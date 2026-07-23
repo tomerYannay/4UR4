@@ -25,6 +25,9 @@ const AGENTS_DIR = '.claude/agents';                 // canonical, executable
 const LEGACY_DIR = 'agents';                         // must NOT hold agent copies
 const CI_WORKFLOW = '.github/workflows/governance-validation.yml';
 const SPECIALIST_GOV = 'governance/temporary-specialists.md';
+const SETTINGS = '.claude/settings.json';
+const HOOK_SCRIPT = '.claude/hooks/bash-guard.mjs';
+const HOOK_TESTS = '.claude/hooks/bash-guard.test.mjs';
 const MAX_PERMANENT_AGENTS = 9;
 
 // Real Claude Code subagent frontmatter fields (source: code.claude.com/docs/en/sub-agents).
@@ -209,6 +212,22 @@ if (!existsSync(join(ROOT, CI_WORKFLOW))) err(`missing CI workflow: ${CI_WORKFLO
 if (!existsSync(join(ROOT, SPECIALIST_GOV))) err(`missing temporary-specialist governance: ${SPECIALIST_GOV}`);
 if (!govIds.has('GOV-016')) err('GOV-016 (temporary specialists) is not defined');
 
+// ---- Bash safety hook -------------------------------------------------------
+let hookOk = false;
+if (!existsSync(join(ROOT, HOOK_SCRIPT))) err(`missing Bash safety hook script: ${HOOK_SCRIPT}`);
+if (!existsSync(join(ROOT, HOOK_TESTS))) err(`missing Bash safety hook tests: ${HOOK_TESTS}`);
+if (!existsSync(join(ROOT, SETTINGS))) {
+  err(`missing ${SETTINGS} (PreToolUse Bash hook must be configured)`);
+} else {
+  try {
+    const s = JSON.parse(readFileSync(join(ROOT, SETTINGS), 'utf8'));
+    const pre = s?.hooks?.PreToolUse || [];
+    const bashHook = pre.find((h) => h.matcher === 'Bash' && (h.hooks || []).some((x) => /bash-guard\.mjs/.test(x.command || '')));
+    if (!bashHook) err(`${SETTINGS}: no PreToolUse hook matching 'Bash' that runs bash-guard.mjs`);
+    else hookOk = true;
+  } catch (e) { err(`${SETTINGS}: invalid JSON (${e.message})`); }
+}
+
 // ---- report -----------------------------------------------------------------
 const classCounts = AGENT_CLASSES.map((c) => `${c} ${permanent.filter((a) => a.gov.class === c).length}`).join(', ');
 console.log('4UR4 Agent OS — validation');
@@ -219,6 +238,7 @@ console.log(`Classes:       ${classCounts}`);
 console.log(`Gov rules:     ${govIds.size} defined, ${registryIds.size} in registry`);
 console.log(`Build-freeze:  ${freezeOn ? 'ON (autonomous implementation disabled)' : 'UNKNOWN'}`);
 console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present' : 'MISSING'}`);
+console.log(`Bash hook:     ${hookOk ? 'configured (PreToolUse → bash-guard.mjs)' : 'MISSING/INVALID'}`);
 console.log('─'.repeat(58));
 for (const w of warns) console.log(`  ⚠︎  ${w}`);
 if (errors.length === 0) {

@@ -37,7 +37,8 @@ This bootstrap deliberately **does not** implement any of it (requirement 13).
 | Skills | Created only when reused by ≥2 tickets or agents ([GOV-012](governance/skills-policy.md)) | `skills/` *(none yet, by design)* |
 | Validation (static) | Structural + governance + executability checks | [`tools/validate.mjs`](tools/validate.mjs) |
 | Validation (live) | Manual Claude Code discovery/restriction procedure | [`docs/claude-code-validation.md`](docs/claude-code-validation.md) |
-| CI | Runs the validator on every PR and push to main | [`.github/workflows/governance-validation.yml`](.github/workflows/governance-validation.yml) |
+| Bash safety hook | Role-scoped `PreToolUse` guard for every Bash command | [`.claude/hooks/`](.claude/hooks/) |
+| CI | Runs the validator **and hook tests** on every PR and push to main | [`.github/workflows/governance-validation.yml`](.github/workflows/governance-validation.yml) |
 
 ## Operating principle
 

@@ -27,3 +27,7 @@ jobs:
       - name: Run governance validator
         # Exits non-zero on any validation error, failing the workflow.
         run: node tools/validate.mjs
+
+      - name: Run Bash safety hook tests
+        # Exits non-zero on any failed assertion, failing the workflow.
+        run: node .claude/hooks/bash-guard.test.mjs
