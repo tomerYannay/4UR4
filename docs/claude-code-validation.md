@@ -12,15 +12,17 @@ mid-session are not hot-loaded.
 | Static validation (`node tools/validate.mjs`) | ✅ **Executed — PASS** (see PR / CI) |
 | Validator negative tests (catches bad tools, custom FM keys, det-writes) | ✅ **Executed — fails as intended** |
 | Tool restrictions present in frontmatter | ✅ **Executed — verified statically** |
-| Live agent **discovery** (`/agents`) | ⏳ **Not executed here** — needs a fresh session |
-| Live **delegation** by orchestrator | ⏳ **Not executed here** — needs a fresh session |
-| Live **deterministic-cannot-write** | ⏳ **Not executed here** — needs a fresh session |
-| Live **innovation-cannot-change-roadmap** | ⏳ **Not executed here** — needs a fresh session |
+| Live agent **discovery** (`/agents`) | ✅ **Executed — PASS** (fresh session 2026-07-24) |
+| Live **delegation** by orchestrator | ✅ **Executed — PASS** (dispatched `project-auditor`) |
+| Live **deterministic-cannot-write** | ✅ **Executed — PASS** (no file created) |
+| Live **innovation-cannot-change-roadmap** | ✅ **Executed — PASS** (roadmap unchanged) |
 
 > During bootstrap, an attempt to invoke the `project-auditor` subagent from the
 > already-running session returned *"Agent type 'project-auditor' not found"* —
-> confirming a restart is required before the live checks below can pass. Do not
-> mark them passed until you have actually run them.
+> confirming a restart is required before the live checks below can pass. Those
+> checks A–E have since been executed in a fresh session; see
+> [`claude-code-validation-evidence.md`](claude-code-validation-evidence.md) for the
+> exact evidence and per-check results.
 
 ---
 
