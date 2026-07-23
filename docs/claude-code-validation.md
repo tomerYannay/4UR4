@@ -21,7 +21,7 @@ mid-session are not hot-loaded.
 > already-running session returned *"Agent type 'project-auditor' not found"* —
 > confirming a restart is required before the live checks below can pass. Those
 > checks A–E have since been executed in a fresh session; see
-> [`claude-code-validation-evidence.md`](claude-code-validation-evidence.md) for the
+> [`live-validation-evidence.md`](live-validation-evidence.md) for the
 > exact evidence and per-check results.
 
 ---
