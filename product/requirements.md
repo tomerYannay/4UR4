@@ -59,13 +59,19 @@ In scope for the MVP (traces to the trendline + confidence specs):
 - **Deterministic state machine** (trendline spec §11): ACTIVE, WICK_BREAK,
   BROKEN_OUT, RETESTED, FAILED_BREAKOUT, EXPIRED — each transition emits a **named
   reason code**.
-- **Confirmed breakout** detection: close-based + persistence + soft-volume policy
-  (trendline spec §13).
+- **Confirmed breakout** detection: a breakout candidate/alert is the **first daily
+  close above the trendline** (HD-03). Persistence above the line and volume are
+  **confidence features, not validity gates**; the breakout **does not** wait for a
+  second daily bar. Tolerance is a **versioned, backtestable** parameter with
+  percentage-based and ATR-based candidates evaluated in Phase 0/4 — no locked 1%
+  threshold (trendline spec §13).
 - **Retest** detection and **failed-breakout** detection (trendline spec §15–§16).
 - **Line expiry / recomputation** ~100 bars after breakout, on new ATH, or on
   structural change (trendline spec §17).
-- **Confidence v1**: a 0–100 **heuristic** (NOT a probability), decomposed into
-  named contributions C1–C7 with reason strings (confidence spec §1–§4).
+- **Confidence v1**: a 0–100 **heuristic** quality score (NEVER a probability;
+  HD-04), decomposed into named contributions C1–C7 with reason strings, with
+  **sentiment excluded from the score** pending an out-of-sample backtest showing
+  improvement plus human approval (HD-08) (confidence spec §1–§4).
 - **Daily end-of-day batch scan** of the S&P 500 over **real market data**, with
   provenance/versioning stamped on every result (architecture §5).
 - **Historical scanner + backtest harness** for rank-ordering validation of
@@ -80,7 +86,10 @@ In scope for the MVP (traces to the trendline + confidence specs):
 - **Sentiment in the score.** Fear & Greed and the market-regime score do **not**
   feed Confidence v1. They are **research context only** until a backtest proves
   calibration lift AND a human approves ([GOV-014](../governance/market-sentiment-context.md),
-  sentiment spec §7). Sentiment *display* is also deferred.
+  sentiment spec §7; HD-08). Sentiment *display* is also deferred: **no third-party
+  Fear & Greed index may be displayed or redistributed commercially until rights are
+  verified, and a proprietary 4UR4 sentiment score is preferred where practical**
+  (HD-09).
 - **Machine-learning confidence (v2).** Feature/label capture is design context;
   no model is trained or shipped in the MVP core.
 - **Intraday / real-time scanning or streaming.** Daily EOD batch only
@@ -110,8 +119,9 @@ string. She can defend the rating to a colleague because every point is traceabl
 A name flagged `WICK_BREAK` catches her eye. The dashboard shows the intrabar high
 pierced the line but the close was rejected, with reason code `WICK_BREAK`; the
 line remains ACTIVE. She trusts that the system did **not** fire a false signal,
-because the confirmation policy (close + persistence + soft volume) is explicit and
-the reason code explains the rejection.
+because the confirmation policy (a **daily close above the line**, with persistence
+and volume feeding confidence rather than gating validity) is explicit and the
+reason code explains the rejection.
 
 **Journey C — SaaS subscriber receives an alert (Phase 7, later).**
 A subscriber has opted into alerts for confirmed breakouts scoring ≥ 70. The daily
@@ -138,10 +148,14 @@ Traceability: each FR cites the governing spec.
 - **FR-5** The engine MUST implement the line **state machine** (ACTIVE,
   WICK_BREAK, BROKEN_OUT, RETESTED, FAILED_BREAKOUT, EXPIRED) and emit a **named
   reason code** on every transition and rejection (trendline §10–§11).
-- **FR-6** The engine MUST detect a **confirmed breakout** by the close-based +
-  persistence (`p_break`) + soft-volume (`f_vol`) policy, recording the breakout bar
-  and confirmation bar, and flag `LOW_VOLUME` rather than voiding low-volume
-  breakouts (trendline §13, D-TL-07).
+- **FR-6** The engine MUST detect a **breakout candidate/alert** as the **first
+  daily close above the trendline** and MUST NOT require waiting for a second daily
+  bar (HD-03). **Persistence** above the line and **volume** are **confidence
+  features, not validity gates** (low volume flags `LOW_VOLUME` and softens the
+  score; it does not void the breakout). The breakout **tolerance** MUST be a
+  **named, versioned, backtestable** parameter — **not** a permanently locked 1% —
+  with percentage-based and ATR-based candidates evaluated in Phase 0/4 (trendline
+  §13, D-TL-07).
 - **FR-7** The engine MUST distinguish a **wick-break** (intrabar pierce, close
   rejected) from a breakout and keep the line ACTIVE (trendline §14).
 - **FR-8** The engine MUST detect **retest hold** and **failed breakout** within
@@ -163,16 +177,22 @@ Traceability: each FR cites the governing spec.
 - **FR-14** Every result (line, breakout, score) MUST carry a `spec_version` /
   algo version and data `snapshot_id` for reproducibility (architecture §5;
   trendline §20; confidence §3).
-- **FR-15** The **data layer** MUST expose a provider-agnostic interface for
-  adjusted daily OHLCV and point-in-time S&P 500 constituents, and own
-  split/dividend **adjustment policy** and **provenance tagging** (architecture
-  §3.2; data research R1, R3, R4).
+- **FR-15** The **data layer** MUST expose a provider-agnostic interface for daily
+  OHLCV on a **split-adjusted, dividend-UNadjusted ("as-traded") basis** (HD-01),
+  applied consistently across ATH selection, pivots, line fitting, and breakout
+  tests, plus point-in-time S&P 500 constituents; it MUST own the split/dividend
+  **adjustment policy** and **provenance tagging** (architecture §3.2; data research
+  R1, R3, R4).
 - **FR-16** The **worker** MUST run a **daily EOD batch** over the S&P 500, persist
   results, write an auditable `scan_run` record, and enqueue alerts for new
   confirmed events (architecture §3.3).
 - **FR-17** The **historical scanner / backtest harness** MUST replay historical
   bars survivorship-bias-free and emit a **rank-ordering / lift** report for
-  Confidence v1 (confidence §7; architecture §3.1; data research R4/R5).
+  Confidence v1. Trustworthy backtesting has a **correctness-critical dependency on
+  point-in-time S&P 500 constituents and delisted price history** (HD-07 — the need
+  is approved; acquisition remains human-gated); any backtest run without them MUST
+  be flagged **biased/provisional** (confidence §7; architecture §3.1; data research
+  R4/R5).
 - **FR-18** The **internal dashboard** MUST render the line, states, and the
   **decomposed** confidence score with reasons (architecture §3.5).
 - **FR-19** (Later, Phase 7) The **alert pipeline** MUST fan out confirmed-event
@@ -199,9 +219,10 @@ Traceability: each FR cites the governing spec.
   with no I/O in the hot path (architecture §3.1).
 - **NFR-6 — Security.** No secrets in code/repo; provider keys and DB creds via a
   secrets manager. Least privilege between modules (engine holds no credentials).
-  For eventual SaaS: PII minimization, isolated billing behind a third-party
-  processor, no card data held (architecture §6.2). Formal privacy/security review
-  is human-gated before any customer data is collected.
+  For eventual SaaS: a **formal security/privacy review is REQUIRED before any SaaS
+  billing or customer PII** is collected (HD-10); PII minimization, isolated billing
+  behind a **third-party payment processor**, and **card details are never stored**
+  (architecture §6.2).
 - **NFR-7 — Auditability / observability.** Every batch writes a `scan_run` audit
   record; data-quality checks (gaps, split sanity, duplicate bars, constituent
   drift) flag a run rather than silently emitting wrong signals (architecture §6.1).
@@ -237,10 +258,15 @@ Traceability: each FR cites the governing spec.
   dividend-unadjusted). → HD-01.
 - **OQ-2 (high, D-TL-04):** Confirm upper-log-hull envelope as the canonical
   selection rule. → HD-02.
-- **OQ-3 (high, D-TL-07):** Confirm breakout confirmation policy (close +
-  persistence 2 + soft volume). → HD-03.
-- **OQ-4 (high, D-CF-04):** Confirm ML success-label thresholds (triple-barrier
-  +15% / −7% / 60 bars). → HD-05.
+- **OQ-3 (RESOLVED, D-TL-07):** Breakout policy set by HD-03 (REVISED, 2026-07-24) —
+  breakout candidate/alert is the **first daily close above the line** (no 2-bar
+  wait); persistence and volume are confidence features, not validity gates;
+  tolerance is versioned/backtestable (%/ATR candidates evaluated Phase 0/4), no
+  locked 1%. → HD-03.
+- **OQ-4 (RESOLVED, D-CF-04):** Success labeling set by HD-05 (REVISED, 2026-07-24) —
+  store a **multi-label set** (horizons 5/10/20/60; barriers +5/−3, +10/−5, +15/−7;
+  MFE/MAE/failed-breakout/successful-retest), with +15/−7/60 kept only as the
+  initial research label. → HD-05.
 - **OQ-5 (high):** Data-provider selection and recurring cost. → HD-06.
 - **OQ-6 (high):** Survivorship-bias-free constituents + delisted history (paid). → HD-07.
 - **OQ-7 (high, GOV-014):** External F&G source + redistribution/display rights,
@@ -266,9 +292,14 @@ Traceability: each FR cites the governing spec.
   at Phase 7 planning).
 
 **Signal-quality:**
+- **Multi-label evaluation set (HD-05):** each historical breakout is evaluated
+  against a **set** of labels, not a single definition — forward horizons
+  **5/10/20/60 bars**; triple-barriers **+5%/−3%, +10%/−5%, +15%/−7%**; plus
+  **MFE, MAE, failed-breakout, and successful-retest**. The **+15%/−7%/60-bar**
+  label is retained only as the **initial research label**, not final product truth.
 - **Rank-ordering lift (Confidence v1):** on the historical set, higher-scored
-  breakouts show a monotonically higher realized win-rate by decile (Spearman ≥
-  target set at backtest time; confidence §7, D-CF-05).
+  breakouts show a monotonically higher realized win-rate by decile across the
+  multi-label set (Spearman ≥ target set at backtest time; confidence §7, D-CF-05).
 - **Reproducibility:** a re-run of any historical scan reproduces byte-identical
   signals/scores (determinism guard).
 - **False-signal discipline:** wick-breaks correctly rejected vs. confirmed

@@ -67,7 +67,14 @@ stated rules.
 
 ---
 
-## 2. Adjusted vs unadjusted prices — **recommendation: split-adjusted, dividend-unadjusted**
+## 2. Adjusted vs unadjusted prices — **APPROVED: split-adjusted, dividend-unadjusted ("as-traded")**
+
+> **Product Owner approved 2026-07-24 (HD-01).** The price basis is **confirmed
+> split-adjusted, dividend-unadjusted ("as-traded")**. This is now the governing
+> rule, not a pending recommendation. The same field is used consistently for ATH
+> selection, pivot detection, line fitting, and breakout tests. The alternative
+> (fully adjusted / total-return close) is **rejected** for this detector, and raw
+> unadjusted is rejected (splits inject false ATHs).
 
 Trendline geometry is a **multi-decade log-space** construction anchored at an
 all-time high. Price-affecting corporate actions must be handled consistently or
@@ -88,10 +95,12 @@ matches what a chartist sees, keeps the ATH stable, and avoids negative
 adjusted prices (deep dividend back-adjustment on long histories can approach or
 cross zero, breaking `ln`).
 
-> **Decision D-TL-01 — Price adjustment basis** · Default: split-adjusted,
-> dividend-**un**adjusted ("as-traded"). · Alternative: fully adjusted
-> (total-return) close. · Materiality: **high** (changes which bar is the ATH and
-> therefore every downstream signal). · **Human-approval: yes.**
+> **Decision D-TL-01 — Price adjustment basis** · **Status: APPROVED (Product
+> Owner, 2026-07-24, HD-01) — no longer pending.** · Governing rule:
+> split-adjusted, dividend-**un**adjusted ("as-traded"). · Superseded/rejected
+> alternative: fully adjusted (total-return) close. · Materiality: **high**
+> (changes which bar is the ATH and therefore every downstream signal). ·
+> Human-approval: yes — **granted 2026-07-24 (HD-01).**
 
 **Consistency rule:** whichever basis is chosen, the **same** field is used for
 ATH selection, pivot detection, line fitting, and breakout tests. Mixing bases is
@@ -225,6 +234,14 @@ Line at `t=30`: `ŷ = −0.00645130·30 + 4.886888 = 4.693349` →
 
 ## 8. The envelope rule — selecting **THE** valid descending line
 
+> **Product Owner approved 2026-07-24 (HD-02).** The canonical trendline-selection
+> rule is **confirmed the upper log-hull from the ATH** — the shallowest
+> descending log-space line that dominates all intervening highs within tolerance
+> `ε`, anchored at `A`. This is now the governing, canonical definition of the
+> product's core object (not a pending recommendation). The naive "steepest line
+> through two most significant pivots" alternative is **rejected** (it cuts through
+> intervening highs).
+
 Among all eligible `B` candidates, 4UR4 selects a **single canonical** descending
 resistance line. The governing principle: the line is the **upper log-envelope**
 of the price highs from the ATH forward — the tightest descending straight line
@@ -288,12 +305,13 @@ intervening high, violating "resistance stays above highs."
 Selected `B* = (45, 92)` — the shallowest line that still dominates all highs.
 This is the correct canonical resistance.
 
-> **Decision D-TL-04 — Envelope selection principle** · Default: **upper convex
+> **Decision D-TL-04 — Envelope selection principle** · **Status: APPROVED /
+> CANONICAL (Product Owner, 2026-07-24, HD-02).** · Governing rule: **upper convex
 > hull in log space from the ATH** (shallowest descending line dominating all
-> intervening highs within `ε`). · Alternative: "steepest line touching two most
-> significant pivots" (naive two-point). · Materiality: **high** (defines the core
-> object). · **Human-approval: yes** — this is the load-bearing geometric
-> definition of the product.
+> intervening highs within `ε`). · Superseded/rejected alternative: "steepest line
+> touching two most significant pivots" (naive two-point). · Materiality: **high**
+> (defines the core object). · Human-approval: yes — **granted 2026-07-24 (HD-02)**;
+> this is the load-bearing geometric definition of the product.
 
 > **Decision D-TL-05 — Domination set: pivots-only vs every bar high** · Default:
 > enforce domination against **pivot highs** for line *selection*, and against
@@ -354,16 +372,25 @@ explainability and evidence.
 ```
 NONE ──(valid A,B found)──▶ ACTIVE
 ACTIVE ──(bar high pierces > ε, close below)──▶ WICK_BREAK (transient, stays ACTIVE)
-ACTIVE ──(close-confirmed above line per §13)──▶ BROKEN_OUT
+ACTIVE ──(FIRST daily close above line + ε_break, §13)──▶ BROKEN_OUT (alert fires here)
 ACTIVE ──(new ATH)──▶ NONE (then recompute)
 ACTIVE ──(structural pierce, no breakout)──▶ NONE (recompute)
-BROKEN_OUT ──(price returns & holds §14)──▶ RETESTED
+BROKEN_OUT ──(price returns & holds §16)──▶ RETESTED
 BROKEN_OUT ──(price closes back below line − ε §15)──▶ FAILED_BREAKOUT
-BROKEN_OUT / RETESTED ──(~100 bars elapsed §16)──▶ EXPIRED ──▶ NONE (recompute)
+BROKEN_OUT / RETESTED ──(~100 bars elapsed §17)──▶ EXPIRED ──▶ NONE (recompute)
 ```
 
 State transitions are deterministic functions of the bar stream; each emits a
 reason code.
+
+> **Revised per HD-03 (Product Owner, 2026-07-24).** `ACTIVE → BROKEN_OUT` fires on
+> the **first** qualifying daily close above the line (§13), so
+> `confirmed_bar == breakout_bar`. There is **no 2-bar persistence gate** on this
+> transition. Persistence above the line and volume are tracked as post-breakout
+> **quality/confidence** signals only; they never gate this transition nor delay
+> the alert. The `WICK_BREAK` vs `BROKEN_OUT` distinction is unchanged: `WICK_BREAK`
+> is an intrabar-only pierce whose close does **not** clear the line (stays
+> `ACTIVE`), whereas `BROKEN_OUT` requires that first **close** above line + ε_break.
 
 ---
 
@@ -378,34 +405,96 @@ detector's accept/reject logic.
 
 ## 13. Confirmed breakout definition
 
-A **confirmed breakout** at bar `t` requires:
+> **Product Owner revised 2026-07-24 (HD-03).** This section is **rewritten**. The
+> earlier formulation — "close-based cross **+ 2-bar persistence** + soft volume,"
+> where the alert waited for `p_break = 2` consecutive closes and volume was a soft
+> qualifier — is **SUPERSEDED**. The governing policy below fires the confirmed
+> breakout **ALERT on the first qualifying daily close**, with no mandatory
+> multi-bar wait; persistence and volume are moved to the **confidence/quality**
+> layer and never gate breakout validity.
 
-1. **Close-based cross:** `ln(C[t]) > ŷ(t) + ε_break`, i.e. the **close**
-   (not the wick) exceeds the line by a breakout buffer `ε_break` (default `0.01`
-   ≈ 1%).
-2. **Persistence (default):** the close remains above the line for `p_break`
-   consecutive bars, default `p_break = 2`. Breakout is *confirmed* on the bar
-   that completes the persistence requirement; the **breakout bar** is recorded
-   as the first bar `t` that crossed.
-3. **Volume qualifier (default, soft):** breakout volume `V[t] ≥ f_vol × SMA_vol`
-   where `SMA_vol` is the 20-bar average volume and `f_vol = 1.0` (i.e. at least
-   average volume). This is a **soft** qualifier: a breakout that fails volume is
-   still recorded but flagged `LOW_VOLUME` (it lowers confidence rather than
-   voiding the signal), preserving correctness/explainability separation.
+### 13.1 Breakout candidate
 
-> **Decision D-TL-07 — Breakout confirmation defaults** · Default: close-based,
-> `ε_break = 0.01`, persistence `p_break = 2` bars, soft volume `f_vol = 1.0×`
-> 20-bar avg. · Alternative: single-close breakout (`p_break = 1`, more signals,
-> more false positives) or hard volume gate. · Materiality: **high** (defines when
-> the product fires). · **Human-approval: yes** (the persistence/volume policy is
-> a core signal-semantics choice).
+A **breakout candidate** at bar `t` is the **first daily close above the line +
+tolerance**:
 
-**Worked example.** Line at `t=80`: `ŷ = 4.3000` (`line = 73.70`), `ε_break =
-0.01`. `C[80] = 74.2` → `ln = 4.30680`; `4.30680 > 4.3000+0.01 = 4.3100`? No
-(`4.30680 < 4.31`) → **not** a confirmed cross at t=80. `C[81] = 76.0` → `ln =
-4.33073 > 4.31` ✓ (cross). Need `p_break = 2`: `C[82] = 75.5`,
-`ŷ(82) = 4.2987`, `ln 75.5 = 4.32413 > 4.3087` ✓ → **breakout confirmed at t=82**,
-breakout bar recorded as `t=81`.
+```
+ln(C[t]) > ŷ(t) + ε_break            # close (not the wick) exceeds the line by tolerance
+```
+
+The candidate is the first bar in the current `ACTIVE` episode to satisfy this.
+
+### 13.2 Confirmed breakout ALERT (no multi-bar wait)
+
+A **confirmed breakout** — the state that fires the **ALERT** — is the **first
+daily close above the trendline** (i.e. the breakout candidate of §13.1).
+
+- There is **NO mandatory 2-bar (or multi-bar) persistence requirement** on the
+  alert/confirmation path. The 2-bar wait is **removed**. The alert fires on that
+  **first qualifying daily close**.
+- The **breakout bar** and the **confirmed bar** are therefore the **same bar**
+  (`confirmed_bar == breakout_bar`) in the revised policy.
+- Transition `ACTIVE → BROKEN_OUT` occurs on that first qualifying close (§11).
+
+### 13.3 Persistence — a SEPARATE post-breakout QUALITY feature (does NOT gate)
+
+Whether the close **persists** above the line for subsequent bars is tracked as a
+**post-breakout quality signal only**. It feeds the confidence/quality score
+(see [`confidence-specification.md`](confidence-specification.md)) as an
+explainable component. It **does not gate breakout validity and does not delay
+the alert**. A breakout that later fails to persist is still a valid, already-fired
+breakout (it may separately become a `FAILED_BREAKOUT` per §15, which is a
+distinct labeled outcome, not a retroactive un-firing).
+
+### 13.4 Volume — a CONFIDENCE feature, not a validity gate
+
+Breakout volume is a **confidence input only**. Low volume lowers the confidence
+score via a flag/component (e.g. `LOW_VOLUME`) but **never voids a breakout**.
+There is **no hard volume gate**. Volume expansion is measured against a reference
+(e.g. 20-bar average volume) purely to compute the volume-confirmation confidence
+component; validity is independent of it.
+
+### 13.5 Tolerance `ε_break` — versioned & backtestable, NOT a locked 1%
+
+The breakout tolerance is a **versioned, backtestable parameter**, **not** a
+permanently locked `ε_break = 0.01`. No fixed value is committed by this spec.
+Two candidate tolerance definitions are carried side by side and **evaluated
+before any value is locked**:
+
+- a **percentage/log-unit** candidate (deviation above the line as a fraction /
+  log units), and
+- an **ATR-based** candidate (tolerance scaled by recent Average True Range, i.e.
+  volatility-adaptive).
+
+Both are to be **evaluated in Phase 0 (golden fixtures) and Phase 4 (backtest)**;
+the governing value/definition is chosen from that evidence and pinned with the
+detector's `spec_version`. Until then `ε_break` is an explicit, named,
+overridable config parameter with no locked default.
+
+> **Decision D-TL-07 — Breakout confirmation policy** · **Status: REVISED (Product
+> Owner, 2026-07-24, HD-03).** · Governing rule: a **breakout candidate** is the
+> **first daily close above line + tolerance**; the **confirmed breakout ALERT
+> fires on that first qualifying daily close** (`confirmed_bar == breakout_bar`),
+> with **no mandatory persistence wait**. **Persistence** above the line and
+> **volume** are **confidence/quality features only** — neither gates validity nor
+> delays the alert. `ε_break` is a **versioned, backtestable tolerance**
+> (percentage-based AND ATR-based candidates, evaluated Phase 0 + Phase 4), **not
+> a locked 1%**. · **Superseded formulation:** close + `p_break = 2` persistence +
+> soft volume, with a fixed `ε_break = 0.01`. · Rejected alternatives: hard volume
+> gate (voids valid breaks); persistence as a validity gate (delays the alert). ·
+> Materiality: **high** (defines when the product fires). · Human-approval: yes —
+> **revised & granted 2026-07-24 (HD-03).**
+
+**Worked example (revised, single-close confirms).** Line at `t=81`:
+`ŷ(81) = 4.3000` (`line ≈ 73.70`), with a candidate tolerance `ε_break = 0.01`
+(illustrative only — not a locked value; the governing tolerance is chosen from
+Phase 0/Phase 4 evidence and may be ATR-based). `C[80] = 74.2` →
+`ln = 4.30680`; `4.30680 > 4.3000 + 0.01 = 4.3100`? No → not yet a candidate.
+`C[81] = 76.0` → `ln = 4.33073 > 4.3100` ✓ → this **first qualifying daily close
+IS the confirmed breakout**: the **alert fires at `t=81`**, and
+`confirmed_bar == breakout_bar == 81`. No second bar is required. Whether
+`C[82]`, `C[83]`, … hold above the line only adjusts the **confidence/quality**
+score afterward; it does not change that the breakout already fired at `t=81`.
 
 ---
 
@@ -530,7 +619,17 @@ build-lifted ticket must produce:
 2. **GX-02 Envelope discrimination:** a shallow candidate line pierced by a mid
    high (like §8 example) — asserts the hull picks `B*=(45,92)`, not `(20,96)`.
 3. **GX-03 Wick-break vs breakout:** one bar wick-pierces (rejected
-   `WICK_BREAK`), a later bar close-confirms with persistence (`BROKEN_OUT`).
+   `WICK_BREAK`), a later bar's **first daily close** above line + `ε_break`
+   confirms (`BROKEN_OUT`). **Revised per HD-03 (2026-07-24):** this fixture must
+   **no longer require a 2-bar persistence confirmation**. The expected output
+   must assert the breakout fires on the **first qualifying close** with
+   `confirmed_bar == breakout_bar` (the alert bar is the crossing bar itself).
+   Any subsequent above-line closes are expected to appear as **persistence
+   *quality* data** feeding confidence, **not** as a precondition of `BROKEN_OUT`.
+   The prior expected fixture (breakout confirmed one bar *after* the cross, at
+   `t = crossbar + 1`) is **superseded** and must be regenerated to the
+   single-close-confirms policy. (Describe/regenerate the fixture when the build
+   is lifted — do not build it now.)
 4. **GX-04 Retest hold:** post-breakout dip to line that holds → `RETESTED`.
 5. **GX-05 Failed breakout:** post-breakout re-close below line within
    `F_fail` → `FAILED_BREAKOUT`.
@@ -540,8 +639,15 @@ build-lifted ticket must produce:
 8. **GX-08 Monotonic decline:** no valid second anchor → `NO_VALID_SECOND_ANCHOR`.
 9. **GX-09 ATH on first bar:** IPO-peak decline; valid line from `t=0`.
 10. **GX-10 Split artifact:** an unadjusted 2:1 jump → `SUSPECTED_UNADJUSTED_SPLIT`.
-11. **GX-11 Volume-soft breakout:** close-confirmed but low volume → `BROKEN_OUT`
-    + `LOW_VOLUME` flag (not voided).
+11. **GX-11 Low-volume breakout (volume is confidence-only):** a **first-close**
+    breakout on low volume → `BROKEN_OUT` fires normally, with a `LOW_VOLUME`
+    flag. **Revised per HD-03 (2026-07-24):** the fixture must assert the breakout
+    is **valid and fired** (volume does **not** gate validity); `LOW_VOLUME` is a
+    **confidence** signal only, lowering the score, never voiding the signal. The
+    fixture must **not** depend on any 2-bar persistence wait. The earlier
+    "volume-soft breakout" framing (where volume was a soft *qualifier* on the
+    validity path) is **superseded** by "volume is a confidence feature, not a
+    validity gate"; regenerate expected output accordingly when the build is lifted.
 12. **GX-12 Equal-ATH tie:** duplicate highs → earliest anchors (D-TL-02).
 
 Each fixture's expected JSON must include: selected anchors, `m`/`b`, state,
@@ -553,9 +659,15 @@ figures**, so Verification is exact and reproducible.
 ## 20. Determinism & reproducibility requirements (binding on implementation)
 
 1. No randomness anywhere in geometry or state transitions.
-2. All tolerances/constants (`k, ε, ε_touch, ε_break, ε_fail, ε_retest, p_break,
-   f_vol, W_retest, h_hold, F_fail, E_expiry`) are **named config**, defaulted as
-   above, versioned with the detector.
+2. All tolerances/constants (`k, ε, ε_touch, ε_break, ε_fail, ε_retest,
+   W_retest, h_hold, F_fail, E_expiry`) are **named config**, versioned with the
+   detector. **Per HD-03 (2026-07-24):** `ε_break` is a **versioned, backtestable
+   tolerance with NO locked default** (percentage-based **and** ATR-based
+   candidates evaluated in Phase 0 + Phase 4 before any value is pinned). The former
+   persistence gate `p_break` and volume gate `f_vol` are **removed from the
+   validity path**; persistence and volume are now **confidence/quality** inputs
+   (see the confidence spec) — any persistence-window or volume-reference constants
+   they use live with the confidence scorer, not the validity config.
 3. Floating-point comparisons use the stated `ε` buffers; no bare equality on
    prices. Tie rules (D-TL-02, ENVELOPE_TIE_LATER) make outcomes order-stable.
 4. Output carries a `spec_version` matching this document's version so evidence
@@ -579,8 +691,12 @@ The Architect proposes the Product Steward add these to
 - **Tolerance ε** — permitted log-unit deviation for domination/touch/breakout.
 - **Wick-break** — intrabar high crosses the line while the close does not
   confirm; not a signal.
-- **Confirmed breakout** — close-based, persistence- and volume-qualified cross
-  above the line.
+- **Breakout candidate** — the first daily close above the line + tolerance
+  (`ε_break`).
+- **Confirmed breakout** — the **first daily close above the line + tolerance**;
+  fires the alert on that bar with **no mandatory persistence wait** (revised
+  HD-03, 2026-07-24). Persistence above the line and volume are **confidence /
+  quality** features, not validity gates.
 - **Retest** — post-breakout return to the broken line that holds as support.
 - **Failed breakout** — post-breakout re-close below the line within the failure
   window.
@@ -593,12 +709,15 @@ The Architect proposes the Product Steward add these to
 
 ## Open questions (for Orchestrator/Steward/human triage)
 
-1. **OQ-1 (D-TL-01, high):** Confirm price-adjustment basis (split-adjusted,
-   dividend-unadjusted). Impacts which bar is the ATH.
-2. **OQ-2 (D-TL-04, high):** Confirm the **upper-log-hull envelope** as the
-   canonical line-selection definition. This is the product's geometric core.
-3. **OQ-3 (D-TL-07, high):** Confirm breakout confirmation policy (close +
-   persistence 2 + soft volume).
+1. **OQ-1 (D-TL-01, high) — RESOLVED 2026-07-24 (HD-01):** price-adjustment basis
+   **approved** split-adjusted, dividend-unadjusted ("as-traded").
+2. **OQ-2 (D-TL-04, high) — RESOLVED 2026-07-24 (HD-02):** the **upper-log-hull
+   envelope** is **approved** as the canonical line-selection definition.
+3. **OQ-3 (D-TL-07, high) — RESOLVED (REVISED) 2026-07-24 (HD-03):** breakout
+   confirmation fires on the **first daily close** above line + tolerance (no
+   persistence wait); persistence and volume are confidence features; `ε_break` is
+   a versioned, backtestable tolerance (%-based and ATR-based, evaluated Phase 0 +
+   Phase 4). The prior "close + persistence 2 + soft volume" policy is superseded.
 4. **OQ-4:** Should the touch/domination check use pivot highs only or every bar
    high (D-TL-05)? Default hybrid proposed.
 5. **OQ-5:** Universe/data-vendor and split/dividend data availability for S&P 500

@@ -87,8 +87,8 @@ issues**, not tickets yet, and not approved.
   confidence fixtures; provider data.
 - **Acceptance criteria (testable):**
   - [ ] GX-03, GX-04, GX-05, GX-07, GX-11 each exist as a CSV+JSON pair.
-  - [ ] GX-03 shows a rejected `WICK_BREAK` then a persistence-confirmed `BROKEN_OUT`.
-  - [ ] GX-11 asserts a close-confirmed breakout flagged `LOW_VOLUME` (not voided).
+  - [ ] GX-03 shows a rejected `WICK_BREAK` (intrabar high only) then a `BROKEN_OUT` confirmed on the **first daily close** above the line — no multi-bar persistence wait (HD-03).
+  - [ ] GX-11 asserts a first-close breakout flagged `LOW_VOLUME` — volume is a confidence feature, not a validity gate (not voided) (HD-03).
   - [ ] Each expected JSON records final state, relevant bars, and all reason codes.
   - [ ] Numeric values pinned to 6 significant figures; reviewer maps each to spec §.
 - **Dependencies:** Human decision **HD-03** (breakout confirmation policy) resolved
