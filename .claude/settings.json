@@ -1,0 +1,16 @@
+{
+  "$comment": "4UR4 project settings. The PreToolUse hook enforces role-scoped Bash safety (see .claude/hooks/README.md). It fails closed for clearly dangerous commands and applies per-agent mutation rules using the agent_type provided on the hook payload.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/bash-guard.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

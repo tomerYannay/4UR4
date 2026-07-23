@@ -1,0 +1,33 @@
+name: Governance Validation
+
+# Enforces the 4UR4 Agent Operating System on every change.
+# Dependency-free: it only needs Node to run tools/validate.mjs.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate agent OS & governance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run governance validator
+        # Exits non-zero on any validation error, failing the workflow.
+        run: node tools/validate.mjs
+
+      - name: Run Bash safety hook tests
+        # Exits non-zero on any failed assertion, failing the workflow.
+        run: node .claude/hooks/bash-guard.test.mjs
