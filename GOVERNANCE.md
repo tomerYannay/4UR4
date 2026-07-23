@@ -24,6 +24,7 @@ and escalate**, never proceed.
 | **GOV-013** | Human Approval Gate | all | human | [approval-gate.md](governance/approval-gate.md) |
 | **GOV-014** | Market-Sentiment Research Boundary | all | Product Steward | [market-sentiment-context.md](governance/market-sentiment-context.md) |
 | **GOV-015** | Build-Freeze (no product implementation yet) | all | human + validator | [build-freeze.md](governance/build-freeze.md) |
+| **GOV-016** | Temporary Ticket-Scoped Specialist Subagents | all | Orchestrator/Architect + validator | [temporary-specialists.md](governance/temporary-specialists.md) |
 
 ## Rule anatomy
 

@@ -27,14 +27,17 @@ This bootstrap deliberately **does not** implement any of it (requirement 13).
 
 | Area | Purpose | Entry point |
 |------|---------|-------------|
-| Agents | The ≤9 permanent agents, their missions and boundaries | [`AGENTS.md`](AGENTS.md) |
-| Governance | The rules every agent obeys (`GOV-###`) | [`GOVERNANCE.md`](GOVERNANCE.md) |
+| **Executable agents** | The 9 permanent agents as Claude Code subagents (single source of truth) | [`.claude/agents/`](.claude/agents/) |
+| Agents (registry) | Missions, tools, boundaries, invocation, temporary specialists | [`AGENTS.md`](AGENTS.md) |
+| Governance | The rules every agent obeys (`GOV-001`…`GOV-016`) | [`GOVERNANCE.md`](GOVERNANCE.md) |
 | Workflows | Issues, Project, PRs, Ideas Inbox, experiments, audit, status | [`workflows/`](workflows/) |
 | Product | Vision, glossary, governed roadmap | [`product/`](product/) |
 | Ideas | The Ideas Inbox (proposals, not commitments) | [`ideas/inbox.md`](ideas/inbox.md) |
-| Templates | Canonical issue / PR / idea / experiment / report shapes | [`templates/`](templates/) |
+| Templates | Issue / PR / idea / experiment / report + temporary-specialist scaffold | [`templates/`](templates/) |
 | Skills | Created only when reused by ≥2 tickets or agents ([GOV-012](governance/skills-policy.md)) | `skills/` *(none yet, by design)* |
-| Validation | Structural + governance checks | [`tools/validate.mjs`](tools/validate.mjs) |
+| Validation (static) | Structural + governance + executability checks | [`tools/validate.mjs`](tools/validate.mjs) |
+| Validation (live) | Manual Claude Code discovery/restriction procedure | [`docs/claude-code-validation.md`](docs/claude-code-validation.md) |
+| CI | Runs the validator on every PR and push to main | [`.github/workflows/governance-validation.yml`](.github/workflows/governance-validation.yml) |
 
 ## Operating principle
 
@@ -48,9 +51,18 @@ This bootstrap deliberately **does not** implement any of it (requirement 13).
 node tools/validate.mjs
 ```
 
-The validator enforces agent-count limits, required fields, valid agent
-classes, handoff integrity, governance cross-references, and the build-freeze
-state. It exits non-zero on any failure so it can gate CI.
+The validator enforces: canonical agents under `.claude/agents/` (single source
+of truth), valid Claude Code frontmatter and **real tool identifiers**, required
+governance metadata, agent-class rules, the ≤9 permanent-agent ceiling,
+separation of duties, handoff integrity, governance cross-references, that
+deterministic and innovation agents **cannot write**, temporary-specialist
+governance, the build-freeze state, and the presence of the CI workflow. It exits
+non-zero on any failure so it gates CI ([`governance-validation.yml`](.github/workflows/governance-validation.yml),
+run on `pull_request` and `push` to `main`).
+
+For **live** proof that Claude Code discovers the agents and honours their tool
+restrictions, follow [`docs/claude-code-validation.md`](docs/claude-code-validation.md)
+in a fresh session.
 
 ## Human control points
 

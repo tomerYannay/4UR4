@@ -30,5 +30,7 @@ The **Project Auditor** runs an independent audit each cycle. The audit is
 
 An [audit report](../templates/audit-report.md) with a **traceability matrix**, a
 **violation list** (rule id + evidence), and prioritized recommendations handed to
-the Orchestrator (flow) and Product Steward (scope). The Auditor **runs
-[`tools/validate.mjs`](../tools/validate.mjs)** and attaches its result.
+the Orchestrator (flow) and Product Steward (scope). The Auditor is **read-only**,
+so it **reads the latest CI result** of [`tools/validate.mjs`](../tools/validate.mjs)
+(run by [`governance-validation.yml`](../.github/workflows/governance-validation.yml))
+and attaches it, rather than running it itself.
