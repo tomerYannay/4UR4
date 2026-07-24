@@ -1,0 +1,69 @@
+{
+  "fixture_id": "GX-15",
+  "purpose": "Tolerance-boundary cases shown numerically on BOTH sides: (a) a near-end bar high sitting just inside y_hat+eps (dominated, line survives) vs a counterfactual just outside (INVALID_PIERCE); and (b) a final close just below y_hat+eps_break (not a breakout candidate) vs a counterfactual just above (breakout).",
+  "category": "tolerance-boundary cases",
+  "spec_refs": ["§8", "§9", "§9(worked example)", "§10.1", "§13.1", "§13.5", "D-TL-05", "D-TL-06"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 31,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break=0.01 is ILLUSTRATIVE, not locked (HD-03, §13.5); this fixture explicitly probes the eps_break boundary to show it is a versioned/backtestable knob.",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 20, "H": 90.00 },
+  "expected_log_slope": -0.00526803,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "20": { "y_hat": 4.49981, "line": 90.0000 },
+    "28": { "y_hat": 4.45767, "line": 86.2858 },
+    "30": { "y_hat": 4.44713, "line": 85.3815 }
+  },
+  "expected_state_transitions": [
+    { "bar": 20, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "eps boundary — the t=28 high (87.90) INVALIDATING the line (INVALID_PIERCE)",
+      "rejected_because": "The t=28 high sits just INSIDE y_hat(28)+eps, so it is dominated-within-tolerance and the line stays ACTIVE. (It is a validity-only bar: within k of the series end it cannot be a confirmed pivot, so it never re-selects B*.)",
+      "numeric": "ln(87.90)=4.475948 <= y_hat(28)+eps=4.457665+0.02=4.477665 (margin 0.001717 INSIDE). Counterfactual: H=88.10 -> ln=4.478220 > 4.477665 -> would PIERCE by 0.000555 -> INVALID_PIERCE."
+    },
+    {
+      "candidate": "eps_break boundary — the t=30 close (86.10) being a BREAKOUT candidate",
+      "rejected_because": "The final close is just BELOW y_hat(30)+eps_break, so it is NOT a breakout candidate; the line remains ACTIVE.",
+      "numeric": "ln(86.10)=4.455494 < y_hat(30)+eps_break=4.447129+0.01=4.457129 (miss by 0.001635). Counterfactual: C=86.40 -> ln=4.458973 > 4.457129 -> WOULD be a breakout candidate (BROKEN_OUT), confirmed_bar==breakout_bar==30 (HD-03)."
+    },
+    {
+      "candidate": "t=28 high triggering a WICK_BREAK",
+      "rejected_because": "Its high does not exceed y_hat(28)+eps, so it is a within-envelope overshoot, not even a wick-break.",
+      "numeric": "ln(87.90)=4.475948 <= 4.477665 -> no eps pierce -> not WICK_BREAK."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.49981,
+    "slope_formula": "m=(ln90-ln100)/(20-0)=(4.499810-4.605170)/20=-0.105360/20=-0.00526803",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "B*=(20,90) is the unambiguous shallow-hull anchor; all intervening pivots sit below the line.",
+      "eps boundary (validity): ln(H[28])=4.475948 vs y_hat(28)+eps=4.477665 -> INSIDE by 0.001717 (dominated).",
+      "eps_break boundary (breakout): ln(C[30])=4.455494 vs y_hat(30)+eps_break=4.457129 -> BELOW by 0.001635 (no candidate).",
+      "Both counterfactual perturbations (H=88.10; C=86.40) flip the outcome, pinning the exact decision thresholds."
+    ],
+    "notes": "The t=28 bar is deliberately within k=3 of the series end so it is a validity-only bar (D-TL-05: selection uses pivots, validity uses every bar high) and cannot re-select the envelope. This isolates the eps domination boundary from hull re-selection."
+  }
+}

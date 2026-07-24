@@ -1,0 +1,64 @@
+{
+  "fixture_id": "GX-03",
+  "purpose": "An intrabar high pierces the line beyond eps but the close does not confirm above eps_break -> WICK_BREAK; the line stays ACTIVE (no signal).",
+  "category": "wick-only crossing",
+  "spec_refs": ["§11", "§13.1", "§14", "§14(worked example)"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 19,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 12, "H": 88.00 },
+  "expected_log_slope": -0.0106528,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "12": { "y_hat": 4.47734, "line": 88.0000 },
+    "16": { "y_hat": 4.43473, "line": 84.3290 }
+  },
+  "expected_state_transitions": [
+    { "bar": 12, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 16, "from": "ACTIVE", "to": "ACTIVE", "reason_code": "WICK_BREAK" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "WICK_BREAK"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "t=16 being a confirmed BROKEN_OUT",
+      "rejected_because": "Breakout requires the CLOSE above line+eps_break; at t=16 only the intrabar high pierced, the close did not confirm.",
+      "numeric": "ln(C[16])=ln(84.50)=4.436752 <= y_hat(16)+eps_break=4.434725+0.01=4.444725 -> close does NOT confirm -> not a breakout."
+    },
+    {
+      "candidate": "t=16 being an INVALID_PIERCE (structural break -> recompute)",
+      "rejected_because": "Per §11/§14 a single intrabar high pierce with a non-confirming close is a transient WICK_BREAK that stays ACTIVE, not a structural invalidation.",
+      "numeric": "ln(H[16])=ln(87.00)=4.465908 > y_hat(16)+eps=4.454725 (wick pierces) AND ln(C[16])=4.436752 <= 4.444725 (close rejects) -> WICK_BREAK."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.47734,
+    "slope_formula": "m=(ln88-ln100)/(12-0)=(4.477337-4.605170)/12=-0.127833/12=-0.0106528",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Same clean line as GX-01: B*=(12,88).",
+      "Wick test at t=16: high pierces (4.465908 > 4.454725) while close rejects (4.436752 <= 4.444725).",
+      "WICK_BREAK is transient; state remains ACTIVE (§11).",
+      "No other close exceeds line+eps_break anywhere."
+    ],
+    "notes": "Locks the breakout-vs-wick distinction: breakout is close-confirmed (§13), wick-break is intrabar-only (§14). Reproduces the §14 worked-example logic on this fixture's line."
+  }
+}

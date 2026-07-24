@@ -1,0 +1,73 @@
+{
+  "fixture_id": "GX-17",
+  "purpose": "A post-breakout deep undercut whose low reaches the line but whose close plunges below it and never reclaims within h_hold: NOT a valid retest, and it qualifies as FAILED_BREAKOUT.",
+  "category": "deep undercut not a valid retest",
+  "spec_refs": ["§11", "§13.2", "§15", "§16", "D-TL-08", "D-TL-09"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 24,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "eps_retest": 0.01,
+    "W_retest": 20,
+    "h_hold": 3,
+    "eps_fail": 0.01,
+    "F_fail": 10,
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 12, "H": 88.00 },
+  "expected_log_slope": -0.0106528,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "12": { "y_hat": 4.47734, "line": 88.0000 },
+    "16": { "y_hat": 4.43473, "line": 84.3290 },
+    "20": { "y_hat": 4.39211, "line": 80.8110 },
+    "21": { "y_hat": 4.38146, "line": 79.9545 },
+    "22": { "y_hat": 4.37081, "line": 79.1072 }
+  },
+  "expected_state_transitions": [
+    { "bar": 12, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 16, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" },
+    { "bar": 20, "from": "BROKEN_OUT", "to": "FAILED_BREAKOUT", "reason_code": "FAILED_BREAKOUT" }
+  ],
+  "expected_final_state": "FAILED_BREAKOUT",
+  "breakout_bar": 16,
+  "confirmed_bar": 16,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED", "FAILED_BREAKOUT"],
+  "flags": ["NOT_RETESTED"],
+  "rejection_rationale": [
+    {
+      "candidate": "RETEST_HELD at t=20 (treating the dip as a successful retest)",
+      "rejected_because": "The return condition is met (low reached the line) but the HOLD condition fails: the close does NOT reclaim the line within eps_retest, and it does not reclaim within h_hold=3 bars either.",
+      "numeric": "Return: ln(L[20])=ln(76.00)=4.330733 <= y_hat(20)+eps_retest=4.402114 (dipped). Hold FAILS: ln(C[20])=ln(77.00)=4.343805 < y_hat(20)-eps_retest=4.382114; and t=21 (ln76=4.330733) and t=22 (ln75=4.317488) also stay below y_hat-eps_retest -> no reclaim within h_hold."
+    },
+    {
+      "candidate": "Staying BROKEN_OUT (no failure)",
+      "rejected_because": "The close at t=20 is below line-eps_fail within F_fail bars, so FAILED_BREAKOUT fires.",
+      "numeric": "ln(C[20])=4.343805 < y_hat(20)-eps_fail=4.392114-0.01=4.382114; t=20-16=4 <= F_fail=10."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.47734,
+    "slope_formula": "m=(ln88-ln100)/(12-0)=-0.127833/12=-0.0106528",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Breakout at t=16 (ln(C)=4.465908 > 4.444725).",
+      "t=20 low reaches the line (return true) but close 77 is far below line-eps_retest (hold false).",
+      "No reclaim within h_hold=3 bars (t=20,21,22 all close below line-eps_retest).",
+      "Close below line-eps_fail within F_fail -> FAILED_BREAKOUT, explicitly NOT RETESTED."
+    ],
+    "notes": "Contrast with GX-04: same geometry and return-to-line, but the close fails the 'hold as support' test. Distinguishes a genuine retest (§16) from a breakdown (§15)."
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "fixture_id": "GX-12",
+  "purpose": "Two bars share the exact all-time-high; anchor is the EARLIEST such bar (D-TL-02), not the later equal high.",
+  "category": "repeated ATH",
+  "spec_refs": ["§4", "§4(Repeated/equal ATH)", "§8", "§18(Equal ATHs)", "D-TL-02", "D-TL-04"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 22,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 130.00 },
+  "expected_second_anchor": { "t": 15, "H": 118.00 },
+  "expected_log_slope": -0.00645660,
+  "expected_intercept": 4.86753,
+  "expected_line_values": {
+    "0": { "y_hat": 4.86753, "line": 130.000 },
+    "2": { "y_hat": 4.85462, "line": 128.332 },
+    "6": { "y_hat": 4.82879, "line": 125.060 },
+    "15": { "y_hat": 4.77069, "line": 118.000 },
+    "21": { "y_hat": 4.73194, "line": 113.516 }
+  },
+  "expected_state_transitions": [
+    { "bar": 15, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "Anchor A=(2,130) (the LATER equal ATH)",
+      "rejected_because": "D-TL-02 anchors at the earliest bar achieving HA to span the longest descent; t=0 wins the tie over t=2.",
+      "numeric": "H[0]=H[2]=130=HA (global max, tied); smallest tA among ties = 0."
+    },
+    {
+      "candidate": "Equal ATH at t=2 invalidating the line as a structural pierce",
+      "rejected_because": "The slope is shallow enough that the t=2 equal high stays within eps of the line (dominated-within-tolerance), so no pierce.",
+      "numeric": "ln130=4.867534 vs y_hat(2)=4.854621; diff=0.012913 <= eps=0.02 -> within tolerance, not a pierce."
+    },
+    {
+      "candidate": "B=(6,122) as second anchor",
+      "rejected_because": "Its steeper line is pierced by the t=15 high (118) -> not envelope-valid; hull picks the shallower (15,118).",
+      "numeric": "m_6=(ln122-ln130)/6=-0.0105855; y_hat_6(15)=4.867534-0.158783=4.708751; ln118=4.770685 > 4.708751+0.02=4.728751 -> pierces."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.86753,
+    "yB": 4.77069,
+    "slope_formula": "m=(ln118-ln130)/(15-0)=(4.770685-4.867534)/15=-0.096849/15=-0.00645660",
+    "intercept_formula": "b=yA-m*0=4.867534",
+    "key_inequalities": [
+      "HA=130 tied at t=0 and t=2; earliest (t=0) anchors (D-TL-02).",
+      "Eligible pivots below ATH: t=6 (122) and t=15 (118); hull binds at (15,118).",
+      "line(2)=exp(4.85462)=128.332; the t=2 equal high (130) sits within eps -> dominated.",
+      "No close exceeds line+eps_break -> ACTIVE."
+    ],
+    "notes": "Locks the duplicate-ATH tie rule: earliest anchor, and a later equal high is tolerated within eps rather than breaking the line."
+  }
+}

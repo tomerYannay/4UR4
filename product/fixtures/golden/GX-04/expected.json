@@ -1,0 +1,76 @@
+{
+  "fixture_id": "GX-04",
+  "purpose": "A confirmed breakout followed by a dip back to the broken line that holds as support -> BROKEN_OUT then RETESTED.",
+  "category": "clean retest",
+  "spec_refs": ["§11", "§13.2", "§16", "§16(worked example)", "D-TL-09"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 23,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "eps_retest": 0.01,
+    "W_retest": 20,
+    "h_hold": 3,
+    "eps_fail": 0.01,
+    "F_fail": 10,
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 12, "H": 88.00 },
+  "expected_log_slope": -0.0106528,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "12": { "y_hat": 4.47734, "line": 88.0000 },
+    "16": { "y_hat": 4.43473, "line": 84.3290 },
+    "20": { "y_hat": 4.39211, "line": 80.8110 }
+  },
+  "expected_state_transitions": [
+    { "bar": 12, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 16, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" },
+    { "bar": 20, "from": "BROKEN_OUT", "to": "RETESTED", "reason_code": "RETEST_HELD" }
+  ],
+  "expected_final_state": "RETESTED",
+  "breakout_bar": 16,
+  "confirmed_bar": 16,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED", "RETEST_HELD"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "t=20 being a FAILED_BREAKOUT instead of a retest",
+      "rejected_because": "The dip's close reclaims the line (>= line-eps_retest and > line-eps_fail); price held as support rather than failing.",
+      "numeric": "ln(C[20])=ln(82.00)=4.406719 >= y_hat(20)-eps_retest=4.392114-0.01=4.382114 (held) and > line-eps_fail=4.382114 (not failed)."
+    },
+    {
+      "candidate": "No retest (dip never reached the line)",
+      "rejected_because": "The t=20 low reaches the line within eps_retest, satisfying the 'return' condition.",
+      "numeric": "ln(L[20])=ln(81.00)=4.394449 <= y_hat(20)+eps_retest=4.392114+0.01=4.402114 -> dipped to the line."
+    },
+    {
+      "candidate": "Retest outside the W_retest window",
+      "rejected_because": "The retest occurs within W_retest=20 bars of the breakout and holds within h_hold=3 bars.",
+      "numeric": "t_retest=20; breakout_bar=16; 20-16=4 <= W_retest=20; hold on the same bar (<= h_hold=3)."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.47734,
+    "slope_formula": "m=(ln88-ln100)/(12-0)=-0.127833/12=-0.0106528",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Breakout at t=16 (ln(C)=4.465908 > 4.444725).",
+      "Return: ln(L[20])=4.394449 <= y_hat(20)+eps_retest=4.402114.",
+      "Hold: ln(C[20])=4.406719 >= y_hat(20)-eps_retest=4.382114.",
+      "No FAILED_BREAKOUT before the retest -> RETEST_HELD (§16)."
+    ],
+    "notes": "Locks §16: retest = dip to the line (low within eps_retest) that holds (close reclaims within h_hold), inside W_retest, with no structural failure."
+  }
+}

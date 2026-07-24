@@ -1,0 +1,74 @@
+{
+  "fixture_id": "GX-05",
+  "purpose": "A confirmed breakout that later re-closes decisively below the line within F_fail bars -> BROKEN_OUT then FAILED_BREAKOUT (a distinct labeled outcome, not a retroactive un-firing).",
+  "category": "false breakout",
+  "spec_refs": ["§11", "§13.2", "§15", "§15(worked example)", "D-TL-08"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 23,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "eps_fail": 0.01,
+    "F_fail": 10,
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 12, "H": 88.00 },
+  "expected_log_slope": -0.0106528,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "12": { "y_hat": 4.47734, "line": 88.0000 },
+    "16": { "y_hat": 4.43473, "line": 84.3290 },
+    "19": { "y_hat": 4.40277, "line": 81.6764 },
+    "20": { "y_hat": 4.39211, "line": 80.8110 }
+  },
+  "expected_state_transitions": [
+    { "bar": 12, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 16, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" },
+    { "bar": 20, "from": "BROKEN_OUT", "to": "FAILED_BREAKOUT", "reason_code": "FAILED_BREAKOUT" }
+  ],
+  "expected_final_state": "FAILED_BREAKOUT",
+  "breakout_bar": 16,
+  "confirmed_bar": 16,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED", "FAILED_BREAKOUT"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "Failure at t=19 (close just below the line)",
+      "rejected_because": "At t=19 the close is below the line but NOT below line-eps_fail, so it does not yet qualify as a failed breakout.",
+      "numeric": "ln(C[19])=ln(81.00)=4.394449 vs y_hat(19)-eps_fail=4.402767-0.01=4.392767; 4.394449 > 4.392767 -> not yet failed."
+    },
+    {
+      "candidate": "Retroactively un-firing the breakout",
+      "rejected_because": "The breakout at t=16 is a real, already-fired event; failure is a distinct forward outcome (§13.3, §15), not an un-firing.",
+      "numeric": "breakout_bar==confirmed_bar==16 remain fixed; FAILED_BREAKOUT is a separate transition at t=20."
+    },
+    {
+      "candidate": "Failure outside the F_fail window",
+      "rejected_because": "The failing close occurs within F_fail=10 bars of the breakout, so it counts.",
+      "numeric": "t_fail=20; breakout_bar=16; 20-16=4 <= F_fail=10 -> in window."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.47734,
+    "slope_formula": "m=(ln88-ln100)/(12-0)=-0.127833/12=-0.0106528",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Breakout at t=16: ln(C[16])=4.465908 > y_hat(16)+eps_break=4.444725.",
+      "t=19 close below line but within eps_fail -> not failed.",
+      "t=20 failure: ln(C[20])=ln(79.00)=4.369448 < y_hat(20)-eps_fail=4.392114-0.01=4.382114.",
+      "Failure within F_fail=10 bars of breakout (20-16=4)."
+    ],
+    "notes": "Locks §15: FAILED_BREAKOUT requires a close below line-eps_fail within F_fail bars; a close merely below the line (t=19) does not qualify."
+  }
+}

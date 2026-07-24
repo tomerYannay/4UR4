@@ -1,0 +1,64 @@
+{
+  "fixture_id": "GX-09",
+  "purpose": "ATH on the first bar (IPO-peak secular decline): tA=0 is a valid anchor and a descending envelope line forms from t=0.",
+  "category": "normal valid variant (ATH on first bar)",
+  "spec_refs": ["§4", "§5", "§6", "§7", "§8", "§18(ATH on first bar)", "D-TL-04"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 15,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 200.00 },
+  "expected_second_anchor": { "t": 10, "H": 150.00 },
+  "expected_log_slope": -0.0287682,
+  "expected_intercept": 5.29832,
+  "expected_line_values": {
+    "0": { "y_hat": 5.29832, "line": 200.000 },
+    "5": { "y_hat": 5.15448, "line": 173.201 },
+    "10": { "y_hat": 5.01064, "line": 150.000 },
+    "14": { "y_hat": 4.89556, "line": 133.695 }
+  },
+  "expected_state_transitions": [
+    { "bar": 10, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "B=(5,170) as second anchor",
+      "rejected_because": "Its steeper line passes below the t=10 pivot high (150), which pierces beyond eps -> not envelope-valid.",
+      "numeric": "m_5=(ln170-ln200)/5=(5.135798-5.298317)/5=-0.0325038; y_hat_5(10)=5.298317-0.325038=4.973279; ln150=5.010635 > 4.973279+0.02=4.993279 -> pierces."
+    },
+    {
+      "candidate": "tA!=0 (treating t=0 as not-anchorable because it cannot be a k=3 confirmed pivot)",
+      "rejected_because": "The ATH bar is an anchor by construction regardless of pivot confirmation (§5, §18 ATH-on-first-bar).",
+      "numeric": "HA=max H[t]=200 at t=0 (unique global max); anchor A=(0,200) accepted."
+    }
+  ],
+  "geometry_check": {
+    "yA": 5.29832,
+    "yB": 5.01064,
+    "slope_formula": "m=(ln150-ln200)/(10-0)=(5.010635-5.298317)/10=-0.287682/10=-0.0287682",
+    "intercept_formula": "b=yA-m*0=5.298317",
+    "key_inequalities": [
+      "Pivots below ATH: t=5 (170) and t=10 (150), both k=3 confirmed.",
+      "line(5)=exp(5.15448)=173.201 >= H[5]=170 -> dominated.",
+      "Only (10,150) dominates every intervening high within eps; (5,170) fails on t=10.",
+      "No close exceeds line+eps_break -> ACTIVE."
+    ],
+    "notes": "Demonstrates the §18 'ATH on the first bar' edge case resolves to a normal valid line, not an error."
+  }
+}
