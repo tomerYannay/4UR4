@@ -1,0 +1,128 @@
+{
+  "$schema": "../../schema/real-annotation.schema.json",
+  "fixture_id": "RM-01",
+  "status": "awaiting-market-data",
+  "source_evidence": {
+    "file": "source-chart.png",
+    "sha256": "d191300e3cde075aac86838185bfa5797a2c6d0e6dd6f1c2a8558a414ab05b15",
+    "bytes": 137151,
+    "dimensions": { "width": 1272, "height": 672 },
+    "immutable": true
+  },
+  "product_owner_metadata": {
+    "symbol": "SPCX",
+    "exchange": "unknown",
+    "timeframe": "1D",
+    "scale": "logarithmic",
+    "visible_date_range": { "from": "2026-06-12", "to": "2026-07-24" },
+    "data_source": "TradingView",
+    "timezone": "unknown",
+    "stated_ath_anchor": {
+      "date": "2026-06-16",
+      "price": 225.64,
+      "source": "product-owner-stated"
+    },
+    "stated_second_anchor": {
+      "date": "2026-07-21",
+      "price": null,
+      "source": "product-owner-stated"
+    },
+    "stated_breakout_date": null,
+    "stated_retest_date": null
+  },
+  "drawn_line_metadata": {
+    "construction": "Manually extended TradingView trendline (two-point construction).",
+    "magnet_mode": true,
+    "intended_endpoints": {
+      "from": {
+        "date": "2026-06-16",
+        "price": 225.64,
+        "source": "product-owner-stated"
+      },
+      "to": {
+        "date": "2026-07-21",
+        "price": null,
+        "source": "product-owner-stated"
+      }
+    },
+    "notes": "The orange line is a manually extended TradingView trendline; magnet mode snapped endpoints to candle highs. Intended line connects the ATH high 2026-06-16 @ 225.64 to the later high on 2026-07-21. The exact second-anchor price is NOT inferred from screenshot pixels. The drawn line is NOT treated as algorithmic ground truth until verified against actual OHLCV."
+  },
+  "product_owner_interpretation": {
+    "bullets": [
+      "Orange descending line starts from the stock's all-time-high wick.",
+      "Intended second anchor is the later high wick on 2026-07-21.",
+      "Line should remain above intervening highs per the approved upper-log-hull rule.",
+      "A breakout is the first daily close above the line.",
+      "Persistence and volume are confidence features, not breakout validity gates.",
+      "A retest is a later contact/overlap with the line where the daily close holds above it."
+    ]
+  },
+  "expected_regions": {
+    "ath_anchor": {
+      "date": "2026-06-16",
+      "price": 225.64,
+      "provenance": "product-owner-stated",
+      "note": "PO-stated ATH high/anchor. Not pixel-derived; awaits OHLCV verification."
+    },
+    "second_anchor": {
+      "date": "2026-07-21",
+      "price": null,
+      "provenance": "product-owner-stated",
+      "note": "PO-stated second-anchor DATE only. Price unknown and intentionally null — MUST NOT be inferred from pixels. Note: whether 2026-07-21 is also the upper-log-hull canonical second anchor is UNRESOLVED (see spec_contradiction_report SC-1)."
+    },
+    "breakout": {
+      "date": null,
+      "price": null,
+      "provenance": "unknown",
+      "note": "Expected breakout region unknown; awaits verified OHLCV and first-daily-close test (§13)."
+    },
+    "retest": {
+      "date": null,
+      "price": null,
+      "provenance": "unknown",
+      "note": "Expected retest region unknown; awaits verified OHLCV (§16)."
+    }
+  },
+  "verified_market_data": {
+    "ohlcv_bars": null,
+    "ath_anchor": null,
+    "second_anchor": null,
+    "log_slope": null,
+    "intercept": null,
+    "line_values": null,
+    "breakout_bar": null,
+    "confirmed_bar": null,
+    "retest_bar": null,
+    "adjustment_basis": null,
+    "data_provider": null,
+    "provenance": null
+  },
+  "visual_acceptance_checklist": [
+    { "item": "Line begins at the intended ATH wick on 2026-06-16 at 225.64.", "result": "pending" },
+    { "item": "Line touches the intended later high wick on 2026-07-21.", "result": "pending" },
+    { "item": "Line does not improperly cut through intervening highs.", "result": "pending" },
+    { "item": "Projected line visually matches the PO's orange TradingView line.", "result": "pending" },
+    { "item": "Breakout bar classification matches the PO's expectation.", "result": "pending" },
+    { "item": "Retest, if present, matches the approved rule.", "result": "pending" }
+  ],
+  "product_owner_approval": "pending",
+  "unresolved_metadata": [
+    "exchange (unknown)",
+    "timezone (unknown)",
+    "second-anchor high price on 2026-07-21 (unknown; null until verified OHLCV)",
+    "breakout date (unknown)",
+    "retest date (unknown)",
+    "all verified OHLCV bars and recomputed geometry (unavailable; awaits licensed data provider, HD-06)"
+  ],
+  "spec_contradiction_report": {
+    "status": "open",
+    "items": [
+      {
+        "id": "SC-1",
+        "description": "The PO's orange line is a TWO-POINT construction (ATH 2026-06-16 -> later high 2026-07-21) drawn in TradingView. The approved canonical rule is the UPPER-LOG-HULL (§8, D-TL-04): the shallowest descending log line from the ATH that stays above ALL intervening highs within tolerance. A two-point line and the hull line coincide ONLY if no intervening high pierces the two-point line and no shallower dominating line exists. Qualitatively (visual, unverified) the drawn two-point line appears to run close to — and possibly through — some intervening candle highs in the mid-section, so it is UNRESOLVED whether the PO's intended second anchor (2026-07-21) equals the hull-canonical second anchor. This MUST be checked against real OHLCV once available. If intervening highs pierce the two-point line, the hull rule would select a DIFFERENT second anchor than 2026-07-21; that discrepancy must be surfaced to the Product Owner, NOT resolved by silently editing the spec or this annotation. Recorded as a risk/contradiction, not a decision.",
+        "spec_refs": ["§8", "D-TL-04", "D-TL-05", "§13", "§16"],
+        "resolution": "unresolved-awaiting-ohlcv"
+      }
+    ]
+  }
+}

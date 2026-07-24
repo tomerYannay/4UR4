@@ -138,6 +138,21 @@ layers are complementary: synthetic fixtures pin the deterministic arithmetic; r
 validate that the arithmetic captures the intended real-world object. **No market data is
 acquired now** (build-freeze + human-gated provider selection, HD-06/HD-07).
 
+## 6a. Fixture layers (synthetic vs real-market)
+
+| Layer | Count | Status | Location |
+|-------|-------|--------|----------|
+| **Synthetic golden fixtures** | **18** | complete, independently verified (see `VERIFICATION.md`) | `golden/GX-01 … GX-18` |
+| **Real-market fixtures** | **1 (RM-01)** | **pending data and Product Owner approval** (`status: awaiting-market-data`, `product_owner_approval: pending`) | `real/RM-01/` |
+
+The two layers are complementary and must not be conflated: the **synthetic** set pins the
+deterministic arithmetic (spec-derived expected values), while the **real-market** set is the
+independent, non-circular ground truth (human-annotated real charts). **RM-01** is the
+Product Owner's original chart — recorded now as immutable source evidence plus annotation,
+with all verified OHLCV/geometry fields left `null` until licensed data exists. See
+[`real/RM-01/README.md`](real/RM-01/README.md) and the process in
+[`real-market-plan.md`](real-market-plan.md). The synthetic catalog in §3 is unchanged.
+
 ## 7. Files
 
 - `README.md` — this document.
@@ -147,6 +162,12 @@ acquired now** (build-freeze + human-gated provider selection, HD-06/HD-07).
 - `golden/<ID>/expected.json` — the expected output for `<ID>`, schema-validated.
 - `real-market-plan.md` — plan to add human-reviewed real-market fixtures as independent
   ground truth (acquires no data now).
+- `schema/real-annotation.schema.json` — JSON Schema for real-market `annotation.json`
+  (numeric market-data/geometry fields nullable until verified OHLCV exists).
+- `real/RM-01/source-chart.png` — immutable source evidence (do not edit/regenerate).
+- `real/RM-01/annotation.json` — RM-01 annotation instance (`status: awaiting-market-data`).
+- `real/RM-01/README.md` — human-readable RM-01 record (evidence, metadata,
+  visual-acceptance checklist, spec-contradiction report).
 
 *Design artifact under GOV-015. It authorizes no build; implementation of a detector that
 reproduces these fixtures follows only when a Ready ticket exists and the freeze is lifted
