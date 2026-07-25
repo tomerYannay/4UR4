@@ -30,9 +30,13 @@ mandates:
 - Transform: `y[t] = ln(H[t])` (§3).
 - Anchor `A = (tA, HA)`: earliest bar at the global-max high (§4, D-TL-02).
 - Pivot highs: strict `>` on the left, `>=` on the right over `k` bars (§5), default `k=3`.
-- Second anchor `B* = (tB, HB)`: the **upper log-hull** selection (§8, D-TL-04) — the
-  shallowest descending log line from `A` that dominates all intervening pivot highs within
-  tolerance `eps`.
+  **Pivots are SECONDARY / NON-AUTHORITATIVE for selection** (Product Owner decision
+  2026-07-25, resolves SC-2): they serve only visualization, descriptive metadata, confidence
+  features, and provably-lossless optimization — they never gate second-anchor candidacy.
+- Second anchor `B* = (tB, HB)`: the **all-highs upper log-hull** selection (§6, §8, D-TL-04,
+  D-TL-05) — the shallowest descending log line from `A` that dominates **all later bar
+  highs** (not a pivot subset) within tolerance `eps`. Candidacy is over **every** later bar
+  high; a non-pivot bar high can be the canonical anchor (see GX-19 / RM-01).
 - Line geometry (§7):
   - slope `m = (yB - yA) / (tB - tA)`
   - intercept `b = yA - m * tA`
@@ -70,14 +74,19 @@ figures**; where hand computation of `exp()` leaves ambiguity at the 6th figure,
 | GX-08 | invalidation | Monotonic decline -> **NO_VALID_SECOND_ANCHOR** (no line) | §5, §6, §18 |
 | GX-10 | stock split edge case | Unadjusted ~2:1 jump -> **SUSPECTED_UNADJUSTED_SPLIT**, do not fit | §2, §18 |
 | GX-18 | missing-data edge case | Missing high / non-positive price -> **INVALID_INPUT / INVALID_PRICE**, no geometry | §1, §18 |
+| GX-19 | non-pivot canonical anchor (SC-2 proof) | Non-pivot bar B*=(16,120) is the all-highs upper-log-hull anchor; a strict k=3 prefilter would wrongly pick the only k=3 pivot (4,160) whose steeper line is pierced/does-not-dominate -> all-highs hull selects correctly | §5, §6, §8, D-TL-03/05 |
 
-**Fixture count: 18.** Category coverage: normal valid (GX-01, GX-09), repeated ATH
+**Fixture count: 19.** (SC-2 proof GX-19 added per the Product Owner decision 2026-07-25;
+`k=3` pivots are non-authoritative for selection, and the canonical anchor is the all-highs
+upper-log-hull vertex.) **Existing fixtures' canonical anchors are unchanged** — each selected
+`B*` is already the all-highs upper-log-hull vertex, so removing the pivot precondition does
+not move any prior anchor. Category coverage: normal valid (GX-01, GX-09), repeated ATH
 (GX-12), multiple competing second anchors (GX-02), intervening-high invalidation (GX-13),
 nearly-equal slopes / envelope tie (GX-14), tolerance-boundary (GX-15), wick-only crossing
 (GX-03), first-close breakout (GX-16), volume-as-confidence (GX-11), false breakout
 (GX-05), clean retest (GX-04), deep-undercut-not-a-retest (GX-17), expiry & recalculation
 (GX-07, GX-06), invalidation / no-second-anchor (GX-08), stock-split (GX-10), missing-data
-(GX-18).
+(GX-18), non-pivot canonical anchor / SC-2 proof (GX-19).
 
 Several breakout-family fixtures deliberately **share the same base line** `A=(0,100),
 B*=(12,88)` (GX-01, GX-03, GX-16, GX-11, GX-05, GX-04, GX-17) so the differences are
@@ -142,7 +151,7 @@ acquired now** (build-freeze + human-gated provider selection, HD-06/HD-07).
 
 | Layer | Count | Status | Location |
 |-------|-------|--------|----------|
-| **Synthetic golden fixtures** | **18** | complete, independently verified (see `VERIFICATION.md`) | `golden/GX-01 … GX-18` |
+| **Synthetic golden fixtures** | **19** | complete, independently verified (see `VERIFICATION.md`); GX-19 added as the SC-2 proof | `golden/GX-01 … GX-19` |
 | **Real-market fixtures** | **1 (RM-01)** | **verified from licensed OHLCV; SC-1 = MATCH; Product Owner approval `pending`** (`status: verified`) | `real/RM-01/` |
 
 The two layers are complementary and must not be conflated: the **synthetic** set pins the
@@ -151,8 +160,10 @@ independent, non-circular ground truth (real charts + licensed OHLCV). **RM-01**
 Product Owner's original SPCX chart — immutable chart image + immutable Alpha Vantage OHLCV
 source, with geometry **independently recomputed** from real data: **SC-1 resolves as MATCH**
 (2026-07-21 is the upper-log-hull canonical anchor; 0 envelope violations; no breakout through
-2026-07-24). One open item **SC-2** (the anchor is not a `k=3` pivot) is surfaced for the PO,
-not resolved. Product Owner approval of the result is **`pending`**. See
+2026-07-24). **SC-2** (the anchor is not a `k=3` pivot) is now **RESOLVED by the Product
+Owner decision 2026-07-25**: the upper-log-hull over **all** highs is canonical and the pivot
+prefilter is non-authoritative (spec §5/§6/§8, D-TL-05); the synthetic proof is **GX-19**.
+Product Owner approval of the RM-01 *result* remains **`pending`** (a separate review). See
 [`real/RM-01/README.md`](real/RM-01/README.md) and the process in
 [`real-market-plan.md`](real-market-plan.md). The synthetic catalog in §3 is unchanged.
 

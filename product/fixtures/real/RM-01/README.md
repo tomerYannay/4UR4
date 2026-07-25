@@ -7,7 +7,7 @@
 > golden set in [`../../README.md`](../../README.md).
 >
 > **Status: `verified` (geometry independently recomputed from licensed OHLCV) · Product
-> Owner approval: `pending` (awaiting PO review of the calculated result).**
+> Owner approval: `approved` (2026-07-25).** SC-1 = MATCH; SC-2 resolved via HD-11.
 
 The machine-validated record is [`annotation.json`](annotation.json), conforming to
 [`../../schema/real-annotation.schema.json`](../../schema/real-annotation.schema.json). The
@@ -108,7 +108,7 @@ Computed from `input.csv` using **trading-bar ordinal indices** (not calendar-da
 | 5 | Breakout bar classification matches the PO's expectation | ✅ pass | No breakout through 2026-07-24 |
 | 6 | Retest matches the approved rule | ✅ pass | No retest (no breakout occurred) |
 
-All six pass on the calculated result. **Product Owner review of this result is still required** before approval advances.
+All six pass on the calculated result — **approved by the Product Owner (2026-07-25)**.
 
 ---
 
@@ -116,8 +116,8 @@ All six pass on the calculated result. **Product Owner review of this result is 
 
 **SC-1 — RESOLVED = `MATCH`.** The independent calculation confirms the PO's intended two-point line (ATH 2026-06-16 → 2026-07-21) **coincides with the canonical upper-log-hull line**: 2026-07-21 is the shallowest-slope (hull) anchor over all later highs, **no intervening high pierces** the line (0 violations; closest −0.740% at 2026-07-06). This rules out `MISMATCH_INTERVENING_HIGH` and `MISMATCH_DIFFERENT_CANONICAL_ANCHOR`; the evidence is exact (not a tolerance judgement), so `MATCH` rather than `VISUAL_MATCH_WITHIN_TOLERANCE`, and there is enough data (29 bars) so not `INSUFFICIENT_DATA`.
 
-**SC-2 — OPEN (surfaced, NOT resolved).** 2026-07-21 is the upper-log-hull vertex over *all* later highs **but is not a `k=3` pivot high** per §5/§6: 2026-07-17 (high 130.33) is a higher bar within 3 bars, so 2026-07-21 is only a `k=1` local high. The **only** `k=3` pivot after the ATH is 2026-06-30, whose steeper line does **not** dominate later highs. So a strict reading of the pivot-eligibility precondition (§5/§6, `k=3`) would exclude the very anchor the hull selects and the PO intends. **Open question for the Product Steward/PO:** reconcile the pivot filter `k` (D-TL-03) with the upper-log-hull-over-all-highs selection (e.g. a smaller/tunable `k`, or hull precedence for the ATH-adjacent anchor). **The spec and this annotation are left unchanged** pending a human decision ([GOV-007](../../../../governance/product-focus.md) — surfaced, not absorbed).
+**SC-2 — RESOLVED 2026-07-25 (Product Owner decision, [HD-11](../../../human-decisions.md)).** The surfaced question — 2026-07-21 is the upper-log-hull vertex over *all* later highs **but is not a `k=3` pivot high** (2026-07-17 @130.33 is higher within 3 bars; the only `k=3` pivot after the ATH, 2026-06-30, does not dominate) — has been ruled on: **the upper-log-hull envelope rule is canonical and must not depend on a fixed pivot-high prefilter.** Pivot detection is secondary/non-authoritative (visualization, descriptive metadata, confidence, provably-lossless optimization only) and **must never change the canonical anchor**. The trendline spec §5/§6/§8/D-TL-03/D-TL-05 were revised accordingly, and golden fixture **GX-19** was added to prove a non-pivot high can be the canonical anchor (with a strict `k=3` prefilter choosing the wrong result). RM-01 is cited as the motivating real-world case. **This resolves the last open contradiction on RM-01.**
 
 ---
 
-*Design/evidence artifact under GOV-015. It authorizes no build. The geometry above is independently computed from licensed OHLCV as verification evidence; the Product Owner's approval of this result remains `pending`.*
+*Design/evidence artifact under GOV-015. It authorizes no build. The geometry above is independently computed from licensed OHLCV as verification evidence; the Product Owner **approved** this result on 2026-07-25 (SC-1 = MATCH, SC-2 resolved via HD-11).*

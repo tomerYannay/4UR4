@@ -1,0 +1,99 @@
+{
+  "fixture_id": "GX-19",
+  "purpose": "SC-2 proof: a NON-pivot bar high B*=(16,120) is the canonical all-highs upper-log-hull anchor; a strict k=3 pivot PREFILTER would wrongly select the only k=3 pivot (4,160), whose steeper line is pierced by later highs and does NOT dominate. The all-highs hull selects the non-pivot anchor correctly.",
+  "category": "non-pivot canonical anchor (SC-2 proof)",
+  "spec_refs": ["§5", "§6", "§8", "D-TL-03", "D-TL-05", "PO-decision-2026-07-25(SC-2)"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 21,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative only, never locked (HD-03, §13.5). No breakout occurs in this fixture, so eps_break is not exercised.",
+    "tolerance_version": "tol-2026.07-defaults"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 200.00 },
+  "expected_second_anchor": {
+    "t": 16,
+    "H": 120.00,
+    "reason": "All-highs upper-log-hull vertex: shallowest descending line from A dominating every later bar high within eps. NOT a k=3 pivot (H[16]=120 < H[13]=126 and < H[14]=120.5 within k=3), yet canonical per §6/§8 and the 2026-07-25 SC-2 decision (§5)."
+  },
+  "expected_log_slope": -0.0319266,
+  "expected_intercept": 5.29832,
+  "expected_line_values": {
+    "0": { "y_hat": 5.29832, "line": 200.000 },
+    "4": { "y_hat": 5.17061, "line": 176.022 },
+    "8": { "y_hat": 5.04290, "line": 154.919 },
+    "13": { "y_hat": 4.88327, "line": 132.062 },
+    "14": { "y_hat": 4.85135, "line": 127.915 },
+    "15": { "y_hat": 4.81942, "line": 123.893 },
+    "16": { "y_hat": 4.78749, "line": 120.000 },
+    "17": { "y_hat": 4.75557, "line": 116.229 },
+    "20": { "y_hat": 4.65979, "line": 105.613 }
+  },
+  "expected_state_transitions": [
+    { "bar": 16, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "B=(4,160) — the ONLY k=3 pivot after the ATH; what a strict k=3 PREFILTER would pick",
+      "rejected_because": "Its steeper line is pierced by later bar highs, so it is NOT envelope-valid. A strict k=3 pivot prefilter (restricting candidacy to pivots) would WRONGLY select this bar (or, treating it as invalid, wrongly emit NO_VALID_SECOND_ANCHOR) and thereby exclude the true canonical anchor at t=16. This is the SC-2 failure the 2026-07-25 decision forbids (§5).",
+      "numeric": "m_P=(ln160-ln200)/4=(5.075174-5.298317)/4=-0.223143/4=-0.0557859; y_hat_P(5)=5.298317-0.0557859*5=5.019390; ln158(high@t=5)=5.062595 > 5.019390+0.02=5.039390 -> pierces by 0.023205. Far downstream y_hat_P(16)=5.298317-0.0557859*16=4.405746 (line 81.90) << ln120=4.787492 -> pierces by ~0.38. P does not dominate."
+    },
+    {
+      "candidate": "B=(13,126) — a HIGHER-priced, earlier bar high",
+      "rejected_because": "Although its price (126) is higher than B*'s (120), its line from A is STEEPER (more negative slope) than B*'s, so it is not the shallowest dominating line. A higher price does not make a bar the canonical anchor; the shallowest-slope (upper-hull) bar does.",
+      "numeric": "m=(ln126-ln200)/13=(4.836282-5.298317)/13=-0.462035/13=-0.0355412; -0.0355412 < -0.0319266 (steeper than B*). It sits below the A->B* line: y_hat_B*(13)=4.883272 (line 132.062) > ln126=4.836282 -> dominated by B*."
+    },
+    {
+      "candidate": "B=(14,120.5) — the HIGHER bar within k=3 that makes t=16 a non-pivot",
+      "rejected_because": "This is the bar that disqualifies t=16 as a k=3 pivot (it is higher and within 3 bars). Yet it is NOT the canonical anchor: being earlier, its line from A is STEEPER than B*'s, so B* (later, slightly lower) gives the shallower dominating line. This is exactly the RM-01 geometry (a higher, earlier bar yields a steeper — not shallower — slope).",
+      "numeric": "m=(ln120.5-ln200)/14=(4.791650-5.298317)/14=-0.506667/14=-0.0361905; -0.0361905 < -0.0319266 (steeper than B*). Dominated by B*: y_hat_B*(14)=4.851345 (line 127.915) > ln120.5=4.791650."
+    },
+    {
+      "candidate": "B*=(16,120) itself piercing any bar high (validity of the selected line)",
+      "rejected_because": "The selected all-highs hull line dominates every bar high within eps=0.02, so nothing pierces it -> it is the valid canonical envelope.",
+      "numeric": "Tightest downstream margins: t=17 high 114 < line 116.229; t=19 high 106 < line 109.041; t=20 high 102 < line 105.613. All later highs strictly below the line -> 0 pierces."
+    },
+    {
+      "candidate": "SC-2 documentation (explicit)",
+      "rejected_because": "The selected anchor is NOT a k=3 pivot; the only k=3 pivot (t=4, H=160) would give the wrong line (steeper, pierced, non-dominating); the all-highs upper-log-hull selects the non-pivot bar t=16 correctly (SC-2). Pivot detection is secondary/non-authoritative (§5, D-TL-03) and must never change the canonical anchor (D-TL-05).",
+      "numeric": "Pivots after ATH: ONLY t=4 (H=160 > H[1..3]=150,155,158 and >= H[5..7]=158,154,150) is a k=3 pivot. t=16 is only a k=1 local high (H[16]=120 > H[15]=119, >= H[17]=114) but NOT k=3 (H[16]=120 < H[13]=126, < H[14]=120.5). Shallowest slope among ALL later highs is at t=16 (m=-0.0319266, closest to zero) -> upper-hull vertex."
+    }
+  ],
+  "geometry_check": {
+    "yA": 5.29832,
+    "yB": 4.78749,
+    "slope_formula": "m=(ln120-ln200)/(16-0)=(4.787492-5.298317)/16=-0.510826/16=-0.0319266",
+    "intercept_formula": "b=yA-m*tA=5.298317-(-0.0319266*0)=5.298317",
+    "key_inequalities": [
+      "Anchor A=(0,200): yA=ln200=5.298317. Candidate set = ALL later bar highs (t>0), NOT a pivot subset (§8, 2026-07-25 SC-2 decision).",
+      "Shallowest-slope (upper-hull) test over all later highs: slope(A->t) = (ln H[t]-5.298317)/t. Max (closest to zero) is at t=16: m=-0.0319266.",
+      "Comparators steeper (more negative): (4,160)->-0.0557859; (13,126)->-0.0355412; (14,120.5)->-0.0361905; therefore none is the shallowest dominating line.",
+      "Domination: the A->B* line (m=-0.0319266, b=5.298317) sits at/above EVERY bar high within eps=0.02 -> 0 pierces (t=16 lies exactly on the line).",
+      "Non-pivot proof: H[16]=120 is NOT a k=3 pivot because H[16] < H[13]=126 and H[16] < H[14]=120.5 (higher bars within k=3). It is only a k=1 local high.",
+      "Only k=3 pivot after ATH = t=4 (H=160). Its line is pierced immediately: y_hat_P(5)=5.019390 < ln158-eps=5.042595 -> t=5 high pierces; P does NOT dominate -> a k=3 prefilter is WRONG.",
+      "Conclusion: all-highs upper-log-hull selects the NON-pivot bar B*=(16,120); a strict k=3 pivot prefilter would select the wrong anchor (4,160) or none. SC-2 proven."
+    ],
+    "pivot_analysis": {
+      "k": 3,
+      "k3_pivots_after_ath": [{ "t": 4, "H": 160.00 }],
+      "selected_anchor_is_k3_pivot": false,
+      "selected_anchor_local_high_order": "k=1 (H[16]=120 > H[15]=119 and >= H[17]=114) but NOT k=3",
+      "disqualifying_higher_bars_within_k3": [{ "t": 13, "H": 126.00 }, { "t": 14, "H": 120.50 }],
+      "note": "Mirrors RM-01: the upper-log-hull vertex over all highs is a non-pivot bar; the only k=3 pivot gives a steeper, non-dominating line. Pivot status is non-authoritative for selection (§5, D-TL-03, D-TL-05)."
+    },
+    "notes": "Small, hand-verifiable (21 bars). Geometry to 6 significant figures; where hand exp() is ambiguous at the 6th figure the inequalities above (not the rounded line display) are authoritative, per fixtures/README.md §2. This fixture is the SC-2 proof referenced by trendline-specification.md §5 (Product Owner decision 2026-07-25)."
+  }
+}

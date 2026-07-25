@@ -202,7 +202,7 @@
       "note": "No retest, because no breakout occurred (matches PO and the approved rule)."
     }
   ],
-  "product_owner_approval": "pending",
+  "product_owner_approval": "approved",
   "unresolved_metadata": [
     "exchange (still unknown)",
     "chart display timezone (still unknown; OHLCV source timezone is US/Eastern)",
@@ -210,7 +210,7 @@
     "SC-2 pivot-eligibility question (open; see spec_contradiction_report)"
   ],
   "spec_contradiction_report": {
-    "status": "open",
+    "status": "resolved-with-po",
     "items": [
       {
         "id": "SC-1",
@@ -227,15 +227,17 @@
       },
       {
         "id": "SC-2",
-        "verdict": "open-spec-question",
-        "resolution": "escalated-to-product-owner",
-        "description": "SURFACED, NOT silently resolved. 2026-07-21 is the pure upper-log-hull vertex over ALL later highs and matches PO intent, BUT it is NOT a k=3 pivot high per §5/§6 (2026-07-17 @130.33 is higher within 3 bars; 2026-07-21 is a k=1 local high; the only k=3 pivot after the ATH is 2026-06-30, whose steeper line does NOT dominate). The strict pivot precondition (§5/§6, k=3) would exclude the anchor the hull selects and the PO intends. Open question for the Product Steward/PO: reconcile pivot filter k with the upper-log-hull-over-all-highs selection. Spec and annotation left unchanged pending human decision.",
+        "verdict": "MATCH",
+        "resolution": "resolved",
+        "description": "RESOLVED 2026-07-25 by Product Owner decision (HD-11): the upper-log-hull envelope rule is CANONICAL and must NOT depend on a fixed pivot-high prefilter; pivot detection is secondary/non-authoritative and must never change the canonical anchor. RM-01 is the motivating case: 2026-07-21 (129.88) is NOT a k=3 pivot (2026-07-17 @130.33 is higher within 3 bars) yet IS the canonical shallowest descending envelope anchor over all later highs; excluding it would contradict the approved rule. The trendline spec §5/§6/§8/D-TL-03/D-TL-05 were revised accordingly and golden fixture GX-19 was added to prove a non-pivot high can be the canonical anchor. No longer an open contradiction.",
         "spec_refs": [
           "§5",
           "§6",
           "§8",
           "D-TL-03",
-          "D-TL-05"
+          "D-TL-05",
+          "HD-11",
+          "GX-19"
         ]
       }
     ]

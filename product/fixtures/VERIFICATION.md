@@ -81,14 +81,29 @@ high exceeds the line; closest approach near 2026-07-06; no breakout / wick-brea
 MISMATCH_INTERVENING_HIGH / MISMATCH_DIFFERENT_CANONICAL_ANCHOR / INSUFFICIENT_DATA): the PO's
 two-point line coincides with the canonical upper-log-hull line; exact evidence, adequate data.
 
-**Disagreement recorded — SC-2 (open, not resolved):** 2026-07-21 is the hull vertex but is
-**not a `k=3` pivot high** (2026-07-17 @130.33 is higher within 3 bars; the only `k=3` pivot
-after the ATH is 2026-06-30, whose line does not dominate). The strict pivot precondition
-(§5/§6) would exclude the anchor the hull selects and the PO intends — surfaced to the Product
-Steward/PO, spec and annotation left unchanged.
+**SC-2 → RESOLVED 2026-07-25 (HD-11).** The recorded disagreement (2026-07-21 is the hull
+vertex but not a `k=3` pivot — 2026-07-17 @130.33 is higher within 3 bars; the only `k=3`
+pivot after the ATH, 2026-06-30, does not dominate) was ruled on by the Product Owner: the
+**upper-log-hull is canonical; the pivot prefilter is non-authoritative** and must never change
+the canonical anchor. The trendline spec (§5/§6/§8/D-TL-03/D-TL-05) was revised and golden
+fixture **GX-19** added as the deterministic proof.
 
-`annotation.json` is machine-validated against `schema/real-annotation.schema.json`. Product
-Owner approval remains **`pending`** pending review of this calculated result.
+`annotation.json` is machine-validated against `schema/real-annotation.schema.json`.
+**Product Owner approval: `approved` (2026-07-25).**
+
+## SC-2 regression check — all-highs upper-log-hull across the golden set
+
+After the pivot prefilter was made non-authoritative, an independent **all-highs hull check**
+recomputed, for every geometry fixture, the shallowest descending line from `A` over **all**
+later bar highs in the formation window (no pivot restriction) and confirmed it equals the
+stated second anchor and dominates all intervening highs:
+
+- **16 / 16 geometry fixtures**: stated `B*` **is** the all-highs upper-log-hull vertex — so
+  removing the pivot precondition **moves no existing anchor** (existing fixtures unchanged).
+- **GX-19** is the only fixture whose canonical `B*` is a **non-`k=3`-pivot** bar (`t=16`,
+  H=120): the sole `k=3` pivot (`t=4`, H=160) yields a steeper line pierced at `t=5`, so a
+  strict prefilter would pick the wrong anchor while the all-highs hull selects correctly —
+  the SC-2 proof. Geometry verifier: **19 / 19** fixtures reproduce to 6 significant figures.
 
 ---
 
