@@ -253,7 +253,7 @@
               "FAILED_BREAKOUT",
               "EXPIRED"
             ],
-            "description": "State at the START of this transition (§11). Must equal the previous transition's `to` — the list is a walk of the state machine, asserted by `tools/fixture-replay.mjs --all`."
+            "description": "State at the START of this transition (§11). Must equal the previous transition's `to` — the list is continuous, and that continuity is asserted by `tools/fixture-replay.mjs --all` (§21.6 rule 3). Continuity is not edge legality: the check does not reject an edge §11 omits."
           },
           "to": {
             "type": "string",
@@ -301,7 +301,7 @@
         "FAILED_BREAKOUT",
         "EXPIRED"
       ],
-      "description": "Terminal state of the series (§11). Closed set — WICK_BREAK is NOT a state (§11 annotates it 'transient, stays ACTIVE'); a wick-break fixture ends ACTIVE."
+      "description": "Terminal state of the series (§11). Closed set — WICK_BREAK is NOT a state: §11 draws it as an ACTIVE -> ACTIVE edge recorded by a reason code, so a wick-break fixture ends ACTIVE."
     },
     "breakout_bar": {
       "type": [

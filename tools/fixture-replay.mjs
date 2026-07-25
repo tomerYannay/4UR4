@@ -820,8 +820,8 @@ function checkTransitionChain(fx) {
   return problems;
 }
 
-// §1 OHLC coherence over the whole set. GX-18's incoherence is deliberate and is
-// caught earlier by the INVALID_INPUT/INVALID_PRICE guards, so it is exempt.
+// §1 OHLC coherence over the whole set. There is NO fixture-level exemption; see
+// the note in the body for why GX-18 does not need one.
 function checkOhlc(fx) {
   const problems = [];
   // NO blanket exemption for guard-rejected fixtures. The previous version skipped
@@ -844,6 +844,20 @@ function checkOhlc(fx) {
 // under ±20% around the documented eps_break. GX-15 is the one fixture HD-13
 // exempts by design. This must FAIL the run, not merely print.
 const EPS_BREAK_BOUNDARY_EXEMPT = new Set(['GX-15']);
+// HD-13 rule 2 says EXACTLY ONE fixture is retained as the boundary case, so the
+// whitelist itself is assertable: it must name exactly one fixture, and that fixture
+// must exist. Checked once, outside the per-fixture loop — the per-fixture inverse
+// assertion cannot detect a whitelisted fixture that was DELETED from the set.
+function checkBoundaryWhitelist(ids) {
+  const problems = [];
+  if (EPS_BREAK_BOUNDARY_EXEMPT.size !== 1) {
+    problems.push(`HD-13 rule 2 violated: the boundary-fixture whitelist names ${EPS_BREAK_BOUNDARY_EXEMPT.size} fixtures; the decision retains EXACTLY ONE`);
+  }
+  for (const id of EPS_BREAK_BOUNDARY_EXEMPT) {
+    if (!ids.includes(id)) problems.push(`HD-13 rule 2 violated: whitelisted boundary fixture ${id} is not in the fixture set — the set has no boundary case left`);
+  }
+  return problems;
+}
 function checkEpsBreakRule(fx) {
   const outcomes = new Set(robustness(fx, [0.8, 1.0, 1.2]).map((x) => `${x.state}/${x.breakout_bar}`));
   if (EPS_BREAK_BOUNDARY_EXEMPT.has(fx.id)) {
@@ -852,10 +866,14 @@ function checkEpsBreakRule(fx) {
     // invariant, the set would silently lose its only boundary case and this gate
     // would still pass. A whitelist entry must earn its exemption.
     return outcomes.size > 1 ? []
-      : [`HD-13 rule 2 violated: ${fx.id} is whitelisted as THE tolerance-boundary fixture but is now invariant under ±20% — the set has no boundary case left, or the whitelist entry is stale`];
+      : [`HD-13 rule 2 violated: ${fx.id} is whitelisted as THE tolerance-boundary fixture but is now invariant under ±20% — the whitelist entry is stale (a DELETED boundary fixture is caught separately by checkBoundaryWhitelist)`];
   }
   return outcomes.size === 1 ? []
     : [`HD-13 rule 1 violated: classification is not invariant under ±20% of eps_break (${[...outcomes].join(' vs ')})`];
+}
+
+function reportBoundaryWhitelist(ids) {
+  return checkBoundaryWhitelist(ids);
 }
 
 function robustness(fx, scales = [0.8, 1.0, 1.2]) {
@@ -908,6 +926,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
 
+  if (has('--all')) {
+    for (const p of reportBoundaryWhitelist(ids)) { console.log(`✗ whitelist  ${p}`); failures++; }
+  }
   for (const id of ids) {
     const fx = loadFixture(id);
     const p = paramsOf(fx.expected);

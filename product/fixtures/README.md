@@ -189,7 +189,10 @@ Phase-0 + Phase-4 evidence and pinned with the detector's `spec_version`. Every 
 whose bar-set is rejected by an input guard (GX-10, GX-18 — they never consult `eps_break`)
 records a sweep in `causal_record.eps_break_robustness`. **HD-13 rule 1 is machine-enforced:**
 `node tools/fixture-replay.mjs --all` **fails** if any ordinary fixture's classification moves
-under ±20%, with GX-15 whitelisted as the fixture HD-13 exempts. Counted from the committed
+under ±20%, with GX-15 whitelisted as the fixture HD-13 exempts. **Rule 2 is asserted too** —
+a whitelist is otherwise unfalsifiable, so the harness additionally requires that the
+whitelisted fixture is still non-invariant (a stale entry fails) and that the whitelist names
+exactly one fixture which is still present (a deleted boundary case fails). Counted from the committed
 sweeps: **22 of 23 invariant at ±20%** — all 22 ordinary fixtures comply, GX-15 being the
 designed exception — and **21 of 23 across the wider 0.5×–2× sweep**. The two that are not
 invariant across the wider sweep:
@@ -232,7 +235,7 @@ A fixture with *N* pre-breakout re-selections records *N* + (one per formation e
 `LINE_ESTABLISHED` transitions — usually *N*+1, but *N*+2 for GX-06 and GX-22, which form a
 line twice across a new-ATH reset. The re-selection entry is stamped at the bar the
 re-selected line takes **effect** (§21.6), and is emitted **before** that bar's own event, so
-the transition list is always a valid walk of the §11 state machine (asserted by `--all`).
+the transition list is always continuous — each `from` equals the previous `to` (§21.6 rule 3, asserted by `--all`).
 
 `INSUFFICIENT_BARS` is the standing reason for every bar before `t_form` in **every**
 fixture. It is not recorded as an event transition — a series always starts short — but it

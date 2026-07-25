@@ -319,16 +319,18 @@ line ever exists, `eps_break` is never consulted — the result is invariant acr
 | No look-ahead (`--nolookahead`) | truncating the series at any bar leaves every classification at or before that bar unchanged (§21.8 streaming ≡ batch) | **0 violations** |
 | Frozen line (`--frozen`) | the reported event line **is** `Λ_b` computed from `S_b`, and no post-breakout bar moves it (§21.5) | **0 violations** |
 | Formation (`--formation`) | (a) no line ACTIVE before `min_formation_bars`; (b) none within `min_ath_age_bars` of its anchor; (c) formation is immediate once all three gates hold; (d) replaying at `k ∈ {1,2,3,4,5,8}` produces byte-identical output | **0 violations** |
-| Transition-list continuity (`--all`) | each transition's `from` equals the previous `to`, and the last `to` equals the reported final state (§11) — continuity, not edge legality | **0 violations** |
+| Transition-list continuity (`--all`) | each transition's `from` equals the previous `to`, and the last `to` equals the reported final state (§21.6 rule 3) — continuity, not edge legality | **0 violations** |
 | OHLC coherence (`--ohlc`, `--all`) | every bar satisfies `low <= open, close <= high`; only bars with a MISSING field are skipped (GX-18's deliberate case) | **0 violations across 23 fixtures** |
-| `eps_break` rule (`--all`, gating) | HD-13 rule 1: every ORDINARY fixture's classification is invariant under ±20% of the documented `eps_break`. **This now FAILS the run**, rather than printing a verdict — GX-15 is the single fixture HD-13 exempts by design and is whitelisted explicitly | **all 22 ordinary fixtures comply** |
+| `eps_break` rule 1 (`--all`, gating) | HD-13 rule 1: every ORDINARY fixture's classification is invariant under ±20% of the documented `eps_break`. **This FAILS the run**, rather than printing a verdict — GX-15 is the single fixture HD-13 exempts by design and is whitelisted explicitly | **all 22 ordinary fixtures comply** |
+| `eps_break` rule 2 (`--all`, gating) | HD-13 rule 2: **exactly one** fixture is retained as the boundary case. Asserted two ways, because a whitelist is otherwise unfalsifiable — (a) the whitelisted fixture MUST still be non-invariant, so a stale entry is caught; (b) the whitelist MUST name exactly one fixture and that fixture MUST exist, so a *deleted* boundary case is caught too | **1 entry (GX-15), present and still non-invariant** |
 | `eps_break` sweep (`--robustness`, informational) | wider sensitivity picture | **22 / 23 invariant at ±20%** (exception: GX-15, by design) · **21 / 23 across 0.5×–2×** (exceptions: GX-15 and GX-12, the latter compliant with HD-13 and leaving the band only at 0.5×). Counted from the committed `causal_record.eps_break_robustness` sweeps, not asserted |
 
-### Round-2 corrections (2026-07-25) — findings from the independent review chain
+### Corrections from the independent review chain (2026-07-25)
 
 The first head of this audit (`c27a2d6`) was routed through Verification, Code Review,
-Project Audit and Strategic Review. They found the following, all of which are corrected in
-the head this section describes. They are recorded because a verification log that hides its
+Project Audit and Strategic Review. The chain ran four rounds against four successive heads. This table records what each
+round found and how it was corrected; a cell annotated "corrected again" was fixed in a
+later round than the one that first raised it. They are recorded because a verification log that hides its
 own misses is worth nothing.
 
 | Finding | Correction |

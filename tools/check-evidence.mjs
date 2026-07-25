@@ -58,8 +58,8 @@ chk(JSON.parse(readFileSync(join(ROOT, 'product/fixtures/real/RM-01/annotation.j
 // forever — exactly the failure mode this file exists to prevent, and the same reason
 // tools/fixture-replay.mjs carries a positive control on its formation checks. Feed a
 // known-bad instance through and require it to complain in each of the keyword
-// classes listed in MUST_CATCH (not every keyword the schema uses — `type`,
-// `required` and `minimum` are satisfied by this instance by construction).
+// classes listed in MUST_CATCH. `minimum` is the only schema keyword this instance
+// does not exercise (nothing it carries has a numeric lower bound).
 const control = [];
 chk({
   fixture_id: 'BAD-1',                                        // fails `pattern`
@@ -70,7 +70,7 @@ chk({
   expected_reason_codes: [], rejection_rationale: [], geometry_check: {},
   not_a_real_field: 1,                                        // fails additionalProperties
 }, schema, '', 'NEGATIVE-CONTROL', control);
-const MUST_CATCH = ['pattern', 'const mismatch', 'not in enum', 'additional property', 'minItems'];
+const MUST_CATCH = ['pattern', 'const mismatch', 'not in enum', 'additional property', 'minItems', 'missing required'];
 const missed = MUST_CATCH.filter((k) => !control.some((e) => e.includes(k)));
 if (missed.length) {
   errs.push(`NEGATIVE CONTROL FAILED — validator did not detect: ${missed.join(', ')}`
