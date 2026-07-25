@@ -28,6 +28,16 @@ named reason). Determinism is a hard requirement: no randomness, no
 floating-point-order-dependent tie resolution — ties are broken by explicit,
 stated rules.
 
+> **Reading order — §21 governs *when* every other rule is evaluated.**
+> [§21](#21-as-of-time-rolling-causal-evaluation-semantics--approved-hd-12)
+> (**HD-12**, Product Owner 2026-07-25) defines the **as-of-time (rolling causal)**
+> evaluation semantics: which bars are visible when a rule is applied, when a line
+> first becomes `ACTIVE`, and when the line is frozen. §4–§18 define **what** each
+> rule tests; §21 defines **against which line and with which bars visible**. Where
+> a section below says "the line", it means `Λ_t` — the line active at the **start**
+> of the evaluation bar — as defined in §21.1. §21 is **normative** and overrides any
+> reading of §4–§18 that would require future bars.
+
 ### Notation
 
 | Symbol | Meaning |
@@ -42,6 +52,11 @@ stated rules.
 | `ŷ(t) = m·t + b` | The trendline value in log space at index `t`. |
 | `line(t) = exp(ŷ(t))` | The trendline value back in price space at index `t`. |
 | `ε` | Tolerance, expressed in **log units** (§9). |
+| `S_t` | The **available prefix** at evaluation bar `t`: bars `0 … t−1` (§21.1, HD-12). |
+| `A_t`, `B*_t` | The as-of-time anchor and canonical second anchor computed **over `S_t`** (§21.1). |
+| `Λ_t` | The **line active at the start of bar `t`** — `(A_t, B*_t, m_t, b_t, tolerance_version)`, or `⊥` when no line is eligible (§21.1, §21.3). Capital lambda is used deliberately: `L[t]` already denotes the bar **low**. |
+| `Λ^F` | The **frozen event line** captured at a confirmed breakout (§21.5). |
+| `t_form` | The **formation bar**: the earliest `t` at which `Λ_t ≠ ⊥` (§21.3). |
 
 ---
 
@@ -144,6 +159,16 @@ would put `t=50` at 75, over-stating resistance at the midpoint.
 - **Wick semantics:** the ATH is the **bar high** (the wick), not the close. This
   matches resistance being tested by intrabar extremes.
 - **Anchor point:** `A = (tA, HA)` where `tA = argmax_t H[t]`.
+
+> **As-of-time reading (§21, HD-12).** "Full available delivered history" is
+> evaluated **causally**: at evaluation bar `t` the available history is the prefix
+> `S_t = bars[0 … t−1]`, so the anchor in force is
+> `A_t = (tA, HA)` with `HA = max over S_t of H[·]` and `tA` the **earliest**
+> bar of `S_t` attaining it (D-TL-02). The anchor is therefore **provisional**: it
+> is the all-time high *of the bars seen so far*. A later bar whose high exceeds
+> `HA` is a **new ATH** and triggers the reset of §10.3 / §17.1 / §21.7 — it does
+> **not** retroactively re-anchor already-evaluated bars. A detector MUST NOT use
+> any bar at index `≥ t` to determine the anchor in force at bar `t`.
 
 **Worked example.** Highs `[80, 120, 95, 130, 110]`. `HA = 130`, `tA = 3`.
 Anchor `A = (3, 130)`, `yA = ln 130 = 4.86753`.
@@ -301,6 +326,16 @@ of the price highs from the ATH forward — the tightest descending straight lin
 in log space that stays **at or above every intervening high** (within tolerance
 `ε`), anchored at `A`.
 
+> **Selection window is AS-OF-TIME (Product Owner 2026-07-25, HD-12 — resolves
+> OQ-7).** The algorithm below is evaluated over the **available prefix `S_t`**
+> (bars `0 … t−1`), **never** over the full series retroactively. `B*_t` is the
+> all-highs upper-log-hull vertex **of `S_t`**. While the line is `ACTIVE`, `B*`
+> **rolls forward**: each non-breakout bar's high enters the candidate set and the
+> resulting line becomes active from the **next** bar (§21.2 step 4, §21.6). At a
+> confirmed breakout the anchors are **frozen** (§21.5). A later high MUST NOT
+> re-select `B*` for an event that has already been classified (§21.8). See
+> [§21](#21-as-of-time-rolling-causal-evaluation-semantics--approved-hd-12).
+
 > **Candidates are ALL later bar highs (Product Owner 2026-07-25, resolves SC-2).**
 > The candidate set is **every** bar high with `t > tA`, **not** a pivot-restricted
 > subset. The canonical anchor is the **all-highs upper-log-hull vertex** — the
@@ -314,7 +349,8 @@ This is equivalent to walking the **upper convex hull** (in log space) of the
 ### Algorithm (deterministic)
 
 ```
-Given anchor A=(tA,yA) and the ordered set H of ALL bar highs with t>tA:
+Given anchor A=(tA,yA) and the ordered set H of ALL bar highs with t>tA
+  (as-of-time: restricted to the available prefix S_t = bars 0..t-1, §21.1):
 1. Consider candidate second anchors B ∈ H with yB < yA (descending).   # ALL highs, not pivots
 2. For each candidate B, define ŷ_B(t) = slope(A,B)·(t−tA)+yA.
 3. B is ENVELOPE-VALID iff for EVERY bar high (not just pivots) with tA < t_i < tB
@@ -438,16 +474,44 @@ Every invalidation MUST emit a **named reason code** (e.g. `INVALID_PIERCE`,
 `RESET_NEW_ATH`, `EXPIRED_POST_BREAKOUT`, `NO_VALID_SECOND_ANCHOR`) for
 explainability and evidence.
 
+> **As-of-time reconciliation (§21, HD-12).** Every test above is applied to the
+> **line active at the start of the evaluation bar** (`Λ_t`, §21.1), using only the
+> prefix `S_t`. The **classification** of bar `t` is final for bar `t`; the
+> **replacement geometry** it triggers takes effect **from bar `t+1`** and is never
+> applied retroactively to bar `t` itself (§21.2 step 4). Specifically:
+>
+> 1. **§10.1 structural pierce (pre-breakout).** Under all-highs candidacy a high
+>    that pierces `Λ_t` beyond `ε` **is itself an envelope-valid candidate** (§21.4,
+>    Lemma), so the mandated recomputation always resolves to a **shallower line
+>    re-bound at that very bar**: `B*_{t+1} = (t, H[t])`. The bar therefore emits
+>    `INVALID_PIERCE` **for the superseded line** and `LINE_ESTABLISHED` for the
+>    re-selected line, which becomes active at **`t+1`**; the episode continues
+>    (§21.6). The only cases in which recomputation does **not** yield a line are a
+>    **new ATH** (§10.3 → `RESET_NEW_ATH`) and a high that **ties or is otherwise
+>    incompatible with any descending candidate** (§10.4 → `NO_VALID_SECOND_ANCHOR`,
+>    fixture GX-20). **No new reason code is introduced by §21.**
+> 2. **§10.2 post-breakout expiry** is measured against the **frozen** line `Λ^F`
+>    (§21.5), not against a re-selected one.
+> 3. **§10.3 new ATH** is detected as-of-time against the provisional anchor `A_t`
+>    (§4 as-of-time note) and starts a **new formation** subject to §21.3.
+> 4. **§10.4** is evaluated on `S_t`; the guards of §18 (`INSUFFICIENT_BARS`,
+>    `ATH_TOO_RECENT`) are likewise evaluated on `S_t` and are the **formation
+>    eligibility** conditions of §21.3 — they keep a degenerate two-point line from
+>    ever becoming `ACTIVE`.
+
 ---
 
 ## 11. Line states (state machine)
 
 ```
-NONE ──(valid A,B found)──▶ ACTIVE
+NONE ──(formation eligibility met on S_t, §21.3: |S_t| ≥ 2k+2, ATH not within k
+        of the last available bar, and an envelope-valid B* exists)──▶ ACTIVE
 ACTIVE ──(bar high pierces > ε, close below)──▶ WICK_BREAK (transient, stays ACTIVE)
-ACTIVE ──(FIRST daily close above line + ε_break, §13)──▶ BROKEN_OUT (alert fires here)
-ACTIVE ──(new ATH)──▶ NONE (then recompute)
-ACTIVE ──(structural pierce, no breakout)──▶ NONE (recompute)
+ACTIVE ──(FIRST daily close above line + ε_break, §13)──▶ BROKEN_OUT (alert fires here;
+        the line is FROZEN as Λ^F at the start-of-bar state, §21.5)
+ACTIVE ──(new ATH)──▶ NONE (then recompute; new formation from t+1, §21.7)
+ACTIVE ──(structural pierce, no breakout)──▶ ACTIVE with a re-selected B* effective t+1
+        (§10 note, §21.6; → NONE only if §10.3 or §10.4 applies)
 BROKEN_OUT ──(price returns & holds §16)──▶ RETESTED
 BROKEN_OUT ──(price closes back below line − ε §15)──▶ FAILED_BREAKOUT
 BROKEN_OUT / RETESTED ──(~100 bars elapsed §17)──▶ EXPIRED ──▶ NONE (recompute)
@@ -455,6 +519,18 @@ BROKEN_OUT / RETESTED ──(~100 bars elapsed §17)──▶ EXPIRED ──▶ 
 
 State transitions are deterministic functions of the bar stream; each emits a
 reason code.
+
+> **As-of-time reading (§21, HD-12).** Every transition out of `ACTIVE` is decided
+> by comparing bar `t` against `Λ_t` — the line built from `S_t` only. Every
+> transition is **final for that bar**: once emitted, a transition MUST NOT be
+> revised, re-labelled, or withdrawn by any later bar (§21.8). Before `t_form`
+> (§21.3) the state is `NONE` with reason `INSUFFICIENT_BARS` or `ATH_TOO_RECENT`
+> (§18); while the state is `NONE` no breakout, wick-break, retest or failure event
+> can be emitted, because there is no line to test against. While the state is
+> `BROKEN_OUT` or `RETESTED`, **anchor re-selection is suspended** — the frozen line
+> `Λ^F` governs (§21.5) — so the transitions still available (`RETEST_HELD`,
+> `FAILED_BREAKOUT`, `EXPIRED_POST_BREAKOUT`, `RESET_NEW_ATH`) are **all** evaluated
+> against `Λ^F`, never against a re-selected line.
 
 > **Revised per HD-03 (Product Owner, 2026-07-24).** `ACTIVE → BROKEN_OUT` fires on
 > the **first** qualifying daily close above the line (§13), so
@@ -474,6 +550,13 @@ Touch counting: a **touch** is any bar whose high satisfies the `ε_touch` test
 2. Touch count and spacing feed Confidence (see confidence spec), not this
 detector's accept/reject logic.
 
+> **As-of-time reading (§21, HD-12).** A touch at bar `t` is evaluated against `Λ_t`
+> (§21.1) — the line active at the **start** of bar `t` — and is final for that bar
+> (§21.8). Because `B*` may roll forward before a breakout (§21.6), the anchor pair
+> counted as touches 1 and 2 is the pair of the line **in force at the time of the
+> count**; at a confirmed breakout it is the frozen pair of `Λ^F` (§21.5). Touch
+> counting is a confidence input only, so this never affects accept/reject logic.
+
 ---
 
 ## 13. Confirmed breakout definition
@@ -492,10 +575,22 @@ A **breakout candidate** at bar `t` is the **first daily close above the line +
 tolerance**:
 
 ```
-ln(C[t]) > ŷ(t) + ε_break            # close (not the wick) exceeds the line by tolerance
+ln(C[t]) > ŷ_t(t) + ε_break          # close (not the wick) exceeds the line by tolerance
+                                     # ŷ_t = the line Λ_t ACTIVE AT THE START of bar t (§21.1)
 ```
 
 The candidate is the first bar in the current `ACTIVE` episode to satisfy this.
+
+> **As-of-time reading (§21, HD-12) — binding.** `ŷ_t(t)` is the value at index `t`
+> of `Λ_t`, the line computed from the **available prefix `S_t` = bars `0 … t−1`**.
+> Bar `t`'s own high MUST NOT enter the candidate set used to build the line against
+> which bar `t`'s close is judged (§21.2 steps 1–2): **the evaluation bar may never
+> redefine the line that judges it.** "First bar in the current `ACTIVE` episode"
+> means the first bar whose close clears **the line that was active at the start of
+> that bar** — the comparison line may legitimately differ from bar to bar as `B*`
+> rolls forward (§21.6). On a confirmed breakout the line is **frozen** as `Λ^F`
+> (§21.5) and every downstream test (§15 failure, §16 retest, §17 expiry) uses
+> `Λ^F`.
 
 ### 13.2 Confirmed breakout ALERT (no multi-bar wait)
 
@@ -590,6 +685,16 @@ close rejected**.
 4.3000+0.02 = 4.3200` ✓ wick pierces. `C[t] = 73 → ln = 4.29046 ≤ 4.3100` →
 close does not confirm → **WICK_BREAK**, line remains ACTIVE.
 
+> **As-of-time reading (§21, HD-12) — "stays ACTIVE" ≠ "geometry unchanged."** Both
+> tests use `ŷ_t`, the line `Λ_t` active at the **start** of bar `t`. Because bar `t`
+> produced no confirmed breakout, §21.2 step 4 applies: its high enters the candidate
+> set and, since `y[t] > ŷ_t(t)` by construction of a wick-break, it **re-selects**
+> `B*` — `B*_{t+1} = (t, H[t])` (§21.4 Lemma) — effective from bar `t+1`. The
+> **state** remains `ACTIVE` (correct, per §11) while the **line geometry** legitimately
+> shallows. A wick-break is therefore also a re-selection event and MUST be recorded
+> as both (`WICK_BREAK` plus `LINE_ESTABLISHED` for the line effective at `t+1`, and
+> `INVALID_PIERCE` for the superseded line when the pierce exceeded `ε` — §10 note).
+
 ---
 
 ## 15. Failed breakout definition
@@ -598,9 +703,16 @@ After a `BROKEN_OUT` state, a **failed breakout** occurs when price re-closes
 decisively **below** the line:
 
 ```
-ln(C[t]) < ŷ(t) − ε_fail       # default ε_fail = 0.01
+ln(C[t]) < ŷ_F(t) − ε_fail     # default ε_fail = 0.01
+                               # ŷ_F = the FROZEN event line Λ^F (§21.5), NOT a re-selected line
 within F_fail bars of the breakout bar    # default F_fail = 10 bars
 ```
+
+> **As-of-time reading (§21, HD-12).** After `BROKEN_OUT` the geometry is **frozen**:
+> `ŷ_F(t) = m^F·t + b^F` from the `Λ^F` captured at the start of the breakout bar
+> (§21.5). Anchor re-selection is suspended (§21.6), so a post-breakout high MUST NOT
+> shift the line used by this test. The failure window `F_fail` is counted from the
+> frozen `breakout_bar`.
 
 Transition `BROKEN_OUT → FAILED_BREAKOUT`, reason `FAILED_BREAKOUT`. A failed
 breakout is a first-class labeled outcome (feeds later ML success labels — see
@@ -616,7 +728,17 @@ confidence spec §labels).
 ## 16. Retest definition
 
 A **retest** strengthens a confirmed breakout: after `BROKEN_OUT`, price returns
-toward the **broken line (now acting as support)** and holds:
+toward the **broken line (now acting as support)** and holds.
+
+> **As-of-time reading (§21, HD-12) — the retest line is the FROZEN line.** "The
+> broken line" is `Λ^F` (§21.5): the exact `A`, `B*`, slope, intercept and tolerance
+> version that were active at the **start of the breakout bar**. This is the line the
+> market actually broke, which is precisely what retest semantics require. Every
+> `ŷ(t)` below therefore means `ŷ_F(t)`. Post-breakout highs MUST NOT re-select `B*`
+> (§21.6), and the retest window `W_retest` is counted from the frozen
+> `breakout_bar`.
+
+Conditions:
 
 1. **Return:** within `W_retest` bars of the breakout bar (default `W_retest =
    20`), a bar low approaches the line from above:
@@ -644,8 +766,10 @@ bars of t=81 ✓ → **RETEST_HELD**.
 ## 17. Line expiry & recalculation (~100 bars after breakout)
 
 - **Expiry trigger:** `EXPIRED` when `t − breakoutBar ≥ E_expiry`, default
-  `E_expiry = 100` bars. On expiry the line is retired (`→ NONE`) and the
-  detector **recomputes** from scratch over the full updated history.
+  `E_expiry = 100` bars, measured from the **frozen** `breakout_bar` (§21.5) and
+  evaluated against the frozen line `Λ^F`. On expiry the line is retired (`→ NONE`)
+  and the detector **recomputes** from scratch over the full **available** history
+  (the prefix, §21.1) — never over bars the detector has not yet reached.
 - **Recalculation triggers (any):**
   1. **New ATH** — a bar high exceeds the prior `HA`. Immediate reset: new anchor
      `A`, new envelope, new line. (Old line reason `RESET_NEW_ATH`.)
@@ -655,8 +779,34 @@ bars of t=81 ✓ → **RETEST_HELD**.
      canonical line.
   3. **Structural pierce without breakout** (§10.1) — recompute.
   4. **Post-breakout expiry** (above).
-- **Determinism:** recomputation is a pure function of the current full history;
-  it never depends on prior mutable state, guaranteeing reproducibility.
+- **Determinism:** recomputation is a pure function of the **bars available at the
+  time of recomputation** (the prefix `S_t`, §21.1) — never of bars at index `≥ t`;
+  it never depends on prior mutable state, guaranteeing reproducibility. (Amended by
+  HD-12: the earlier phrase "the current **full** history" is read as the **available**
+  history as of the recomputation bar; recomputing from the complete series would be
+  look-ahead and is prohibited by §21.8.)
+
+> **As-of-time reading (§21, HD-12) — triggers 1–4 restated causally.**
+>
+> - **Trigger 1 (new ATH)** is detected against the provisional anchor `A_t` (§4
+>   as-of-time note). Reset is immediate for classification purposes at bar `t`; the
+>   **new** line becomes active no earlier than `t+1` and only when formation
+>   eligibility (§21.3) is met again for the new anchor (§21.7).
+> - **Trigger 2 (hull re-bind) is the OQ-7 question and is now decided by HD-12.**
+>   It fires **only while the line is `ACTIVE`**, only on bars that produced **no**
+>   confirmed breakout, and the re-selected line is effective from **`t+1`**
+>   (§21.2 step 4, §21.6). It is **suspended** while `BROKEN_OUT` / `RETESTED`
+>   (§21.5). It MUST NOT be applied retroactively to any already-classified bar.
+> - **Trigger 3 (structural pierce)** is the same event as trigger 2 whenever the
+>   piercing bar produced no breakout — under all-highs candidacy the piercing bar is
+>   itself the new binding `B*` (§10 note, §21.4 Lemma). The distinction is only in
+>   the reason codes emitted, not in the resulting geometry.
+> - **Trigger 4 (expiry)** is evaluated against the frozen line `Λ^F`; on expiry the
+>   detector returns to `NONE` and recomputes from `S_{t+1}`, so the replacement line
+>   is active from `t+1` at the earliest, subject to §21.3.
+>
+> **General rule:** *no line ever takes effect on the bar that caused it to be
+> computed.*
 
 > **Decision D-TL-10 — Expiry horizon** · Default: `E_expiry = 100` bars. ·
 > Alternative: expiry keyed to volatility/ATR or to retest completion.
@@ -668,9 +818,9 @@ bars of t=81 ✓ → **RETEST_HELD**.
 
 | Case | Rule | Reason code |
 |------|------|-------------|
-| **Fewer than `2k+2` bars** | Minimum-history guard → no line. Threshold **unchanged**; re-derived under all-highs candidacy in the note below. | `INSUFFICIENT_BARS` |
+| **Fewer than `2k+2` bars available** | Minimum-history guard → no line. Threshold **unchanged** (`2k+2 = 8` at `k=3`); re-derived under all-highs candidacy in the note below. **Evaluated as-of-time on the prefix `S_t`** (§21.1): the guard blocks formation while `t < 2k+2`, so the earliest possible formation bar is `t = 2k+2` (§21.3). | `INSUFFICIENT_BARS` |
 | **ATH on the first bar** (`tA = 0`) | Valid anchor; `B` is any later eligible **bar high** (§6 — pivot status is not a precondition). Common for stocks in secular decline from IPO peak. Fixtures GX-09, GX-08. | — |
-| **ATH on (or within `k` of) the last bar** | No room for a descending second anchor yet → no line; wait for more bars. The `k`-bar recency window is **retained unchanged** as a conservative guard (see the note below). | `ATH_TOO_RECENT` |
+| **ATH on (or within `k` of) the last *available* bar** | No room for a descending second anchor yet → no line; wait for more bars. The `k`-bar recency window is **retained unchanged** as a conservative guard (see the note below). **Evaluated as-of-time**: the last available bar at evaluation bar `t` is `t−1`, so the guard blocks formation while `tA > (t−1) − k`, i.e. until `t ≥ tA + k + 1` (§21.3). It constrains the **anchor `A`**, never the candidacy of any `B` — no bar high is excluded from selection for being near the end of the series (HD-11, HD-12 rule 6). | `ATH_TOO_RECENT` |
 | **No envelope-valid second anchor** — e.g. a later bar high **ties the ATH** (double top) and so pierces every descending candidate line beyond `ε` | Eligible candidates exist (§6: all later bar highs with `HB < HA`) but **none** survives the envelope test of §8 → no line. Fixture **GX-20**. **A strictly monotonic decline can never emit this code**: its first later bar high is always eligible and the hull binds there (fixture **GX-08**, `B* = (1,98)`). The former "no qualifying pivot" trigger is **superseded** — the absence of pivot highs is never a reason for this code (§5, §6, D-TL-03, D-TL-05, HD-11). | `NO_VALID_SECOND_ANCHOR` |
 | **Price gaps (overnight)** | Gaps are real bars; no interpolation. Gap-up through the line still requires **close** confirmation (§13). | — |
 | **Trading halt** (missing calendar days) | Handled by ordinal indexing (§1); no synthetic bars. Halt does not alter `t` continuity. | — |
@@ -696,6 +846,34 @@ bars of t=81 ✓ → **RETEST_HELD**.
 > decision; this section makes none). Both codes stay **distinct** from
 > `NO_VALID_SECOND_ANCHOR`, which concerns the §8 envelope test on a series that
 > *is* long enough.
+
+> **⚠ Note — under HD-12 these two guards became OUTCOME-DETERMINING (raised, NOT
+> decided here: see OQ-8).** Both thresholds remain **numerically unchanged**
+> (`2k+2`, `k`, with `k = 3`), and §21.3 does nothing but read them **as-of-time**.
+> But their role has changed in kind:
+>
+> - Before HD-12 they only decided *whether* a line was reported on a short series.
+> - After HD-12 they decide **`t_form`**, the first bar at which any event can be
+>   classified, and therefore **which line the first evaluable bars are judged
+>   against**. Removing them reinstates the degenerate case they exist to prevent: a
+>   line fitted to `A` plus a single later bar is a two-point line of arbitrary
+>   steepness, and under causal evaluation the **next** close will clear it almost
+>   trivially, manufacturing a spurious `BROKEN_OUT` within a bar or two of the
+>   series start. The guards are what keep §21 well-posed.
+> - Consequently a parameter declared **non-authoritative for *selection*** (`k`,
+>   D-TL-03/HD-11 — it may never exclude a bar high from candidacy) is now
+>   authoritative for **formation timing**. §21.3 preserves that distinction
+>   explicitly: `k` gates **when the first line forms**; it never removes a candidate
+>   `B` from the §6/§8 selection set, and never changes `B*` for a formed line. This
+>   is consistent with HD-11 and with HD-12 rule 6 (which bars an end-window
+>   exclusion on **selection**, the rule RM-01 would contradict — RM-01's approved
+>   canonical **anchor `B*` is 3 bars from the end of its series**, while its **`A`**
+>   is not).
+> - **Not decided here:** whether `2k+2` and the `k`-recency window remain the right
+>   formation gate now that they are outcome-determining, or should be restated as
+>   first-class, `k`-independent formation constants. That is a Product-Owner
+>   product-definition question, recorded as **OQ-8**. This spec changes **no
+>   threshold**; it applies the approved ones causally.
 
 ---
 
@@ -764,6 +942,19 @@ Each fixture's expected JSON must include: selected anchors, `m`/`b`, state,
 every reason code emitted, and (for numeric geometry) values to **6 significant
 figures**, so Verification is exact and reproducible.
 
+> **Binding on fixtures and backtests (HD-12 rule 7, §21.8).** Every expected value
+> MUST be derived **as-of-time**: each bar's classification is computed against the
+> line built from bars strictly before it (§21.2), and **no fixture may use a later
+> bar to establish, revise, or withdraw an earlier bar's classification**. A single
+> full-series hull computed over the complete fixture series is **not** a valid
+> derivation of an expected event unless it is demonstrably identical to the
+> as-of-time result. Fixtures whose expected anchors/events were derived by
+> full-series calculation MUST be **re-derived** under §21 by a dedicated audit
+> before they are cited as evidence; that audit is a **separate task** and no
+> fixture is changed by this section. To make the derivation checkable, an
+> as-of-time fixture SHOULD record, per evaluated bar, the anchors of `Λ_t`, and —
+> where a breakout occurs — the frozen `Λ^F` (§21.5).
+
 ---
 
 ## 20. Determinism & reproducibility requirements (binding on implementation)
@@ -782,6 +973,371 @@ figures**, so Verification is exact and reproducible.
    prices. Tie rules (D-TL-02, ENVELOPE_TIE_LATER) make outcomes order-stable.
 4. Output carries a `spec_version` matching this document's version so evidence
    is traceable.
+5. **Causal (as-of-time) evaluation is a determinism requirement (HD-12, §21).**
+   Every emitted event MUST be a pure function of the bars **available at or before
+   the evaluation bar** (`S_t ∪ {bar[t]}`). Streaming the series bar-by-bar and
+   batch-processing the whole series MUST produce **identical** output — this
+   equivalence is the operational test for "no look-ahead" (§21.8) and SHOULD be
+   asserted by Verification. A confirmed breakout additionally carries its **frozen**
+   line `Λ^F` (`A`, `B*`, `m`, `b`, `tolerance_version`, §21.5) so that retest,
+   failure and expiry evidence is reproducible from the event record alone.
+
+---
+
+## 21. As-of-time (rolling causal) evaluation semantics — **APPROVED: HD-12**
+
+> **Product Owner approved 2026-07-25 (HD-12) — resolves OQ-7.** **Anchor selection
+> uses rolling, causal, as-of-time evaluation while the trendline is `ACTIVE`.** It
+> is **neither** a final full-series calculation that may use future bars
+> retroactively, **nor** a permanently frozen anchor from the first moment a valid
+> line forms. This section states that ruling normatively and makes it computable.
+> It is governing; §4–§18 are read through it.
+>
+> **Placement note.** This section is **appended** rather than inserted between §9
+> and §10 deliberately: the 20 golden fixtures and `fixtures/README.md` cross-reference
+> this document by **section number**, so renumbering would silently break evidence
+> links. §21 is normative over the *timing* of §4–§18 regardless of its position;
+> each affected section carries an explicit back-reference.
+
+### 21.1 Definitions (precise and computable)
+
+Let `k`, `ε`, `ε_break`, `ε_fail`, `ε_retest`, `W_retest`, `F_fail`, `E_expiry` be the
+named config of §20.
+
+- **Available prefix.** `S_t := bars[0 … t−1]` — every bar strictly before the
+  evaluation bar `t`. `|S_t| = t`. `S_0 = ∅`.
+- **As-of-time anchor.** `A_t := (tA, HA)` where `HA = max_{i ∈ S_t} H[i]` and `tA`
+  is the **earliest** `i ∈ S_t` attaining it (§4, D-TL-02). Undefined for `S_t = ∅`.
+- **As-of-time second anchor.** `B*_t :=` the canonical all-highs upper-log-hull
+  vertex of §8 computed with the candidate set restricted to
+  `{ i ∈ S_t : i > tA }`, with domination tested over **all bar highs in `S_t`**
+  (D-TL-05) and ties broken by `ENVELOPE_TIE_LATER` (§18). `B*_t = ⊥` when no
+  candidate is envelope-valid (§10.4).
+- **Line active at the start of bar `t`.**
+  ```
+  Λ_t := ( A_t, B*_t, m_t, b_t, tolerance_version )      if FORMATION_ELIGIBLE(t)   (§21.3)
+       := ⊥  (no line; state NONE)                        otherwise
+  m_t = ( y[tB*_t] − y[tA] ) / ( tB*_t − tA )
+  b_t = y[tA] − m_t · tA
+  ŷ_t(u) = m_t · u + b_t
+  ```
+  `Λ_t` depends on **`S_t` only**. Bar `t` itself is **not** an input to `Λ_t`.
+- **Formation bar.** `t_form :=` the least `t` with `Λ_t ≠ ⊥` for the current anchor
+  episode. Re-computed afresh after every `RESET_NEW_ATH` and every
+  `EXPIRED_POST_BREAKOUT` (§21.7).
+- **Frozen event line.** `Λ^F :=` the value of `Λ_t` at the bar `t` on which a
+  confirmed breakout fired, retained verbatim (§21.5).
+
+### 21.2 Authoritative processing order for evaluation bar `t` (normative)
+
+A conforming detector MUST process each bar in exactly this order.
+
+1. **Build the line from the past only.** At the start of bar `t`, the active
+   canonical line MUST be `Λ_t`, calculated **only from bars available through
+   `t−1`**. Bars at index `≥ t` MUST NOT influence `Λ_t`.
+2. **Evaluate bar `t` against that pre-existing line.** Bar `t`'s wick (§14), close
+   (§13), breakout, touch (§12), failure (§15) and retest (§16) tests MUST be
+   evaluated against `Λ_t` (or `Λ^F` where §21.5 applies) — never against a line
+   that already includes `H[t]`.
+3. **Freeze on confirmed breakout.** If bar `t` produces a confirmed breakout
+   (§13.2), the detector MUST **freeze** the exact `A`, `B*`, slope `m`, intercept
+   `b`, tolerance version and line that were active at the **start of bar `t`** as
+   `Λ^F`, and MUST use `Λ^F` for breakout, retest, failure and expiry semantics.
+   **Later highs MUST NOT retroactively replace `B*` for that event** (§21.5).
+4. **Otherwise roll the anchor forward.** If bar `t` does **not** produce a
+   confirmed breakout, the detector MUST incorporate `H[t]` into the candidate set,
+   recompute the all-highs upper-log-hull canonical `B*` over `S_{t+1} = S_t ∪
+   {bar[t]}`, and the resulting line MUST become active **beginning with bar `t+1`**
+   — i.e. `Λ_{t+1}`. It MUST NOT be applied to bar `t` (§21.6).
+5. **New ATH resets.** If `H[t] > HA` of `A_t`, the previous structure is
+   invalidated (`RESET_NEW_ATH`, §10.3) and a **new formation** begins from the new
+   anchor, subject to §21.3 (§21.7). **Ordering:** this test is evaluated on bar `t`
+   **before** steps 3 and 4 and takes precedence over both — a bar that makes a new
+   ATH resets the structure and MUST NOT be recorded as a breakout of the retired
+   line, nor roll its `B*` forward.
+6. **Pivot status and end-of-series proximity are non-authoritative for
+   selection.** No candidate `B` may be excluded from §6/§8 candidacy because it is
+   not a `k`-pivot (HD-11) **or** because it lies close to the end of the currently
+   available series (HD-12 rule 6). The only end-of-series condition in this spec
+   constrains the **anchor `A`** at **formation** time (`ATH_TOO_RECENT`, §18,
+   §21.3), never the selection of `B*`.
+7. **No look-ahead.** Backtests and fixtures MUST NOT use future bars to revise an
+   earlier event classification (§21.8).
+
+### 21.3 Formation eligibility — when a line FIRST becomes `ACTIVE`
+
+**Normative rule.**
+
+```
+FORMATION_ELIGIBLE(t)  iff  all of:
+  (F1)  |S_t| ≥ 2k + 2                    # §18 INSUFFICIENT_BARS, read as-of-time
+  (F2)  tA ≤ (t − 1) − k                  # §18 ATH_TOO_RECENT, read as-of-time
+  (F3)  B*_t ≠ ⊥                          # §6 candidacy + §8 envelope test on S_t
+                                          # (§10.4 NO_VALID_SECOND_ANCHOR otherwise)
+```
+
+Equivalently, the earliest bar at which a line can be `ACTIVE` is
+
+```
+t_form = min { t : t ≥ 2k + 2  ∧  t ≥ tA + k + 1  ∧  B*_t ≠ ⊥ }
+```
+
+and for every `t < t_form` the state is `NONE`, with reason code
+`INSUFFICIENT_BARS`, `ATH_TOO_RECENT` or `NO_VALID_SECOND_ANCHOR` respectively (the
+first unmet condition in the order F1, F2, F3). While the state is `NONE` **no**
+breakout, wick-break, retest or failure event may be emitted (§11) — there is no line
+to test against, and a bar that cannot be evaluated MUST NOT be evaluated later.
+
+**Derivation (this rule invents nothing; every element is already approved).**
+
+1. **HD-12 rule 1** fixes the visible data: at evaluation bar `t` the active line is
+   calculated **only from bars available through `t−1`**. Therefore "the available
+   series", "the delivered history" and "the last bar" — the phrases §4, §10 and §18
+   are written in — all denote `S_t` and its last element `t−1` when evaluated at bar
+   `t`. Re-reading those existing predicates on `S_t` is a **mechanical consequence**
+   of HD-12, not a new rule.
+2. **§18, row 1** (approved, threshold unchanged): fewer than `2k+2` bars → **no
+   line**, `INSUFFICIENT_BARS`. On `S_t` this is `|S_t| = t ≥ 2k+2` ⇒ **(F1)**.
+3. **§18, row 3** (approved, threshold unchanged): ATH on, or within `k` of, the
+   **last bar** → no line, "wait for more bars", `ATH_TOO_RECENT`. This row is
+   **already written in as-of-time language** ("wait for more bars" presupposes a
+   rolling evaluation). On `S_t` the last bar is `t−1`, so the guard is
+   `(t−1) − tA ≥ k` ⇒ **(F2)**.
+4. **§6 + §8 + §10.4** (approved): a line exists only if some later bar high is
+   eligible and survives the envelope test; otherwise `NO_VALID_SECOND_ANCHOR` and
+   **no line** — an explicit "no signal" state, not an error. On `S_t` ⇒ **(F3)**.
+5. **§11** (approved): the transition into `ACTIVE` is `NONE ──(valid A,B
+   found)──▶ ACTIVE`; there is no other entry into `ACTIVE`. So `ACTIVE` at bar `t`
+   ⟺ F1 ∧ F2 ∧ F3 on `S_t`. The conjunction is therefore forced, not chosen.
+6. **HD-11 and HD-12 rule 6 are respected.** (F2) constrains only the **anchor
+   `A`** — the phrasing §18 already uses ("ATH on … the last bar"). It removes **no**
+   candidate `B` from the §6/§8 set, and once a line has formed it plays no further
+   part. This is exactly the distinction HD-12's constraint bullet draws: the barred
+   rule is "bars within `k` of the end are excluded from **selection**", which would
+   contradict RM-01, whose approved canonical **`B*`** sits 3 bars from the end of its
+   series. RM-01's **anchor** is not near the end, so (F2) does not touch it.
+7. **Why the alternatives are excluded, not merely disfavoured.**
+   - *Evaluate the guards once over the complete delivered series* (so a line may be
+     `ACTIVE` from `t = 2` because the **whole** series happens to be long enough) —
+     excluded by HD-12 rules 1 and 7: it uses the length of the unseen remainder to
+     license an earlier line, which is look-ahead.
+   - *Drop the guards as pivot-derived and let a line form as soon as `A` plus one
+     later lower high exist* — excluded by §18 as written, which **retains** both
+     thresholds (the §18 re-derivation note re-justified them under all-highs
+     candidacy and explicitly relaxed **neither**). It is also the degenerate case
+     the guards exist to prevent: a two-point line over the first bars has arbitrary
+     steepness, and under causal evaluation the next close clears it almost trivially,
+     manufacturing a spurious `BROKEN_OUT` at `t = 2`–`t = 3`.
+   - *Invent a new "enough structure" threshold* (e.g. require `n` dominated highs or
+     `n` touches before forming) — excluded: no approved rule states one, and this
+     spec introduces **no new threshold**.
+8. **After a reset**, `S_t` keeps growing but the anchor changes, so (F1) is a
+   condition on **total available history** and (F2) a condition on **history since
+   the anchor**; both are the literal readings of §18 and they compose without
+   ambiguity: a new ATH late in a long series satisfies (F1) immediately and must
+   still wait out (F2).
+
+> **Numerically nothing changed.** `2k+2` and `k` are the §18 values, unchanged
+> (`k = 3` ⇒ earliest formation at `t = 8` for an ATH at `t = 0`). Their status
+> under HD-12 is flagged in the §18 note and raised as **OQ-8**; this section
+> **decides no threshold**.
+
+### 21.4 `Λ_t` in closed form — the running-max lemma (computability)
+
+The normative definition of `B*_t` is the §8 recomputation over `S_t`. The following
+**Lemma** makes it computable in `O(1)` per bar and — more importantly — makes the
+semantics **reconstructible by an auditor**.
+
+**Lemma (rolling hull = running maximum slope).** Let a line exist at bar `t` with
+anchor `A_t` unchanged at `t+1` (bar `t` is neither a new ATH nor an ATH tie). Then
+
+```
+slope_t(i) := ( y[i] − y[tA] ) / ( i − tA )
+
+B*_t  = argmax_{ i ∈ S_t, i > tA }  slope_t(i)      (later i wins ties — ENVELOPE_TIE_LATER)
+
+B*_{t+1} = (t, H[t])   if  y[t] ≥ ŷ_t(t)            # bar t's high reached or exceeded the line
+         = B*_t         otherwise
+```
+
+*Proof sketch.* (i) Adding a point to the candidate set only **adds** domination
+constraints, so a candidate that was envelope-invalid cannot become valid. (ii) If
+`y[t] ≤ ŷ_t(t)` then `Λ_t` still dominates every point of `S_{t+1}`, so `B*_t` remains
+envelope-valid and remains the maximum-slope valid candidate ⇒ `B*_{t+1} = B*_t`.
+(iii) If `y[t] > ŷ_t(t)` then `slope(A, (t,H[t])) > m_t`, and because the candidate
+line through `(t, H[t])` is **shallower** than `Λ_t` it lies at or above `Λ_t` for all
+`u > tA`; every earlier high satisfied `y[u] ≤ ŷ_t(u) + ε`, hence also
+`y[u] ≤ ŷ_new(u) + ε` — so the new candidate is envelope-valid. No candidate with a
+still-greater slope can exist (it would already have been selected at `t`), so the new
+candidate is the maximum ⇒ `B*_{t+1} = (t, H[t])`. (iv) Equality `y[t] = ŷ_t(t)` gives
+identical slopes and `ENVELOPE_TIE_LATER` selects the later bar; the geometry is
+unchanged. ∎
+
+**Consequences (all normative unless marked).**
+
+- **`B*` re-binds exactly when a high reaches the active line** — `y[t] ≥ ŷ_t(t)` —
+  and the new `B*` is **that bar**. Nothing else moves the anchor.
+- `m_t` is **monotonically non-decreasing** in `t` within an episode: the causal line
+  can only **shallow**, never steepen, while `A` is unchanged.
+- *(Non-normative corollary — auditable invariant.)* With the same anchor in force,
+  the running maximum over `S_t` is never greater than the maximum over the complete
+  series, so for every `u > tA` the causal line `Λ_t` lies **at or below** the
+  full-series line. Consequently a close that clears the full-series line also clears
+  the causal line, and **the first as-of-time breakout of an episode occurs at or
+  before the first full-series breakout — never after, and it may exist where the
+  full-series calculation reports none.** An audit converting a full-series
+  expectation to as-of-time MUST expect breakouts to **appear or move earlier**, and
+  MUST treat "a first breakout moved later or disappeared" as a **defect in the
+  conversion**, not as a finding. (Post-breakout geometry is not comparable this way:
+  the frozen line `Λ^F` is by the same argument at or below the full-series line, so
+  failure/retest tests are evaluated against a **lower** line than a full-series
+  derivation would use.)
+- The Lemma is an **optimization, not the definition**: like the pivot pruning of §5
+  and §8, an implementation MAY use it **only if** it is lossless against the §8
+  recomputation over `S_t`, and MUST fall back to the full recomputation whenever the
+  anchor changes, a candidate ties the ATH, or `B*_t = ⊥` (§10.4).
+
+### 21.5 Freeze on confirmed breakout
+
+When bar `t` produces a confirmed breakout (§13.2), the detector MUST capture the
+frozen event line `Λ^F` **exactly as it stood at the start of bar `t`**:
+
+| Frozen field | Meaning |
+|--------------|---------|
+| `A = (tA, HA)` | anchor in force at the start of bar `t` |
+| `B* = (tB*, HB*)` | canonical second anchor in force at the start of bar `t` |
+| `m` | log-space slope of `Λ_t` |
+| `b` | log-space intercept of `Λ_t` |
+| `tolerance_version` | the named tolerance set in force (`ε`, `ε_touch`, `ε_break`, `ε_fail`, `ε_retest`) — `ε_break` is versioned and unlocked (§13.5, HD-03) |
+| `breakout_bar = confirmed_bar = t` | the alert bar (§13.2, HD-03) |
+
+Binding consequences:
+
+- **§15 failure**, **§16 retest** and **§17 expiry** MUST be evaluated against `Λ^F`
+  (`ŷ_F(u) = m^F·u + b^F`), because that is the line the market actually broke.
+- Anchor **re-selection is suspended** from bar `t` onward for that episode: while the
+  state is `BROKEN_OUT` or `RETESTED`, §21.2 step 4 does **not** run and no later high
+  may replace `B*`.
+- `Λ^F` MUST be emitted with the event so that downstream evidence is reproducible
+  from the event record alone (§20.5).
+- The only exits are `RESET_NEW_ATH` (§21.7) and `EXPIRED_POST_BREAKOUT` (§17); both
+  return the detector to `NONE`, after which a **new** formation is subject to §21.3
+  and takes effect no earlier than the following bar.
+
+### 21.6 Re-selection before breakout (the pre-breakout roll)
+
+While the state is `ACTIVE` and bar `t` produced **no** confirmed breakout:
+
+- The detector MUST incorporate `H[t]` and recompute `B*` over `S_{t+1}` (§21.2 step
+  4). Per §21.4 this changes the anchor **iff** `y[t] ≥ ŷ_t(t)`.
+- The re-selected line is `Λ_{t+1}` and is effective **from bar `t+1`**. **The
+  evaluation bar MUST NEVER redefine the line against which its own event is judged**
+  — this is the single most important invariant of §21 and the guarantee that no
+  event is created or destroyed by its own bar.
+- The state remains `ACTIVE` (§11): *"stays ACTIVE" does not mean "geometry
+  unchanged."*
+- Reason codes (existing codes only — §21 introduces none): `LINE_ESTABLISHED` for the
+  line effective at `t+1`; additionally `INVALID_PIERCE` for the superseded line when
+  `y[t] > ŷ_t(t) + ε` (§10.1); additionally `WICK_BREAK` when the close also failed to
+  confirm (§14). A single bar may legitimately emit all three.
+- If instead the recomputation yields `B*_{t+1} = ⊥` (§10.4 — e.g. a high that **ties**
+  the ATH and pierces every descending candidate beyond `ε`, fixture GX-20), the state
+  becomes `NONE` with `NO_VALID_SECOND_ANCHOR` from `t+1`, and §21.3 governs any later
+  re-formation.
+
+### 21.7 New-ATH reset (HD-12 rule 5)
+
+If `H[t] > HA` of the anchor `A_t` in force:
+
+- The previous structure is invalidated immediately for bar `t`'s classification, with
+  `RESET_NEW_ATH` (§10.3, §17 trigger 1). This applies whether the state was `ACTIVE`,
+  `BROKEN_OUT` or `RETESTED` — a new ATH overrides a frozen line.
+- Bar `t` MUST NOT be classified as a breakout of the retired line by virtue of the same
+  high: a close above a line whose high made a new ATH is a **reset**, not a breakout.
+  (Rule 5 takes precedence over §21.2 step 3.)
+- A **new formation** begins with anchor `A_{t+1}` (which is `(t, H[t])` unless an
+  earlier equal high exists, D-TL-02) and is subject to §21.3 — in particular (F2)
+  means the new line cannot become `ACTIVE` until at least `k` bars after the new
+  anchor are available.
+- An `H[t]` that **equals** `HA` is **not** a new ATH (D-TL-02 keeps the earliest bar as
+  the anchor); it is handled by §21.6 / §10.4 (the GX-20 double-top case).
+
+### 21.8 No look-ahead — binding on backtests, fixtures and evidence
+
+1. A detector, backtest or fixture MUST NOT use any bar at index `≥ t` to establish,
+   revise, re-label or withdraw the classification of bar `t`.
+2. A classification, once emitted, is **final for that bar**. A later bar may add a new
+   event (a failure, a retest, an expiry) but may never rewrite an earlier one. A
+   breakout that later fails is a `FAILED_BREAKOUT` (§15) — **not** a retroactively
+   un-fired breakout (§13.3).
+3. **Operational test (SHOULD be asserted by Verification):** streaming the series
+   bar-by-bar and batch-processing the whole series MUST yield identical output
+   (§20.5).
+4. Any expected value derived from a **full-series** hull is valid evidence only if it
+   is demonstrably identical to the as-of-time result (§19 note). Where it is not, the
+   fixture MUST be re-derived under §21 by a dedicated audit.
+
+### 21.9 Worked micro-example (three bars: a re-selection, then a breakout + freeze)
+
+Setup: `k = 3` (so the earliest possible formation bar is `t = 2k+2 = 8`), `ε = 0.02`,
+illustrative `ε_break = 0.01` (**not** a locked value — §13.5). Anchor `A = (0, 100)`,
+`yA = ln 100 = 4.6051702`. Suppose that at the start of bar 20 the rolling hull has
+selected `B*_20 = (18, 88)`, `y = ln 88 = 4.4773368`:
+
+```
+m_20 = (4.4773368 − 4.6051702) / 18 = −0.00710186
+b_20 = 4.6051702
+ŷ_20(20) = 4.6051702 − 0.00710186·20 = 4.4631331     → line(20) = 86.7589
+```
+
+**Bar 20 — evaluated against `Λ_20`, then re-selects (step 1 → 2 → 4).**
+`H[20] = 88.00` (`y = 4.4773368`), `C[20] = 87.00` (`ln = 4.4659081`).
+
+- Breakout test (§13.1): `4.4659081 > 4.4631331 + 0.01 = 4.4731331`? **No** → no
+  breakout.
+- Wick test (§14): `4.4773368 > 4.4631331 + 0.02 = 4.4831331`? **No** → not even a
+  wick-break (the high is above the line but inside `ε`).
+- Step 4 (§21.6): no breakout ⇒ incorporate `H[20]`. Since
+  `y[20] = 4.4773368 ≥ ŷ_20(20) = 4.4631331`, the hull **re-binds**:
+  `B*_21 = (20, 88)`, `m_21 = (4.4773368 − 4.6051702)/20 = −0.00639167`. Reason code
+  `LINE_ESTABLISHED`, **effective at bar 21**. Bar 20's own classification is
+  unaffected by this — the line that judged bar 20 was `Λ_20`.
+
+**Bar 21 — breakout against `Λ_21`, freeze (step 1 → 2 → 3).**
+`ŷ_21(21) = 4.6051702 − 0.00639167·21 = 4.4709451` → `line(21) = 87.4393`.
+`C[21] = 88.50` (`ln = 4.4830025`).
+
+- Breakout test: `4.4830025 > 4.4709451 + 0.01 = 4.4809451` ✓ (margin `0.0020574`)
+  → **confirmed breakout**, `breakout_bar = confirmed_bar = 21`, `BREAKOUT_CONFIRMED`
+  (§13.2, HD-03 — no persistence wait).
+- **Freeze (§21.5):** `Λ^F = { A=(0,100), B*=(20,88), m=−0.00639167, b=4.6051702,
+  tolerance_version }`.
+
+**Bar 22 — the freeze binds; a later high MUST NOT re-select.**
+`H[22] = 90` (`y = ln 90 = 4.4998097`).
+
+- Under a **full-series** (rejected) reading, `(22, 90)` would be a shallower
+  envelope-valid vertex: `m = (4.4998097 − 4.6051702)/22 = −0.00478911`, giving
+  `ŷ(21) = 4.5045989` — and bar 21's close (`4.4830025`) would then sit **below** the
+  line, so **the already-fired breakout would vanish retroactively**. That is exactly
+  the look-ahead HD-12 prohibits.
+- Under §21: re-selection is **suspended** (state `BROKEN_OUT`). Bar 22 is evaluated
+  against the frozen line: `ŷ_F(22) = 4.6051702 − 0.00639167·22 = 4.4645535` →
+  `line(22) = 86.8822`; §15/§16/§17 all use this value. `H[22]` does not exceed the
+  prior `HA = 100`, so §21.7 does not fire.
+
+> **Decision D-TL-11 — As-of-time (rolling causal) evaluation** · **Status: APPROVED
+> (Product Owner, 2026-07-25, HD-12) — resolves OQ-7.** · Governing rule: bar `t` is
+> evaluated against `Λ_t`, the canonical all-highs upper-log-hull line built from bars
+> `0 … t−1`; a non-breakout bar rolls `B*` forward effective `t+1`; a confirmed
+> breakout **freezes** `A`, `B*`, `m`, `b`, tolerance version and line for
+> breakout/retest/failure/expiry; a new ATH starts a new formation; formation
+> eligibility is the §18 guards read as-of-time (§21.3). · Superseded/rejected
+> alternatives: **full-series retroactive selection** (look-ahead; a later high could
+> rewrite an earlier classification) and **permanently frozen at formation** (prevents
+> a developing line from updating before any breakout). · Materiality: **high**
+> (determines which events fire and when). · Human-approval: yes — **granted
+> 2026-07-25 (HD-12).**
 
 ---
 
@@ -817,6 +1373,21 @@ The Architect proposes the Product Steward add these to
   post-breakout, on new ATH, or on structural change).
 - **Reason code** — the named machine-readable justification emitted with every
   accept/reject/state transition.
+- **As-of-time (rolling causal) evaluation** — evaluating each bar against a line
+  built only from strictly earlier bars, so no classification can depend on future
+  bars (§21, HD-12).
+- **Available prefix (`S_t`)** — the bars `0 … t−1` visible when bar `t` is
+  evaluated (§21.1).
+- **Active line at bar `t` (`Λ_t`)** — the canonical line computed from `S_t` and in
+  force for bar `t`'s tests (§21.1).
+- **Formation eligibility / formation bar (`t_form`)** — the conditions under which a
+  line first becomes `ACTIVE` (minimum available history, anchor not too recent, an
+  envelope-valid `B*` exists) and the earliest bar satisfying them (§21.3).
+- **Anchor re-selection (pre-breakout roll)** — a non-breakout bar whose high reaches
+  the active line re-binds `B*` to that bar, effective from the **next** bar (§21.6).
+- **Frozen event line (`Λ^F`)** — the `A`, `B*`, slope, intercept and tolerance
+  version captured at the start of a confirmed-breakout bar, governing retest,
+  failure and expiry (§21.5).
 
 ---
 
@@ -839,8 +1410,21 @@ The Architect proposes the Product Steward add these to
    (data-layer ticket dependency, not this spec).
 6. **OQ-6:** Should very long (multi-decade) histories switch to weekly bars to
    tame pivot noise (D-TL-00)?
-7. **OQ-7 (high, OPEN — raised 2026-07-25 by the Issue #16 stale-pivot sweep; NOT
-   decided there):** over **what window** is the §8 selection evaluated — the
+7. **OQ-7 (high) — RESOLVED 2026-07-25 (HD-12):** anchor selection is **rolling,
+   causal, as-of-time** while the line is `ACTIVE` — **neither** full-series
+   retroactive **nor** permanently frozen at formation. Bar `t` is evaluated against
+   the line built from bars `0 … t−1`; a non-breakout bar rolls `B*` forward
+   effective `t+1`; a confirmed breakout **freezes** the line for
+   breakout/retest/failure/expiry; a new ATH starts a new formation; formation
+   eligibility is the §18 guards read as-of-time. Specified normatively in **§21**
+   (D-TL-11). Both rejected alternatives are recorded there. **Evidence
+   consequence (not resolved by this section):** fixture expectations derived by
+   full-series calculation — including the anchors of **GX-09** and **GX-15** flagged
+   under `geometry_check.open_issue_2026_07_25`, and any fixture whose event list was
+   derived full-series — MUST be **re-derived** as-of-time by a dedicated fixture
+   audit (§19 note, §21.8). **No fixture geometry is changed by §21.**
+   *History (the question as raised, retained per the decision-history rule):* over
+   **what window** is the §8 selection evaluated — the
    **full history** (so a later, shallower, envelope-valid bar high **re-selects**
    `B*` under §17 trigger 2, even while the current line is `ACTIVE` and unpierced)
    or **frozen at line formation** (later bars only *validate*)? Before HD-11 the
@@ -855,3 +1439,19 @@ The Architect proposes the Product Steward add these to
    itself only 3 bars from the end of its series, so "bars within `k` of the series
    end are excluded from **selection**" would contradict RM-01 and HD-11. Requires a
    Product Owner decision; **no fixture geometry has been changed pending it**.
+8. **OQ-8 (high, OPEN — raised 2026-07-25 by the §21/HD-12 specification work; NOT
+   decided there):** HD-12 made **formation eligibility** (§21.3) outcome-determining
+   — `t_form` decides the first bar at which any event can fire and which line the
+   earliest evaluable bars are judged against. §21.3 derives it from the **existing,
+   numerically unchanged** §18 guards (`2k+2` minimum available history; ATH not
+   within `k` of the last available bar), because those are the approved rules and no
+   new threshold may be invented. But this makes `k` — declared **non-authoritative
+   for selection** (D-TL-03, HD-11) — authoritative for **formation timing**. Should
+   the formation gate (a) remain the §18 guards as-is, (b) be restated as first-class,
+   `k`-independent formation constants (`min_bars`, `min_bars_after_anchor`) so that
+   tuning the pivot window can never move an event, or (c) be relaxed toward the
+   geometric minimum? **Materiality: high** — it moves `t_form` and therefore can add
+   or remove early events on every fixture and backtest. **Safe default held here:**
+   option (a), the approved §18 thresholds read as-of-time; **§21 changes no
+   threshold**. Requires a Product Owner decision before the formation gate is pinned
+   with a `spec_version`. See the ⚠ note in §18 and §21.3.

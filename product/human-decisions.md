@@ -23,6 +23,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-09 | med  | External Fear & Greed source + redistribution/display rights | APPROVED |
 | HD-10 | high | SaaS billing/PII security review | APPROVED |
 | HD-11 | high | Pivot-high prefilter is non-authoritative (upper-log-hull is canonical) | APPROVED |
+| HD-12 | high | Anchor selection is rolling/causal (as-of-time), frozen at confirmed breakout | APPROVED |
 
 ---
 
@@ -264,6 +265,69 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Cross-references:** refines [HD-02](#hd-02--envelope-selection-rule--materiality-high)
   (the envelope rule); real-market evidence in `product/fixtures/real/RM-01/`.
 
+## HD-12 — Anchor selection is rolling and causal (as-of-time), frozen at confirmed breakout · materiality: **high**
+- **Status:** APPROVED — **Decided by: Product Owner, 2026-07-25.** Resolves **OQ-7**
+  (surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18), the stale-pivot sweep, which
+  explicitly did **not** decide it). Builds on
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
+- **Decision:** Over what window is the canonical §8 anchor selection evaluated —
+  full history (later bars may retroactively re-select `B*`), frozen at line
+  formation, or rolling/as-of-time?
+- **Ruling (governing rule):** **Anchor selection uses rolling, causal, as-of-time
+  evaluation while the trendline is `ACTIVE`.** It is **neither** a final full-series
+  calculation that may use future bars retroactively, **nor** a permanently frozen
+  anchor from the first moment a valid line forms. Authoritative processing order for
+  evaluation bar `t`:
+  1. At the start of bar `t`, the active canonical line is calculated **only from bars
+     available through `t−1`**.
+  2. Evaluate bar `t`'s wick, close, breakout and related events **against that
+     pre-existing line**.
+  3. If bar `t` produces a **confirmed breakout**: **freeze** the exact `A`, `B*`,
+     slope, intercept, tolerance version and line that were active at the **start of
+     bar `t`**; use that frozen event line for breakout, retest, failure and expiry
+     semantics; **later highs must not retroactively replace `B*` for that event**.
+  4. If bar `t` does **not** produce a breakout: incorporate bar `t`'s high into the
+     candidate set; recompute the all-highs upper-log-hull canonical `B*`; the
+     resulting line becomes active **beginning with bar `t+1`**.
+  5. A **new ATH** invalidates the previous structure and starts a new formation.
+  6. **Pivot status and distance from the end of the currently available series remain
+     non-authoritative.**
+  7. **Backtests and fixtures must never use future bars to revise an earlier event
+     classification.**
+- **Reason:** Preserves causality and prevents look-ahead bias; allows a developing
+  resistance line to update before breakout; freezes the actual line the market broke
+  so subsequent retest semantics refer to the line that existed at the event; remains
+  consistent with **RM-01** and
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high);
+  and avoids reinstating a pivot-derived end-window exclusion.
+- **Alternatives:**
+  - **Full-series retroactive selection** — compute `B*` once over the complete
+    history so a later, shallower, envelope-valid high re-selects the anchor of an
+    already-evaluated event (**REJECTED** — introduces look-ahead bias and would let
+    future bars rewrite an earlier breakout/retest classification).
+  - **Permanently frozen at formation** — fix `B*` at the first moment a valid line
+    forms, with later bars only validating (**REJECTED** — prevents a developing
+    resistance line from legitimately updating before any breakout occurs).
+- **Constraint that made the obvious alternative unavailable:** a "bars within `k` of
+  the end of the series are excluded from **selection**" rule is **not** available:
+  **RM-01's Product-Owner-approved canonical anchor is itself only 3 bars from the end
+  of its series**, so reinstating such an end-window exclusion would contradict
+  **RM-01** and
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
+- **Cost of delaying:** n/a — resolved 2026-07-25. (While open it contested the stated
+  anchors of fixtures **GX-09** and **GX-15** and blocked closure of the Phase 0
+  evidence correction.)
+- **Safe default:** Evaluate each bar against the line built from strictly prior bars;
+  freeze the line at a confirmed breakout for all downstream event semantics; never
+  revise an earlier classification with later bars.
+- **Cross-references:** resolves **OQ-7** in
+  [`trendline-specification.md`](trendline-specification.md) (Open questions, §8/§17);
+  surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18); consistent with
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high)
+  and the RM-01 real-market evidence in `product/fixtures/real/RM-01/`.
+
 ---
 
 ## Decision log — 2026-07-24 (Product Owner)
@@ -291,6 +355,21 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 
 - **2026-07-25 — HD-11 approved (resolves SC-2 from RM-01):** upper-log-hull canonical,
   pivot prefilter non-authoritative.
+- **2026-07-25 — [HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high)
+  approved (resolves OQ-7, surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18)):** anchor selection is **rolling,
+  causal, as-of-time** while the line is `ACTIVE` — bar `t` is evaluated against the line
+  built from bars through `t−1`; a confirmed breakout **freezes** that line (`A`, `B*`,
+  slope, intercept, tolerance version) for breakout/retest/failure/expiry semantics; with
+  no breakout, bar `t`'s high joins the candidate set and the recomputed line becomes
+  active from `t+1`; a new ATH starts a new formation. Neither full-series retroactive
+  selection nor permanent freeze-at-formation. Pivot status and distance from the end of
+  the series remain non-authoritative, and no end-window (`within k of the end`) exclusion
+  is reinstated — **RM-01's approved anchor is only 3 bars from the end of its series**, so
+  such an exclusion would contradict RM-01 and
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
+  Backtests and fixtures must never use future bars to revise an earlier event
+  classification. See [`trendline-specification.md`](trendline-specification.md).
 - **2026-07-25 — Historical Product Owner Decision Record — RM-01** (*recorded here, not
   newly decided*): PR #9 merged the RM-01 verification without a citable GitHub decision
   artifact (0 comments, 0 reviews), so this bullet supplies the missing precedence-1
