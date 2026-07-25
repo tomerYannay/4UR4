@@ -832,7 +832,8 @@ function checkOhlc(fx) {
   // Only bars with a MISSING field are skipped, which is GX-18's deliberate case;
   // GX-18's non-positive low is coherent (0 <= every other field) and needs no
   // exemption. There is deliberately NO opt-out: an exemption marker on this gate
-  // would be one edit away from re-opening the hole closed at head 9d704e0.
+  // would be one edit away from re-opening the hole that was FOUND at head 9d704e0
+  // (see above) and CLOSED at head c10612c.
   for (const [t, b] of fx.bars.entries()) {
     if ([b.open, b.high, b.low, b.close].some((v) => v === null)) continue;
     if (b.low > b.high || b.open < b.low || b.open > b.high || b.close < b.low || b.close > b.high) {
