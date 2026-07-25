@@ -152,7 +152,7 @@ acquired now** (build-freeze + human-gated provider selection, HD-06/HD-07).
 | Layer | Count | Status | Location |
 |-------|-------|--------|----------|
 | **Synthetic golden fixtures** | **19** | complete, independently verified (see `VERIFICATION.md`); GX-19 added as the SC-2 proof | `golden/GX-01 … GX-19` |
-| **Real-market fixtures** | **1 (RM-01)** | **verified from licensed OHLCV; SC-1 = MATCH; Product Owner approval `pending`** (`status: verified`) | `real/RM-01/` |
+| **Real-market fixtures** | **1 (RM-01)** | **verified from licensed OHLCV; SC-1 = MATCH; Product Owner approval `approved` (2026-07-25)** (`status: verified`) | `real/RM-01/` |
 
 The two layers are complementary and must not be conflated: the **synthetic** set pins the
 deterministic arithmetic (spec-derived expected values), while the **real-market** set is the
@@ -163,9 +163,15 @@ source, with geometry **independently recomputed** from real data: **SC-1 resolv
 2026-07-24). **SC-2** (the anchor is not a `k=3` pivot) is now **RESOLVED by the Product
 Owner decision 2026-07-25**: the upper-log-hull over **all** highs is canonical and the pivot
 prefilter is non-authoritative (spec §5/§6/§8, D-TL-05); the synthetic proof is **GX-19**.
-Product Owner approval of the RM-01 *result* remains **`pending`** (a separate review). See
-[`real/RM-01/README.md`](real/RM-01/README.md) and the process in
-[`real-market-plan.md`](real-market-plan.md). The synthetic catalog in §3 is unchanged.
+Product Owner approval of the RM-01 *result* (the separate review of the verified geometry) **was
+granted on 2026-07-25**, in the same review that ruled HD-11 — see
+[`real/RM-01/README.md`](real/RM-01/README.md) (status header and §5 visual-acceptance record),
+[`VERIFICATION.md`](VERIFICATION.md) ("Product Owner approval: `approved` (2026-07-25)"),
+[`real/RM-01/annotation.json`](real/RM-01/annotation.json)
+(`product_owner_approval: approved`), and
+[`../human-decisions.md`](../human-decisions.md) (HD-11, decided 2026-07-25).
+The process is in [`real-market-plan.md`](real-market-plan.md). The synthetic catalog in §3 is
+unchanged.
 
 ## 7. Files
 
@@ -181,7 +187,7 @@ Product Owner approval of the RM-01 *result* remains **`pending`** (a separate r
 - `real/RM-01/source-chart.png` — immutable chart-image evidence (do not edit/regenerate).
 - `real/RM-01/alphavantage-source.json` — immutable licensed OHLCV source (Alpha Vantage, SPCX daily).
 - `real/RM-01/input.csv` — chronologically-ascending `date,open,high,low,close,volume` derived from the source.
-- `real/RM-01/annotation.json` — RM-01 annotation instance (`status: verified`, SC-1 = MATCH, approval `pending`).
+- `real/RM-01/annotation.json` — RM-01 annotation instance (`status: verified`, SC-1 = MATCH, approval `approved` (2026-07-25)).
 - `real/RM-01/README.md` — human-readable RM-01 record (evidence, ATH verification, independent
   calculation, visual-acceptance checklist, spec-contradiction report SC-1/SC-2).
 

@@ -10,7 +10,7 @@
 > [`roadmap.md`](roadmap.md) → merged fixture evidence → open PR proposals → agent summaries.
 
 - **Last updated:** 2026-07-25
-- **Last reviewed commit SHA (main):** `f8fd7db13f2d994208aaf4fb88af204b14f83b92`
+- **Last reviewed commit SHA (main):** `c0f66ea15a1a5c9c7af631c8fcfccbd7cc8e1527`
 - **Build-freeze status:** **ON** ([GOV-015](../governance/build-freeze.md)) — no product implementation until a human lifts it per-scope.
 
 ## Product objective
@@ -32,11 +32,20 @@ implementation and beyond remain **freeze-blocked**.
 - **Phase 0 golden fixtures** (19 synthetic) + **RM-01** real-market case, PO-approved;
   **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9).
 - ChatGPT↔Claude **handoff protocol** + PR template + Agent Coordination Queue (#10) (PR #11).
-- **Strategic Product Reviewer** added as the 10th permanent agent (this change).
+- **Strategic Product Reviewer** added as the 10th permanent agent (PR #13).
 
 ## Active work
 - **PR #12** — Phase 1 market-data research (Issues **#4**, **#5**): provider comparison +
-  survivorship/delisted research. **Draft; awaiting ChatGPT/strategic review** (round 1 of 2).
+  survivorship/delisted research. **Draft; CI green; 0 reviews; awaiting ChatGPT/strategic
+  review** (round 1 of 2).
+- **Issue #14** — documentation reconciliation (freeze-permitted, **docs only**): refresh this
+  file's reviewed-SHA/PR-#13 currency, the RM-01 Product-Owner-approval references in
+  [`fixtures/README.md`](fixtures/README.md), the stale fixture count in
+  [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md), SC-2 hygiene in
+  `fixtures/real/RM-01/annotation.json`, and a currency note on
+  [`../docs/live-validation-evidence.md`](../docs/live-validation-evidence.md). Open PR on
+  branch `docs/reconcile-project-state-phase0-traceability`. Changes **no** product
+  definition, spec rule, fixture data, or roadmap entry.
 
 ## Next milestone
 Complete the Phase 1 research review, then obtain the **Product Owner decision on HD-06**
@@ -52,8 +61,8 @@ freeze is lifted per-scope.
 - **HD-06** — data-provider selection + recurring spend (**human-gated**; research in PR #12).
 
 ## Open issues / PRs (governed index)
-- Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index).
-- Open PR: **#12** (research, draft, awaiting review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#14](https://github.com/tomerYannay/4UR4/issues/14)** (documentation reconciliation, open, docs-only).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · the **documentation-reconciliation PR for Issue #14** (docs-only, branch `docs/reconcile-project-state-phase0-traceability`; its PR number is recorded here once the PR is opened). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·

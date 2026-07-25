@@ -24,7 +24,9 @@ no-geometry guard + reason codes.
 
 ## Result
 
-- **18 / 18 fixtures verified** (15 with geometry; 3 null-anchor by design).
+- **19 / 19 fixtures verified** (16 with geometry; 3 null-anchor by design — GX-08, GX-10,
+  GX-18). Consistent with the all-highs hull check below ("16 / 16 geometry fixtures") and with
+  the catalog of 19 in [`README.md`](README.md) §3.
 - All anchors, slopes, intercepts, and `y_hat` values reproduced independently.
 - **Two `line` (price) display values** were off in the 5th–6th significant figure due to
   manual `exp()` rounding and were **corrected to the independently computed values**:

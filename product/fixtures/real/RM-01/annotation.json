@@ -206,8 +206,7 @@
   "unresolved_metadata": [
     "exchange (still unknown)",
     "chart display timezone (still unknown; OHLCV source timezone is US/Eastern)",
-    "lifetime-ATH assumption: 2026-06-12 as SPCX listing/IPO date (pending listing-history confirmation, HD-07)",
-    "SC-2 pivot-eligibility question (open; see spec_contradiction_report)"
+    "lifetime-ATH assumption: 2026-06-12 as SPCX listing/IPO date (pending listing-history confirmation, HD-07)"
   ],
   "spec_contradiction_report": {
     "status": "resolved-with-po",
@@ -227,9 +226,9 @@
       },
       {
         "id": "SC-2",
-        "verdict": "MATCH",
+        "verdict": "open-spec-question",
         "resolution": "resolved",
-        "description": "RESOLVED 2026-07-25 by Product Owner decision (HD-11): the upper-log-hull envelope rule is CANONICAL and must NOT depend on a fixed pivot-high prefilter; pivot detection is secondary/non-authoritative and must never change the canonical anchor. RM-01 is the motivating case: 2026-07-21 (129.88) is NOT a k=3 pivot (2026-07-17 @130.33 is higher within 3 bars) yet IS the canonical shallowest descending envelope anchor over all later highs; excluding it would contradict the approved rule. The trendline spec §5/§6/§8/D-TL-03/D-TL-05 were revised accordingly and golden fixture GX-19 was added to prove a non-pivot high can be the canonical anchor. No longer an open contradiction.",
+        "description": "RESOLVED 2026-07-25 by Product Owner decision (HD-11) — NOT an open item; the verdict token 'open-spec-question' classifies WHAT SC-2 WAS (a specification question about pivot eligibility, resolved by PO ruling) and is NOT a geometry comparison verdict like SC-1's MATCH. Substance: the upper-log-hull envelope rule is CANONICAL and must NOT depend on a fixed pivot-high prefilter; pivot detection is secondary/non-authoritative and must never change the canonical anchor. RM-01 is the motivating case: 2026-07-21 (129.88) is NOT a k=3 pivot (2026-07-17 @130.33 is higher within 3 bars) yet IS the canonical shallowest descending envelope anchor over all later highs; excluding it would contradict the approved rule. The trendline spec §5/§6/§8/D-TL-03/D-TL-05 were revised accordingly and golden fixture GX-19 was added to prove a non-pivot high can be the canonical anchor. No longer an open contradiction.",
         "spec_refs": [
           "§5",
           "§6",
