@@ -527,7 +527,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   authoritative wherever the two disagree.
 - **Alternatives:** (a) permit but bar CI from depending on it — keeps the freeze tighter, but
   removes the continuous enforcement the review chain specifically demanded; (b) require its
-  removal before merge — returns Phase 0 to the hand derivation that failed twice.
+  removal before merge — returns Phase 0 to the hand derivation that failed repeatedly.
 - **Cost of delaying:** PR #18 cannot merge; Phase 0 cannot close.
 - **Safe default (in force):** the freeze stays **ON** and the PR stays **draft**.
 - **⚠ Note on the disclaimers already in the tree.** `tools/fixture-replay.mjs`,
