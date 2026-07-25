@@ -1,8 +1,12 @@
 # 4UR4 — Ticket Definitions (first three phases)
 
-Status: planning artifact under [GOV-015](../../governance/build-freeze.md); these
-are **ticket DEFINITIONS for the human/primary session to create as GitHub
-issues**, not tickets yet, and not approved.
+Status: planning artifact under [GOV-015](../../governance/build-freeze.md). These
+began as **ticket DEFINITIONS** for the primary session to create as GitHub issues.
+**They are now live issues** — (a)/(b) delivered by PR #18, (c) = [#4](https://github.com/tomerYannay/4UR4/issues/4),
+(d) = [#5](https://github.com/tomerYannay/4UR4/issues/5), (e) = [#6](https://github.com/tomerYannay/4UR4/issues/6),
+(f) = [#7](https://github.com/tomerYannay/4UR4/issues/7) — and the roadmap they
+trace to is **approved** (HD-16, 2026-07-26). This file is therefore a historical
+definition record; **the issues are authoritative** where the two disagree.
 
 > **Hygiene ([GOV-008](../../governance/ticket-hygiene.md)):** at most 3 epics
 > (labels only — no umbrella issues); at most 5 open **unstarted Ready** tickets;
@@ -11,9 +15,16 @@ issues**, not tickets yet, and not approved.
 >
 > **DoR ([GOV-004](../../governance/definition-of-ready.md)):** every ticket below
 > "Becomes Ready upon human roadmap approval ([GOV-013](../../governance/approval-gate.md));
-> freeze status set." Research/design tickets are **Ready-eligible-now** (permitted
-> under freeze); implementation tickets are **blocked: freeze** until a human lifts
-> the freeze per-scope.
+> freeze status set." Research/design tickets are freeze-permitted; implementation
+> tickets are **blocked: freeze** until a human lifts the freeze per-scope.
+>
+> **That approval was given on 2026-07-26** — the Phase 0–9 roadmap baseline is
+> APPROVED under GOV-013
+> ([artifact](https://github.com/tomerYannay/4UR4/issues/23); recorded as **HD-16**).
+> Tickets (a)–(d) therefore satisfy their DoR condition and are **Ready**, not
+> merely Ready-eligible; (a) and (b) are **delivered** (23 golden fixtures + RM-01,
+> merged in PR #18). Approval of the baseline did **not** lift the freeze, so (e)
+> and (f) are unchanged.
 
 ## Epic labels (3) — labels only, NOT issues
 
@@ -25,16 +36,18 @@ issues**, not tickets yet, and not approved.
 
 | # | Ticket | Epic | Phase | Autonomy | Ready status |
 |---|--------|------|-------|----------|--------------|
-| a | Golden-example fixture set: trendline geometry & selection | product-quant-spec | 0 | design-only (freeze-permitted) | Ready-eligible-now |
-| b | Acceptance-example set: breakout / retest / expiry | product-quant-spec | 0 | design-only (freeze-permitted) | Ready-eligible-now |
-| c | Data-provider research & recommendation | market-data-foundation | 1 | research-only (freeze-permitted) | Ready-eligible-now |
-| d | Survivorship-free constituents + corporate-actions research | market-data-foundation | 1 | research-only (freeze-permitted) | Ready-eligible-now |
+| a | Golden-example fixture set: trendline geometry & selection | product-quant-spec | 0 | design-only (freeze-permitted) | **Delivered** (PR #18) |
+| b | Acceptance-example set: breakout / retest / expiry | product-quant-spec | 0 | design-only (freeze-permitted) | **Delivered** (PR #18) |
+| c | Data-provider research & recommendation | market-data-foundation | 1 | research-only (freeze-permitted) | **Ready** ([#4](https://github.com/tomerYannay/4UR4/issues/4)) |
+| d | Survivorship-free constituents + corporate-actions research | market-data-foundation | 1 | research-only (freeze-permitted) | **Ready** ([#5](https://github.com/tomerYannay/4UR4/issues/5)) |
 | e | Market-data ingestion & storage service | market-data-foundation | 1 | blocked (build-freeze) | blocked: freeze |
 | f | Deterministic trendline detection engine | trendline-detection-engine | 2 | blocked (build-freeze) | blocked: freeze |
 
-**Totals:** 6 tickets defined · **4 Ready-eligible-now** (a, b, c, d) ·
-**2 blocked: freeze** (e, f). Ready-eligible count (4) ≤ 5 budget ✓; total (6) ✓;
-3 epics ✓; no umbrella issues ✓.
+**Totals:** 6 tickets defined · **2 delivered** (a, b — Phase 0) · **2 Ready and
+in progress** (c, d — Phase 1 research) · **2 blocked: freeze** (e, f). Open
+unstarted Ready count (0) ≤ 5 budget ✓; total (6) ✓; 3 epics ✓; no umbrella
+issues ✓. HD-06 remains **PENDING**: (c) may recommend a provider and may not
+select one, commit spend, or accept licensing terms.
 
 ---
 
