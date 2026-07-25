@@ -1,8 +1,16 @@
 {
   "fixture_id": "GX-07",
-  "purpose": "A confirmed breakout that persists for E_expiry bars expires: at t - breakout_bar == 100 the line is retired (EXPIRED -> NONE) and the detector recomputes from scratch over the full updated history.",
+  "purpose": "A confirmed breakout that persists: at t - breakout_bar == E_expiry the frozen line is retired (EXPIRED_POST_BREAKOUT -> NONE) and the detector recomputes from the available prefix.",
   "category": "expiry & recalculation",
-  "spec_refs": ["§11", "§13.2", "§17", "D-TL-10"],
+  "spec_refs": [
+    "§13",
+    "§17",
+    "§21.5",
+    "§21.8",
+    "HD-03",
+    "D-TL-10",
+    "D-TL-11"
+  ],
   "input_convention": {
     "timestamp_kind": "ordinal",
     "bar_count": 111,
@@ -15,52 +23,949 @@
     "eps_touch": 0.01,
     "eps_break": 0.01,
     "eps_break_locked": false,
-    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. This fixture is verified robust across an eps_break sweep — see causal_record.eps_break_robustness.",
     "E_expiry": 100,
-    "tolerance_version": "tol-2026.07-illustrative"
+    "tolerance_version": "tol-2026.07-illustrative",
+    "min_formation_bars": 8,
+    "min_ath_age_bars": 3,
+    "formation_params_note": "Formation gates are first-class, k-independent, versioned parameters (§21.3, D-TL-12): min_formation_bars replaces the pivot-derived 2k+2 and min_ath_age_bars replaces the k-recency window. Numerically unchanged at k=3."
   },
-  "expected_ath_anchor": { "t": 0, "H": 100.00 },
-  "expected_second_anchor": { "t": 6, "H": 94.00 },
-  "expected_log_slope": -0.0103125,
+  "expected_ath_anchor": {
+    "t": 0,
+    "H": 100
+  },
+  "expected_second_anchor": {
+    "t": 6,
+    "H": 94,
+    "reason": "Frozen at the confirmed breakout on bar 10 (§21.5): this is the canonical second anchor of the line active at the START of that bar, retained verbatim. No later high may replace it (§21.8)."
+  },
+  "expected_log_slope": -0.0103126,
   "expected_intercept": 4.60517,
   "expected_line_values": {
-    "0": { "y_hat": 4.60517, "line": 100.000 },
-    "6": { "y_hat": 4.54330, "line": 94.0000 },
-    "10": { "y_hat": 4.50205, "line": 90.2015 }
+    "0": {
+      "y_hat": 4.60517,
+      "line": 100
+    },
+    "6": {
+      "y_hat": 4.54329,
+      "line": 94
+    },
+    "10": {
+      "y_hat": 4.50204,
+      "line": 90.2014
+    },
+    "110": {
+      "y_hat": 3.47079,
+      "line": 32.1621
+    }
   },
   "expected_state_transitions": [
-    { "bar": 6, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
-    { "bar": 10, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" },
-    { "bar": 110, "from": "BROKEN_OUT", "to": "NONE", "reason_code": "EXPIRED_POST_BREAKOUT" }
+    {
+      "bar": 8,
+      "from": "NONE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 10,
+      "from": "ACTIVE",
+      "to": "BROKEN_OUT",
+      "reason_code": "BREAKOUT_CONFIRMED"
+    },
+    {
+      "bar": 110,
+      "from": "BROKEN_OUT",
+      "to": "NONE",
+      "reason_code": "EXPIRED_POST_BREAKOUT"
+    }
   ],
   "expected_final_state": "NONE",
   "breakout_bar": 10,
   "confirmed_bar": 10,
-  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED", "EXPIRED_POST_BREAKOUT"],
+  "expected_reason_codes": [
+    "LINE_ESTABLISHED",
+    "BREAKOUT_CONFIRMED",
+    "EXPIRED_POST_BREAKOUT"
+  ],
   "flags": [],
   "rejection_rationale": [
     {
-      "candidate": "Expiry firing at t=109 (99 bars after breakout)",
-      "rejected_because": "Expiry requires t - breakout_bar >= E_expiry=100; at t=109 the gap is 99, still short.",
-      "numeric": "109 - 10 = 99 < 100 -> not yet expired."
+      "candidate": "A confirmed breakout on any bar before t=10",
+      "rejected_because": "No earlier bar in the ACTIVE episode closes above the line that was active at the START of that bar (§13.1 as-of-time).",
+      "numeric": "Closest earlier approach is t=8: ln(C)-y_hat_8(8)-eps_break = -0.03286 < 0."
     },
     {
-      "candidate": "Expiry firing before any retest/failure is possible",
-      "rejected_because": "The breakout never retested (price never dipped to the line) nor failed (never closed below line-eps_fail); it simply persisted until the expiry horizon.",
-      "numeric": "post-breakout plateau high=93, low=90 stays above the descending line (line(20)~81, line(110)~32) -> no retest/fail; expiry at 110-10=100."
+      "candidate": "Re-selecting B* from a high after t=10",
+      "rejected_because": "Anchor re-selection is SUSPENDED once the state is BROKEN_OUT/RETESTED; the frozen event line governs failure, retest and expiry (§21.5, §21.8).",
+      "numeric": "101 later high(s) have a shallower A->high slope than the frozen m=-0.0103126 (e.g. t=10, slope -0.0040822); under a full-series hull one of them would replace B* and could retroactively un-fire the breakout. §21.8 forbids it."
+    },
+    {
+      "candidate": "A line ACTIVE before t=8",
+      "rejected_because": "Formation eligibility is evaluated as-of-time on the available prefix (§21.3): the line becomes ACTIVE only at the first bar satisfying |S_t| >= min_formation_bars AND tA <= (t-1) - min_ath_age_bars AND B*_t exists.",
+      "numeric": "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL] | t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL] | t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok] | t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok] | t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=8: ELIGIBLE [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
+    },
+    {
+      "candidate": "B=(7,92) as second anchor at the formation bar",
+      "rejected_because": "It is not the shallowest envelope-valid descending candidate over the available prefix; the upper log-hull selects the maximum-slope valid candidate (§8, D-TL-04).",
+      "numeric": "slope(A,(7,92)) = -0.0119117 < slope(A,B*) = -0.0103126; B* dominates every bar high in S_8 = bars 0..7 (worst gap 0 <= eps)."
     }
   ],
   "geometry_check": {
     "yA": 4.60517,
-    "yB": 4.54330,
-    "slope_formula": "m=(ln94-ln100)/(6-0)=(4.543295-4.605170)/6=-0.061875/6=-0.0103125",
-    "intercept_formula": "b=yA-m*0=4.605170",
+    "yB": 4.54329,
+    "slope_formula": "m=(yB-yA)/(tB-tA)=(4.54329-4.60517)/(6-0)=-0.0103126",
+    "intercept_formula": "b=yA-m*tA=4.60517-(-0.0103126*0)=4.60517",
     "key_inequalities": [
-      "Line A=(0,100), B*=(6,94); breakout at t=10 (ln(C[10])=ln93=4.532599 > y_hat(10)+eps_break=4.502045+0.01=4.512045).",
-      "Post-breakout plateau persists above the line with no retest and no failure.",
-      "Expiry: first t with t - breakout_bar >= 100 is t=110 -> EXPIRED_POST_BREAKOUT -> NONE.",
-      "Recompute is then triggered over the full history (new line geometry is out of this fixture's pinned scope; the locked assertion is the expiry TIMING and transition)."
+      "Candidacy is over ALL later bar highs (§6, D-TL-05, HD-11) — never a pivot subset — and every value below is computed from bars strictly EARLIER than the bar it judges (§21.1, HD-12).",
+      "Formation (§21.3): t_form = 8 — the first bar with |S_t| >= min_formation_bars = 8 and tA <= (t-1) - min_ath_age_bars = (t-1) - 3 and an envelope-valid B*_t.",
+      "No re-selection occurs: no bar high ever reaches the active line, so B*_t is constant from formation to the final bar (§21.4 Lemma).",
+      "Breakout (§13.1/§13.2): at t=10, ln(C)=4.55388 > y_hat_10(10)=4.50204 + eps_break=0.01 -> margin 0.0418324 log units; confirmed_bar == breakout_bar == 10 (HD-03, no persistence wait).",
+      "Expiry (§17): t - breakout_bar = 100 >= E_expiry, measured from the frozen breakout bar and evaluated against the frozen line.",
+      "Governing line: A=(0,100), B*=(6,94), m=-0.0103126, b=4.60517 — FROZEN at the breakout bar (§21.5)."
     ],
-    "notes": "The expiry timing (breakout_bar + E_expiry) is the load-bearing assertion. Post-breakout bars are a deliberately flat plateau so no retest/failure intervenes before expiry."
+    "notes": "Every bar of the post-breakout plateau (high 95.00) is a shallower hull challenger than the frozen B*=(6,94); §21.5 suspends re-selection for the whole BROKEN_OUT episode, so expiry is measured against the frozen line throughout."
+  },
+  "causal_record": {
+    "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
+    "formation": {
+      "min_formation_bars": 8,
+      "min_ath_age_bars": 3,
+      "t_form": 8,
+      "rule": "FORMATION_ELIGIBLE(t) iff |S_t| >= min_formation_bars (F1) AND tA <= (t-1) - min_ath_age_bars (F2) AND B*_t exists (F3). Both thresholds are first-class versioned parameters, independent of the pivot window k (§21.3, D-TL-12).",
+      "gate_trace": [
+        "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=8: ELIGIBLE [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=9: ELIGIBLE [F1 |S_t|=9>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
+      ],
+      "gate_trace_full": [
+        "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=8: ELIGIBLE [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=9: ELIGIBLE [F1 |S_t|=9>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=10: ELIGIBLE [F1 |S_t|=10>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=11: ELIGIBLE [F1 |S_t|=11>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=12: ELIGIBLE [F1 |S_t|=12>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=13: ELIGIBLE [F1 |S_t|=13>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=14: ELIGIBLE [F1 |S_t|=14>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=15: ELIGIBLE [F1 |S_t|=15>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=16: ELIGIBLE [F1 |S_t|=16>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=17: ELIGIBLE [F1 |S_t|=17>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=18: ELIGIBLE [F1 |S_t|=18>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=19: ELIGIBLE [F1 |S_t|=19>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=20: ELIGIBLE [F1 |S_t|=20>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=21: ELIGIBLE [F1 |S_t|=21>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=22: ELIGIBLE [F1 |S_t|=22>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=23: ELIGIBLE [F1 |S_t|=23>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=24: ELIGIBLE [F1 |S_t|=24>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=25: ELIGIBLE [F1 |S_t|=25>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=26: ELIGIBLE [F1 |S_t|=26>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=27: ELIGIBLE [F1 |S_t|=27>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=28: ELIGIBLE [F1 |S_t|=28>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=29: ELIGIBLE [F1 |S_t|=29>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=30: ELIGIBLE [F1 |S_t|=30>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=31: ELIGIBLE [F1 |S_t|=31>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=32: ELIGIBLE [F1 |S_t|=32>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=33: ELIGIBLE [F1 |S_t|=33>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=34: ELIGIBLE [F1 |S_t|=34>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=35: ELIGIBLE [F1 |S_t|=35>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=36: ELIGIBLE [F1 |S_t|=36>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=37: ELIGIBLE [F1 |S_t|=37>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=38: ELIGIBLE [F1 |S_t|=38>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=39: ELIGIBLE [F1 |S_t|=39>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=40: ELIGIBLE [F1 |S_t|=40>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=41: ELIGIBLE [F1 |S_t|=41>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=42: ELIGIBLE [F1 |S_t|=42>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=43: ELIGIBLE [F1 |S_t|=43>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=44: ELIGIBLE [F1 |S_t|=44>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=45: ELIGIBLE [F1 |S_t|=45>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=46: ELIGIBLE [F1 |S_t|=46>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=47: ELIGIBLE [F1 |S_t|=47>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=48: ELIGIBLE [F1 |S_t|=48>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=49: ELIGIBLE [F1 |S_t|=49>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=50: ELIGIBLE [F1 |S_t|=50>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=51: ELIGIBLE [F1 |S_t|=51>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=52: ELIGIBLE [F1 |S_t|=52>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=53: ELIGIBLE [F1 |S_t|=53>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=54: ELIGIBLE [F1 |S_t|=54>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=55: ELIGIBLE [F1 |S_t|=55>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=56: ELIGIBLE [F1 |S_t|=56>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=57: ELIGIBLE [F1 |S_t|=57>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=58: ELIGIBLE [F1 |S_t|=58>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=59: ELIGIBLE [F1 |S_t|=59>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=60: ELIGIBLE [F1 |S_t|=60>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=61: ELIGIBLE [F1 |S_t|=61>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=62: ELIGIBLE [F1 |S_t|=62>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=63: ELIGIBLE [F1 |S_t|=63>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=64: ELIGIBLE [F1 |S_t|=64>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=65: ELIGIBLE [F1 |S_t|=65>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=66: ELIGIBLE [F1 |S_t|=66>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=67: ELIGIBLE [F1 |S_t|=67>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=68: ELIGIBLE [F1 |S_t|=68>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=69: ELIGIBLE [F1 |S_t|=69>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=70: ELIGIBLE [F1 |S_t|=70>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=71: ELIGIBLE [F1 |S_t|=71>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=72: ELIGIBLE [F1 |S_t|=72>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=73: ELIGIBLE [F1 |S_t|=73>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=74: ELIGIBLE [F1 |S_t|=74>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=75: ELIGIBLE [F1 |S_t|=75>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=76: ELIGIBLE [F1 |S_t|=76>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=77: ELIGIBLE [F1 |S_t|=77>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=78: ELIGIBLE [F1 |S_t|=78>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=79: ELIGIBLE [F1 |S_t|=79>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=80: ELIGIBLE [F1 |S_t|=80>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=81: ELIGIBLE [F1 |S_t|=81>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=82: ELIGIBLE [F1 |S_t|=82>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=83: ELIGIBLE [F1 |S_t|=83>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=84: ELIGIBLE [F1 |S_t|=84>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=85: ELIGIBLE [F1 |S_t|=85>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=86: ELIGIBLE [F1 |S_t|=86>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=87: ELIGIBLE [F1 |S_t|=87>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=88: ELIGIBLE [F1 |S_t|=88>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=89: ELIGIBLE [F1 |S_t|=89>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=90: ELIGIBLE [F1 |S_t|=90>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=91: ELIGIBLE [F1 |S_t|=91>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=92: ELIGIBLE [F1 |S_t|=92>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=93: ELIGIBLE [F1 |S_t|=93>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=94: ELIGIBLE [F1 |S_t|=94>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=95: ELIGIBLE [F1 |S_t|=95>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=96: ELIGIBLE [F1 |S_t|=96>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=97: ELIGIBLE [F1 |S_t|=97>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=98: ELIGIBLE [F1 |S_t|=98>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=99: ELIGIBLE [F1 |S_t|=99>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=100: ELIGIBLE [F1 |S_t|=100>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=101: ELIGIBLE [F1 |S_t|=101>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=102: ELIGIBLE [F1 |S_t|=102>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=103: ELIGIBLE [F1 |S_t|=103>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=104: ELIGIBLE [F1 |S_t|=104>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=105: ELIGIBLE [F1 |S_t|=105>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=106: ELIGIBLE [F1 |S_t|=106>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=107: ELIGIBLE [F1 |S_t|=107>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=108: ELIGIBLE [F1 |S_t|=108>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=109: ELIGIBLE [F1 |S_t|=109>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=110: ELIGIBLE [F1 |S_t|=110>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=111: ELIGIBLE [F1 |S_t|=111>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
+      ]
+    },
+    "as_of_time_candidate_set": {
+      "at_bar": 8,
+      "available_prefix": "S_8 = bars 0..7",
+      "anchor": {
+        "t": 0,
+        "H": 100
+      },
+      "candidates": [
+        {
+          "t": 1,
+          "H": 97,
+          "slope": -0.0304592,
+          "worst_gap": 0.129833,
+          "envelope_valid": false
+        },
+        {
+          "t": 2,
+          "H": 95,
+          "slope": -0.0256466,
+          "worst_gap": 0.0961449,
+          "envelope_valid": false
+        },
+        {
+          "t": 3,
+          "H": 93,
+          "slope": -0.0241902,
+          "worst_gap": 0.08595,
+          "envelope_valid": false
+        },
+        {
+          "t": 4,
+          "H": 92,
+          "slope": -0.0208454,
+          "worst_gap": 0.063197,
+          "envelope_valid": false
+        },
+        {
+          "t": 5,
+          "H": 93,
+          "slope": -0.0145141,
+          "worst_gap": 0.0252094,
+          "envelope_valid": false
+        },
+        {
+          "t": 6,
+          "H": 94,
+          "slope": -0.0103126,
+          "worst_gap": 0,
+          "envelope_valid": true
+        },
+        {
+          "t": 7,
+          "H": 92,
+          "slope": -0.0119117,
+          "worst_gap": 0.00959455,
+          "envelope_valid": true
+        }
+      ],
+      "selected": {
+        "t": 6,
+        "H": 94,
+        "slope": -0.0103126
+      },
+      "note": "Candidacy is over EVERY later bar high (§6, HD-11); pivot status is not consulted. Domination is tested over all bar highs in the prefix (D-TL-05)."
+    },
+    "pivot_context": {
+      "k": 3,
+      "definition": "isPivotHigh(p,k): strict > against the k bars on the left, >= against the k bars on the right (§5).",
+      "confirmed_pivots_full_series": [
+        6,
+        10
+      ],
+      "confirmed_pivots_in_formation_prefix": [],
+      "b_star_bar": 6,
+      "b_star_is_confirmed_pivot": true,
+      "note": "DESCRIPTIVE ONLY. Pivot status is non-authoritative (§5, D-TL-03, HD-11): it never removes a candidate from §6/§8, never changes B*, and never affects formation eligibility (§21.3, D-TL-12). Replacing k here changes nothing in this fixture except this block."
+    },
+    "active_line_before_event_bars": [
+      {
+        "bar": 8,
+        "state_at_start": "ACTIVE",
+        "line_source": "Λ_8 built from S_8 = bars 0..7",
+        "B_star": {
+          "t": 6,
+          "H": 94
+        },
+        "m": -0.0103126,
+        "b": 4.60517,
+        "y_hat_at_bar": 4.52267,
+        "line_at_bar": 92.0811,
+        "close_vs_line_plus_eps_break": -0.03286,
+        "high_vs_line_plus_eps": -0.0318101
+      },
+      {
+        "bar": 10,
+        "state_at_start": "ACTIVE",
+        "line_source": "Λ_10 built from S_10 = bars 0..9",
+        "B_star": {
+          "t": 6,
+          "H": 94
+        },
+        "m": -0.0103126,
+        "b": 4.60517,
+        "y_hat_at_bar": 4.50204,
+        "line_at_bar": 90.2014,
+        "close_vs_line_plus_eps_break": 0.0418324,
+        "high_vs_line_plus_eps": 0.0423037
+      },
+      {
+        "bar": 110,
+        "state_at_start": "BROKEN_OUT",
+        "line_source": "frozen event line Λ^F (§21.5)",
+        "B_star": {
+          "t": 6,
+          "H": 94
+        },
+        "m": -0.0103126,
+        "b": 4.60517,
+        "y_hat_at_bar": 3.47079,
+        "line_at_bar": 32.1621,
+        "close_vs_line_plus_eps_break": 1.06251,
+        "high_vs_line_plus_eps": 1.06309
+      }
+    ],
+    "events": [
+      {
+        "bar": 10,
+        "event": "BREAKOUT_CONFIRMED",
+        "line": {
+          "tA": 0,
+          "tB": 6,
+          "m": -0.010312567286347996,
+          "b": 4.605170185988092
+        },
+        "y_hat": 4.50204,
+        "line_value": 90.2014,
+        "close": 95,
+        "ln_close": 4.55388,
+        "margin": 0.0418324
+      },
+      {
+        "bar": 110,
+        "event": "EXPIRED_POST_BREAKOUT",
+        "bars_since_breakout": 100
+      }
+    ],
+    "reselections": [],
+    "frozen_event_line": {
+      "A": {
+        "t": 0,
+        "H": 100
+      },
+      "B_star": {
+        "t": 6,
+        "H": 94
+      },
+      "m": -0.0103126,
+      "b": 4.60517,
+      "breakout_bar": 10,
+      "confirmed_bar": 10,
+      "tolerance_version": "tol-2026.07-illustrative",
+      "binding": "Failure (§15), retest (§16) and expiry (§17) are evaluated against THIS line; re-selection is suspended (§21.5)."
+    },
+    "non_retroactive_challengers": {
+      "note": "Later highs whose A→high slope is shallower than the frozen line. Under a full-series hull they would re-select B*; §21.5/§21.8 forbid it, so the frozen line stands.",
+      "bars": [
+        {
+          "bar": 10,
+          "H": 96,
+          "slope_if_selected": -0.0040822
+        },
+        {
+          "bar": 11,
+          "H": 95,
+          "slope_if_selected": -0.00466303
+        },
+        {
+          "bar": 12,
+          "H": 95,
+          "slope_if_selected": -0.00427444
+        },
+        {
+          "bar": 13,
+          "H": 95,
+          "slope_if_selected": -0.00394564
+        },
+        {
+          "bar": 14,
+          "H": 95,
+          "slope_if_selected": -0.00366381
+        },
+        {
+          "bar": 15,
+          "H": 95,
+          "slope_if_selected": -0.00341955
+        },
+        {
+          "bar": 16,
+          "H": 95,
+          "slope_if_selected": -0.00320583
+        },
+        {
+          "bar": 17,
+          "H": 95,
+          "slope_if_selected": -0.00301725
+        },
+        {
+          "bar": 18,
+          "H": 95,
+          "slope_if_selected": -0.00284963
+        },
+        {
+          "bar": 19,
+          "H": 95,
+          "slope_if_selected": -0.00269965
+        },
+        {
+          "bar": 20,
+          "H": 95,
+          "slope_if_selected": -0.00256466
+        },
+        {
+          "bar": 21,
+          "H": 95,
+          "slope_if_selected": -0.00244254
+        },
+        {
+          "bar": 22,
+          "H": 95,
+          "slope_if_selected": -0.00233151
+        },
+        {
+          "bar": 23,
+          "H": 95,
+          "slope_if_selected": -0.00223014
+        },
+        {
+          "bar": 24,
+          "H": 95,
+          "slope_if_selected": -0.00213722
+        },
+        {
+          "bar": 25,
+          "H": 95,
+          "slope_if_selected": -0.00205173
+        },
+        {
+          "bar": 26,
+          "H": 95,
+          "slope_if_selected": -0.00197282
+        },
+        {
+          "bar": 27,
+          "H": 95,
+          "slope_if_selected": -0.00189975
+        },
+        {
+          "bar": 28,
+          "H": 95,
+          "slope_if_selected": -0.0018319
+        },
+        {
+          "bar": 29,
+          "H": 95,
+          "slope_if_selected": -0.00176873
+        },
+        {
+          "bar": 30,
+          "H": 95,
+          "slope_if_selected": -0.00170978
+        },
+        {
+          "bar": 31,
+          "H": 95,
+          "slope_if_selected": -0.00165462
+        },
+        {
+          "bar": 32,
+          "H": 95,
+          "slope_if_selected": -0.00160292
+        },
+        {
+          "bar": 33,
+          "H": 95,
+          "slope_if_selected": -0.00155434
+        },
+        {
+          "bar": 34,
+          "H": 95,
+          "slope_if_selected": -0.00150863
+        },
+        {
+          "bar": 35,
+          "H": 95,
+          "slope_if_selected": -0.00146552
+        },
+        {
+          "bar": 36,
+          "H": 95,
+          "slope_if_selected": -0.00142481
+        },
+        {
+          "bar": 37,
+          "H": 95,
+          "slope_if_selected": -0.00138631
+        },
+        {
+          "bar": 38,
+          "H": 95,
+          "slope_if_selected": -0.00134982
+        },
+        {
+          "bar": 39,
+          "H": 95,
+          "slope_if_selected": -0.00131521
+        },
+        {
+          "bar": 40,
+          "H": 95,
+          "slope_if_selected": -0.00128233
+        },
+        {
+          "bar": 41,
+          "H": 95,
+          "slope_if_selected": -0.00125106
+        },
+        {
+          "bar": 42,
+          "H": 95,
+          "slope_if_selected": -0.00122127
+        },
+        {
+          "bar": 43,
+          "H": 95,
+          "slope_if_selected": -0.00119287
+        },
+        {
+          "bar": 44,
+          "H": 95,
+          "slope_if_selected": -0.00116576
+        },
+        {
+          "bar": 45,
+          "H": 95,
+          "slope_if_selected": -0.00113985
+        },
+        {
+          "bar": 46,
+          "H": 95,
+          "slope_if_selected": -0.00111507
+        },
+        {
+          "bar": 47,
+          "H": 95,
+          "slope_if_selected": -0.00109135
+        },
+        {
+          "bar": 48,
+          "H": 95,
+          "slope_if_selected": -0.00106861
+        },
+        {
+          "bar": 49,
+          "H": 95,
+          "slope_if_selected": -0.0010468
+        },
+        {
+          "bar": 50,
+          "H": 95,
+          "slope_if_selected": -0.00102587
+        },
+        {
+          "bar": 51,
+          "H": 95,
+          "slope_if_selected": -0.00100575
+        },
+        {
+          "bar": 52,
+          "H": 95,
+          "slope_if_selected": -0.00098641
+        },
+        {
+          "bar": 53,
+          "H": 95,
+          "slope_if_selected": -0.000967798
+        },
+        {
+          "bar": 54,
+          "H": 95,
+          "slope_if_selected": -0.000949876
+        },
+        {
+          "bar": 55,
+          "H": 95,
+          "slope_if_selected": -0.000932605
+        },
+        {
+          "bar": 56,
+          "H": 95,
+          "slope_if_selected": -0.000915952
+        },
+        {
+          "bar": 57,
+          "H": 95,
+          "slope_if_selected": -0.000899882
+        },
+        {
+          "bar": 58,
+          "H": 95,
+          "slope_if_selected": -0.000884367
+        },
+        {
+          "bar": 59,
+          "H": 95,
+          "slope_if_selected": -0.000869378
+        },
+        {
+          "bar": 60,
+          "H": 95,
+          "slope_if_selected": -0.000854888
+        },
+        {
+          "bar": 61,
+          "H": 95,
+          "slope_if_selected": -0.000840874
+        },
+        {
+          "bar": 62,
+          "H": 95,
+          "slope_if_selected": -0.000827311
+        },
+        {
+          "bar": 63,
+          "H": 95,
+          "slope_if_selected": -0.000814179
+        },
+        {
+          "bar": 64,
+          "H": 95,
+          "slope_if_selected": -0.000801458
+        },
+        {
+          "bar": 65,
+          "H": 95,
+          "slope_if_selected": -0.000789128
+        },
+        {
+          "bar": 66,
+          "H": 95,
+          "slope_if_selected": -0.000777171
+        },
+        {
+          "bar": 67,
+          "H": 95,
+          "slope_if_selected": -0.000765572
+        },
+        {
+          "bar": 68,
+          "H": 95,
+          "slope_if_selected": -0.000754313
+        },
+        {
+          "bar": 69,
+          "H": 95,
+          "slope_if_selected": -0.000743381
+        },
+        {
+          "bar": 70,
+          "H": 95,
+          "slope_if_selected": -0.000732761
+        },
+        {
+          "bar": 71,
+          "H": 95,
+          "slope_if_selected": -0.000722441
+        },
+        {
+          "bar": 72,
+          "H": 95,
+          "slope_if_selected": -0.000712407
+        },
+        {
+          "bar": 73,
+          "H": 95,
+          "slope_if_selected": -0.000702648
+        },
+        {
+          "bar": 74,
+          "H": 95,
+          "slope_if_selected": -0.000693153
+        },
+        {
+          "bar": 75,
+          "H": 95,
+          "slope_if_selected": -0.000683911
+        },
+        {
+          "bar": 76,
+          "H": 95,
+          "slope_if_selected": -0.000674912
+        },
+        {
+          "bar": 77,
+          "H": 95,
+          "slope_if_selected": -0.000666147
+        },
+        {
+          "bar": 78,
+          "H": 95,
+          "slope_if_selected": -0.000657606
+        },
+        {
+          "bar": 79,
+          "H": 95,
+          "slope_if_selected": -0.000649282
+        },
+        {
+          "bar": 80,
+          "H": 95,
+          "slope_if_selected": -0.000641166
+        },
+        {
+          "bar": 81,
+          "H": 95,
+          "slope_if_selected": -0.000633251
+        },
+        {
+          "bar": 82,
+          "H": 95,
+          "slope_if_selected": -0.000625528
+        },
+        {
+          "bar": 83,
+          "H": 95,
+          "slope_if_selected": -0.000617991
+        },
+        {
+          "bar": 84,
+          "H": 95,
+          "slope_if_selected": -0.000610634
+        },
+        {
+          "bar": 85,
+          "H": 95,
+          "slope_if_selected": -0.000603451
+        },
+        {
+          "bar": 86,
+          "H": 95,
+          "slope_if_selected": -0.000596434
+        },
+        {
+          "bar": 87,
+          "H": 95,
+          "slope_if_selected": -0.000589578
+        },
+        {
+          "bar": 88,
+          "H": 95,
+          "slope_if_selected": -0.000582878
+        },
+        {
+          "bar": 89,
+          "H": 95,
+          "slope_if_selected": -0.000576329
+        },
+        {
+          "bar": 90,
+          "H": 95,
+          "slope_if_selected": -0.000569925
+        },
+        {
+          "bar": 91,
+          "H": 95,
+          "slope_if_selected": -0.000563663
+        },
+        {
+          "bar": 92,
+          "H": 95,
+          "slope_if_selected": -0.000557536
+        },
+        {
+          "bar": 93,
+          "H": 95,
+          "slope_if_selected": -0.000551541
+        },
+        {
+          "bar": 94,
+          "H": 95,
+          "slope_if_selected": -0.000545673
+        },
+        {
+          "bar": 95,
+          "H": 95,
+          "slope_if_selected": -0.000539929
+        },
+        {
+          "bar": 96,
+          "H": 95,
+          "slope_if_selected": -0.000534305
+        },
+        {
+          "bar": 97,
+          "H": 95,
+          "slope_if_selected": -0.000528797
+        },
+        {
+          "bar": 98,
+          "H": 95,
+          "slope_if_selected": -0.000523401
+        },
+        {
+          "bar": 99,
+          "H": 95,
+          "slope_if_selected": -0.000518114
+        },
+        {
+          "bar": 100,
+          "H": 95,
+          "slope_if_selected": -0.000512933
+        },
+        {
+          "bar": 101,
+          "H": 95,
+          "slope_if_selected": -0.000507854
+        },
+        {
+          "bar": 102,
+          "H": 95,
+          "slope_if_selected": -0.000502875
+        },
+        {
+          "bar": 103,
+          "H": 95,
+          "slope_if_selected": -0.000497993
+        },
+        {
+          "bar": 104,
+          "H": 95,
+          "slope_if_selected": -0.000493205
+        },
+        {
+          "bar": 105,
+          "H": 95,
+          "slope_if_selected": -0.000488508
+        },
+        {
+          "bar": 106,
+          "H": 95,
+          "slope_if_selected": -0.000483899
+        },
+        {
+          "bar": 107,
+          "H": 95,
+          "slope_if_selected": -0.000479377
+        },
+        {
+          "bar": 108,
+          "H": 95,
+          "slope_if_selected": -0.000474938
+        },
+        {
+          "bar": 109,
+          "H": 95,
+          "slope_if_selected": -0.000470581
+        },
+        {
+          "bar": 110,
+          "H": 95,
+          "slope_if_selected": -0.000466303
+        }
+      ]
+    },
+    "eps_break_robustness": {
+      "documented_default": 0.01,
+      "sweep": [
+        {
+          "scale": 0.5,
+          "eps_break": 0.005,
+          "final_state": "NONE",
+          "breakout_bar": 10
+        },
+        {
+          "scale": 0.8,
+          "eps_break": 0.008,
+          "final_state": "NONE",
+          "breakout_bar": 10
+        },
+        {
+          "scale": 1,
+          "eps_break": 0.01,
+          "final_state": "NONE",
+          "breakout_bar": 10
+        },
+        {
+          "scale": 1.2,
+          "eps_break": 0.012,
+          "final_state": "NONE",
+          "breakout_bar": 10
+        },
+        {
+          "scale": 2,
+          "eps_break": 0.02,
+          "final_state": "NONE",
+          "breakout_bar": 10
+        }
+      ]
+    }
   }
 }

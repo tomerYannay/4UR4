@@ -327,7 +327,7 @@ in log space that stays **at or above every intervening high** (within tolerance
 `ε`), anchored at `A`.
 
 > **Selection window is AS-OF-TIME (Product Owner 2026-07-25, HD-12 — resolves
-> OQ-7).** The algorithm below is evaluated over the **available prefix `S_t`**
+> OQ-TL-7).** The algorithm below is evaluated over the **available prefix `S_t`**
 > (bars `0 … t−1`), **never** over the full series retroactively. `B*_t` is the
 > all-highs upper-log-hull vertex **of `S_t`**. While the line is `ACTIVE`, `B*`
 > **rolls forward**: each non-breakout bar's high enters the candidate set and the
@@ -504,8 +504,9 @@ explainability and evidence.
 ## 11. Line states (state machine)
 
 ```
-NONE ──(formation eligibility met on S_t, §21.3: |S_t| ≥ 2k+2, ATH not within k
-        of the last available bar, and an envelope-valid B* exists)──▶ ACTIVE
+NONE ──(formation eligibility met on S_t, §21.3: |S_t| ≥ min_formation_bars, ATH not
+        within min_ath_age_bars of the last available bar, and an envelope-valid B*
+        exists)──▶ ACTIVE
 ACTIVE ──(bar high pierces > ε, close below)──▶ WICK_BREAK (transient, stays ACTIVE)
 ACTIVE ──(FIRST daily close above line + ε_break, §13)──▶ BROKEN_OUT (alert fires here;
         the line is FROZEN as Λ^F at the start-of-bar state, §21.5)
@@ -792,7 +793,7 @@ bars of t=81 ✓ → **RETEST_HELD**.
 >   as-of-time note). Reset is immediate for classification purposes at bar `t`; the
 >   **new** line becomes active no earlier than `t+1` and only when formation
 >   eligibility (§21.3) is met again for the new anchor (§21.7).
-> - **Trigger 2 (hull re-bind) is the OQ-7 question and is now decided by HD-12.**
+> - **Trigger 2 (hull re-bind) is the OQ-TL-7 question and is now decided by HD-12.**
 >   It fires **only while the line is `ACTIVE`**, only on bars that produced **no**
 >   confirmed breakout, and the re-selected line is effective from **`t+1`**
 >   (§21.2 step 4, §21.6). It is **suspended** while `BROKEN_OUT` / `RETESTED`
@@ -818,9 +819,9 @@ bars of t=81 ✓ → **RETEST_HELD**.
 
 | Case | Rule | Reason code |
 |------|------|-------------|
-| **Fewer than `2k+2` bars available** | Minimum-history guard → no line. Threshold **unchanged** (`2k+2 = 8` at `k=3`); re-derived under all-highs candidacy in the note below. **Evaluated as-of-time on the prefix `S_t`** (§21.1): the guard blocks formation while `t < 2k+2`, so the earliest possible formation bar is `t = 2k+2` (§21.3). | `INSUFFICIENT_BARS` |
+| **Fewer than `min_formation_bars` bars available** | Minimum-history guard → no line. `min_formation_bars` is a **first-class, versioned, `k`-independent parameter** (default **8**, D-TL-12); it replaces the former pivot-derived `2k+2` formulation with **no change of value** at `k = 3`. **Evaluated as-of-time on the prefix `S_t`** (§21.1): the guard blocks formation while `t < min_formation_bars`, so the earliest possible formation bar is `t = min_formation_bars` (§21.3). | `INSUFFICIENT_BARS` |
 | **ATH on the first bar** (`tA = 0`) | Valid anchor; `B` is any later eligible **bar high** (§6 — pivot status is not a precondition). Common for stocks in secular decline from IPO peak. Fixtures GX-09, GX-08. | — |
-| **ATH on (or within `k` of) the last *available* bar** | No room for a descending second anchor yet → no line; wait for more bars. The `k`-bar recency window is **retained unchanged** as a conservative guard (see the note below). **Evaluated as-of-time**: the last available bar at evaluation bar `t` is `t−1`, so the guard blocks formation while `tA > (t−1) − k`, i.e. until `t ≥ tA + k + 1` (§21.3). It constrains the **anchor `A`**, never the candidacy of any `B` — no bar high is excluded from selection for being near the end of the series (HD-11, HD-12 rule 6). | `ATH_TOO_RECENT` |
+| **ATH within `min_ath_age_bars` of the last *available* bar** | No room for a descending second anchor yet → no line; wait for more bars. `min_ath_age_bars` is a **first-class, versioned, `k`-independent parameter** (default **3**, D-TL-12); it replaces the former pivot-derived `k`-recency window with **no change of value** at `k = 3`. **Evaluated as-of-time**: the last available bar at evaluation bar `t` is `t−1`, so the guard blocks formation while `tA > (t−1) − min_ath_age_bars`, i.e. until `t ≥ tA + min_ath_age_bars + 1` (§21.3). It constrains the **anchor `A`**, never the candidacy of any `B` — no bar high is excluded from selection for being near the end of the series (HD-11, HD-12 rule 6). | `ATH_TOO_RECENT` |
 | **No envelope-valid second anchor** — e.g. a later bar high **ties the ATH** (double top) and so pierces every descending candidate line beyond `ε` | Eligible candidates exist (§6: all later bar highs with `HB < HA`) but **none** survives the envelope test of §8 → no line. Fixture **GX-20**. **A strictly monotonic decline can never emit this code**: its first later bar high is always eligible and the hull binds there (fixture **GX-08**, `B* = (1,98)`). The former "no qualifying pivot" trigger is **superseded** — the absence of pivot highs is never a reason for this code (§5, §6, D-TL-03, D-TL-05, HD-11). | `NO_VALID_SECOND_ANCHOR` |
 | **Price gaps (overnight)** | Gaps are real bars; no interpolation. Gap-up through the line still requires **close** confirmation (§13). | — |
 | **Trading halt** (missing calendar days) | Handled by ordinal indexing (§1); no synthetic bars. Halt does not alter `t` continuity. | — |
@@ -830,50 +831,57 @@ bars of t=81 ✓ → **RETEST_HELD**.
 | **Non-positive price** | Invalid input, reject bar-set. | `INVALID_PRICE` |
 | **Flat-top plateau at a pivot** | Earliest bar of plateau is the pivot (§5 `≥` rule). | — |
 
-> **Note — re-derivation of the `2k+2` and `k`-recency guards under all-highs
-> candidacy (§6, D-TL-03/D-TL-05, HD-11).** Both thresholds are **retained
-> unchanged**; only their *justification* is restated, because "a bar within `k` of
-> the series end cannot be a confirmed pivot" (§5) is no longer a reason to exclude
-> a second-anchor candidate. Re-derived: under all-highs candidacy the **geometric**
-> minimum for a line is `A` plus one later bar high below it (**2 bars**), and the
-> shortest series that can clear the `k`-bar recency guard is **`k + 2` bars**.
-> `2k + 2` is therefore now a **conservative minimum-history guard** — it keeps the
-> secondary pivot layer of §5 (visualization, descriptive metadata, confidence
-> features) computable and refuses to fit a canonical line on a window too short to
-> exhibit structure — rather than a consequence of pivot confirmability. Whether to
-> relax either threshold toward its geometric minimum is a **tunable question left
-> open and NOT decided here** (changing a threshold would be a product-definition
-> decision; this section makes none). Both codes stay **distinct** from
-> `NO_VALID_SECOND_ANCHOR`, which concerns the §8 envelope test on a series that
-> *is* long enough.
-
-> **⚠ Note — under HD-12 these two guards became OUTCOME-DETERMINING (raised, NOT
-> decided here: see OQ-8).** Both thresholds remain **numerically unchanged**
-> (`2k+2`, `k`, with `k = 3`), and §21.3 does nothing but read them **as-of-time**.
-> But their role has changed in kind:
+> **Note — the two formation guards are `k`-INDEPENDENT parameters (D-TL-12,
+> approved 2026-07-25, HD-14; resolves OQ-TL-8).** Under HD-12 these guards became
+> **outcome-determining**: they decide `t_form`, the first bar at which any event can
+> be classified, and therefore which line the earliest evaluable bars are judged
+> against. A parameter that determines events may not be a by-product of the pivot
+> window `k`, which HD-11 declared **non-authoritative**. They are therefore restated
+> as **first-class, named, versioned, backtestable parameters**:
 >
-> - Before HD-12 they only decided *whether* a line was reported on a short series.
-> - After HD-12 they decide **`t_form`**, the first bar at which any event can be
->   classified, and therefore **which line the first evaluable bars are judged
->   against**. Removing them reinstates the degenerate case they exist to prevent: a
->   line fitted to `A` plus a single later bar is a two-point line of arbitrary
->   steepness, and under causal evaluation the **next** close will clear it almost
->   trivially, manufacturing a spurious `BROKEN_OUT` within a bar or two of the
->   series start. The guards are what keep §21 well-posed.
-> - Consequently a parameter declared **non-authoritative for *selection*** (`k`,
->   D-TL-03/HD-11 — it may never exclude a bar high from candidacy) is now
->   authoritative for **formation timing**. §21.3 preserves that distinction
->   explicitly: `k` gates **when the first line forms**; it never removes a candidate
->   `B` from the §6/§8 selection set, and never changes `B*` for a formed line. This
->   is consistent with HD-11 and with HD-12 rule 6 (which bars an end-window
->   exclusion on **selection**, the rule RM-01 would contradict — RM-01's approved
->   canonical **anchor `B*` is 3 bars from the end of its series**, while its **`A`**
->   is not).
-> - **Not decided here:** whether `2k+2` and the `k`-recency window remain the right
->   formation gate now that they are outcome-determining, or should be restated as
->   first-class, `k`-independent formation constants. That is a Product-Owner
->   product-definition question, recorded as **OQ-8**. This spec changes **no
->   threshold**; it applies the approved ones causally.
+> | Parameter | Default | Replaces | Constrains |
+> |---|---|---|---|
+> | `min_formation_bars` | **8** | the pivot-derived `2k+2` | minimum available history `\|S_t\|` |
+> | `min_ath_age_bars` | **3** | the pivot-derived `k`-recency window | the age of the **anchor `A`** only |
+>
+> - **No value changed.** At the former `k = 3` the old formulation gave `2k+2 = 8`
+>   and `k = 3`; the new parameters are numerically identical. The change is one of
+>   *status*, not of behaviour: `k` may now be re-tuned freely — for pivot
+>   visualization, descriptive metadata or confidence features — **without moving a
+>   single event on a single fixture or backtest**. Regression fixtures **GX-21**,
+>   **GX-22** and **GX-23** lock exactly that, and `tools/fixture-replay.mjs
+>   --formation` asserts it mechanically by replaying every fixture at
+>   `k ∈ {1,2,3,4,5,8}` and requiring byte-identical transitions, anchors and states.
+> - **Why the guards exist at all** (their justification, restated free of pivots):
+>   under all-highs candidacy the *geometric* minimum for a line is `A` plus one later
+>   lower high — **two bars**. A two-point line over the opening bars has arbitrary
+>   steepness, and under causal evaluation the next close clears it almost trivially,
+>   manufacturing a spurious `BROKEN_OUT` at `t = 2`–`t = 3`. `min_formation_bars`
+>   refuses to fit a canonical line on a window too short to exhibit structure;
+>   `min_ath_age_bars` refuses to anchor on an all-time high that the market has not
+>   yet had a chance to descend from. Both are conservatism, not pivot confirmability.
+> - **`min_ath_age_bars` constrains the ANCHOR only.** It removes **no** candidate `B`
+>   from the §6/§8 set and never changes `B*` for a formed line (HD-11, HD-12 rule 6).
+>   The barred rule — "bars within `k` of the end are excluded from **selection**" —
+>   would contradict RM-01, whose approved canonical **`B*` sits 3 bars from the end of
+>   its series**; RM-01's **anchor** is not near the end, so this guard does not touch it.
+> - Both codes stay **distinct** from `NO_VALID_SECOND_ANCHOR`, which concerns the §8
+>   envelope test on a series that *is* long enough (fixture **GX-20**).
+>
+> > **Decision D-TL-12 — Formation parameters are first-class and `k`-independent** ·
+> > **Status: APPROVED (Product Owner, 2026-07-25, HD-14) — resolves OQ-TL-8.** ·
+> > Governing rule: formation eligibility is gated by the named parameters
+> > `min_formation_bars` (default 8) and `min_ath_age_bars` (default 3), evaluated
+> > as-of-time on `S_t` (§21.3). Neither is derived from the pivot window `k`;
+> > changing `k` MUST NOT move any event. · Superseded formulation: `2k+2` minimum
+> > history and a `k`-bar ATH-recency window, both justified by pivot confirmability. ·
+> > Rejected alternatives: (a) keep the §18 guards expressed in `k` — leaves a
+> > non-authoritative parameter determining events; (c) relax toward the two-bar
+> > geometric minimum — reinstates the degenerate two-point line the guards exist to
+> > prevent. · Materiality: **high** (decides `t_form`, hence which events can fire). ·
+> > Human-approval: yes — **granted 2026-07-25 (HD-14)**. · Values are **versioned and
+> > backtestable**: they are pinned with the detector's `spec_version` and carried
+> > explicitly in every fixture's `params`.
 
 ---
 
@@ -928,14 +936,24 @@ build-lifted ticket must produce:
     validity path) is **superseded** by "volume is a confidence feature, not a
     validity gate"; regenerate expected output accordingly when the build is lifted.
 12. **GX-12 Equal-ATH tie:** duplicate highs → earliest anchors (D-TL-02).
-13. **GX-20 Duplicate ATH (double top) → no envelope-valid second anchor:** a later
-    bar high **ties** the ATH far enough downstream that every descending candidate
-    line is pierced by it beyond `ε` (24 candidates, 0 valid) →
-    `NO_VALID_SECOND_ANCHOR`. This is the **genuinely reachable** case for that
-    reason code after HD-11 (§18); it is decided purely on the envelope test, never
-    on pivot status.
+13. **GX-20 Duplicate ATH (double top) → no envelope-valid second anchor:** a bar
+    high **ties** the ATH **before `min_formation_bars`**, so at *every* evaluable
+    prefix the shallowest descending candidate is already pierced by it beyond `ε` →
+    `NO_VALID_SECOND_ANCHOR`, permanently. This is the **genuinely reachable** case
+    for that reason code after HD-11 (§18); it is decided purely on the envelope
+    test, never on pivot status. **Revised 2026-07-25 (HD-12 audit):** the first
+    construction placed the tie *after* formation, so a line legitimately formed and
+    broke out before the tie ever existed — a full-series design that §21.8 outlaws.
+    The tie must precede formation for the property to hold causally.
+14. **GX-21 / GX-22 / GX-23 Formation-gate regressions (D-TL-12, HD-14):** three
+    fixtures that isolate the formation gates — `min_formation_bars` binding alone
+    (GX-21), `min_ath_age_bars` binding alone after a new-ATH reset (GX-22), and
+    eligibility holding with **zero** confirmed pivots in the formation prefix
+    (GX-23). Together they lock: no formation before either gate; formation
+    *immediately* once both are met and `B*` exists; and complete independence from
+    the pivot window `k`.
 
-*(The complete, superseding catalog — GX-01 … GX-20, including the SC-2 proof
+*(The complete, superseding catalog — GX-01 … GX-23, including the SC-2 proof
 GX-19 — is maintained in [`fixtures/README.md`](fixtures/README.md) §3.)*
 
 Each fixture's expected JSON must include: selected anchors, `m`/`b`, state,
@@ -948,12 +966,18 @@ figures**, so Verification is exact and reproducible.
 > bar to establish, revise, or withdraw an earlier bar's classification**. A single
 > full-series hull computed over the complete fixture series is **not** a valid
 > derivation of an expected event unless it is demonstrably identical to the
-> as-of-time result. Fixtures whose expected anchors/events were derived by
-> full-series calculation MUST be **re-derived** under §21 by a dedicated audit
-> before they are cited as evidence; that audit is a **separate task** and no
-> fixture is changed by this section. To make the derivation checkable, an
-> as-of-time fixture SHOULD record, per evaluated bar, the anchors of `Λ_t`, and —
-> where a breakout occurs — the frozen `Λ^F` (§21.5).
+> as-of-time result.
+>
+> **Audit status — COMPLETE (2026-07-25).** Every fixture in the set has been
+> re-derived as-of-time. Each `expected.json` now carries a **`causal_record`** block
+> holding the per-gate formation trace, the as-of-time candidate set, the active `B*`
+> and line value before every event bar, each event's margin, every pre-breakout
+> re-selection, the frozen `Λ^F`, the later non-retroactive challengers, an
+> `ε_break` robustness sweep and a descriptive pivot context. The whole set is
+> re-checked mechanically by `tools/fixture-replay.mjs`, which additionally asserts
+> the §21.4 hull lemma against the §8 brute-force recomputation **at every evaluable
+> prefix**, prefix-truncation invariance (§21.8), the frozen-line invariants (§21.5)
+> and the formation-gate regressions (§21.3, D-TL-12).
 
 ---
 
@@ -961,8 +985,12 @@ figures**, so Verification is exact and reproducible.
 
 1. No randomness anywhere in geometry or state transitions.
 2. All tolerances/constants (`k, ε, ε_touch, ε_break, ε_fail, ε_retest,
-   W_retest, h_hold, F_fail, E_expiry`) are **named config**, versioned with the
-   detector. **Per HD-03 (2026-07-24):** `ε_break` is a **versioned, backtestable
+   W_retest, h_hold, F_fail, E_expiry, min_formation_bars, min_ath_age_bars`) are
+   **named config**, versioned with the detector. **Per D-TL-12 (2026-07-25,
+   HD-14):** `min_formation_bars` and `min_ath_age_bars` are **first-class formation
+   parameters independent of `k`** — they are pinned with `spec_version`, are
+   backtestable, and changing `k` MUST NOT move any event (asserted by
+   `tools/fixture-replay.mjs --formation`). **Per HD-03 (2026-07-24):** `ε_break` is a **versioned, backtestable
    tolerance with NO locked default** (percentage-based **and** ATR-based
    candidates evaluated in Phase 0 + Phase 4 before any value is pinned). The former
    persistence gate `p_break` and volume gate `f_vol` are **removed from the
@@ -986,7 +1014,7 @@ figures**, so Verification is exact and reproducible.
 
 ## 21. As-of-time (rolling causal) evaluation semantics — **APPROVED: HD-12**
 
-> **Product Owner approved 2026-07-25 (HD-12) — resolves OQ-7.** **Anchor selection
+> **Product Owner approved 2026-07-25 (HD-12) — resolves OQ-TL-7.** **Anchor selection
 > uses rolling, causal, as-of-time evaluation while the trendline is `ACTIVE`.** It
 > is **neither** a final full-series calculation that may use future bars
 > retroactively, **nor** a permanently frozen anchor from the first moment a valid
@@ -1001,8 +1029,8 @@ figures**, so Verification is exact and reproducible.
 
 ### 21.1 Definitions (precise and computable)
 
-Let `k`, `ε`, `ε_break`, `ε_fail`, `ε_retest`, `W_retest`, `F_fail`, `E_expiry` be the
-named config of §20.
+Let `k`, `ε`, `ε_break`, `ε_fail`, `ε_retest`, `W_retest`, `F_fail`, `E_expiry`,
+`min_formation_bars` and `min_ath_age_bars` be the named config of §20.
 
 - **Available prefix.** `S_t := bars[0 … t−1]` — every bar strictly before the
   evaluation bar `t`. `|S_t| = t`. `S_0 = ∅`.
@@ -1070,8 +1098,8 @@ A conforming detector MUST process each bar in exactly this order.
 
 ```
 FORMATION_ELIGIBLE(t)  iff  all of:
-  (F1)  |S_t| ≥ 2k + 2                    # §18 INSUFFICIENT_BARS, read as-of-time
-  (F2)  tA ≤ (t − 1) − k                  # §18 ATH_TOO_RECENT, read as-of-time
+  (F1)  |S_t| ≥ min_formation_bars        # §18 INSUFFICIENT_BARS, read as-of-time
+  (F2)  tA ≤ (t − 1) − min_ath_age_bars   # §18 ATH_TOO_RECENT, read as-of-time
   (F3)  B*_t ≠ ⊥                          # §6 candidacy + §8 envelope test on S_t
                                           # (§10.4 NO_VALID_SECOND_ANCHOR otherwise)
 ```
@@ -1079,8 +1107,17 @@ FORMATION_ELIGIBLE(t)  iff  all of:
 Equivalently, the earliest bar at which a line can be `ACTIVE` is
 
 ```
-t_form = min { t : t ≥ 2k + 2  ∧  t ≥ tA + k + 1  ∧  B*_t ≠ ⊥ }
+t_form = min { t : t ≥ min_formation_bars
+                 ∧ t ≥ tA + min_ath_age_bars + 1
+                 ∧ B*_t ≠ ⊥ }
 ```
+
+`min_formation_bars` (default **8**) and `min_ath_age_bars` (default **3**) are
+**first-class, named, versioned, backtestable parameters — independent of the pivot
+window `k`** (D-TL-12, HD-14). Neither may be derived from `k`, and changing `k` MUST
+NOT move `t_form` or any event. The three gates are evaluated **independently**, so an
+implementation and an auditor can always say which one binds; fixtures record that
+per-gate trace in `causal_record.formation.gate_trace`.
 
 and for every `t < t_form` the state is `NONE`, with reason code
 `INSUFFICIENT_BARS`, `ATH_TOO_RECENT` or `NO_VALID_SECOND_ANCHOR` respectively (the
@@ -1096,13 +1133,15 @@ to test against, and a bar that cannot be evaluated MUST NOT be evaluated later.
    are written in — all denote `S_t` and its last element `t−1` when evaluated at bar
    `t`. Re-reading those existing predicates on `S_t` is a **mechanical consequence**
    of HD-12, not a new rule.
-2. **§18, row 1** (approved, threshold unchanged): fewer than `2k+2` bars → **no
-   line**, `INSUFFICIENT_BARS`. On `S_t` this is `|S_t| = t ≥ 2k+2` ⇒ **(F1)**.
-3. **§18, row 3** (approved, threshold unchanged): ATH on, or within `k` of, the
-   **last bar** → no line, "wait for more bars", `ATH_TOO_RECENT`. This row is
-   **already written in as-of-time language** ("wait for more bars" presupposes a
-   rolling evaluation). On `S_t` the last bar is `t−1`, so the guard is
-   `(t−1) − tA ≥ k` ⇒ **(F2)**.
+2. **§18, row 1** (approved; value unchanged, now named `min_formation_bars` per
+   D-TL-12): fewer than `min_formation_bars` bars → **no line**,
+   `INSUFFICIENT_BARS`. On `S_t` this is `|S_t| = t ≥ min_formation_bars` ⇒ **(F1)**.
+3. **§18, row 3** (approved; value unchanged, now named `min_ath_age_bars` per
+   D-TL-12): ATH on, or within `min_ath_age_bars` of, the **last bar** → no line,
+   "wait for more bars", `ATH_TOO_RECENT`. This row is **already written in
+   as-of-time language** ("wait for more bars" presupposes a rolling evaluation). On
+   `S_t` the last bar is `t−1`, so the guard is `(t−1) − tA ≥ min_ath_age_bars`
+   ⇒ **(F2)**.
 4. **§6 + §8 + §10.4** (approved): a line exists only if some later bar high is
    eligible and survives the envelope test; otherwise `NO_VALID_SECOND_ANCHOR` and
    **no line** — an explicit "no signal" state, not an error. On `S_t` ⇒ **(F3)**.
@@ -1122,12 +1161,11 @@ to test against, and a bar that cannot be evaluated MUST NOT be evaluated later.
      excluded by HD-12 rules 1 and 7: it uses the length of the unseen remainder to
      license an earlier line, which is look-ahead.
    - *Drop the guards as pivot-derived and let a line form as soon as `A` plus one
-     later lower high exist* — excluded by §18 as written, which **retains** both
-     thresholds (the §18 re-derivation note re-justified them under all-highs
-     candidacy and explicitly relaxed **neither**). It is also the degenerate case
-     the guards exist to prevent: a two-point line over the first bars has arbitrary
-     steepness, and under causal evaluation the next close clears it almost trivially,
-     manufacturing a spurious `BROKEN_OUT` at `t = 2`–`t = 3`.
+     later lower high exist* — excluded by D-TL-12, which **retains both values** and
+     merely renames them free of `k`. It is also the degenerate case the guards exist
+     to prevent: a two-point line over the first bars has arbitrary steepness, and
+     under causal evaluation the next close clears it almost trivially, manufacturing
+     a spurious `BROKEN_OUT` at `t = 2`–`t = 3`.
    - *Invent a new "enough structure" threshold* (e.g. require `n` dominated highs or
      `n` touches before forming) — excluded: no approved rule states one, and this
      spec introduces **no new threshold**.
@@ -1135,12 +1173,25 @@ to test against, and a bar that cannot be evaluated MUST NOT be evaluated later.
    condition on **total available history** and (F2) a condition on **history since
    the anchor**; both are the literal readings of §18 and they compose without
    ambiguity: a new ATH late in a long series satisfies (F1) immediately and must
-   still wait out (F2).
+   still wait out (F2). Fixture **GX-22** locks exactly this composition.
 
-> **Numerically nothing changed.** `2k+2` and `k` are the §18 values, unchanged
-> (`k = 3` ⇒ earliest formation at `t = 8` for an ATH at `t = 0`). Their status
-> under HD-12 is flagged in the §18 note and raised as **OQ-8**; this section
-> **decides no threshold**.
+> **Numerically nothing changed; the parameters' STATUS did.** `min_formation_bars =
+> 8` and `min_ath_age_bars = 3` are the former `2k+2` and `k` values at `k = 3`,
+> unchanged (earliest formation at `t = 8` for an ATH at `t = 0`). What D-TL-12
+> (HD-14) changed is that they are now **first-class, versioned, `k`-independent**
+> parameters rather than by-products of a pivot window HD-11 declared
+> non-authoritative — so re-tuning `k` can never move an event.
+>
+> **Regression evidence (binding).** Three fixtures lock the gate, and
+> `tools/fixture-replay.mjs --formation` asserts all four properties over the whole
+> set on every run:
+>
+> | Property | Asserted by |
+> |---|---|
+> | No line is ever `ACTIVE` before `min_formation_bars` | check (a) over every fixture; **GX-21** is the dedicated case — F2 and F3 are already satisfied, so F1 alone binds |
+> | No line is ever `ACTIVE` within `min_ath_age_bars` of its own anchor | check (b) over every fixture; **GX-22** is the dedicated case — F1 stays satisfied across a new-ATH reset, so F2 alone binds |
+> | Formation happens **immediately** once all three gates hold — not one bar later | check (c): the first `ACTIVE` bar must equal `min { t : F1 ∧ F2 ∧ F3 }` |
+> | Pivot status never affects eligibility | check (d): every fixture is replayed at `k ∈ {1,2,3,4,5,8}` and must produce byte-identical transitions, anchors and states. **GX-23** is the dedicated case — its formation prefix contains **zero** confirmed `k=3` pivots and its `B*` is a bar that could never be confirmed as one, yet it forms on exactly the same bar as **GX-21**, whose prefix does contain pivot structure |
 
 ### 21.4 `Λ_t` in closed form — the running-max lemma (computability)
 
@@ -1279,7 +1330,8 @@ If `H[t] > HA` of the anchor `A_t` in force:
 
 ### 21.9 Worked micro-example (three bars: a re-selection, then a breakout + freeze)
 
-Setup: `k = 3` (so the earliest possible formation bar is `t = 2k+2 = 8`), `ε = 0.02`,
+Setup: `min_formation_bars = 8` (so the earliest possible formation bar is `t = 8`),
+`min_ath_age_bars = 3`, `k = 3` (descriptive only), `ε = 0.02`,
 illustrative `ε_break = 0.01` (**not** a locked value — §13.5). Anchor `A = (0, 100)`,
 `yA = ln 100 = 4.6051702`. Suppose that at the start of bar 20 the rolling hull has
 selected `B*_20 = (18, 88)`, `y = ln 88 = 4.4773368`:
@@ -1327,7 +1379,7 @@ b_20 = 4.6051702
   prior `HA = 100`, so §21.7 does not fire.
 
 > **Decision D-TL-11 — As-of-time (rolling causal) evaluation** · **Status: APPROVED
-> (Product Owner, 2026-07-25, HD-12) — resolves OQ-7.** · Governing rule: bar `t` is
+> (Product Owner, 2026-07-25, HD-12) — resolves OQ-TL-7.** · Governing rule: bar `t` is
 > evaluated against `Λ_t`, the canonical all-highs upper-log-hull line built from bars
 > `0 … t−1`; a non-breakout bar rolls `B*` forward effective `t+1`; a confirmed
 > breakout **freezes** `A`, `B*`, `m`, `b`, tolerance version and line for
@@ -1393,24 +1445,39 @@ The Architect proposes the Product Steward add these to
 
 ## Open questions (for Orchestrator/Steward/human triage)
 
-1. **OQ-1 (D-TL-01, high) — RESOLVED 2026-07-24 (HD-01):** price-adjustment basis
+> **Identifier namespace (added 2026-07-25 — resolves an identifier collision).**
+> The open questions below are **local to this specification** and are numbered
+> `OQ-TL-n`, mirroring this document's own `D-TL-nn` decision convention. They are
+> **distinct** from the product-level open questions `OQ-n` in
+> [`requirements.md`](requirements.md), which is **precedence 3** and governs. Before
+> this change both registers used a bare `OQ-n`, so `OQ-7` denoted the
+> anchor-selection-window question here and the external Fear & Greed
+> source/redistribution question there — two different questions with one label.
+> **Mapping:** every `OQ-n` previously cited *in this document* is now `OQ-TL-n`
+> (same number, namespaced); every `OQ-n` in `requirements.md` is unchanged. Cite
+> `OQ-TL-7` for the as-of-time selection window (resolved by HD-12) and `OQ-TL-8` for
+> the formation-gate question (resolved by HD-14); `OQ-7`/`OQ-8` without the `TL`
+> always mean the `requirements.md` entries.
+
+
+1. **OQ-TL-1 (D-TL-01, high) — RESOLVED 2026-07-24 (HD-01):** price-adjustment basis
    **approved** split-adjusted, dividend-unadjusted ("as-traded").
-2. **OQ-2 (D-TL-04, high) — RESOLVED 2026-07-24 (HD-02):** the **upper-log-hull
+2. **OQ-TL-2 (D-TL-04, high) — RESOLVED 2026-07-24 (HD-02):** the **upper-log-hull
    envelope** is **approved** as the canonical line-selection definition.
-3. **OQ-3 (D-TL-07, high) — RESOLVED (REVISED) 2026-07-24 (HD-03):** breakout
+3. **OQ-TL-3 (D-TL-07, high) — RESOLVED (REVISED) 2026-07-24 (HD-03):** breakout
    confirmation fires on the **first daily close** above line + tolerance (no
    persistence wait); persistence and volume are confidence features; `ε_break` is
    a versioned, backtestable tolerance (%-based and ATR-based, evaluated Phase 0 +
    Phase 4). The prior "close + persistence 2 + soft volume" policy is superseded.
-4. **OQ-4 (D-TL-05, high) — RESOLVED 2026-07-25 (resolves SC-2):** selection
+4. **OQ-TL-4 (D-TL-05, high) — RESOLVED 2026-07-25 (resolves SC-2):** selection
    domination uses **every bar high** (not pivots-only); the canonical anchor is
    the all-highs upper-log-hull vertex and **pivot detection is
    non-authoritative** (§5, §6, §8). Proof fixture: **GX-19**.
-5. **OQ-5:** Universe/data-vendor and split/dividend data availability for S&P 500
+5. **OQ-TL-5:** Universe/data-vendor and split/dividend data availability for S&P 500
    (data-layer ticket dependency, not this spec).
-6. **OQ-6:** Should very long (multi-decade) histories switch to weekly bars to
+6. **OQ-TL-6:** Should very long (multi-decade) histories switch to weekly bars to
    tame pivot noise (D-TL-00)?
-7. **OQ-7 (high) — RESOLVED 2026-07-25 (HD-12):** anchor selection is **rolling,
+7. **OQ-TL-7 (high) — RESOLVED 2026-07-25 (HD-12):** anchor selection is **rolling,
    causal, as-of-time** while the line is `ACTIVE` — **neither** full-series
    retroactive **nor** permanently frozen at formation. Bar `t` is evaluated against
    the line built from bars `0 … t−1`; a non-breakout bar rolls `B*` forward
@@ -1418,11 +1485,12 @@ The Architect proposes the Product Steward add these to
    breakout/retest/failure/expiry; a new ATH starts a new formation; formation
    eligibility is the §18 guards read as-of-time. Specified normatively in **§21**
    (D-TL-11). Both rejected alternatives are recorded there. **Evidence
-   consequence (not resolved by this section):** fixture expectations derived by
-   full-series calculation — including the anchors of **GX-09** and **GX-15** flagged
-   under `geometry_check.open_issue_2026_07_25`, and any fixture whose event list was
-   derived full-series — MUST be **re-derived** as-of-time by a dedicated fixture
-   audit (§19 note, §21.8). **No fixture geometry is changed by §21.**
+   consequence — DISCHARGED 2026-07-25:** every fixture expectation derived by
+   full-series calculation has been **re-derived as-of-time** by the dedicated audit
+   (§19 note, §21.8). The causal result was identical for GX-08, GX-10, GX-12 and
+   GX-18 and different for every other fixture; the in-place
+   `geometry_check.open_issue_2026_07_25` flags on GX-03, GX-09 and GX-15 are resolved
+   and removed, and every fixture now carries a full `causal_record`.
    *History (the question as raised, retained per the decision-history rule):* over
    **what window** is the §8 selection evaluated — the
    **full history** (so a later, shallower, envelope-valid bar high **re-selects**
@@ -1439,19 +1507,25 @@ The Architect proposes the Product Steward add these to
    itself only 3 bars from the end of its series, so "bars within `k` of the series
    end are excluded from **selection**" would contradict RM-01 and HD-11. Requires a
    Product Owner decision; **no fixture geometry has been changed pending it**.
-8. **OQ-8 (high, OPEN — raised 2026-07-25 by the §21/HD-12 specification work; NOT
-   decided there):** HD-12 made **formation eligibility** (§21.3) outcome-determining
-   — `t_form` decides the first bar at which any event can fire and which line the
-   earliest evaluable bars are judged against. §21.3 derives it from the **existing,
-   numerically unchanged** §18 guards (`2k+2` minimum available history; ATH not
-   within `k` of the last available bar), because those are the approved rules and no
-   new threshold may be invented. But this makes `k` — declared **non-authoritative
-   for selection** (D-TL-03, HD-11) — authoritative for **formation timing**. Should
-   the formation gate (a) remain the §18 guards as-is, (b) be restated as first-class,
-   `k`-independent formation constants (`min_bars`, `min_bars_after_anchor`) so that
-   tuning the pivot window can never move an event, or (c) be relaxed toward the
-   geometric minimum? **Materiality: high** — it moves `t_form` and therefore can add
-   or remove early events on every fixture and backtest. **Safe default held here:**
-   option (a), the approved §18 thresholds read as-of-time; **§21 changes no
-   threshold**. Requires a Product Owner decision before the formation gate is pinned
-   with a `spec_version`. See the ⚠ note in §18 and §21.3.
+8. **OQ-TL-8 (high) — RESOLVED 2026-07-25 (HD-14):** the formation gate is restated
+   as **first-class, `k`-independent constants** — option (b). `min_formation_bars`
+   (default **8**) and `min_ath_age_bars` (default **3**) replace the pivot-derived
+   `2k+2` and `k`-recency formulations **at identical values**, are versioned with the
+   detector's `spec_version`, are carried explicitly in every fixture's `params`, and
+   are backtestable. Tuning the pivot window `k` can no longer move any event.
+   Specified normatively in §18 and §21.3 (**D-TL-12**); locked by regression fixtures
+   **GX-21**, **GX-22**, **GX-23** and by the `--formation` assertions of
+   `tools/fixture-replay.mjs`, which replay every fixture at `k ∈ {1,2,3,4,5,8}` and
+   require identical output.
+   *History (the question as raised, retained per the decision-history rule):* HD-12
+   made **formation eligibility** (§21.3) outcome-determining — `t_form` decides the
+   first bar at which any event can fire and which line the earliest evaluable bars
+   are judged against. §21.3 originally derived it from the **existing, numerically
+   unchanged** §18 guards (`2k+2` minimum available history; ATH not within `k` of the
+   last available bar), because those were the approved rules and no new threshold
+   could be invented. But that made `k` — declared **non-authoritative for selection**
+   (D-TL-03, HD-11) — authoritative for **formation timing**. The options put to the
+   Product Owner were (a) keep the §18 guards as-is, (b) restate them as first-class
+   `k`-independent constants, (c) relax them toward the geometric minimum. **(b) was
+   approved.** Rejected: (a) leaves a non-authoritative parameter determining events;
+   (c) reinstates the degenerate two-point line the guards exist to prevent.

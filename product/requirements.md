@@ -272,6 +272,13 @@ Traceability: each FR cites the governing spec.
   store a **multi-label set** (horizons 5/10/20/60; barriers +5/−3, +10/−5, +15/−7;
   MFE/MAE/failed-breakout/successful-retest), with +15/−7/60 kept only as the
   initial research label. → HD-05.
+> **Identifier namespace.** The `OQ-n` identifiers in this file are the
+> **product-level** open questions and are governing (this document is precedence 3).
+> The trendline specification keeps its own document-local register, renamed
+> **`OQ-TL-n`** on 2026-07-25 to end a collision in which `OQ-7` meant the external
+> Fear & Greed question here and the anchor-selection-window question there. An
+> unqualified `OQ-n` anywhere in the repository means **this** list.
+
 - **OQ-5 (high):** Data-provider selection and recurring cost. → HD-06.
 - **OQ-6 (high):** Survivorship-bias-free constituents + delisted history (paid). → HD-07.
 - **OQ-7 (high, GOV-014):** External F&G source + redistribution/display rights,

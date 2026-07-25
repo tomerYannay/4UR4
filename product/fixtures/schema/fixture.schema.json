@@ -88,6 +88,20 @@
         "W_retest": { "type": "integer", "description": "Retest return window in bars (§16)." },
         "h_hold": { "type": "integer", "description": "Retest hold window in bars (§16)." },
         "E_expiry": { "type": "integer", "description": "Post-breakout expiry horizon in bars (§17)." },
+        "min_formation_bars": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum available history before a line may become ACTIVE (§21.3 F1, D-TL-12). A first-class versioned parameter, INDEPENDENT of the pivot window k; it replaces the pivot-derived 2k+2 formulation."
+        },
+        "min_ath_age_bars": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minimum number of bars that must separate the anchor A from the last available bar before a line may become ACTIVE (§21.3 F2, D-TL-12). Constrains the ANCHOR only — never the candidacy of any B (HD-11, HD-12 rule 6). Independent of k; it replaces the pivot-derived k-recency window."
+        },
+        "formation_params_note": {
+          "type": "string",
+          "description": "Human note recording that the formation gates are k-independent, versioned and backtestable (D-TL-12)."
+        },
         "tolerance_version": {
           "type": "string",
           "description": "Version tag for the tolerance set used (traceability, §20)."
@@ -107,9 +121,9 @@
       "type": ["object", "null"],
       "additionalProperties": false,
       "properties": {
-        "t": { "type": "integer" },
-        "H": { "type": "number" },
-        "reason": { "type": "string", "description": "If null, why no B* was selected." }
+        "t": { "type": ["integer", "null"], "description": "Null when no B* exists; `reason` then explains why." },
+        "H": { "type": ["number", "null"], "description": "Null when no B* exists; `reason` then explains why." },
+        "reason": { "type": "string", "description": "Why this B* was selected, or — when t/H are null — why none was." }
       },
       "description": "Selected second anchor B*=(tB,HB) per §6/§8; null with reason when none."
     },
@@ -192,6 +206,26 @@
           "items": { "type": "string" }
         },
         "notes": { "type": "string" }
+      }
+    },
+    "causal_record": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "As-of-time (§21 / HD-12 / D-TL-11) evidence block, emitted by tools/fixture-replay.mjs: the formation-gate trace with F1/F2/F3 evaluated independently, the as-of-time candidate set at the formation bar, the active B* and line value before every event bar, each event with its margin, every pre-breakout re-selection, the frozen event line, the later non-retroactive challengers, the eps_break robustness sweep, and a DESCRIPTIVE pivot context. Every number is derived only from bars strictly earlier than the bar it judges.",
+      "properties": {
+        "semantics": { "type": "string" },
+        "formation": { "type": "object" },
+        "as_of_time_candidate_set": { "type": ["object", "null"] },
+        "no_anchor_proof": { "type": "object" },
+        "pivot_context": { "type": "object" },
+        "active_line_before_event_bars": { "type": "array" },
+        "events": { "type": "array" },
+        "reselections": { "type": "array" },
+        "frozen_event_line": { "type": ["object", "null"] },
+        "non_retroactive_challengers": { "type": "object" },
+        "eps_break_robustness": { "type": "object" },
+        "input_guard": { "type": "object" },
+        "note": { "type": "string" }
       }
     }
   }

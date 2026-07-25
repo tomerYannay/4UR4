@@ -1,6 +1,9 @@
 # 4UR4 — Project State (canonical, current-state only)
 
-> **Current state only — not a history log.** **Content owner: Product Steward.** The
+> **Current state only — not a history log.** *A fuller post-merge refresh of this file — and
+> the queued roadmap-status reconciliation — are deliberately deferred until PR #18 merges; the
+> edits made on that branch are confined to statements the branch's own diff would otherwise
+> falsify.* **Content owner: Product Steward.** The
 > **Orchestrator** ensures this file is updated after: a phase completes · a Product Owner
 > decision is recorded · a roadmap phase changes · a major PR merges · a build-freeze scope
 > changes. The **Strategic Product Reviewer** reads and validates this file but **may not
@@ -31,18 +34,22 @@ Phase 0 exit was not clean because **GX-08 as committed** encoded a precondition
 forbids**) is **removed by the [#16](https://github.com/tomerYannay/4UR4/issues/16) evidence
 correction**: GX-08 now expects the all-highs upper-log-hull result `B* = (1, 98)`, GX-20
 covers the still-reachable `NO_VALID_SECOND_ANCHOR` case, and the stale pivot-conditioned text
-has been swept. **One narrower item remains open** and was raised by that same sweep: whether
-§8 selection is evaluated over the **full history** or freezes at line formation — a question
-HD-11 left unstated once the pivot precondition was removed, which contests the stated anchors
-of **GX-09** and **GX-15** (flagged in-place under `geometry_check.open_issue_2026_07_25` and
-in [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md); **not decided** by #16, since it is a
-product-definition question).
+has been swept. The narrower question that sweep raised — whether §8 selection is evaluated
+over the **full history** or freezes at line formation — has since been **decided by the
+Product Owner as HD-12**: selection is **rolling, causal, as-of-time**, frozen at a confirmed
+breakout. Two consequential decisions followed on 2026-07-25: **HD-13** (`eps_break` stays
+unlocked; ordinary fixtures must be tolerance-robust, with GX-15 alone retained as the
+boundary fixture) and **HD-14** (formation gates restated as first-class, `k`-independent
+parameters `min_formation_bars = 8` / `min_ath_age_bars = 3`). The entire fixture set has been
+re-derived as-of-time and re-verified mechanically; the in-place
+`geometry_check.open_issue_2026_07_25` flags are resolved and removed.
 
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
 - Proposed MVP roadmap, PRD, specs, human-decision register (PR #8).
-- **Phase 0 golden fixtures** (**20 synthetic** — 17 geometry + 3 null-anchor, after the #16
-  correction added GX-20 and moved GX-08 into the geometry set) + **RM-01** real-market case,
+- **Phase 0 golden fixtures** (**23 synthetic** — 20 geometry + 3 null-anchor, after the #16
+  correction and the HD-12 as-of-time audit added GX-20 and the formation-gate regressions
+  GX-21/GX-22/GX-23, and moved GX-08 into the geometry set) + **RM-01** real-market case,
   PO-approved; **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9; fixtures corrected under #16).
 - ChatGPT↔Claude **handoff protocol** + PR template + Agent Coordination Queue (#10) (PR #11).
 - **Strategic Product Reviewer** added as the 10th permanent agent (PR #13).
@@ -72,9 +79,11 @@ product-definition question).
   Phase 0 evidence defect, not a new product-definition decision** (Product Owner ruling).
   Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Authored on branch
   `fix/gx08-hd11-pivot-sweep`; awaiting verification/review and merge.** The sweep additionally
-  surfaced an **unresolved product-definition question** (full-history vs formation-window
-  selection, contesting the GX-09 / GX-15 anchors) which is **escalated, not decided** — see the
-  Phase-0 note above.
+  surfaced the full-history-vs-formation-window selection question, which the Product Owner
+  decided as **HD-12** (as-of-time selection), followed by **HD-13** and **HD-14**. The branch
+  now also carries the complete as-of-time re-derivation of the fixture set, the
+  `k`-independent formation parameters and their regression fixtures. **No Product-Owner-only
+  question is left open by this branch.**
 
 ## Next milestone
 Two tracks: (1) complete the **[#16](https://github.com/tomerYannay/4UR4/issues/16) Phase 0
