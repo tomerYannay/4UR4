@@ -9,8 +9,14 @@
 >
 > **Machine-guarded surfaces.** The governing result table below and every `causal_record`
 > block are **emitted and diffed by `node tools/fixture-replay.mjs --all`**, which CI runs,
-> so neither can drift from the fixtures without failing the build. The surrounding prose is
-> not machine-checked and is hand-verified at the head named in each section.
+> so neither can drift from the fixtures without failing the build.
+>
+> **What is NOT guarded, named explicitly:** each fixture's `geometry_check` block — including
+> `key_inequalities` — is **hand-written and machine-checked by nothing**, despite living
+> inside the fixture JSON next to the gated `causal_record`. It has drifted twice. So has the
+> prose in this file and in `README.md`. All of it is hand-verified at the head named in each
+> section and nowhere else. Building a gate for `geometry_check` is outstanding work, not
+> something this branch did.
 >
 > **The current, governing verification pass is
 > [§ As-of-time (HD-12) audit — 2026-07-25](#as-of-time-hd-12-audit--2026-07-25-governing) at
@@ -333,9 +339,12 @@ line ever exists, `eps_break` is never consulted — the result is invariant acr
 ### Corrections from the independent review chain (2026-07-25)
 
 The first head of this audit (`c27a2d6`) was routed through Verification, Code Review,
-Project Audit and Strategic Review. The chain ran **seven successive heads** (`c27a2d6` → `c0ede4d` → `9d704e0` → `c10612c` →
-`53b554a` → `4532492` → `a1e6a0f`) and six correction rounds. This table records what each
-round found and how it was corrected; a cell annotated "corrected again" was fixed in a
+Project Audit and Strategic Review. The chain ran against **every head this branch has produced** — the full list is in the
+branch's commit history, beginning `c27a2d6` → `c0ede4d` → `9d704e0` → `c10612c` → `53b554a`
+→ `4532492` → `a1e6a0f` and continuing to the head named at the top of this section. *(A
+literal head count is deliberately not asserted here: each correction commit would falsify
+it, which is the exact defect class this table exists to record.)* This table records what
+each round found and how it was corrected; a cell annotated "corrected again" was fixed in a
 later round than the one that first raised it. **Findings against the CHECKS themselves are
 listed alongside findings against the fixtures** — a verification log that records only the
 defects its own tooling caught would be measuring the wrong thing. They are recorded because a verification log that hides its

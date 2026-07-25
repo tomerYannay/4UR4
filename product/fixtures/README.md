@@ -238,8 +238,9 @@ line twice across a new-ATH reset. The re-selection entry is stamped at the bar 
 re-selected line takes **effect** (§21.6), and is emitted **before** that bar's own event, so
 the transition list is always continuous — each `from` equals the previous `to` (§21.6 rule 3, asserted by `--all`).
 
-`INSUFFICIENT_BARS` is the standing reason for the bars before the FIRST `t_form`. It is not
-the only such reason: after a new-ATH reset the standing reason is `ATH_TOO_RECENT`
+`INSUFFICIENT_BARS` is the standing reason at the **head of every series**, until enough bars
+are available. It is not the only reason a fixture sits in `NONE`, and not always the one in
+force immediately before `t_form`: after a new-ATH reset the standing reason is `ATH_TOO_RECENT`
 (GX-06, GX-22), and where no candidate is envelope-valid it is `NO_VALID_SECOND_ANCHOR`
 (GX-20 permanently, GX-12 transiently). It is not recorded as an event transition — a series always starts short — but it
 is visible bar by bar in `causal_record.formation.gate_trace`, which evaluates F1, F2 and

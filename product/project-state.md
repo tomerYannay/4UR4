@@ -116,7 +116,7 @@ until the freeze is lifted per-scope.
 
 ## Open issues / PRs (governed index)
 - Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (GX-08 + stale pivot-conditioned `NO_VALID_SECOND_ANCHOR` sweep, open, Phase 0 evidence correction).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **seven successive heads and six correction rounds of the full review chain recorded**; blocked on three Product-Owner-only items — ratification of HD-12/13/14 and the HD-15 GOV-015 scope ruling). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **the full review chain re-run against every head this branch has produced**, with each round's findings recorded in `fixtures/VERIFICATION.md`; blocked on three Product-Owner-only items — (1) ratification of HD-12/13/14, (2) the HD-15 GOV-015 scope ruling, and (3) re-scoping Issue #16 to cover what the branch actually delivers). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·

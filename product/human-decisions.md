@@ -502,7 +502,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   Reviewer, independently, during the review of
   [PR #18](https://github.com/tomerYannay/4UR4/pull/18). **No agent may decide this.**
 - **Decision:** [PR #18](https://github.com/tomerYannay/4UR4/pull/18) commits
-  `tools/fixture-replay.mjs`, a ~970-line executable causal reference model implementing
+  `tools/fixture-replay.mjs`, a roughly thousand-line executable causal reference model implementing
   §3, §4, §6, §7, §8, §9, §10, §11, §13, §14, §15, §16, §17, §18 and §21 of the trendline
   specification, and CI now depends on it. Is that **permitted evidence tooling** under
   [GOV-015](../governance/build-freeze.md), or is it **product functionality** implemented
