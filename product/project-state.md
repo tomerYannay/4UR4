@@ -43,8 +43,8 @@ implementation and beyond remain **freeze-blocked**.
   [`fixtures/README.md`](fixtures/README.md), the stale fixture count in
   [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md), SC-2 hygiene in
   `fixtures/real/RM-01/annotation.json`, and a currency note on
-  [`../docs/live-validation-evidence.md`](../docs/live-validation-evidence.md). Open PR on
-  branch `docs/reconcile-project-state-phase0-traceability`. Changes **no** product
+  [`../docs/live-validation-evidence.md`](../docs/live-validation-evidence.md). **PR #15
+  (draft)** on branch `docs/reconcile-project-state-phase0-traceability`. Changes **no** product
   definition, spec rule, fixture data, or roadmap entry.
 
 ## Next milestone
@@ -62,7 +62,7 @@ freeze is lifted per-scope.
 
 ## Open issues / PRs (governed index)
 - Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#14](https://github.com/tomerYannay/4UR4/issues/14)** (documentation reconciliation, open, docs-only).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · the **documentation-reconciliation PR for Issue #14** (docs-only, branch `docs/reconcile-project-state-phase0-traceability`; its PR number is recorded here once the PR is opened). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#15](https://github.com/tomerYannay/4UR4/pull/15)** (documentation reconciliation, draft, docs-only, Refs #14, branch `docs/reconcile-project-state-phase0-traceability`). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·
