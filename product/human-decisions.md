@@ -140,9 +140,40 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   truth.
 
 ## HD-06 — Data-provider selection + recurring cost · materiality: **high**
-- **Status:** PENDING (unchanged).
+- **Status:** **PENDING** (unchanged) — with an **explicit authority boundary added
+  2026-07-26**, see below.
 - **Ruling:** No selection or spend yet. Complete the R1–R8 provider research and
   comparison matrix **before** any provider selection or commitment.
+
+### Authority boundary — Product Owner, 2026-07-26
+
+Ruled in the batch ruling of 2026-07-26
+([artifact](https://github.com/tomerYannay/4UR4/issues/23), against head `45dfb91`).
+**Agents are NOT authorized to:**
+
+1. select a paid provider;
+2. commit recurring or one-time spend;
+3. accept commercial licensing terms;
+4. publish or redistribute restricted provider data;
+5. **represent an agent-composed decision as the Product Owner's financial
+   authorization.**
+
+**Permitted, and expected to continue:** evidence verification; provider comparison;
+licensing and redistribution analysis; free-tier and trial feasibility; technical
+interface requirements; point-in-time constituents research; delisted-history
+research; shortlist criteria; a recommendation memo with ranked options; cost
+scenarios; implementation planning; acceptance criteria.
+
+**Agents may recommend one provider clearly** — but must not purchase, subscribe,
+accept terms, or record HD-06 as approved.
+
+> **Boundary 5 binds the relay channel itself.** Every artifact in this repository —
+> including the rulings that authorize agent work — is authored by a single account,
+> and this ruling arrived that way too, disclosed as a relay. Boundary 5 is
+> [#21](https://github.com/tomerYannay/4UR4/issues/21)'s defect restated as a rule:
+> an agent-composed comment on the owner's account must never stand as a financial
+> commitment. #21 remains a **precondition for taking HD-06 at all**, and requires an
+> out-of-band confirmation step before this decision can be made.
 - **Decision:** Which market-data provider(s) to license, and approval of the
   recurring spend.
 - **Recommended option:** **No recommendation — human-gated.** Agents produce the
@@ -421,7 +452,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   2. **GX-15** as the dedicated boundary fixture — option (b) had named **GX-01**;
   3. rule 3 (ordinary fixtures must not become boundary tests) and rule 4 (a robust causal
      event is preserved, not reverted) — neither appeared in any option.
-  **Ratified as recorded** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) states explicitly that HD-13 is ratified *as recorded*, which includes these four clauses, and invites correction if any was meant to be excepted.
+  **Ratified as recorded, then retained in full.** [Ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) *as recorded* — which includes these four clauses — with an invitation to correct any that was meant to be excepted. That invitation was **answered on 2026-07-26** ([artifact](https://github.com/tomerYannay/4UR4/issues/23)): *"Retain HD-13 in full … Do not strike any of these clauses."* **None was struck; the question is closed.**
 - **Cost of delaying:** n/a — resolved 2026-07-25.
 - **Safe default:** the documented illustrative `ε_break = 0.01` with
   `eps_break_locked: false` in every fixture, plus a recorded robustness sweep.
@@ -619,7 +650,93 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   [`fixtures/real/RM-01/README.md`](fixtures/real/RM-01/README.md) and
   [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md).
 
-*This register records the Product Owner's rulings of 2026-07-24 and 2026-07-25. Ruled
-items are governing; HD-06 remains a proposal pending human decision
-([GOV-013](../governance/approval-gate.md)). The build-freeze
-([GOV-015](../governance/build-freeze.md)) remains ON.*
+## HD-16 — Roadmap baseline approved under GOV-013 · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/23), against head `45dfb91`).
+- **Decision:** The current Phase 0–9 roadmap baseline in
+  [`roadmap.md`](roadmap.md) is approved. It is no longer PROPOSED.
+- **Consequence:** [#4](https://github.com/tomerYannay/4UR4/issues/4) and
+  [#5](https://github.com/tomerYannay/4UR4/issues/5) may become **Ready**, and Phase 1
+  **research** may proceed.
+- **What this approval explicitly does NOT do** (the Product Owner's own four
+  exclusions): it does **not** lift GOV-015; does **not** authorize product
+  implementation; does **not** select a provider; does **not** authorize spend or
+  licensing.
+- **Reason it needed a human:** GOV-013 reserves roadmap approval to the Product
+  Owner, and until now `roadmap.md` opened with *"PROPOSED, pending human approval"*,
+  which made every Phase 1 ticket un-Ready by its own Definition of Ready.
+- **Standing risk:** an approved roadmap invites the reading that building may begin.
+  It may not. `build_freeze: ON`, `autonomous_implementation: DISABLED`, and Phase 2
+  entry additionally requires [#19](https://github.com/tomerYannay/4UR4/issues/19),
+  [#20](https://github.com/tomerYannay/4UR4/issues/20) and a per-scope freeze lift.
+
+## HD-17 — Bounded delegation for reversible ambiguity · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/23)).
+- **Decision:** For a *new ambiguity*, the **Strategic Product Reviewer** may select
+  the safest reversible option — but only when **all six** conditions hold: no spend
+  or licensing commitment; no product-definition change; no roadmap phase-order
+  change; GOV-015 remains ON; no privacy, security, billing or PII impact; and the
+  decision is documented with rationale and is reversible.
+- **Hard limit:** it **must not claim Product Owner authority** when exercising this
+  delegation. Every exercise is recorded as a *delegated* call with its rationale, so
+  this register keeps delegated choices distinguishable from ruled ones. A delegated
+  call is reversible by construction and creates no precedent.
+- **Reason:** the alternative was stopping the session on questions that cost nothing
+  to get wrong and can be undone. The six conditions are conjunctive precisely so the
+  delegation cannot creep into the classes that are expensive or irreversible.
+
+## Decision log — 2026-07-26 (Product Owner)
+
+- **2026-07-26 — Batch ruling** ([artifact](https://github.com/tomerYannay/4UR4/issues/23),
+  against head `45dfb91`). Six parts: the roadmap baseline approved under GOV-013
+  (**HD-16**); the two phase-gate questions ruled; **HD-13 retained in full** with none
+  of its four clauses struck; **HD-15 conditions 1–3 retained**; an explicit **authority
+  boundary** added to the still-**PENDING** HD-06; and a **bounded delegation** to the
+  Strategic Product Reviewer (**HD-17**). **GOV-015 remains ON throughout** — the ruling
+  says so three separate times.
+
+- **2026-07-26 — Phase-gate placements ruled.** **RM-01 is part of the Phase 2 exit
+  gate** as the committed real-market, non-circular conformance fixture. **Wick-break
+  belongs to Phase 2** *"because it is evaluated while the structure remains ACTIVE and
+  does not itself perform an `ACTIVE → BROKEN_OUT` state transition"*; **Phase 3 remains
+  responsible for confirmed breakout, retest, failure and expiry.** This resolves both
+  `PENDING (human)` rows recorded in `45dfb91` — and supplies a **better rationale than
+  the one proposed**: the roadmap had justified wick-break's placement by the
+  `confirmed_bar` partition, a mechanical property of current fixture data that would
+  evaporate if a future fixture gave GX-03 a breakout. The ruling's behavioural reason
+  survives that change; the roadmap now leads with it.
+
+- **2026-07-26 — HD-13 retained in full.** `eps_break` stays unlocked, versioned and
+  backtestable; ordinary fixtures must be robust under **±20%** around the documented
+  default; **GX-15** is the dedicated tolerance-boundary fixture; non-boundary fixtures
+  must not depend on threshold coincidence. *"Do not strike any of these clauses."*
+  This closes the invitation HD-13's own entry recorded — that its four beyond-the-menu
+  clauses could be struck if a bare ratification had been intended. It was not.
+
+- **2026-07-26 — HD-15 conditions 1–3 retained, and condition 2 sharpened into
+  something testable.** The reference model *"remains verification-only and is not
+  product implementation."* The Phase 2 implementation *"must remain independently
+  authored and must not import, copy, execute or mechanically translate the reference
+  model,"* and **#20 must define an enforceable independence mechanism before Phase 2
+  implementation begins.** This is a material improvement on the original wording:
+  *"authored by an agent that has not read this model"* is a claim about a session's
+  history and therefore unverifiable after the fact, whereas *"must not import, copy,
+  execute or mechanically translate"* is **a property of the artifact**, checkable
+  against the code that exists. Both are kept — the artifact property as the testable
+  criterion, the read-restriction as the preventive control.
+
+- **2026-07-26 — HD-06 remains PENDING, with an explicit authority boundary.** See the
+  [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high) entry.
+  Phase 1 research continues in full; provider *selection*, spend, licensing acceptance
+  and redistribution do not. Agents may **recommend one provider clearly** and must not
+  purchase, subscribe, accept terms, or record HD-06 as approved.
+
+*This register records the Product Owner's rulings of 2026-07-24, 2026-07-25 and
+2026-07-26. Ruled items are governing; **HD-06 remains a proposal pending human
+decision** ([GOV-013](../governance/approval-gate.md)), now with an explicit authority
+boundary and with [#21](https://github.com/tomerYannay/4UR4/issues/21) as a
+precondition. The build-freeze ([GOV-015](../governance/build-freeze.md)) **remains
+ON**; the roadmap baseline being approved (HD-16) does not change that.*

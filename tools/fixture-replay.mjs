@@ -8,12 +8,16 @@
 //   specification — instead of by hand arithmetic that has already been shown to
 //   drift (Issue #16).
 //
-// WHAT THIS IS NOT  (RULED — HD-15, Product Owner, 2026-07-25: this file is permitted
-//   under GOV-015 as Phase-0 evidence tooling, with the conditions below. See
-//   governance/build-freeze.md and product/human-decisions.md HD-15.)
-//   It is NOT the product detector and confers no Phase-2 credit. Phase 2's engine MUST
-//   be authored from the specification by an agent that has NOT read this file, so that
-//   "exact reproduction" tests conformance rather than transcription. It lives in
+// WHAT THIS IS NOT  (RULED — HD-15, Product Owner, 2026-07-25, conditions RETAINED and
+//   condition 2 SHARPENED 2026-07-26 (github.com/tomerYannay/4UR4/issues/23): this file is
+//   permitted under GOV-015 as Phase-0 evidence tooling, and is VERIFICATION-ONLY — it is
+//   not product implementation. See governance/build-freeze.md and human-decisions.md HD-15.)
+//   It is NOT the product detector and confers no Phase-2 credit. The Phase 2 implementation
+//   MUST be independently authored and MUST NOT import, copy, execute or mechanically
+//   translate this file; it must be written from the specification, by an agent that has NOT
+//   read this file, so that "exact reproduction" tests conformance rather than
+//   transcription. Issue #20 must define an enforceable independence mechanism before
+//   Phase 2 implementation begins. It lives in
 //   tools/ alongside validate.mjs, creates no product-code directory, is not
 //   wired into any product surface, and deliberately implements only the subset
 //   of trendline-specification.md that the golden fixtures assert. A future,

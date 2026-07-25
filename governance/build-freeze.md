@@ -49,14 +49,23 @@ and shipped a defective fixture, and a correctness contract nobody can mechanica
 re-derive is the larger hazard.
 
 **Conditions attached to the permission.** Condition 4 is the ruling's own scope, stated in
-the artifact. Conditions 1–3 are the **review chain's recommended terms**, adopted as the
-detail of the permission rather than separately quoted Product Owner words — the artifact
-records that distinction and invites them to be struck if a bare permission was intended.
+the artifact. Conditions 1–3 originated as the **review chain's recommended terms**, adopted
+as the detail of the permission rather than separately quoted Product Owner words; the
+artifact recorded that distinction and invited them to be struck if a bare permission was
+intended. **They were not struck.** On **2026-07-26** the Product Owner ruled
+([artifact](https://github.com/tomerYannay/4UR4/issues/23)): *"Retain HD-15 conditions 1–3.
+The fixture reference model remains verification-only and is not product implementation."*
+All four conditions are now directly ruled, and condition 2 was **sharpened** — see below.
 
 1. It confers **no Phase-2 credit**. Phase 2 is not partly done because this exists.
-2. The Phase-2 engine MUST be authored **from the specification, by an agent that has not
-   read this model**, so that "exact reproduction" tests conformance rather than
-   transcription.
+2. The Phase-2 implementation MUST be **independently authored**, and **must not import,
+   copy, execute or mechanically translate this model** (Product Owner, 2026-07-26), so that
+   "exact reproduction" tests conformance rather than transcription. The original wording —
+   *authored by an agent that has not read this model* — is retained as the **preventive
+   control**, but the ruled criterion is now a **property of the artifact** rather than a
+   claim about a session's history, and is therefore checkable after the fact.
+   **[Issue #20](https://github.com/tomerYannay/4UR4/issues/20) must define an enforceable
+   independence mechanism before Phase 2 implementation begins.**
 3. The **specification is authoritative**. Any divergence between the two is a spec-defect
    report or a model bug — never a silent model behaviour.
 4. This ruling covers **this file, for this purpose**. It is not a precedent for committing
