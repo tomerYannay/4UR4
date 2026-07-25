@@ -9,7 +9,7 @@ enforced_by: [orchestrator, architect, validator, project-auditor]
 # GOV-016 — Temporary Ticket-Scoped Specialists
 
 ## Intent
-The nine permanent agents must stay minimal (GOV-011), but one generic
+The ten permanent agents must stay minimal (GOV-011), but one generic
 Implementation Engineer cannot be the sole expertise for quant, market-data, ML,
 backend, frontend, security, and DevOps work. This rule allows **temporary,
 ticket-scoped specialist subagents** without growing the permanent roster or
@@ -21,7 +21,7 @@ breaking separation of duties.
 1. A specialist is **temporary** and **ticket-scoped**: it exists only for one
    approved ticket and is retired when that ticket is Done.
 2. Specialists have `status: temporary` and **do not count** toward the
-   nine-permanent-agent ceiling. Only `status: permanent` agents count.
+   ten-permanent-agent ceiling. Only `status: permanent` agents count.
 3. **Minimum-necessary rule:** no more specialists are active than the ticket
    strictly requires. The Orchestrator caps concurrent specialists.
 
@@ -66,7 +66,7 @@ Use [`templates/specialist-agent.md`](../templates/specialist-agent.md) to creat
 
 ## Enforcement
 The Orchestrator/Architect justify and cap specialists; the validator checks the
-required metadata and that permanent count stays ≤ 9; the Auditor flags orphaned or
+required metadata and that permanent count stays ≤ 10; the Auditor flags orphaned or
 expired specialists and any that outlive their ticket.
 
 ## Escalation

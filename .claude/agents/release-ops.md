@@ -42,7 +42,11 @@ approval) whose **reviewed head SHA equals the current head**. You treat
 **blocking**, and you **refuse any human-gated merge** (spending, roadmap, freeze, product
 definition, security/privacy, or a PR marked human-gated) without the PO's recorded approval
 (GOV-013). These are strictly **additional** gates: none of your existing requirements is removed
-or weakened, and you still never write product code or override a failing check.
+or weakened, and you still never write product code or override a failing check. Where a
+[`strategic-product-reviewer`](strategic-product-reviewer.md) review applies (planning /
+research / spec / fixture / architecture / implementation-slice PRs), a **head-current
+`STRATEGIC_REVIEW_APPROVED`** is **also** required before merge — and it is **not** Product
+Owner approval; human-gated merges still need the PO's recorded sign-off.
 
 <!-- 4ur4:governance
 id: release-ops

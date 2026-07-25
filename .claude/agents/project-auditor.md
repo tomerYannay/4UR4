@@ -41,7 +41,9 @@ commits, changed files, validation output, CI conclusion, and governance status 
 summary is a faithful index to that evidence (protocol §2), not a substitute for it. You return a
 **completeness verdict** and flag any gap (missing evidence, stale/mismatched SHA, unverifiable
 claim) to the Orchestrator. You **post nothing and change nothing** — your independence is that
-you cannot alter what you audit.
+you cannot alter what you audit. Your evidence-completeness verdict **precedes** the
+[`strategic-product-reviewer`](strategic-product-reviewer.md)'s review (it relies on real,
+complete evidence, not your say-so, and remains independent of it).
 
 <!-- 4ur4:governance
 id: project-auditor
@@ -52,6 +54,6 @@ authority: audit-and-reporting
 inputs: [repo_state, issue_board, governance_registry, evidence_logs, ci_validation_result]
 outputs: [audit_report, status_report, traceability_matrix, violation_list, drift_alerts]
 handoff_from: [release-ops, orchestrator]
-handoff_to: [orchestrator, product-steward, product-innovation]
+handoff_to: [orchestrator, product-steward, product-innovation, strategic-product-reviewer]
 bindings: [GOV-007, GOV-008, GOV-011, GOV-009, GOV-001]
 -->

@@ -26,16 +26,22 @@ mid-session are not hot-loaded.
 
 ---
 
-## A. Discovery — all nine agents are visible
+## A. Discovery — all ten agents are visible
+
+> **Updated 2026-07-25:** a **10th** permanent agent, `strategic-product-reviewer`, was
+> added by Product Owner decision. Because Claude Code discovers `.claude/agents/` at
+> **session start**, this discovery check must be **re-run in a fresh session** to
+> live-verify the 10th agent (the earlier "Executed — PASS" row above reflects the
+> 9-agent run of 2026-07-24).
 
 1. `cd` to the repo root and start Claude Code (`claude`).
 2. Run `/agents`.
-3. **Expected:** all nine appear —
+3. **Expected:** all ten appear —
    `orchestrator`, `product-steward`, `product-innovation`, `architect`,
    `implementation-engineer`, `verification`, `code-reviewer`, `release-ops`,
-   `project-auditor`.
+   `project-auditor`, `strategic-product-reviewer`.
 
-✅ Pass if all nine are listed as project agents.
+✅ Pass if all ten are listed as project agents.
 
 ## B. Tool restrictions — each agent has the intended tools
 

@@ -1,7 +1,7 @@
 <!--
 Template: TEMPORARY ticket-scoped specialist subagent (GOV-016).
 Copy to .claude/agents/tmp-<ticket>-<specialty>.md, fill in, and DELETE when the
-ticket is Done. Temporary specialists do NOT count toward the 9 permanent agents.
+ticket is Done. Temporary specialists do NOT count toward the 10 permanent agents.
 
 Choose tools by kind:
   - Advisory specialist (quant-research, trendline-math, market-data,

@@ -6,7 +6,7 @@
 //   - canonical executable agents live under .claude/agents/ (single source of truth)
 //   - each agent has valid Claude Code frontmatter (name, description, real tools, ...)
 //   - governance metadata lives in a machine-readable body block (not custom frontmatter)
-//   - permanent-agent ceiling (<= 9), separation of duties, handoff integrity
+//   - permanent-agent ceiling (<= 10), separation of duties, handoff integrity
 //   - deterministic + innovation agents cannot write (no Write/Edit tools)
 //   - temporary specialist governance (GOV-016), build-freeze, and CI workflow exist
 
@@ -28,7 +28,7 @@ const SPECIALIST_GOV = 'governance/temporary-specialists.md';
 const SETTINGS = '.claude/settings.json';
 const HOOK_SCRIPT = '.claude/hooks/bash-guard.mjs';
 const HOOK_TESTS = '.claude/hooks/bash-guard.test.mjs';
-const MAX_PERMANENT_AGENTS = 9;
+const MAX_PERMANENT_AGENTS = 10;
 
 // Real Claude Code subagent frontmatter fields (source: code.claude.com/docs/en/sub-agents).
 const VALID_FM_FIELDS = new Set([
