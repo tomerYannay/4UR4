@@ -1,0 +1,465 @@
+{
+  "fixture_id": "GX-20",
+  "purpose": "The genuinely reachable NO_VALID_SECOND_ANCHOR case, constructed CAUSALLY: the duplicate ATH sits at t=5, BEFORE min_formation_bars, so every evaluable prefix already contains the tie. At every prefix the shallowest descending candidate is pierced beyond eps by that tie bar, no candidate is ever envelope-valid, no line ever becomes ACTIVE, and therefore no event of any kind can fire.",
+  "category": "invalidation (no envelope-valid second anchor)",
+  "spec_refs": [
+    "§4",
+    "§6",
+    "§8",
+    "§10.4",
+    "§18",
+    "§21.1",
+    "§21.3",
+    "§21.6",
+    "D-TL-02",
+    "D-TL-05",
+    "D-TL-11"
+  ],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 26,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. This fixture is verified robust across an eps_break sweep — see causal_record.eps_break_robustness.",
+    "split_log_jump_threshold": 0.405465,
+    "tolerance_version": "tol-2026.07-illustrative",
+    "min_formation_bars": 8,
+    "min_ath_age_bars": 3,
+    "formation_params_note": "Formation gates are first-class, k-independent, versioned parameters (§21.3, D-TL-12): min_formation_bars replaces the pivot-derived 2k+2 and min_ath_age_bars replaces the k-recency window. Numerically unchanged at k=3."
+  },
+  "expected_ath_anchor": {
+    "t": 0,
+    "H": 130
+  },
+  "expected_second_anchor": {
+    "t": null,
+    "H": null,
+    "reason": "No candidate is envelope-valid at ANY evaluable prefix: the bar that ties the ATH pierces every descending candidate beyond eps (§10.4, §18). See causal_record.no_anchor_proof."
+  },
+  "expected_log_slope": null,
+  "expected_intercept": null,
+  "expected_state_transitions": [
+    {
+      "bar": 8,
+      "from": "NONE",
+      "to": "NONE",
+      "reason_code": "NO_VALID_SECOND_ANCHOR"
+    }
+  ],
+  "expected_final_state": "NONE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": [
+    "NO_VALID_SECOND_ANCHOR"
+  ],
+  "flags": [],
+  "rejection_rationale": [],
+  "geometry_check": {
+    "yA": null,
+    "yB": null,
+    "slope_formula": "no line",
+    "intercept_formula": "no line",
+    "key_inequalities": [
+      "Candidacy is over ALL later bar highs (§6, D-TL-05, HD-11) — never a pivot subset — and every value below is computed from bars strictly EARLIER than the bar it judges (§21.1, HD-12)."
+    ],
+    "notes": "REDESIGNED. The committed version placed the duplicate ATH at t=15, AFTER formation: a line legitimately formed at t=8 from bars 0-7 and broke out at t=11, so it was not a no-anchor fixture at all. That design was derived with full-series reasoning (\"no envelope-valid candidate over the whole series\"), which §21.8 outlaws. Moving the tie to t=5 makes the property hold at every evaluable prefix rather than only in retrospect."
+  },
+  "causal_record": {
+    "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
+    "formation": {
+      "min_formation_bars": 8,
+      "min_ath_age_bars": 3,
+      "t_form": null,
+      "rule": "FORMATION_ELIGIBLE(t) iff |S_t| >= min_formation_bars (F1) AND tA <= (t-1) - min_ath_age_bars (F2) AND B*_t exists (F3). Both thresholds are first-class versioned parameters, independent of the pivot window k (§21.3, D-TL-12).",
+      "gate_trace": [
+        "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=8: NO_VALID_SECOND_ANCHOR [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=9: NO_VALID_SECOND_ANCHOR [F1 |S_t|=9>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=10: NO_VALID_SECOND_ANCHOR [F1 |S_t|=10>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=11: NO_VALID_SECOND_ANCHOR [F1 |S_t|=11>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=12: NO_VALID_SECOND_ANCHOR [F1 |S_t|=12>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=13: NO_VALID_SECOND_ANCHOR [F1 |S_t|=13>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=14: NO_VALID_SECOND_ANCHOR [F1 |S_t|=14>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=15: NO_VALID_SECOND_ANCHOR [F1 |S_t|=15>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=16: NO_VALID_SECOND_ANCHOR [F1 |S_t|=16>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=17: NO_VALID_SECOND_ANCHOR [F1 |S_t|=17>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=18: NO_VALID_SECOND_ANCHOR [F1 |S_t|=18>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=19: NO_VALID_SECOND_ANCHOR [F1 |S_t|=19>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=20: NO_VALID_SECOND_ANCHOR [F1 |S_t|=20>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=21: NO_VALID_SECOND_ANCHOR [F1 |S_t|=21>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=22: NO_VALID_SECOND_ANCHOR [F1 |S_t|=22>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=23: NO_VALID_SECOND_ANCHOR [F1 |S_t|=23>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=24: NO_VALID_SECOND_ANCHOR [F1 |S_t|=24>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=25: NO_VALID_SECOND_ANCHOR [F1 |S_t|=25>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]",
+        "t=26: NO_VALID_SECOND_ANCHOR [F1 |S_t|=26>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:FAIL]"
+      ]
+    },
+    "as_of_time_candidate_set": null,
+    "no_anchor_proof": {
+      "eps": 0.02,
+      "note": "At EVERY evaluable prefix the shallowest descending candidate is already pierced beyond eps by the bar that ties the ATH, and the shallowest candidate minimises that pierce — so no candidate is envelope-valid at any prefix and no line ever becomes ACTIVE. Because no line exists, eps_break is never consulted: the outcome is invariant across the whole 0.5x-2x eps_break sweep.",
+      "per_prefix": [
+        {
+          "at_bar": 8,
+          "prefix": "S_8",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 7,
+            "H": 121,
+            "slope": -0.0102491
+          },
+          "pierce_at_tie_bar": 0.0512456,
+          "exceeds_eps_by": 2.56228,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 9,
+          "prefix": "S_9",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 7,
+            "H": 121,
+            "slope": -0.0102491
+          },
+          "pierce_at_tie_bar": 0.0512456,
+          "exceeds_eps_by": 2.56228,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 10,
+          "prefix": "S_10",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 9,
+            "H": 120,
+            "slope": -0.00889363
+          },
+          "pierce_at_tie_bar": 0.0444682,
+          "exceeds_eps_by": 2.22341,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 11,
+          "prefix": "S_11",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 9,
+            "H": 120,
+            "slope": -0.00889363
+          },
+          "pierce_at_tie_bar": 0.0444682,
+          "exceeds_eps_by": 2.22341,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 12,
+          "prefix": "S_12",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 11,
+            "H": 119,
+            "slope": -0.00803736
+          },
+          "pierce_at_tie_bar": 0.0401868,
+          "exceeds_eps_by": 2.00934,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 13,
+          "prefix": "S_13",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 11,
+            "H": 119,
+            "slope": -0.00803736
+          },
+          "pierce_at_tie_bar": 0.0401868,
+          "exceeds_eps_by": 2.00934,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 14,
+          "prefix": "S_14",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 13,
+            "H": 118,
+            "slope": -0.00744999
+          },
+          "pierce_at_tie_bar": 0.0372499,
+          "exceeds_eps_by": 1.8625,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 15,
+          "prefix": "S_15",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 13,
+            "H": 118,
+            "slope": -0.00744999
+          },
+          "pierce_at_tie_bar": 0.0372499,
+          "exceeds_eps_by": 1.8625,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 16,
+          "prefix": "S_16",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 15,
+            "H": 117,
+            "slope": -0.00702403
+          },
+          "pierce_at_tie_bar": 0.0351202,
+          "exceeds_eps_by": 1.75601,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 17,
+          "prefix": "S_17",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 15,
+            "H": 117,
+            "slope": -0.00702403
+          },
+          "pierce_at_tie_bar": 0.0351202,
+          "exceeds_eps_by": 1.75601,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 18,
+          "prefix": "S_18",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 17,
+            "H": 116,
+            "slope": -0.0067026
+          },
+          "pierce_at_tie_bar": 0.033513,
+          "exceeds_eps_by": 1.67565,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 19,
+          "prefix": "S_19",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 17,
+            "H": 116,
+            "slope": -0.0067026
+          },
+          "pierce_at_tie_bar": 0.033513,
+          "exceeds_eps_by": 1.67565,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 20,
+          "prefix": "S_20",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 21,
+          "prefix": "S_21",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 22,
+          "prefix": "S_22",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 23,
+          "prefix": "S_23",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 24,
+          "prefix": "S_24",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 25,
+          "prefix": "S_25",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        },
+        {
+          "at_bar": 26,
+          "prefix": "S_26",
+          "ath_tie_bars": [
+            5
+          ],
+          "shallowest_candidate": {
+            "t": 19,
+            "H": 115,
+            "slope": -0.00645275
+          },
+          "pierce_at_tie_bar": 0.0322638,
+          "exceeds_eps_by": 1.61319,
+          "envelope_valid_candidates": 0
+        }
+      ]
+    },
+    "pivot_context": {
+      "k": 3,
+      "definition": "isPivotHigh(p,k): strict > against the k bars on the left, >= against the k bars on the right (§5).",
+      "confirmed_pivots_full_series": [
+        5
+      ],
+      "confirmed_pivots_in_formation_prefix": null,
+      "b_star_bar": null,
+      "b_star_is_confirmed_pivot": null,
+      "note": "DESCRIPTIVE ONLY. Pivot status is non-authoritative (§5, D-TL-03, HD-11): it never removes a candidate from §6/§8, never changes B*, and never affects formation eligibility (§21.3, D-TL-12). Replacing k here changes nothing in this fixture except this block."
+    },
+    "active_line_before_event_bars": [
+      {
+        "bar": 25,
+        "line": null,
+        "state_at_start": "NONE",
+        "reason": "NO_VALID_SECOND_ANCHOR"
+      }
+    ],
+    "events": [],
+    "reselections": [],
+    "frozen_event_line": null,
+    "non_retroactive_challengers": {
+      "note": "No later high has a shallower slope than the governing line; nothing could have re-selected B* even under a full-series reading.",
+      "bars": []
+    },
+    "eps_break_robustness": {
+      "documented_default": 0.01,
+      "sweep": [
+        {
+          "scale": 0.5,
+          "eps_break": 0.005,
+          "final_state": "NONE",
+          "breakout_bar": null
+        },
+        {
+          "scale": 0.8,
+          "eps_break": 0.008,
+          "final_state": "NONE",
+          "breakout_bar": null
+        },
+        {
+          "scale": 1,
+          "eps_break": 0.01,
+          "final_state": "NONE",
+          "breakout_bar": null
+        },
+        {
+          "scale": 1.2,
+          "eps_break": 0.012,
+          "final_state": "NONE",
+          "breakout_bar": null
+        },
+        {
+          "scale": 2,
+          "eps_break": 0.02,
+          "final_state": "NONE",
+          "breakout_bar": null
+        }
+      ]
+    }
+  }
+}

@@ -10,7 +10,7 @@ here.
 | **ATH** | All-time high; the anchor point for a descending trendline. |
 | **Log descending trendline** | A downward trendline fitted in logarithmic price space from the ATH along subsequent lower highs. |
 | **Breakout** | Price action that crosses above the descending trendline under defined confirmation criteria. |
-| **Confirmed breakout** | A breakout that satisfies the confirmation rules for a ticket (e.g. close-based, volume, persistence) — rules TBD per ticket. |
+| **Confirmed breakout** | A breakout that satisfies the confirmation rules for a ticket (e.g. close-based, volume). For the trendline detector, the governing rule (HD-03) is the **first qualifying daily close** above the line + `ε_break`, with **no persistence wait** — see the geometry-section entry below and [`trendline-specification.md` §13](trendline-specification.md#13-confirmed-breakout-definition). |
 | **Retest** | Price returning toward the broken trendline and holding it as support. |
 | **Confidence score** | A transparent, decomposed 0–1 (or 0–100) rating of signal quality. |
 | **Explainability** | The property that a score can be broken into named, inspectable contributions. |
@@ -27,21 +27,28 @@ here.
 | Term | Meaning in 4UR4 |
 |------|-----------------|
 | **Anchor (A)** | The all-time-high **bar high (wick)** that begins the descending trendline; the earliest bar achieving the maximum high. |
-| **Second anchor (B / B\*)** | The qualifying later pivot high selected by the envelope rule to define the line; `B*` is the chosen canonical one. |
-| **Pivot high** | A bar high that is a local maximum over a symmetric `k`-bar lookback/lookforward window (fractal). |
+| **Second anchor (B / B\*)** | The qualifying later **bar high** (pivot or not) selected by the all-highs envelope rule to define the line; `B*` is the chosen canonical one. Pivot status is **not** a precondition for candidacy or selection (HD-11, 2026-07-25). |
+| **Pivot high** | A bar high that is a local maximum over a symmetric `k`-bar lookback/lookforward window (fractal). **Secondary / non-authoritative** for line selection — retained only for visualization, descriptive metadata, confidence features, and provably-lossless performance optimization (§5, D-TL-03, HD-11). |
 | **Envelope rule / upper log-hull** | The selection rule choosing the **shallowest** descending log-space line from the ATH that stays at/above every intervening high within tolerance `ε` — the upper convex hull from `A` in log space. |
-| **Log-hull** | Shorthand for the upper convex hull of pivot highs in log-price space used by the envelope rule. |
+| **Log-hull** | Shorthand for the upper convex hull of **all later bar highs** (pivot or not) in log-price space used by the envelope rule; domination and selection are never restricted to pivot highs (D-TL-05). |
 | **Tolerance ε** | Permitted deviation in **log units** for envelope domination, touch, and breakout tests (e.g. `ε≈0.02`, `ε_touch≈0.01`). |
 | **Touch** | A bar whose high satisfies the `ε_touch` test while the line is ACTIVE; anchors `A` and `B` count as the first two touches. |
 | **Touch count & spacing** | Number and temporal distribution of touches; feeds Confidence, not accept/reject logic. |
 | **Wick-break** | An intrabar high crosses the line while the **close does not confirm**; not a signal — recorded as a rejection with reason `WICK_BREAK`, line stays ACTIVE. |
-| **Confirmed breakout (confirmation policy)** | A close-based cross above the line qualified by persistence (`p_break` bars) and a soft volume check; low volume flags `LOW_VOLUME` rather than voiding the signal. |
-| **Breakout bar / confirmed bar** | The first bar that crossed (breakout bar) vs. the bar that completes the persistence requirement (confirmed bar). |
+| **Confirmed breakout (confirmation policy)** | The **first daily close** above the line + tolerance (`ε_break`) fires the alert on that bar, with **no mandatory persistence wait** (revised HD-03, 2026-07-24). Persistence above the line and volume are post-breakout **confidence/quality** features only — low volume flags `LOW_VOLUME` but never voids the signal, and neither gates validity nor delays the alert. |
+| **Breakout bar / confirmed bar** | The first bar whose close crosses the line + tolerance. Under the revised confirmation policy (HD-03), `confirmed_bar == breakout_bar` — there is no separate persistence-completion bar. |
 | **Failed breakout** | A post-breakout re-close **below** the line by `ε_fail` within the failure window `F_fail`. |
 | **Retest hold** | A post-breakout return to the broken line (now support) that dips to it and **holds** (close reclaims it) within the retest window. |
 | **Line expiry / reset** | Retirement and recomputation of the line — ~`E_expiry` (~100) bars after breakout, on a new ATH, or on structural change. |
 | **Reason code** | The named, machine-readable justification emitted with every accept, reject, or state transition (e.g. `INVALID_PIERCE`, `RESET_NEW_ATH`, `NO_VALID_SECOND_ANCHOR`). |
 | **Line state machine** | The deterministic states ACTIVE → WICK_BREAK / BROKEN_OUT / RETESTED / FAILED_BREAKOUT / EXPIRED, each transition a pure function of the bar stream. |
+| **As-of-time (rolling causal) evaluation** | Evaluating each bar against a line built only from strictly earlier bars, so no classification can ever depend on future bars; a confirmed breakout freezes the line for all downstream tests (§21, D-TL-11, HD-12). |
+| **Available prefix (`S_t`)** | The bars `0 … t−1` visible when evaluation bar `t` is processed; the active line `Λ_t` is built from `S_t` only (§21.1). |
+| **Active line at bar `t` (`Λ_t`)** | The canonical line — anchor, second anchor, slope, intercept, tolerance version — computed from `S_t` and in force for bar `t`'s wick/close/breakout/touch/failure/retest tests (§21.1). |
+| **Formation eligibility / formation bar (`t_form`)** | The three as-of-time gates (minimum available history, anchor not too recent, an envelope-valid `B*` exists) that must all hold before a line first becomes `ACTIVE`; `t_form` is the earliest bar satisfying them (§21.3). |
+| **Anchor re-selection (pre-breakout roll)** | On a non-breakout bar whose high reaches the active line, `B*` re-binds to that bar, effective from the **next** bar only; the evaluation bar never redefines the line that judges it (§21.6). |
+| **Frozen event line (`Λ^F`)** | The `A`, `B*`, slope, intercept, and tolerance version captured exactly as they stood at the start of a confirmed-breakout bar; retest, failure, and expiry are evaluated against `Λ^F`, never a re-selected line (§21.5). |
+| **`min_formation_bars` / `min_ath_age_bars`** | First-class, versioned, `k`-**independent** formation parameters (defaults **8** and **3**) gating when a line may first become `ACTIVE`; they replace the former pivot-derived `2k+2` and `k`-recency formulations at identical values, so re-tuning the pivot window `k` can never move an event (D-TL-12, HD-14). |
 
 ## Confidence terms (from the confidence specification)
 

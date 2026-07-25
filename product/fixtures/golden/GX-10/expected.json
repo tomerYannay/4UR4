@@ -2,12 +2,16 @@
   "fixture_id": "GX-10",
   "purpose": "An unadjusted ~2:1 split injects an impossible single-bar log jump (|y[t]-y[t-1]| > ln 1.5); the detector flags SUSPECTED_UNADJUSTED_SPLIT and does NOT fit a line.",
   "category": "stock split edge case",
-  "spec_refs": ["§2", "§18(Unadjusted split)", "D-TL-01"],
+  "spec_refs": [
+    "§2",
+    "§18",
+    "§21.3"
+  ],
   "input_convention": {
     "timestamp_kind": "ordinal",
     "bar_count": 10,
     "price_field_for_geometry": "high",
-    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded) — this fixture presents UNADJUSTED data to prove the guard fires"
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
   },
   "params": {
     "k": 3,
@@ -15,45 +19,67 @@
     "eps_touch": 0.01,
     "eps_break": 0.01,
     "eps_break_locked": false,
-    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. It is never consulted in this fixture: the §18 input guards reject the bar-set before any line exists, so the outcome is invariant under every value of eps_break and no sweep is recorded.",
     "split_log_jump_threshold": 0.405465,
-    "tolerance_version": "tol-2026.07-illustrative"
+    "tolerance_version": "tol-2026.07-illustrative",
+    "min_formation_bars": 8,
+    "min_ath_age_bars": 3,
+    "formation_params_note": "Formation gates are first-class, k-independent, versioned parameters (§21.3, D-TL-12): min_formation_bars replaces the pivot-derived 2k+2 and min_ath_age_bars replaces the k-recency window. Numerically unchanged at k=3."
   },
   "expected_ath_anchor": null,
-  "expected_second_anchor": { "t": null, "H": null, "reason": "Geometry is not fit: a suspected unadjusted split was detected, so the bar-set is rejected before anchoring/fitting." },
+  "expected_second_anchor": {
+    "t": null,
+    "H": null,
+    "reason": "Geometry is not fit: the input guards of §18 reject the bar-set (SUSPECTED_UNADJUSTED_SPLIT) before anchoring or fitting."
+  },
   "expected_log_slope": null,
   "expected_intercept": null,
-  "expected_line_values": {},
   "expected_state_transitions": [
-    { "bar": 4, "from": "NONE", "to": "NONE", "reason_code": "SUSPECTED_UNADJUSTED_SPLIT" }
+    {
+      "bar": 4,
+      "from": "NONE",
+      "to": "NONE",
+      "reason_code": "SUSPECTED_UNADJUSTED_SPLIT"
+    }
   ],
   "expected_final_state": "NONE",
   "breakout_bar": null,
   "confirmed_bar": null,
-  "expected_reason_codes": ["SUSPECTED_UNADJUSTED_SPLIT"],
-  "flags": ["SUSPECTED_UNADJUSTED_SPLIT"],
+  "expected_reason_codes": [
+    "SUSPECTED_UNADJUSTED_SPLIT"
+  ],
+  "flags": [
+    "SUSPECTED_UNADJUSTED_SPLIT"
+  ],
   "rejection_rationale": [
     {
-      "candidate": "Fitting a line with ATH=(0,100) and a low pivot near 50",
-      "rejected_because": "The t=3->t=4 log jump exceeds ln(1.5), signalling an unadjusted split; per §18 the detector must NOT fit and instead flag.",
-      "numeric": "|y[4]-y[3]| = |ln(50)-ln(98)| = |3.912023-4.584967| = 0.672944 > ln(1.5)=0.405465 -> SUSPECTED_UNADJUSTED_SPLIT."
-    },
-    {
-      "candidate": "Treating the drop to ~50 as a genuine crash / valid lower highs",
-      "rejected_because": "A single-bar halving is physically an unadjusted corporate action, not a real price move; consistency rule (§2) requires split-adjusted input, so this data is rejected rather than fit.",
-      "numeric": "high 98 -> 50 is a ~49% single-bar drop; ln-jump 0.673 >> 0.405 threshold."
+      "candidate": "Fitting any line at any prefix",
+      "rejected_because": "The §18 input guards reject the bar-set before anchoring or fitting, so no as-of-time line exists at any bar and no tolerance is ever consulted.",
+      "numeric": "{\"bar\":4,\"log_jump\":0.6729444732424263}"
     }
   ],
   "geometry_check": {
     "yA": null,
     "yB": null,
-    "slope_formula": "n/a (fit refused)",
-    "intercept_formula": "n/a",
+    "slope_formula": "no line",
+    "intercept_formula": "no line",
     "key_inequalities": [
-      "Split guard: max_t |ln(H[t]) - ln(H[t-1])| = |ln50 - ln98| = 0.672944 at t=4.",
-      "0.672944 > ln(1.5) = 0.405465 -> SUSPECTED_UNADJUSTED_SPLIT.",
-      "No anchor/line is produced; the bar-set is rejected for geometry."
+      "Input guard (§18) fires before geometry: SUSPECTED_UNADJUSTED_SPLIT. No prefix S_t ever yields a line, so §21 evaluation never begins."
     ],
-    "notes": "Locks §18 unadjusted-split detection and the HD-01/D-TL-01 requirement that geometry runs only on split-adjusted data. expected_ath_anchor is null because fitting is refused before anchoring."
+    "notes": "Unchanged by the causal audit: the guard rejects the bar-set before any geometry is fitted, so no as-of-time line exists at any prefix and no tolerance is ever consulted."
+  },
+  "causal_record": {
+    "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
+    "input_guard": {
+      "rejected": true,
+      "codes": [
+        "SUSPECTED_UNADJUSTED_SPLIT"
+      ],
+      "detail": {
+        "bar": 4,
+        "log_jump": 0.6729444732424263
+      }
+    },
+    "note": "Input guards (§18) reject the bar-set before any geometry is fitted, so no as-of-time line exists at any prefix."
   }
 }

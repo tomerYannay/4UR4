@@ -2,7 +2,11 @@
   "fixture_id": "GX-18",
   "purpose": "A bar missing its high and a bar with a non-positive price make the input invalid; the detector rejects the bar-set and produces no geometry (INVALID_INPUT / INVALID_PRICE).",
   "category": "missing-data edge case",
-  "spec_refs": ["§1", "§3", "§18(Non-positive price)", "§18(missing high/close)"],
+  "spec_refs": [
+    "§1",
+    "§18",
+    "§21.3"
+  ],
   "input_convention": {
     "timestamp_kind": "ordinal",
     "bar_count": 8,
@@ -15,45 +19,69 @@
     "eps_touch": 0.01,
     "eps_break": 0.01,
     "eps_break_locked": false,
-    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
-    "tolerance_version": "tol-2026.07-illustrative"
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. It is never consulted in this fixture: the §18 input guards reject the bar-set before any line exists, so the outcome is invariant under every value of eps_break and no sweep is recorded.",
+    "tolerance_version": "tol-2026.07-illustrative",
+    "min_formation_bars": 8,
+    "min_ath_age_bars": 3,
+    "formation_params_note": "Formation gates are first-class, k-independent, versioned parameters (§21.3, D-TL-12): min_formation_bars replaces the pivot-derived 2k+2 and min_ath_age_bars replaces the k-recency window. Numerically unchanged at k=3."
   },
   "expected_ath_anchor": null,
-  "expected_second_anchor": { "t": null, "H": null, "reason": "Input is invalid (missing high at t=3; non-positive low at t=5), so geometry is not run." },
+  "expected_second_anchor": {
+    "t": null,
+    "H": null,
+    "reason": "Geometry is not fit: the input guards of §18 reject the bar-set (INVALID_INPUT, INVALID_PRICE) before anchoring or fitting."
+  },
   "expected_log_slope": null,
   "expected_intercept": null,
-  "expected_line_values": {},
   "expected_state_transitions": [
-    { "bar": 3, "from": "NONE", "to": "NONE", "reason_code": "INVALID_INPUT" },
-    { "bar": 5, "from": "NONE", "to": "NONE", "reason_code": "INVALID_PRICE" }
+    {
+      "bar": 3,
+      "from": "NONE",
+      "to": "NONE",
+      "reason_code": "INVALID_INPUT"
+    },
+    {
+      "bar": 5,
+      "from": "NONE",
+      "to": "NONE",
+      "reason_code": "INVALID_PRICE"
+    }
   ],
   "expected_final_state": "NONE",
   "breakout_bar": null,
   "confirmed_bar": null,
-  "expected_reason_codes": ["INVALID_INPUT", "INVALID_PRICE"],
-  "flags": ["INVALID_INPUT", "INVALID_PRICE"],
+  "expected_reason_codes": [
+    "INVALID_INPUT",
+    "INVALID_PRICE"
+  ],
+  "flags": [],
   "rejection_rationale": [
     {
-      "candidate": "Fitting geometry after imputing/interpolating the missing t=3 high",
-      "rejected_because": "Per §1 a bar missing high or close is invalid input; no synthetic gap-filling or imputation is allowed.",
-      "numeric": "H[3] is empty -> ln(H[3]) undefined -> INVALID_INPUT at t=3 (reject bar-set)."
-    },
-    {
-      "candidate": "Accepting the t=5 bar with a zero low",
-      "rejected_because": "All prices must be > 0 for ln to be defined (§1, §3); a non-positive price is INVALID_PRICE.",
-      "numeric": "L[5]=0.00 <= 0 -> ln undefined -> INVALID_PRICE at t=5 (reject bar-set)."
+      "candidate": "Fitting any line at any prefix",
+      "rejected_because": "The §18 input guards reject the bar-set before anchoring or fitting, so no as-of-time line exists at any bar and no tolerance is ever consulted.",
+      "numeric": "[\"INVALID_INPUT\",\"INVALID_PRICE\"]"
     }
   ],
   "geometry_check": {
     "yA": null,
     "yB": null,
-    "slope_formula": "n/a (fit refused on invalid input)",
-    "intercept_formula": "n/a",
+    "slope_formula": "no line",
+    "intercept_formula": "no line",
     "key_inequalities": [
-      "t=3 high is missing -> ln(H) undefined -> INVALID_INPUT.",
-      "t=5 low = 0.00 (non-positive) -> ln undefined -> INVALID_PRICE.",
-      "Positivity and completeness are preconditions to geometry; the bar-set is rejected, no line produced."
+      "Input guard (§18) fires before geometry: INVALID_INPUT, INVALID_PRICE. No prefix S_t ever yields a line, so §21 evaluation never begins."
     ],
-    "notes": "Locks the §1/§18 input-validation preconditions: missing required fields and non-positive prices are named, deterministic rejections, not silent passes."
+    "notes": "Unchanged by the causal audit: input validity is checked before any prefix is evaluated, so no as-of-time line exists at any bar."
+  },
+  "causal_record": {
+    "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
+    "input_guard": {
+      "rejected": true,
+      "codes": [
+        "INVALID_INPUT",
+        "INVALID_PRICE"
+      ],
+      "detail": null
+    },
+    "note": "Input guards (§18) reject the bar-set before any geometry is fitted, so no as-of-time line exists at any prefix."
   }
 }

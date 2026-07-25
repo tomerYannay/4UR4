@@ -1,8 +1,19 @@
 {
   "fixture_id": "GX-19",
-  "purpose": "SC-2 proof: a NON-pivot bar high B*=(16,120) is the canonical all-highs upper-log-hull anchor; a strict k=3 pivot PREFILTER would wrongly select the only k=3 pivot (4,160), whose steeper line is pierced by later highs and does NOT dominate. The all-highs hull selects the non-pivot anchor correctly.",
+  "purpose": "SC-2 / HD-11 regression: the canonical second anchor is a NON-pivot bar high. Under as-of-time evaluation the hull rolls forward seven times and binds at B*=(15,119) — not a k=3 pivot — and bar 16 closes above that line by 0.0246129 log units, firing a confirmed breakout that a pivot-restricted prefilter would never have produced.",
   "category": "non-pivot canonical anchor (SC-2 proof)",
-  "spec_refs": ["§5", "§6", "§8", "D-TL-03", "D-TL-05", "PO-decision-2026-07-25(SC-2)"],
+  "spec_refs": [
+    "§5",
+    "§6",
+    "§8",
+    "§13.2",
+    "§16",
+    "§21.4",
+    "§21.5",
+    "D-TL-03",
+    "D-TL-05",
+    "D-TL-11"
+  ],
   "input_convention": {
     "timestamp_kind": "ordinal",
     "bar_count": 21,
@@ -15,85 +26,496 @@
     "eps_touch": 0.01,
     "eps_break": 0.01,
     "eps_break_locked": false,
-    "eps_break_note": "eps_break is illustrative only, never locked (HD-03, §13.5). No breakout occurs in this fixture, so eps_break is not exercised.",
-    "tolerance_version": "tol-2026.07-defaults"
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. This fixture is verified robust across an eps_break sweep — see causal_record.eps_break_robustness.",
+    "tolerance_version": "tol-2026.07-illustrative",
+    "min_formation_bars": 8,
+    "min_ath_age_bars": 3,
+    "formation_params_note": "Formation gates are first-class, k-independent, versioned parameters (§21.3, D-TL-12): min_formation_bars replaces the pivot-derived 2k+2 and min_ath_age_bars replaces the k-recency window. Numerically unchanged at k=3."
   },
-  "expected_ath_anchor": { "t": 0, "H": 200.00 },
+  "expected_ath_anchor": {
+    "t": 0,
+    "H": 200
+  },
   "expected_second_anchor": {
-    "t": 16,
-    "H": 120.00,
-    "reason": "All-highs upper-log-hull vertex: shallowest descending line from A dominating every later bar high within eps. NOT a k=3 pivot (H[16]=120 < H[13]=126 and < H[14]=120.5 within k=3), yet canonical per §6/§8 and the 2026-07-25 SC-2 decision (§5)."
+    "t": 15,
+    "H": 119,
+    "reason": "Frozen at the confirmed breakout on bar 16 (§21.5): this is the canonical second anchor of the line active at the START of that bar, retained verbatim. No later high may replace it (§21.8)."
   },
-  "expected_log_slope": -0.0319266,
+  "expected_log_slope": -0.0346129,
   "expected_intercept": 5.29832,
   "expected_line_values": {
-    "0": { "y_hat": 5.29832, "line": 200.000 },
-    "4": { "y_hat": 5.17061, "line": 176.022 },
-    "8": { "y_hat": 5.04290, "line": 154.919 },
-    "13": { "y_hat": 4.88327, "line": 132.062 },
-    "14": { "y_hat": 4.85135, "line": 127.915 },
-    "15": { "y_hat": 4.81942, "line": 123.893 },
-    "16": { "y_hat": 4.78749, "line": 120.000 },
-    "17": { "y_hat": 4.75557, "line": 116.229 },
-    "20": { "y_hat": 4.65979, "line": 105.613 }
+    "0": {
+      "y_hat": 5.29832,
+      "line": 200
+    },
+    "15": {
+      "y_hat": 4.77912,
+      "line": 119
+    },
+    "16": {
+      "y_hat": 4.74451,
+      "line": 114.952
+    },
+    "17": {
+      "y_hat": 4.7099,
+      "line": 111.041
+    },
+    "20": {
+      "y_hat": 4.60606,
+      "line": 100.089
+    }
   },
   "expected_state_transitions": [
-    { "bar": 16, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+    {
+      "bar": 8,
+      "from": "NONE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 9,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 10,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 11,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 12,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 13,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 14,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 16,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 16,
+      "from": "ACTIVE",
+      "to": "BROKEN_OUT",
+      "reason_code": "BREAKOUT_CONFIRMED"
+    },
+    {
+      "bar": 17,
+      "from": "BROKEN_OUT",
+      "to": "RETESTED",
+      "reason_code": "RETEST_HELD"
+    }
   ],
-  "expected_final_state": "ACTIVE",
-  "breakout_bar": null,
-  "confirmed_bar": null,
-  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "expected_final_state": "RETESTED",
+  "breakout_bar": 16,
+  "confirmed_bar": 16,
+  "expected_reason_codes": [
+    "LINE_ESTABLISHED",
+    "BREAKOUT_CONFIRMED",
+    "RETEST_HELD"
+  ],
   "flags": [],
   "rejection_rationale": [
     {
-      "candidate": "B=(4,160) — the ONLY k=3 pivot after the ATH; what a strict k=3 PREFILTER would pick",
-      "rejected_because": "Its steeper line is pierced by later bar highs, so it is NOT envelope-valid. A strict k=3 pivot prefilter (restricting candidacy to pivots) would WRONGLY select this bar (or, treating it as invalid, wrongly emit NO_VALID_SECOND_ANCHOR) and thereby exclude the true canonical anchor at t=16. This is the SC-2 failure the 2026-07-25 decision forbids (§5).",
-      "numeric": "m_P=(ln160-ln200)/4=(5.075174-5.298317)/4=-0.223143/4=-0.0557859; y_hat_P(5)=5.298317-0.0557859*5=5.019390; ln158(high@t=5)=5.062595 > 5.019390+0.02=5.039390 -> pierces by 0.023205. Far downstream y_hat_P(16)=5.298317-0.0557859*16=4.405746 (line 81.90) << ln120=4.787492 -> pierces by ~0.38. P does not dominate."
+      "candidate": "A confirmed breakout on any bar before t=16",
+      "rejected_because": "No earlier bar in the ACTIVE episode closes above the line that was active at the START of that bar (§13.1 as-of-time).",
+      "numeric": "Closest earlier approach is t=8: ln(C)-y_hat_8(8)-eps_break = -0.00625835 < 0."
     },
     {
-      "candidate": "B=(13,126) — a HIGHER-priced, earlier bar high",
-      "rejected_because": "Although its price (126) is higher than B*'s (120), its line from A is STEEPER (more negative slope) than B*'s, so it is not the shallowest dominating line. A higher price does not make a bar the canonical anchor; the shallowest-slope (upper-hull) bar does.",
-      "numeric": "m=(ln126-ln200)/13=(4.836282-5.298317)/13=-0.462035/13=-0.0355412; -0.0355412 < -0.0319266 (steeper than B*). It sits below the A->B* line: y_hat_B*(13)=4.883272 (line 132.062) > ln126=4.836282 -> dominated by B*."
+      "candidate": "Re-selecting B* from a high after t=16",
+      "rejected_because": "Anchor re-selection is SUSPENDED once the state is BROKEN_OUT/RETESTED; the frozen event line governs failure, retest and expiry (§21.5, §21.8).",
+      "numeric": "5 later high(s) have a shallower A->high slope than the frozen m=-0.0346129 (e.g. t=16, slope -0.0319266); under a full-series hull one of them would replace B* and could retroactively un-fire the breakout. §21.8 forbids it."
     },
     {
-      "candidate": "B=(14,120.5) — the HIGHER bar within k=3 that makes t=16 a non-pivot",
-      "rejected_because": "This is the bar that disqualifies t=16 as a k=3 pivot (it is higher and within 3 bars). Yet it is NOT the canonical anchor: being earlier, its line from A is STEEPER than B*'s, so B* (later, slightly lower) gives the shallower dominating line. This is exactly the RM-01 geometry (a higher, earlier bar yields a steeper — not shallower — slope).",
-      "numeric": "m=(ln120.5-ln200)/14=(4.791650-5.298317)/14=-0.506667/14=-0.0361905; -0.0361905 < -0.0319266 (steeper than B*). Dominated by B*: y_hat_B*(14)=4.851345 (line 127.915) > ln120.5=4.791650."
+      "candidate": "A line ACTIVE before t=8",
+      "rejected_because": "Formation eligibility is evaluated as-of-time on the available prefix (§21.3): the line becomes ACTIVE only at the first bar satisfying |S_t| >= min_formation_bars AND tA <= (t-1) - min_ath_age_bars AND B*_t exists.",
+      "numeric": "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL] | t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL] | t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok] | t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok] | t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok] | t=8: ELIGIBLE [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
     },
     {
-      "candidate": "B*=(16,120) itself piercing any bar high (validity of the selected line)",
-      "rejected_because": "The selected all-highs hull line dominates every bar high within eps=0.02, so nothing pierces it -> it is the valid canonical envelope.",
-      "numeric": "Tightest downstream margins: t=17 high 114 < line 116.229; t=19 high 106 < line 109.041; t=20 high 102 < line 105.613. All later highs strictly below the line -> 0 pierces."
-    },
-    {
-      "candidate": "SC-2 documentation (explicit)",
-      "rejected_because": "The selected anchor is NOT a k=3 pivot; the only k=3 pivot (t=4, H=160) would give the wrong line (steeper, pierced, non-dominating); the all-highs upper-log-hull selects the non-pivot bar t=16 correctly (SC-2). Pivot detection is secondary/non-authoritative (§5, D-TL-03) and must never change the canonical anchor (D-TL-05).",
-      "numeric": "Pivots after ATH: ONLY t=4 (H=160 > H[1..3]=150,155,158 and >= H[5..7]=158,154,150) is a k=3 pivot. t=16 is only a k=1 local high (H[16]=120 > H[15]=119, >= H[17]=114) but NOT k=3 (H[16]=120 < H[13]=126, < H[14]=120.5). Shallowest slope among ALL later highs is at t=16 (m=-0.0319266, closest to zero) -> upper-hull vertex."
+      "candidate": "B=(6,154) as second anchor at the formation bar",
+      "rejected_because": "It is not the shallowest envelope-valid descending candidate over the available prefix; the upper log-hull selects the maximum-slope valid candidate (§8, D-TL-04).",
+      "numeric": "slope(A,(6,154)) = -0.0435608 < slope(A,B*) = -0.0410974; B* dominates every bar high in S_8 = bars 0..7 (worst gap 0 <= eps)."
     }
   ],
   "geometry_check": {
     "yA": 5.29832,
-    "yB": 4.78749,
-    "slope_formula": "m=(ln120-ln200)/(16-0)=(4.787492-5.298317)/16=-0.510826/16=-0.0319266",
-    "intercept_formula": "b=yA-m*tA=5.298317-(-0.0319266*0)=5.298317",
+    "yB": 4.77912,
+    "slope_formula": "m=(yB-yA)/(tB-tA)=(4.77912-5.29832)/(15-0)=-0.0346129",
+    "intercept_formula": "b=yA-m*tA=5.29832-(-0.0346129*0)=5.29832",
     "key_inequalities": [
-      "Anchor A=(0,200): yA=ln200=5.298317. Candidate set = ALL later bar highs (t>0), NOT a pivot subset (§8, 2026-07-25 SC-2 decision).",
-      "Shallowest-slope (upper-hull) test over all later highs: slope(A->t) = (ln H[t]-5.298317)/t. Max (closest to zero) is at t=16: m=-0.0319266.",
-      "Comparators steeper (more negative): (4,160)->-0.0557859; (13,126)->-0.0355412; (14,120.5)->-0.0361905; therefore none is the shallowest dominating line.",
-      "Domination: the A->B* line (m=-0.0319266, b=5.298317) sits at/above EVERY bar high within eps=0.02 -> 0 pierces (t=16 lies exactly on the line).",
-      "Non-pivot proof: H[16]=120 is NOT a k=3 pivot because H[16] < H[13]=126 and H[16] < H[14]=120.5 (higher bars within k=3). It is only a k=1 local high.",
-      "Only k=3 pivot after ATH = t=4 (H=160). Its line is pierced immediately: y_hat_P(5)=5.019390 < ln158-eps=5.042595 -> t=5 high pierces; P does NOT dominate -> a k=3 prefilter is WRONG.",
-      "Conclusion: all-highs upper-log-hull selects the NON-pivot bar B*=(16,120); a strict k=3 pivot prefilter would select the wrong anchor (4,160) or none. SC-2 proven."
+      "Candidacy is over ALL later bar highs (§6, D-TL-05, HD-11) — never a pivot subset — and every value below is computed from bars strictly EARLIER than the bar it judges (§21.1, HD-12).",
+      "Formation (§21.3): t_form = 8 — the first bar with |S_t| >= min_formation_bars = 8 and tA <= (t-1) - min_ath_age_bars = (t-1) - 3 and an envelope-valid B*_t.",
+      "Pre-breakout re-selection (§21.6, §21.4 Lemma): B* re-binds exactly when a bar high reaches the active line, and the new line is effective from the NEXT bar — B* 7->8 effective t=9; B* 8->9 effective t=10; B* 9->10 effective t=11; B* 10->11 effective t=12; B* 11->12 effective t=13; B* 12->13 effective t=14; B* 13->15 effective t=16.",
+      "Breakout (§13.1/§13.2): at t=16, ln(C)=4.77912 > y_hat_16(16)=4.74451 + eps_break=0.01 -> margin 0.0246129 log units; confirmed_bar == breakout_bar == 16 (HD-03, no persistence wait).",
+      "Retest (§16) against the FROZEN line: at t=17, ln(L) <= y_hat_F(17)=4.7099 + eps_retest with room 0.0103674, and ln(C) >= y_hat_F - eps_retest with room 0.0230556.",
+      "Governing line: A=(0,200), B*=(15,119), m=-0.0346129, b=5.29832 — FROZEN at the breakout bar (§21.5)."
     ],
-    "pivot_analysis": {
-      "k": 3,
-      "k3_pivots_after_ath": [{ "t": 4, "H": 160.00 }],
-      "selected_anchor_is_k3_pivot": false,
-      "selected_anchor_local_high_order": "k=1 (H[16]=120 > H[15]=119 and >= H[17]=114) but NOT k=3",
-      "disqualifying_higher_bars_within_k3": [{ "t": 13, "H": 126.00 }, { "t": 14, "H": 120.50 }],
-      "note": "Mirrors RM-01: the upper-log-hull vertex over all highs is a non-pivot bar; the only k=3 pivot gives a steeper, non-dominating line. Pivot status is non-authoritative for selection (§5, D-TL-03, D-TL-05)."
+    "notes": "Input data is UNCHANGED by the causal audit; only the expectation moved. The breakout margin of 0.0246129 log units is robust across a 0.5x-2x eps_break sweep, so this fixture keeps its causal breakout rather than being redesigned. The retest at t=17 is real and is recorded: its return leg holds even at eps_retest = 0, because the low (111.00) is below the frozen line (111.0408)."
+  },
+  "causal_record": {
+    "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
+    "formation": {
+      "min_formation_bars": 8,
+      "min_ath_age_bars": 3,
+      "t_form": 8,
+      "rule": "FORMATION_ELIGIBLE(t) iff |S_t| >= min_formation_bars (F1) AND tA <= (t-1) - min_ath_age_bars (F2) AND B*_t exists (F3). Both thresholds are first-class versioned parameters, independent of the pivot window k (§21.3, D-TL-12).",
+      "gate_trace": [
+        "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=8: ELIGIBLE [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=9: ELIGIBLE [F1 |S_t|=9>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
+      ],
+      "gate_trace_full": [
+        "t=0: INSUFFICIENT_BARS [F1 |S_t|=0>=8:FAIL; F2 tA=null<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=1: INSUFFICIENT_BARS [F1 |S_t|=1>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:FAIL]",
+        "t=2: INSUFFICIENT_BARS [F1 |S_t|=2>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=3: INSUFFICIENT_BARS [F1 |S_t|=3>=8:FAIL; F2 tA=0<=(t-1)-3:FAIL; F3 B*_t exists:ok]",
+        "t=4: INSUFFICIENT_BARS [F1 |S_t|=4>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=5: INSUFFICIENT_BARS [F1 |S_t|=5>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=6: INSUFFICIENT_BARS [F1 |S_t|=6>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=7: INSUFFICIENT_BARS [F1 |S_t|=7>=8:FAIL; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=8: ELIGIBLE [F1 |S_t|=8>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=9: ELIGIBLE [F1 |S_t|=9>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=10: ELIGIBLE [F1 |S_t|=10>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=11: ELIGIBLE [F1 |S_t|=11>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=12: ELIGIBLE [F1 |S_t|=12>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=13: ELIGIBLE [F1 |S_t|=13>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=14: ELIGIBLE [F1 |S_t|=14>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=15: ELIGIBLE [F1 |S_t|=15>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=16: ELIGIBLE [F1 |S_t|=16>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=17: ELIGIBLE [F1 |S_t|=17>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=18: ELIGIBLE [F1 |S_t|=18>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=19: ELIGIBLE [F1 |S_t|=19>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=20: ELIGIBLE [F1 |S_t|=20>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
+        "t=21: ELIGIBLE [F1 |S_t|=21>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
+      ],
+      "gate_trace_full_caveat": "This trace re-evaluates the §21.3 gates statelessly at every bar, INCLUDING bars at which the state is BROKEN_OUT/RETESTED. While the state is frozen (§21.5) re-selection is suspended and no formation occurs, so an \"ELIGIBLE\" entry after the breakout bar describes gate arithmetic only, not an active line. It also runs to t = bar_count, the line that would judge a hypothetical next bar."
     },
-    "notes": "Small, hand-verifiable (21 bars). Geometry to 6 significant figures; where hand exp() is ambiguous at the 6th figure the inequalities above (not the rounded line display) are authoritative, per fixtures/README.md §2. This fixture is the SC-2 proof referenced by trendline-specification.md §5 (Product Owner decision 2026-07-25)."
+    "as_of_time_candidate_set": {
+      "at_bar": 8,
+      "available_prefix": "S_8 = bars 0..7",
+      "anchor": {
+        "t": 0,
+        "H": 200
+      },
+      "candidates": [
+        {
+          "t": 1,
+          "H": 150,
+          "slope": -0.287682,
+          "worst_gap": 1.72609,
+          "envelope_valid": false
+        },
+        {
+          "t": 2,
+          "H": 155,
+          "slope": -0.127446,
+          "worst_gap": 0.604441,
+          "envelope_valid": false
+        },
+        {
+          "t": 3,
+          "H": 158,
+          "slope": -0.0785741,
+          "worst_gap": 0.262337,
+          "envelope_valid": false
+        },
+        {
+          "t": 4,
+          "H": 160,
+          "slope": -0.0557859,
+          "worst_gap": 0.102819,
+          "envelope_valid": false
+        },
+        {
+          "t": 5,
+          "H": 158,
+          "slope": -0.0471445,
+          "worst_gap": 0.0423292,
+          "envelope_valid": false
+        },
+        {
+          "t": 6,
+          "H": 154,
+          "slope": -0.0435608,
+          "worst_gap": 0.0172435,
+          "envelope_valid": true
+        },
+        {
+          "t": 7,
+          "H": 150,
+          "slope": -0.0410974,
+          "worst_gap": 0,
+          "envelope_valid": true
+        }
+      ],
+      "selected": {
+        "t": 7,
+        "H": 150,
+        "slope": -0.0410974
+      },
+      "note": "Candidacy is over EVERY later bar high (§6, HD-11); pivot status is not consulted. Domination is tested over all bar highs in the prefix (D-TL-05)."
+    },
+    "pivot_context": {
+      "k": 3,
+      "definition": "isPivotHigh(p,k): strict > against the k bars on the left, >= against the k bars on the right (§5).",
+      "confirmed_pivots_full_series": [
+        4
+      ],
+      "confirmed_pivots_in_formation_prefix": [
+        4
+      ],
+      "b_star_bar": 15,
+      "b_star_is_confirmed_pivot": false,
+      "note": "DESCRIPTIVE ONLY. Pivot status is non-authoritative (§5, D-TL-03, HD-11): it never removes a candidate from §6/§8, never changes B*, and never affects formation eligibility (§21.3, D-TL-12). Replacing k here changes nothing in this fixture except this block."
+    },
+    "active_line_before_event_bars": [
+      {
+        "bar": 8,
+        "state_at_start": "ACTIVE",
+        "line_source": "Λ_8 built from S_8 = bars 0..7",
+        "B_star": {
+          "t": 7,
+          "H": 150
+        },
+        "m": -0.0410974,
+        "b": 5.29832,
+        "y_hat_at_bar": 4.96954,
+        "line_at_bar": 143.96,
+        "close_vs_line_plus_eps_break": -0.00625835,
+        "high_vs_line_plus_eps": -0.00593123
+      },
+      {
+        "bar": 16,
+        "state_at_start": "ACTIVE",
+        "line_source": "Λ_16 built from S_16 = bars 0..15",
+        "B_star": {
+          "t": 15,
+          "H": 119
+        },
+        "m": -0.0346129,
+        "b": 5.29832,
+        "y_hat_at_bar": 4.74451,
+        "line_at_bar": 114.952,
+        "close_vs_line_plus_eps_break": 0.0246129,
+        "high_vs_line_plus_eps": 0.0229812
+      },
+      {
+        "bar": 17,
+        "state_at_start": "BROKEN_OUT",
+        "line_source": "frozen event line Λ^F (§21.5)",
+        "B_star": {
+          "t": 15,
+          "H": 119
+        },
+        "m": -0.0346129,
+        "b": 5.29832,
+        "y_hat_at_bar": 4.7099,
+        "line_at_bar": 111.041,
+        "close_vs_line_plus_eps_break": 0.00305558,
+        "high_vs_line_plus_eps": 0.00630081
+      },
+      {
+        "bar": 20,
+        "state_at_start": "RETESTED",
+        "line_source": "frozen event line Λ^F (§21.5)",
+        "B_star": {
+          "t": 15,
+          "H": 119
+        },
+        "m": -0.0346129,
+        "b": 5.29832,
+        "y_hat_at_bar": 4.60606,
+        "line_at_bar": 100.089,
+        "close_vs_line_plus_eps_break": -0.00590114,
+        "high_vs_line_plus_eps": -0.00108606
+      }
+    ],
+    "events": [
+      {
+        "bar": 16,
+        "event": "BREAKOUT_CONFIRMED",
+        "line": {
+          "tA": 0,
+          "tB": 15,
+          "m": -0.03461292489576711,
+          "b": 5.298317366548036
+        },
+        "y_hat": 4.74451,
+        "line_value": 114.952,
+        "close": 119,
+        "ln_close": 4.77912,
+        "margin": 0.0246129
+      },
+      {
+        "bar": 17,
+        "event": "RETEST_HELD",
+        "y_hat_frozen": 4.7099,
+        "line_value": 111.041,
+        "low": 111,
+        "close": 112.5,
+        "return_margin": 0.0103674,
+        "hold_margin": 0.0230556
+      }
+    ],
+    "reselections": [
+      {
+        "effective_bar": 9,
+        "from": 7,
+        "to": 8,
+        "m": -0.0393388,
+        "tie": false
+      },
+      {
+        "effective_bar": 10,
+        "from": 8,
+        "to": 9,
+        "m": -0.0380545,
+        "tie": false
+      },
+      {
+        "effective_bar": 11,
+        "from": 9,
+        "to": 10,
+        "m": -0.0371064,
+        "tie": false
+      },
+      {
+        "effective_bar": 12,
+        "from": 10,
+        "to": 11,
+        "m": -0.0364071,
+        "tie": false
+      },
+      {
+        "effective_bar": 13,
+        "from": 11,
+        "to": 12,
+        "m": -0.0358986,
+        "tie": false
+      },
+      {
+        "effective_bar": 14,
+        "from": 12,
+        "to": 13,
+        "m": -0.0355412,
+        "tie": false
+      },
+      {
+        "effective_bar": 16,
+        "from": 13,
+        "to": 15,
+        "m": -0.0346129,
+        "tie": false
+      }
+    ],
+    "frozen_event_line": {
+      "A": {
+        "t": 0,
+        "H": 200
+      },
+      "B_star": {
+        "t": 15,
+        "H": 119
+      },
+      "m": -0.0346129,
+      "b": 5.29832,
+      "breakout_bar": 16,
+      "confirmed_bar": 16,
+      "tolerance_version": "tol-2026.07-illustrative",
+      "binding": "Failure (§15), retest (§16) and expiry (§17) are evaluated against THIS line; re-selection is suspended (§21.5)."
+    },
+    "non_retroactive_challengers": {
+      "note": "Later highs whose A→high slope is shallower than the frozen line. Under a full-series hull they would re-select B*; §21.5/§21.8 forbid it, so the frozen line stands.",
+      "bars": [
+        {
+          "bar": 16,
+          "H": 120,
+          "slope_if_selected": -0.0319266
+        },
+        {
+          "bar": 17,
+          "H": 114,
+          "slope_if_selected": -0.0330658
+        },
+        {
+          "bar": 18,
+          "H": 110,
+          "slope_if_selected": -0.0332132
+        },
+        {
+          "bar": 19,
+          "H": 106,
+          "slope_if_selected": -0.0334146
+        },
+        {
+          "bar": 20,
+          "H": 102,
+          "slope_if_selected": -0.0336672
+        }
+      ]
+    },
+    "eps_break_robustness": {
+      "documented_default": 0.01,
+      "sweep": [
+        {
+          "scale": 0.5,
+          "eps_break": 0.005,
+          "final_state": "RETESTED",
+          "breakout_bar": 16
+        },
+        {
+          "scale": 0.8,
+          "eps_break": 0.008,
+          "final_state": "RETESTED",
+          "breakout_bar": 16
+        },
+        {
+          "scale": 1,
+          "eps_break": 0.01,
+          "final_state": "RETESTED",
+          "breakout_bar": 16
+        },
+        {
+          "scale": 1.2,
+          "eps_break": 0.012,
+          "final_state": "RETESTED",
+          "breakout_bar": 16
+        },
+        {
+          "scale": 2,
+          "eps_break": 0.02,
+          "final_state": "RETESTED",
+          "breakout_bar": 16
+        }
+      ]
+    }
   }
 }

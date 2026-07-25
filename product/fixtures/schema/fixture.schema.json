@@ -16,7 +16,8 @@
     "expected_state_transitions",
     "expected_reason_codes",
     "rejection_rationale",
-    "geometry_check"
+    "geometry_check",
+    "expected_final_state"
   ],
   "properties": {
     "fixture_id": {
@@ -34,7 +35,9 @@
     },
     "spec_refs": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "minItems": 1,
       "description": "List of trendline/confidence spec sections and decisions used, e.g. ['§8','D-TL-04']."
     },
@@ -44,10 +47,16 @@
       "properties": {
         "timestamp_kind": {
           "type": "string",
-          "enum": ["ordinal", "iso_date"],
+          "enum": [
+            "ordinal",
+            "iso_date"
+          ],
           "description": "Whether input.csv timestamp column is an ordinal index t or a synthetic ISO date."
         },
-        "bar_count": { "type": "integer", "minimum": 0 },
+        "bar_count": {
+          "type": "integer",
+          "minimum": 0
+        },
         "price_field_for_geometry": {
           "type": "string",
           "const": "high",
@@ -64,11 +73,24 @@
       "type": "object",
       "description": "Named, versioned config used to derive the expected values (§20).",
       "additionalProperties": true,
-      "required": ["tolerance_version", "eps_break_locked"],
+      "required": [
+        "tolerance_version",
+        "eps_break_locked"
+      ],
       "properties": {
-        "k": { "type": "integer", "minimum": 1, "description": "Pivot lookback/lookforward (§5)." },
-        "eps": { "type": "number", "description": "Envelope/domination tolerance in log units (§9)." },
-        "eps_touch": { "type": "number", "description": "Touch tolerance in log units (§9)." },
+        "k": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Pivot lookback/lookforward (§5)."
+        },
+        "eps": {
+          "type": "number",
+          "description": "Envelope/domination tolerance in log units (§9)."
+        },
+        "eps_touch": {
+          "type": "number",
+          "description": "Touch tolerance in log units (§9)."
+        },
         "eps_break": {
           "type": "number",
           "description": "Breakout tolerance in log units (§13.5). ILLUSTRATIVE, NOT LOCKED (HD-03)."
@@ -82,12 +104,44 @@
           "type": "string",
           "description": "Human note reaffirming eps_break is illustrative, not locked (HD-03)."
         },
-        "eps_fail": { "type": "number", "description": "Failed-breakout tolerance (§15)." },
-        "F_fail": { "type": "integer", "description": "Failed-breakout window in bars (§15)." },
-        "eps_retest": { "type": "number", "description": "Retest tolerance (§16)." },
-        "W_retest": { "type": "integer", "description": "Retest return window in bars (§16)." },
-        "h_hold": { "type": "integer", "description": "Retest hold window in bars (§16)." },
-        "E_expiry": { "type": "integer", "description": "Post-breakout expiry horizon in bars (§17)." },
+        "eps_fail": {
+          "type": "number",
+          "description": "Failed-breakout tolerance (§15)."
+        },
+        "F_fail": {
+          "type": "integer",
+          "description": "Failed-breakout window in bars (§15)."
+        },
+        "eps_retest": {
+          "type": "number",
+          "description": "Retest tolerance (§16)."
+        },
+        "W_retest": {
+          "type": "integer",
+          "description": "Retest return window in bars (§16)."
+        },
+        "h_hold": {
+          "type": "integer",
+          "description": "Retest hold window in bars (§16)."
+        },
+        "E_expiry": {
+          "type": "integer",
+          "description": "Post-breakout expiry horizon in bars (§17)."
+        },
+        "min_formation_bars": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum available history before a line may become ACTIVE (§21.3 F1, D-TL-12). A first-class versioned parameter, INDEPENDENT of the pivot window k; it replaces the pivot-derived 2k+2 formulation."
+        },
+        "min_ath_age_bars": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minimum number of bars that must separate the anchor A from the last available bar before a line may become ACTIVE (§21.3 F2, D-TL-12). Constrains the ANCHOR only — never the candidacy of any B (HD-11, HD-12 rule 6). Independent of k; it replaces the pivot-derived k-recency window."
+        },
+        "formation_params_note": {
+          "type": "string",
+          "description": "Human note recording that the formation gates are k-independent, versioned and backtestable (D-TL-12)."
+        },
         "tolerance_version": {
           "type": "string",
           "description": "Version tag for the tolerance set used (traceability, §20)."
@@ -95,30 +149,63 @@
       }
     },
     "expected_ath_anchor": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "properties": {
-        "t": { "type": "integer", "description": "ATH bar ordinal index tA (§4)." },
-        "H": { "type": "number", "description": "ATH bar high HA." }
+        "t": {
+          "type": "integer",
+          "description": "ATH bar ordinal index tA (§4)."
+        },
+        "H": {
+          "type": "number",
+          "description": "ATH bar high HA."
+        }
       },
       "description": "Anchor A=(tA,HA); null when no geometry is produced (invalid input / no ATH)."
     },
     "expected_second_anchor": {
-      "type": ["object", "null"],
+      "type": [
+        "object",
+        "null"
+      ],
       "additionalProperties": false,
       "properties": {
-        "t": { "type": "integer" },
-        "H": { "type": "number" },
-        "reason": { "type": "string", "description": "If null, why no B* was selected." }
+        "t": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Null when no B* exists; `reason` then explains why."
+        },
+        "H": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Null when no B* exists; `reason` then explains why."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why this B* was selected, or — when t/H are null — why none was."
+        }
       },
       "description": "Selected second anchor B*=(tB,HB) per §6/§8; null with reason when none."
     },
     "expected_log_slope": {
-      "type": ["number", "null"],
+      "type": [
+        "number",
+        "null"
+      ],
       "description": "m=(yB−yA)/(tB−tA) to 6 significant figures (§7); null when no line."
     },
     "expected_intercept": {
-      "type": ["number", "null"],
+      "type": [
+        "number",
+        "null"
+      ],
       "description": "b=yA−m·tA to 6 significant figures (§7); null when no line."
     },
     "expected_line_values": {
@@ -128,8 +215,12 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "y_hat": { "type": "number" },
-          "line": { "type": "number" }
+          "y_hat": {
+            "type": "number"
+          },
+          "line": {
+            "type": "number"
+          }
         }
       }
     },
@@ -139,29 +230,122 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["bar", "from", "to", "reason_code"],
+        "required": [
+          "bar",
+          "from",
+          "to",
+          "reason_code"
+        ],
         "properties": {
-          "bar": { "type": ["integer", "null"] },
-          "from": { "type": "string" },
-          "to": { "type": "string" },
-          "reason_code": { "type": "string" }
+          "bar": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACTIVE",
+              "BROKEN_OUT",
+              "RETESTED",
+              "FAILED_BREAKOUT",
+              "EXPIRED"
+            ],
+            "description": "State at the START of this transition (§11). Must equal the previous transition's `to` — the list is continuous, and that continuity is asserted by `tools/fixture-replay.mjs --all` (§21.6 rule 3). Continuity is not edge legality: the check does not reject an edge §11 omits."
+          },
+          "to": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "ACTIVE",
+              "BROKEN_OUT",
+              "RETESTED",
+              "FAILED_BREAKOUT",
+              "EXPIRED"
+            ],
+            "description": "State after this transition (§11)."
+          },
+          "reason_code": {
+            "type": "string",
+            "enum": [
+              "LINE_ESTABLISHED",
+              "ENVELOPE_TIE_LATER",
+              "WICK_BREAK",
+              "INVALID_PIERCE",
+              "BREAKOUT_CONFIRMED",
+              "FAILED_BREAKOUT",
+              "RETEST_HELD",
+              "RESET_NEW_ATH",
+              "EXPIRED_POST_BREAKOUT",
+              "ATH_TOO_RECENT",
+              "INSUFFICIENT_BARS",
+              "NO_VALID_SECOND_ANCHOR",
+              "SUSPECTED_UNADJUSTED_SPLIT",
+              "INVALID_PRICE",
+              "INVALID_INPUT"
+            ],
+            "description": "Named reason code (§10, §11, §18). Closed set: a code outside it is a schema error, not a new behaviour."
+          }
         }
       }
     },
     "expected_final_state": {
       "type": "string",
-      "description": "Terminal state of the series (NONE/ACTIVE/BROKEN_OUT/WICK_BREAK-stays-ACTIVE/RETESTED/FAILED_BREAKOUT/EXPIRED)."
+      "enum": [
+        "NONE",
+        "ACTIVE",
+        "BROKEN_OUT",
+        "RETESTED",
+        "FAILED_BREAKOUT",
+        "EXPIRED"
+      ],
+      "description": "Terminal state of the series (§11). Closed set — WICK_BREAK is NOT a state: §11 draws it as an ACTIVE -> ACTIVE edge recorded by a reason code, so a wick-break fixture ends ACTIVE."
     },
-    "breakout_bar": { "type": ["integer", "null"], "description": "First qualifying close bar (§13); HD-03 confirmed_bar==breakout_bar." },
-    "confirmed_bar": { "type": ["integer", "null"], "description": "HD-03: equals breakout_bar (no persistence wait)." },
+    "breakout_bar": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "First qualifying close bar (§13); HD-03 confirmed_bar==breakout_bar."
+    },
+    "confirmed_bar": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "HD-03: equals breakout_bar (no persistence wait)."
+    },
     "expected_reason_codes": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string",
+        "enum": [
+          "LINE_ESTABLISHED",
+          "ENVELOPE_TIE_LATER",
+          "WICK_BREAK",
+          "INVALID_PIERCE",
+          "BREAKOUT_CONFIRMED",
+          "FAILED_BREAKOUT",
+          "RETEST_HELD",
+          "RESET_NEW_ATH",
+          "EXPIRED_POST_BREAKOUT",
+          "ATH_TOO_RECENT",
+          "INSUFFICIENT_BARS",
+          "NO_VALID_SECOND_ANCHOR",
+          "SUSPECTED_UNADJUSTED_SPLIT",
+          "INVALID_PRICE",
+          "INVALID_INPUT"
+        ]
+      },
       "description": "Set of every reason code emitted for this fixture."
     },
     "flags": {
       "type": "array",
-      "items": { "type": "string" },
+      "items": {
+        "type": "string"
+      },
       "description": "Non-gating confidence/quality flags (e.g. LOW_VOLUME)."
     },
     "rejection_rationale": {
@@ -170,11 +354,21 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["candidate", "rejected_because"],
+        "required": [
+          "candidate",
+          "rejected_because"
+        ],
         "properties": {
-          "candidate": { "type": "string" },
-          "rejected_because": { "type": "string" },
-          "numeric": { "type": "string", "description": "The exact inequality evaluation used." }
+          "candidate": {
+            "type": "string"
+          },
+          "rejected_because": {
+            "type": "string"
+          },
+          "numeric": {
+            "type": "string",
+            "description": "The exact inequality evaluation used."
+          }
         }
       }
     },
@@ -183,15 +377,85 @@
       "description": "Restated arithmetic so an independent verifier can confirm every number by hand.",
       "additionalProperties": true,
       "properties": {
-        "yA": { "type": ["number", "null"] },
-        "yB": { "type": ["number", "null"] },
-        "slope_formula": { "type": "string" },
-        "intercept_formula": { "type": "string" },
+        "yA": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "yB": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "slope_formula": {
+          "type": "string"
+        },
+        "intercept_formula": {
+          "type": "string"
+        },
         "key_inequalities": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "causal_record": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "As-of-time (§21 / HD-12 / D-TL-11) evidence block, emitted by tools/fixture-replay.mjs: the formation-gate trace with F1/F2/F3 evaluated independently, the as-of-time candidate set at the formation bar, the active B* and line value before every event bar, each event with its margin, every pre-breakout re-selection, the frozen event line, the later non-retroactive challengers, the eps_break robustness sweep, and a DESCRIPTIVE pivot context. Every number is derived only from bars strictly earlier than the bar it judges.",
+      "properties": {
+        "semantics": {
+          "type": "string"
+        },
+        "formation": {
+          "type": "object"
+        },
+        "as_of_time_candidate_set": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "no_anchor_proof": {
+          "type": "object"
+        },
+        "pivot_context": {
+          "type": "object"
+        },
+        "active_line_before_event_bars": {
+          "type": "array"
+        },
+        "events": {
+          "type": "array"
+        },
+        "reselections": {
+          "type": "array"
+        },
+        "frozen_event_line": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "non_retroactive_challengers": {
+          "type": "object"
+        },
+        "eps_break_robustness": {
+          "type": "object"
+        },
+        "input_guard": {
+          "type": "object"
+        },
+        "note": {
+          "type": "string"
+        }
       }
     }
   }

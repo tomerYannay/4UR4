@@ -23,6 +23,10 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-09 | med  | External Fear & Greed source + redistribution/display rights | APPROVED |
 | HD-10 | high | SaaS billing/PII security review | APPROVED |
 | HD-11 | high | Pivot-high prefilter is non-authoritative (upper-log-hull is canonical) | APPROVED |
+| HD-12 | high | Anchor selection is rolling/causal (as-of-time), frozen at confirmed breakout | **APPROVED — RATIFIED** |
+| HD-13 | high | `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust | **APPROVED — RATIFIED** |
+| HD-14 | high | Formation gates are first-class `k`-independent parameters | **APPROVED — RATIFIED** |
+| HD-15 | high | GOV-015 scope: a committed causal reference model is permitted evidence tooling | **APPROVED** |
 
 ---
 
@@ -264,6 +268,75 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Cross-references:** refines [HD-02](#hd-02--envelope-selection-rule--materiality-high)
   (the envelope rule); real-market evidence in `product/fixtures/real/RM-01/`.
 
+## HD-12 — Anchor selection is rolling and causal (as-of-time), frozen at confirmed breakout · materiality: **high**
+- **Status:** **APPROVED and RATIFIED** — **Decided by: Product Owner, 2026-07-25**, and [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`. Resolves **OQ-TL-7**
+  (surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18), the stale-pivot sweep, which
+  explicitly did **not** decide it).
+- **⚠ Provenance.** As with HD-13 and HD-14, this ruling originally reached the repository as a
+  Product Owner instruction to the autonomous session rather than as a posted GitHub
+  artifact, and until the ratification below the issue thread carried the escalation with no
+  answer. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). It mattered more
+  here than anywhere else, because the entire 23-fixture correctness contract derives from
+  this rule. Builds on
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
+- **Decision:** Over what window is the canonical §8 anchor selection evaluated —
+  full history (later bars may retroactively re-select `B*`), frozen at line
+  formation, or rolling/as-of-time?
+- **Ruling (governing rule):** **Anchor selection uses rolling, causal, as-of-time
+  evaluation while the trendline is `ACTIVE`.** It is **neither** a final full-series
+  calculation that may use future bars retroactively, **nor** a permanently frozen
+  anchor from the first moment a valid line forms. Authoritative processing order for
+  evaluation bar `t`:
+  1. At the start of bar `t`, the active canonical line is calculated **only from bars
+     available through `t−1`**.
+  2. Evaluate bar `t`'s wick, close, breakout and related events **against that
+     pre-existing line**.
+  3. If bar `t` produces a **confirmed breakout**: **freeze** the exact `A`, `B*`,
+     slope, intercept, tolerance version and line that were active at the **start of
+     bar `t`**; use that frozen event line for breakout, retest, failure and expiry
+     semantics; **later highs must not retroactively replace `B*` for that event**.
+  4. If bar `t` does **not** produce a breakout: incorporate bar `t`'s high into the
+     candidate set; recompute the all-highs upper-log-hull canonical `B*`; the
+     resulting line becomes active **beginning with bar `t+1`**.
+  5. A **new ATH** invalidates the previous structure and starts a new formation.
+  6. **Pivot status and distance from the end of the currently available series remain
+     non-authoritative.**
+  7. **Backtests and fixtures must never use future bars to revise an earlier event
+     classification.**
+- **Reason:** Preserves causality and prevents look-ahead bias; allows a developing
+  resistance line to update before breakout; freezes the actual line the market broke
+  so subsequent retest semantics refer to the line that existed at the event; remains
+  consistent with **RM-01** and
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high);
+  and avoids reinstating a pivot-derived end-window exclusion.
+- **Alternatives:**
+  - **Full-series retroactive selection** — compute `B*` once over the complete
+    history so a later, shallower, envelope-valid high re-selects the anchor of an
+    already-evaluated event (**REJECTED** — introduces look-ahead bias and would let
+    future bars rewrite an earlier breakout/retest classification).
+  - **Permanently frozen at formation** — fix `B*` at the first moment a valid line
+    forms, with later bars only validating (**REJECTED** — prevents a developing
+    resistance line from legitimately updating before any breakout occurs).
+- **Constraint that made the obvious alternative unavailable:** a "bars within `k` of
+  the end of the series are excluded from **selection**" rule is **not** available:
+  **RM-01's Product-Owner-approved canonical anchor is itself only 3 bars from the end
+  of its series**, so reinstating such an end-window exclusion would contradict
+  **RM-01** and
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
+- **Cost of delaying:** n/a — resolved 2026-07-25. (While open it contested the stated
+  anchors of fixtures **GX-09** and **GX-15** and blocked closure of the Phase 0
+  evidence correction.)
+- **Safe default:** Evaluate each bar against the line built from strictly prior bars;
+  freeze the line at a confirmed breakout for all downstream event semantics; never
+  revise an earlier classification with later bars.
+- **Cross-references:** resolves **OQ-TL-7** in
+  [`trendline-specification.md`](trendline-specification.md) (Open questions, §8/§17);
+  surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18); consistent with
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high)
+  and the RM-01 real-market evidence in `product/fixtures/real/RM-01/`.
+
 ---
 
 ## Decision log — 2026-07-24 (Product Owner)
@@ -287,10 +360,250 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Left pending:** HD-06 — data-provider selection + recurring spend; complete R1–R8
   research before any selection or commitment.
 
+## HD-13 — `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust · materiality: **high**
+- **Status:** **APPROVED and RATIFIED** — **Decided by: Product Owner, 2026-07-25**, and [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`.
+- **⚠ Provenance — read before relying on this entry.** Surfaced as "Decision 1" by the
+  causal fixture audit on [Issue #16](https://github.com/tomerYannay/4UR4/issues/16), whose
+  escalation comment explicitly declined to choose. **The ruling was then issued by the
+  Product Owner directly to the autonomous session as continuation instructions and was NOT
+  posted to GitHub at the time, so for the whole of that period no citable decision artifact
+  existed on the issue or the PR.** (One does now — see *Ratification* below.) This
+  entry is the relay record, written by the agent that received and implemented the
+  instruction. An earlier revision claimed the decision was "answered there" on Issue #16;
+  that citation was **false** and is corrected here (found independently by the Project
+  Auditor and the Strategic Product Reviewer, 2026-07-25). This is the same disclosure
+  pattern as the *Historical Product Owner Decision Record — RM-01* below, and it falls short
+  of the standard the Product Owner set on
+  [#14](https://github.com/tomerYannay/4UR4/issues/14#issuecomment-5078902902) (*"the record
+  must be a committed, citable artifact"*). **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), naming head
+  `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`. The gap this block discloses is closed; the
+  block is retained because the record of how a decision reached the repository is itself
+  evidence (GOV-006), and because the false "answered there" citation it retracts must stay
+  retracted. Implemented in
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
+- **Decision:** Under [HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high)
+  `ε_break` became **outcome-determining**: at least one fixture's expected
+  classification flipped between `ACTIVE` and `BROKEN_OUT` depending on the value
+  chosen, yet [HD-03](#hd-03--breakout-confirmation-policy--materiality-high)
+  deliberately leaves `ε_break` **unlocked** (versioned and backtestable, no locked
+  default). A fixture's expected outcome may not depend on a tolerance the
+  specification declines to fix.
+- **Ruling (governing rule):** **Keep `ε_break` unlocked (HD-03 stands, unamended) and
+  remove the dependency from the evidence instead.**
+  1. Every **ordinary** fixture's expected classification MUST be invariant under at
+     least **±20% variation around the documented `ε_break` default**. Fixtures that
+     were not are **redesigned**, not re-labelled.
+  2. **Exactly one** fixture — **GX-15** — is retained as the dedicated
+     **tolerance-boundary** fixture. Its classification is deliberately
+     tolerance-sensitive and both sides of the boundary are documented numerically,
+     including the exact value at which it flips.
+  3. Ordinary fixtures MUST NOT be turned into tolerance-boundary tests as a
+     side-effect of a redesign.
+  4. A robust causal event is **preserved, not reverted**: where the as-of-time audit
+     produces a breakout with a robust margin (**GX-19**, margin 0.0246129 log units),
+     the fixture keeps that breakout rather than being restored to its full-series
+     `ACTIVE` expectation.
+- **Reason:** Locking `ε_break` now would pre-empt the Phase 0/Phase 4 evidence that
+  HD-03 exists to gather, and would pin a validity threshold before the backtest that
+  is meant to choose it. Accepting indeterminacy in the correctness contract is the
+  other unacceptable option. Making the evidence robust removes the conflict without
+  deciding the tolerance.
+- **Alternatives:** (a) **Lock `ε_break`** at a specific value, amending HD-03 —
+  **REJECTED** (pre-empts Phase 0/4 evidence). (c) Keep it unlocked and treat
+  `ε_break`-boundary fixtures as **provisional**, excluded from the Phase 2
+  exact-reproduction exit criteria — **REJECTED** (weakens the correctness contract
+  exactly where it is load-bearing).
+- **⚠ Where this ruling goes beyond the options as escalated.** Option (b) is the one
+  approved, but the ruling as received **added specifics that appeared in no option**, and
+  those specifics are load-bearing. They are listed rather than presented as a clean
+  selection from the menu:
+  1. the **±20%** invariance threshold — no numeric threshold appeared in any option;
+  2. **GX-15** as the dedicated boundary fixture — option (b) had named **GX-01**;
+  3. rule 3 (ordinary fixtures must not become boundary tests) and rule 4 (a robust causal
+     event is preserved, not reverted) — neither appeared in any option.
+  **Ratified as recorded** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) states explicitly that HD-13 is ratified *as recorded*, which includes these four clauses, and invites correction if any was meant to be excepted.
+- **Cost of delaying:** n/a — resolved 2026-07-25.
+- **Safe default:** the documented illustrative `ε_break = 0.01` with
+  `eps_break_locked: false` in every fixture, plus a recorded robustness sweep.
+- **Evidence:** every fixture that ever forms a line carries
+  `causal_record.eps_break_robustness` (the two input-guard-rejected fixtures, GX-10 and
+  GX-18, never consult `eps_break` at all). Rule 1 is **machine-enforced**:
+  `tools/fixture-replay.mjs --all` fails the run if any ordinary fixture's classification
+  moves under ±20%, with GX-15 whitelisted as the fixture this decision exempts. Counted
+  from the committed sweeps: **22 of 23 invariant at ±20%** — i.e. **all 22 ordinary
+  fixtures comply**, GX-15 being the designed exception — and **21 of 23 across the wider
+  0.5×–2× sweep**, the second exception being GX-12, which complies with this decision and
+  leaves the band only at 0.5×.
+  *(Correction, 2026-07-25: this clause previously read "22 of 23 … across a 0.5×–2× sweep;
+  GX-15 is the intended boundary case", and a first correction over-stated it as 23 of 23 at
+  ±20%. Both were wrong. The figures above are counted from the artifacts on disk. Three
+  successive wrong values for one statistic is why the rule is now enforced by the harness
+  rather than asserted in prose.)*
+- **Cross-references:** [HD-03](#hd-03--breakout-confirmation-policy--materiality-high)
+  (unamended), [HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high),
+  `trendline-specification.md` §13.5.
+
+## HD-14 — Formation gates are first-class, `k`-independent parameters · materiality: **high**
+- **Status:** **APPROVED and RATIFIED** — **Decided by: Product Owner, 2026-07-25**, and [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`.
+- **⚠ Provenance — same limitation as HD-13 above.** Surfaced as "Decision 2" / **OQ-TL-8**
+  by the §21 specification work on
+  [Issue #16](https://github.com/tomerYannay/4UR4/issues/16). **The ruling was issued by the
+  Product Owner directly to the autonomous session as continuation instructions and was not
+  posted to GitHub at the time, so no citable decision artifact existed until the
+  ratification below.** This entry is the relay record.
+  Unlike HD-13, the substance here matches option (b) exactly as escalated — only the
+  parameter names differ (`min_bars`/`min_bars_after_anchor` → `min_formation_bars`/
+  `min_ath_age_bars`) and no threshold value changed. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). Implemented in
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
+- **Decision:** Under HD-12 the §18 formation guards became **outcome-determining** —
+  they fix `t_form`, the first bar at which any event can fire, and therefore which
+  line the earliest evaluable bars are judged against. Both were expressed in the
+  pivot window `k` (`2k+2` minimum history; ATH not within `k` of the last available
+  bar), so `k` — declared **non-authoritative for selection** by
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high)
+  — had become authoritative for formation **timing**.
+- **Ruling (governing rule):** **Restate the formation gate as first-class,
+  `k`-independent constants** (option (b)):
+  - `min_formation_bars` — default **8** — minimum available history `|S_t|`;
+  - `min_ath_age_bars` — default **3** — minimum age of the **anchor `A`** relative to
+    the last available bar.
+  Both are **named, versioned with the detector's `spec_version`, and backtestable**,
+  are carried explicitly in every fixture's `params`, and are **numerically identical**
+  to the superseded `2k+2` / `k` formulation at `k = 3` — **no threshold value
+  changes**. Changing `k` MUST NOT move any event. `min_ath_age_bars` constrains the
+  **anchor only**; it removes no candidate `B` from §6/§8 candidacy (HD-11, HD-12
+  rule 6), so it does not reinstate the end-window exclusion that would contradict
+  RM-01.
+- **Reason:** A parameter that determines which events fire must not be a by-product of
+  a parameter the same register declared non-authoritative. Naming the gates makes the
+  formation timing explicitly tunable, versionable and backtestable, and lets the pivot
+  window be re-tuned for visualization or confidence features without moving a single
+  event.
+- **Alternatives:** (a) keep the §18 guards expressed in `k` — **REJECTED** (leaves a
+  non-authoritative parameter determining events); (c) relax the gates toward the
+  two-bar geometric minimum — **REJECTED** (reinstates the degenerate two-point line
+  the guards exist to prevent, which under causal evaluation manufactures a spurious
+  `BROKEN_OUT` within a bar or two of the series start).
+- **Cost of delaying:** n/a — resolved 2026-07-25.
+- **Safe default:** `min_formation_bars = 8`, `min_ath_age_bars = 3` (the pre-existing
+  values at `k = 3`).
+- **Evidence:** regression fixtures **GX-21** (minimum history binds alone), **GX-22**
+  (anchor recency binds alone, after a new-ATH reset) and **GX-23** (eligibility with zero
+  confirmed pivots in the formation prefix), together with **GX-08** (a series containing no
+  pivots at all still has a canonical anchor) and **GX-19** (the canonical `B*` is a
+  non-pivot bar) — 9 of the 20 geometry fixtures have a non-pivot `B*`.
+  `tools/fixture-replay.mjs --formation` re-checks the gates mechanically and adds a
+  **positive control** so the checks cannot pass vacuously.
+  *(Correction, 2026-07-25: this clause previously offered a `k ∈ {1,2,3,4,5,8}` replay
+  sweep as proof. It is not proof — the reference model never reads `k`, so
+  `k`-independence is **structural** there and the sweep is incapable of failing. The
+  binding evidence is the fixture data above.)*
+- **Cross-references:** `trendline-specification.md` §18, §21.3 and **D-TL-12**;
+  resolves **OQ-TL-8**.
+
+## HD-15 — GOV-015 scope: is `tools/fixture-replay.mjs` permitted under the build-freeze? · materiality: **high**
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-25** ([ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), against head
+  `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`). Raised by the Project Auditor and the Strategic
+  Product Reviewer, independently, during the review of
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
+- **Ruling:** `tools/fixture-replay.mjs` is **permitted under GOV-015 as Phase-0 evidence
+  tooling** — the recommended option below. Recorded in
+  [`governance/build-freeze.md`](../governance/build-freeze.md) so the ruling lives in the
+  governance file rather than only in the artifact it licenses. **GOV-015 itself remains ON:**
+  this is a scope clarification about one file, not a freeze lift, and it authorizes no
+  product code.
+- **Conditions carried with the permission** (the recommended option's own terms, implemented
+  as the detail of the ruling rather than separately quoted): it confers **no Phase-2 credit**;
+  the Phase-2 engine MUST be authored from the specification by an agent that has **not read
+  this model**, so that "exact reproduction" tests conformance rather than transcription; and
+  the **specification governs** wherever the two disagree, with any divergence handled as a
+  spec-defect report or a model bug, never as silent model behaviour.
+- **Decision:** [PR #18](https://github.com/tomerYannay/4UR4/pull/18) commits
+  `tools/fixture-replay.mjs`, a roughly thousand-line executable causal reference model implementing
+  §3, §4, §6, §7, §8, §9, §10, §11, §13, §14, §15, §16, §17, §18 and §21 of the trendline
+  specification, and CI now depends on it. Is that **permitted evidence tooling** under
+  [GOV-015](../governance/build-freeze.md), or is it **product functionality** implemented
+  under a freeze?
+- **Why it is genuinely contested, stated from both sides:**
+  - *For permitting:* the alternative is hand arithmetic, which **demonstrably drifted, repeatedly**
+    — the whole pre-#16 fixture set was derived with full-series hulls, and the replacement
+    GX-20 was designed with full-series reasoning and shipped defective. A correctness
+    contract nobody can mechanically re-derive is the larger Phase-2 hazard. The file creates
+    none of the `PRODUCT_CODE_DIRS` the validator guards, is wired to no product surface, and
+    the freeze validator passes.
+  - *Against:* GOV-015 rule 2's permitted list is **closed** ("this operating system,
+    governance, workflows, templates, and **context-only** research/design") and an executing
+    implementation of the detection algorithm is not obviously on it; rule 3 says the
+    Architect "may **design** but not build". The validator's check is **directory-name-based**
+    and does not reach file contents, so passing it is not clearance — it is a gap in the
+    enforcement, not a ruling.
+- **Recommended option:** **permit as Phase-0 evidence tooling**, recording the conditions
+  explicitly in `governance/build-freeze.md`: it confers no Phase-2 credit; the Phase-2 engine
+  MUST be authored from the specification by an agent that has not read it, so that "exact
+  reproduction" tests conformance rather than transcription; and the specification remains
+  authoritative wherever the two disagree.
+- **Alternatives:** (a) permit but bar CI from depending on it — keeps the freeze tighter, but
+  removes the continuous enforcement the review chain specifically demanded; (b) require its
+  removal before merge — returns Phase 0 to the hand derivation that failed repeatedly.
+- **Cost of delaying:** n/a — resolved 2026-07-25.
+- **Safe default (superseded by the ruling):** the freeze stays **ON** — which remains true;
+  the ruling is a scope clarification about one file, not a freeze lift.
+- **Note on the disclaimers in the tree (history).** `tools/fixture-replay.mjs`,
+  `fixtures/README.md` §7 and `fixtures/VERIFICATION.md` each state that the file is evidence
+  tooling and confers no Phase-2 credit. Before this ruling those statements were the
+  **proposed** disposition and were labelled as proposals in each file, because an artifact
+  may not settle a question reserved to the Product Owner in its own header — the Project
+  Auditor's finding. They are now labelled as **ruled**, citing this decision.
+
 ## Decision log — 2026-07-25 (Product Owner)
 
 - **2026-07-25 — HD-11 approved (resolves SC-2 from RM-01):** upper-log-hull canonical,
   pivot prefilter non-authoritative.
+- **2026-07-25 — [HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high)
+  approved (resolves OQ-TL-7, surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18)):** anchor selection is **rolling,
+  causal, as-of-time** while the line is `ACTIVE` — bar `t` is evaluated against the line
+  built from bars through `t−1`; a confirmed breakout **freezes** that line (`A`, `B*`,
+  slope, intercept, tolerance version) for breakout/retest/failure/expiry semantics; with
+  no breakout, bar `t`'s high joins the candidate set and the recomputed line becomes
+  active from `t+1`; a new ATH starts a new formation. Neither full-series retroactive
+  selection nor permanent freeze-at-formation. Pivot status and distance from the end of
+  the series remain non-authoritative, and no end-window (`within k of the end`) exclusion
+  is reinstated — **RM-01's approved anchor is only 3 bars from the end of its series**, so
+  such an exclusion would contradict RM-01 and
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
+  Backtests and fixtures must never use future bars to revise an earlier event
+  classification. See [`trendline-specification.md`](trendline-specification.md).
+  **Relayed, then ratified:** this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012).
+
+- **2026-07-25 — [HD-13](#hd-13--eps_break-stays-unlocked-ordinary-fixtures-must-be-tolerance-robust--materiality-high)
+  approved:** `ε_break` **stays unlocked** (HD-03 unamended); instead, every **ordinary**
+  fixture's expected classification must be invariant under **±20%** variation around the
+  documented default, **GX-15** alone is retained as the dedicated tolerance-boundary
+  fixture with both sides documented, ordinary fixtures must not become boundary tests,
+  and a robust causal breakout (**GX-19**, margin 0.0246129) is **preserved rather than
+  reverted**.
+  **Relayed, then ratified:** this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012).
+
+- **2026-07-25 — [HD-14](#hd-14--formation-gates-are-first-class-k-independent-parameters--materiality-high)
+  approved (resolves OQ-TL-8):** the formation gate is restated as **first-class,
+  `k`-independent** parameters `min_formation_bars = 8` and `min_ath_age_bars = 3` —
+  **numerically identical** to the superseded `2k+2` / `k` formulation at `k = 3`, but
+  versioned with `spec_version`, backtestable, and carried in every fixture's `params`.
+  Changing the pivot window `k` may no longer move any event. Locked by **GX-21**,
+  **GX-22**, **GX-23** and by `tools/fixture-replay.mjs --formation`.
+  **Relayed, then ratified:** this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012).
+
+- **2026-07-25 — HD-12, HD-13 and HD-14 RATIFIED, and HD-15 approved** ([ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), against head
+  `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`): *"Ratify HD-12, HD-13 and HD-14; permit the
+  reference model under GOV-015."* The three relayed rulings now carry the citable artifact
+  their entries disclosed as missing, HD-13 ratified **as recorded** including the four clauses
+  its entry enumerates as going beyond the escalated options. `tools/fixture-replay.mjs` is
+  permitted under GOV-015 as Phase-0 evidence tooling, conferring no Phase-2 credit;
+  **GOV-015 remains ON.**
 - **2026-07-25 — Historical Product Owner Decision Record — RM-01** (*recorded here, not
   newly decided*): PR #9 merged the RM-01 verification without a citable GitHub decision
   artifact (0 comments, 0 reviews), so this bullet supplies the missing precedence-1
@@ -306,7 +619,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   [`fixtures/real/RM-01/README.md`](fixtures/real/RM-01/README.md) and
   [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md).
 
-*This register records the Product Owner's rulings of 2026-07-24. Ruled items are
-governing; HD-06 remains a proposal pending human decision
+*This register records the Product Owner's rulings of 2026-07-24 and 2026-07-25. Ruled
+items are governing; HD-06 remains a proposal pending human decision
 ([GOV-013](../governance/approval-gate.md)). The build-freeze
 ([GOV-015](../governance/build-freeze.md)) remains ON.*

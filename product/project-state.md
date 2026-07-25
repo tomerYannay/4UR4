@@ -1,6 +1,9 @@
 # 4UR4 — Project State (canonical, current-state only)
 
-> **Current state only — not a history log.** **Content owner: Product Steward.** The
+> **Current state only — not a history log.** *A fuller post-merge refresh of this file — and
+> the queued roadmap-status reconciliation — are deliberately deferred until PR #18 merges; the
+> edits made on that branch are confined to statements the branch's own diff would otherwise
+> falsify.* **Content owner: Product Steward.** The
 > **Orchestrator** ensures this file is updated after: a phase completes · a Product Owner
 > decision is recorded · a roadmap phase changes · a major PR merges · a build-freeze scope
 > changes. The **Strategic Product Reviewer** reads and validates this file but **may not
@@ -26,16 +29,36 @@
 complete and Phase 1 (market-data foundation) is in its **research** stage; Phase 1
 implementation and beyond remain **freeze-blocked**.
 
-**Qualifier on Phase 0 completeness:** Phase 0 exit is **not clean while
-[#16](https://github.com/tomerYannay/4UR4/issues/16) is open.** The fixture set is the
-**correctness contract**, and an engine reproducing **GX-08 as currently committed** would
-implement a precondition **HD-11 forbids**.
+**Phase 0 completeness qualifier — RETIRED (2026-07-25).** The qualifier recorded here (that
+Phase 0 exit was not clean because **GX-08 as committed** encoded a precondition **HD-11
+forbids**) is **removed by the [#16](https://github.com/tomerYannay/4UR4/issues/16) evidence
+correction**: GX-08 now expects the all-highs upper-log-hull result `B* = (1, 98)`, GX-20
+covers the still-reachable `NO_VALID_SECOND_ANCHOR` case, and the stale pivot-conditioned text
+has been swept. The narrower question that sweep raised — whether §8 selection is evaluated
+over the **full history** or freezes at line formation — has since been **decided by the
+Product Owner as HD-12** (a *relayed* ruling — see the caveat below): selection is **rolling, causal, as-of-time**, frozen at a confirmed
+breakout. Two consequential decisions followed on 2026-07-25: **HD-13** (`eps_break` stays
+unlocked; ordinary fixtures must be tolerance-robust, with GX-15 alone retained as the
+boundary fixture) and **HD-14** (formation gates restated as first-class, `k`-independent
+parameters `min_formation_bars = 8` / `min_ath_age_bars = 3`). The entire fixture set has been
+re-derived as-of-time and re-verified mechanically; the in-place
+`geometry_check.open_issue_2026_07_25` flags are resolved and removed.
+
+**All three rulings are RATIFIED.** HD-12, HD-13 and HD-14 originally reached the repository
+as Product Owner instructions with no posted artifact; that gap is closed by the
+[ratification of 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012),
+given against head `2651cd0`, with HD-13 ratified *as recorded* — including the four clauses
+its entry enumerates as going beyond the escalated options. **HD-15** was approved in the same
+ruling: the causal reference model is permitted under GOV-015 as Phase-0 evidence tooling,
+conferring no Phase-2 credit. **GOV-015 itself remains ON.**
 
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
 - Proposed MVP roadmap, PRD, specs, human-decision register (PR #8).
-- **Phase 0 golden fixtures** (19 synthetic) + **RM-01** real-market case, PO-approved;
-  **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9).
+- **Phase 0 golden fixtures** (**23 synthetic** — 20 geometry + 3 null-anchor, after the #16
+  correction and the HD-12 as-of-time audit added GX-20 and the formation-gate regressions
+  GX-21/GX-22/GX-23, and moved GX-08 into the geometry set) + **RM-01** real-market case,
+  PO-approved; **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9; fixtures corrected under #16).
 - ChatGPT↔Claude **handoff protocol** + PR template + Agent Coordination Queue (#10) (PR #11).
 - **Strategic Product Reviewer** added as the 10th permanent agent (PR #13).
 - **Six-record documentation reconciliation** to merged evidence, docs-only (Refs #14); also
@@ -60,9 +83,23 @@ implement a precondition **HD-11 forbids**.
   `19 / 19 … 3 null-anchor by design` result line, and its SC-2 claim that removing the pivot
   precondition **moves no existing anchor**), and adds a new fixture **GX-20** for the
   genuinely reachable `NO_VALID_SECOND_ANCHOR` case (duplicate ATH / double top). It
-  **changes no rule** — **HD-11** and the canonical algorithm are untouched; this is a **stale
-  Phase 0 evidence defect, not a new product-definition decision** (Product Owner ruling).
-  Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Open; no PR yet.**
+  **changed no rule as originally scoped** — **HD-11** and the canonical algorithm are
+  untouched. **⚠ The branch has since grown beyond that scope:** Product Owner rulings HD-12,
+  HD-13 and HD-14 arrived mid-flight, and the branch now also carries spec §21, D-TL-11,
+  D-TL-12, a full as-of-time re-derivation of all 23 fixtures, three new fixtures and a
+  committed reference model. That growth was forced by discovered defects rather than chosen,
+  and is disclosed here and in the PR — but **Issue #16 has not been re-scoped to match**, so
+  the ticket→PR traceability link is incomplete (Project Auditor, GOV-007). Re-scoping #16, or
+  splitting the HD-12 audit into its own ticket, is a one-line ticket edit owed before merge.
+  Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Authored on branch
+  `fix/gx08-hd11-pivot-sweep`; awaiting verification/review and merge.** The sweep additionally
+  surfaced the full-history-vs-formation-window selection question, which the Product Owner
+  decided as **HD-12** (as-of-time selection), followed by **HD-13** and **HD-14**. The branch
+  now also carries the complete as-of-time re-derivation of the fixture set, the
+  `k`-independent formation parameters and their regression fixtures. **The Product-Owner-only items are
+  resolved** — HD-12/13/14 ratified and HD-15 approved on 2026-07-25. Re-scoping Issue #16 to
+  cover what this branch actually delivers is an Orchestrator ticket-hygiene action, not a
+  Product Owner decision, and is handled as such.
 
 ## Next milestone
 Two tracks: (1) complete the **[#16](https://github.com/tomerYannay/4UR4/issues/16) Phase 0
@@ -79,9 +116,15 @@ until the freeze is lifted per-scope.
 ## Pending Product Owner decisions
 - **HD-06** — data-provider selection + recurring spend (**human-gated**; research in PR #12).
 
+*Resolved 2026-07-25 and no longer pending:* **HD-12**, **HD-13** and **HD-14** ratified, and
+**HD-15** approved (the causal reference model is permitted under GOV-015 as Phase-0 evidence
+tooling, conferring no Phase-2 credit) — one ruling, recorded as a citable artifact
+[on #16](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head
+`2651cd0`. **GOV-015 itself remains ON.**
+
 ## Open issues / PRs (governed index)
 - Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (GX-08 + stale pivot-conditioned `NO_VALID_SECOND_ANCHOR` sweep, open, Phase 0 evidence correction).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **the full review chain re-run against every head of this audit**, with each round's findings recorded in `fixtures/VERIFICATION.md`; Product-Owner items resolved 2026-07-25 — HD-12/13/14 ratified and HD-15 approved; awaiting the head-specific review chain at the ratification head, then merge). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·
