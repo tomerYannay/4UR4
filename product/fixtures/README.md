@@ -86,7 +86,7 @@ the `geometry_check` inequalities (not the rounded display value) are the author
 | GX-02 | multiple competing second anchors | Envelope discrimination as a causal roll: `B*` (7,95.5) → (20,96) → **(45,92)**; the t=45 high pierces the (20,96) line beyond `eps=0.005`, exactly the spec §8 rejection | 8 | (45, 92.00) | **ACTIVE** | §8, §10.1, §17, §21.6 |
 | GX-03 | wick-only crossing | Intrabar pierce, close rejects → `WICK_BREAK`, stays ACTIVE — and the same bar re-selects `B*` effective t=17 | 8 | (16, 86.00) | **ACTIVE** | §11, §14, §21.6 |
 | GX-04 | clean retest | Breakout t=16, dip to the **frozen** line holds t=20 → `RETESTED` | 8 | (6, 93.00) | **RETESTED** | §13, §16, §21.5 |
-| GX-05 | false breakout | Breakout t=16, decisive close below the frozen line t=20 → `FAILED_BREAKOUT`; the failing bar lies **entirely below** the line (high 76.50 < line 78.5133), so price never trades back at the broken level | 8 | (6, 93.00) | **FAILED_BREAKOUT** | §15, §21.5 |
+| GX-05 | false breakout | Breakout t=16, decisive close below the frozen line t=20 → `FAILED_BREAKOUT`; the failing bar lies **entirely below** the line (high 76.50 < line 78.5133), so price never trades back at the broken level — a *physical* contrast with GX-17, since §15 fires first in both | 8 | (6, 93.00) | **FAILED_BREAKOUT** | §15, §21.5 |
 | GX-06 | expiry & recalculation (new-ATH recompute) | New ATH t=10 → `RESET_NEW_ATH` (**not** a breakout — §21.2 rule 5); `ATH_TOO_RECENT` until the new anchor ages; new line ACTIVE at t=14 | 8, then 14 | (13, 103.00) | **ACTIVE** | §10.3, §17, §21.7 |
 | GX-07 | expiry & recalculation | Breakout t=10, then `E_expiry` bars above the frozen line → `EXPIRED_POST_BREAKOUT` at t=110 → NONE | 8 | (6, 94.00) frozen | **NONE** (post-expiry) | §13, §17, §21.5 |
 | GX-08 | monotonic decline — **HD-11 regression** | Strictly decreasing highs contain **zero** k=3 pivots, yet the all-highs hull binds at the **first** later bar | 8 | (1, 98.00) | **ACTIVE** | §6, §8, §18, D-TL-03/05 |
@@ -95,7 +95,7 @@ the `geometry_check` inequalities (not the rounded display value) are the author
 | GX-11 | volume-as-confidence | Price identical to GX-16; **only volume differs** → same `BROKEN_OUT` at t=16 plus a `LOW_VOLUME` flag | 8 | (6, 93.00) frozen | **BROKEN_OUT** | §13.4, HD-03 |
 | GX-12 | repeated ATH | Two equal ATHs → **earliest** anchor (D-TL-02). The equal high is out of *candidacy* but stays in the *domination* set, so formation waits to t=12 with `NO_VALID_SECOND_ANCHOR` | 12 | (15, 118.00) | **ACTIVE** | §4, §6, §8, D-TL-02/05 |
 | GX-13 | intervening high invalidates a candidate | Lone spike at t=20 pierces by 3× `eps` and re-binds the hull; its close is 1.69% **below** the line, so no breakout | 8 | (20, 95.00) | **ACTIVE** | §8, §10.1, §17, D-TL-05 |
-| GX-14 | envelope tie | The candidates at t=9 (83.00) and t=18 (68.89 = 100·0.83², at twice the bar distance) give **bit-identical** slopes in IEEE754 → `ENVELOPE_TIE_LATER`, geometry unchanged | 8 | (18, 68.89) | **ACTIVE** | §8, §18, §20.3 |
+| GX-14 | envelope tie | The candidates at t=9 (83.00) and t=18 (68.89) give slopes equal **to the last bit** in IEEE754 → `ENVELOPE_TIE_LATER`, geometry unchanged. See the libm caveat in the fixture's `notes` | 8 | (18, 68.89) | **ACTIVE** | §8, §18, §20.3 |
 | GX-15 | tolerance-boundary (**the dedicated one**) | Bar 28 sits just inside **both** boundaries at once; both sides documented numerically, with the exact flip values | 8 | (28, 87.90) | **ACTIVE** | §9, §13.1/§13.5, HD-13 |
 | GX-16 | first-close breakout | First close above line+`eps_break` fires on that bar → `BROKEN_OUT`, `confirmed_bar == breakout_bar` | 8 | (6, 93.00) frozen | **BROKEN_OUT** | §13, HD-03, §21.5 |
 | GX-17 | deep undercut not a valid retest | Bar 20 **straddles** the frozen line (high 80.00 above it, low far below) so price does trade back at the broken level, but the close fails and never reclaims within `h_hold` → `NOT_RETESTED` + `FAILED_BREAKOUT` | 8 | (6, 93.00) frozen | **FAILED_BREAKOUT** | §15, §16 |
@@ -120,7 +120,7 @@ added as the D-TL-12 / HD-14 formation-gate regressions.
 | Outcome | Fixtures |
 |---|---|
 | **Expectation unchanged** — the causal result is identical to the previously recorded one | GX-08, GX-10, GX-12, GX-18 |
-| **Expectation re-derived, input data unchanged** | GX-15 (the boundary fixture), GX-19 (its causal breakout at t=16 has a robust 0.024613 margin and is **preserved**, per HD-13) |
+| **Expectation re-derived, input data unchanged** | GX-15 (the boundary fixture), GX-19 (its causal breakout at t=16 has a robust 0.0246129 margin and is **preserved**, per HD-13) |
 | **Input data revised so the fixture still demonstrates its stated purpose causally** | GX-02, GX-06, GX-07, GX-09 |
 | **Redesigned for tolerance robustness (HD-13)** | GX-01, GX-03, GX-04, GX-05, GX-11, GX-13, GX-14, GX-16, GX-17 |
 | **Redesigned because the construction was defective under causal evaluation** | GX-20 |
@@ -147,7 +147,11 @@ later candidate won outright rather than by tie-break. Its first replacement, an
 decimal ladder (`100·0.9^(t/10)`), tied in real arithmetic but **not in IEEE754**, and its
 selected anchor flipped between two bars depending on which algebraically-identical form of
 §7 computed the slope — an expected value that is not reproducible is not evidence. The
-current construction ties **bit-exactly** and was verified stable under three formulations.
+current construction ties **bit-exactly** and was verified stable under three formulations —
+subject to one honest caveat recorded in the fixture: the tie rests on `log(68.89)` equalling
+`2·log(83) − log(100)` bit-for-bit in the libms tested, and IEEE 754 does not require `log()`
+to be correctly rounded, so an engine on a different math library must re-check this fixture
+specifically.
 
 Category coverage: normal valid (GX-01, GX-09), monotonic decline / zero-pivot series
 (GX-08), repeated ATH (GX-12), multiple competing second anchors (GX-02),
@@ -169,24 +173,33 @@ h_hold=3, E_expiry=100, min_formation_bars=8, min_ath_age_bars=3`.
 `2k+2` and `k`-recency formulations **at identical values**. They are named, versioned
 with the detector's `spec_version`, backtestable, and carried explicitly in every
 fixture's `params`. Changing the pivot window `k` may no longer move any event —
-`tools/fixture-replay.mjs --formation` proves it by replaying every fixture at
-`k ∈ {1,2,3,4,5,8}` and requiring byte-identical transitions, anchors and states.
-GX-21/GX-22/GX-23 lock the two gates individually and their independence from pivots.
+GX-21/GX-22/GX-23 lock the two gates individually and their independence from pivot
+structure, and GX-08/GX-19/GX-23 lock that a non-pivot bar (or a series with no pivots at
+all) selects the canonical anchor. `tools/fixture-replay.mjs --formation` re-checks the gates
+and adds a positive control so they cannot pass vacuously. Note what the `k` sweep in that
+check does **not** show: the reference model never reads `k`, so `k`-independence is
+**structural** there and the sweep cannot fail — the binding evidence is the fixture data.
 
 **`eps_break` is a versioned, backtestable tolerance with NO locked default (HD-03,
 §13.5) — and no ordinary fixture's outcome may depend on it (HD-13).** Every fixture that
 uses it sets `"eps_break": 0.01` **only as an illustrative value** and carries
 `"eps_break_locked": false` plus an `eps_break_note` reaffirming this. The governing
 `eps_break` value/definition (percentage/log-unit **or** ATR-based) is chosen later from
-Phase-0 + Phase-4 evidence and pinned with the detector's `spec_version`. Each fixture that
-ever forms a line records a sweep in `causal_record.eps_break_robustness` (the two
-guard-rejected fixtures, GX-10 and GX-18, never consult `eps_break` at all). **All 23 are
-invariant across the ±20% band HD-13 requires; 21 of 23 are invariant across the wider
-0.5×–2× sweep.** The two that are not:
-- **GX-15** — the *dedicated* tolerance-boundary fixture, whose sensitivity is the point. It
-  flips to `BROKEN_OUT` at t=28 once `eps_break < 0.00824265` (at exactly that value §13.1's
-  strict inequality is not met and it stays `ACTIVE`); the `eps` side flips at
-  `eps < 0.0185343`. Both sides are documented numerically.
+Phase-0 + Phase-4 evidence and pinned with the detector's `spec_version`. Every fixture except the two
+whose bar-set is rejected by an input guard (GX-10, GX-18 — they never consult `eps_break`)
+records a sweep in `causal_record.eps_break_robustness`. **HD-13 rule 1 is machine-enforced:**
+`node tools/fixture-replay.mjs --all` **fails** if any ordinary fixture's classification moves
+under ±20%, with GX-15 whitelisted as the fixture HD-13 exempts. Counted from the committed
+sweeps: **22 of 23 invariant at ±20%** — all 22 ordinary fixtures comply, GX-15 being the
+designed exception — and **21 of 23 across the wider 0.5×–2× sweep**. The two that are not
+invariant across the wider sweep:
+- **GX-15** — the *dedicated* tolerance-boundary fixture, whose sensitivity is the point. Bar
+  28 clears the line by **0.008242654587** log units, so a breakout fires at t=28 for any
+  `eps_break` strictly below that — including the 6-significant-figure display value
+  `0.00824265` itself, and including the 0.8× sweep point. At the documented `0.01` it does
+  not fire. The `eps` side flips at **0.018534340624**. Both boundaries are quoted at full
+  precision deliberately: the 6 s.f. rounding falls *below* each of them (at exactly that value §13.1's
+  strict inequality is not met and it stays `ACTIVE`).
 - **GX-12** — **not** a second boundary fixture. It satisfies HD-13 (invariant at ±20%) and
   only leaves that band at 0.5×, where its t=15 wick becomes a breakout. Its input data is
   deliberately untouched, because the causal audit proved its expectation correct; the
@@ -214,6 +227,12 @@ fixture's `params.tolerance_version` tags the tolerance set used so evidence is 
 
 Non-gating **flags** (confidence/quality only, never validity gates): `LOW_VOLUME` (GX-11),
 `NOT_RETESTED` (GX-17).
+
+A fixture with *N* pre-breakout re-selections records *N* + (one per formation episode)
+`LINE_ESTABLISHED` transitions — usually *N*+1, but *N*+2 for GX-06 and GX-22, which form a
+line twice across a new-ATH reset. The re-selection entry is stamped at the bar the
+re-selected line takes **effect** (§21.6), and is emitted **before** that bar's own event, so
+the transition list is always a valid walk of the §11 state machine (asserted by `--all`).
 
 `INSUFFICIENT_BARS` is the standing reason for every bar before `t_form` in **every**
 fixture. It is not recorded as an event transition — a series always starts short — but it

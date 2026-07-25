@@ -19,30 +19,30 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // ---------------------------------------------------------------- JSON schema
 const errs = [];
-function chk(inst, sch, path, id) {
+function chk(inst, sch, path, id, sink = errs) {
   if (sch.type) {
     const types = Array.isArray(sch.type) ? sch.type : [sch.type];
     const t = inst === null ? 'null' : Array.isArray(inst) ? 'array'
       : typeof inst === 'number' ? (Number.isInteger(inst) ? 'integer' : 'number') : typeof inst;
     if (!types.some((x) => x === t || (x === 'number' && t === 'integer'))) {
-      errs.push(`${id} ${path}: type ${t} not in ${types.join('|')}`); return;
+      sink.push(`${id} ${path}: type ${t} not in ${types.join('|')}`); return;
     }
   }
-  if (sch.const !== undefined && inst !== sch.const) errs.push(`${id} ${path}: const mismatch ${JSON.stringify(inst)}`);
-  if (sch.enum && !sch.enum.includes(inst)) errs.push(`${id} ${path}: not in enum`);
-  if (sch.pattern && typeof inst === 'string' && !new RegExp(sch.pattern).test(inst)) errs.push(`${id} ${path}: pattern`);
-  if (sch.minimum !== undefined && inst < sch.minimum) errs.push(`${id} ${path}: < minimum`);
-  if (sch.minItems !== undefined && Array.isArray(inst) && inst.length < sch.minItems) errs.push(`${id} ${path}: minItems`);
-  if (Array.isArray(inst) && sch.items) inst.forEach((v, i) => chk(v, sch.items, `${path}[${i}]`, id));
+  if (sch.const !== undefined && inst !== sch.const) sink.push(`${id} ${path}: const mismatch ${JSON.stringify(inst)}`);
+  if (sch.enum && !sch.enum.includes(inst)) sink.push(`${id} ${path}: not in enum`);
+  if (sch.pattern && typeof inst === 'string' && !new RegExp(sch.pattern).test(inst)) sink.push(`${id} ${path}: pattern`);
+  if (sch.minimum !== undefined && inst < sch.minimum) sink.push(`${id} ${path}: < minimum`);
+  if (sch.minItems !== undefined && Array.isArray(inst) && inst.length < sch.minItems) sink.push(`${id} ${path}: minItems`);
+  if (Array.isArray(inst) && sch.items) inst.forEach((v, i) => chk(v, sch.items, `${path}[${i}]`, id, sink));
   if (inst && typeof inst === 'object' && !Array.isArray(inst)) {
-    for (const r of sch.required || []) if (!(r in inst)) errs.push(`${id} ${path}: missing required ${r}`);
+    for (const r of sch.required || []) if (!(r in inst)) sink.push(`${id} ${path}: missing required ${r}`);
     for (const [k, v] of Object.entries(inst)) {
       const ps = (sch.properties || {})[k];
-      if (ps) chk(v, ps, `${path}.${k}`, id);
+      if (ps) chk(v, ps, `${path}.${k}`, id, sink);
       // `$schema` is a JSON-Schema keyword, not instance data; RM-01 carries a
       // self-pointer that predates this check.
-      else if (sch.additionalProperties === false && k !== '$schema') errs.push(`${id} ${path}: additional property ${k}`);
-      else if (sch.additionalProperties && typeof sch.additionalProperties === 'object') chk(v, sch.additionalProperties, `${path}.${k}`, id);
+      else if (sch.additionalProperties === false && k !== '$schema') sink.push(`${id} ${path}: additional property ${k}`);
+      else if (sch.additionalProperties && typeof sch.additionalProperties === 'object') chk(v, sch.additionalProperties, `${path}.${k}`, id, sink);
     }
   }
 }
@@ -53,6 +53,30 @@ for (const id of ids) chk(JSON.parse(readFileSync(join(ROOT, `product/fixtures/g
 // RM-01 annotation against its own schema
 const ras = JSON.parse(readFileSync(join(ROOT, 'product/fixtures/schema/real-annotation.schema.json'), 'utf8'));
 chk(JSON.parse(readFileSync(join(ROOT, 'product/fixtures/real/RM-01/annotation.json'), 'utf8')), ras, '', 'RM-01');
+
+// NEGATIVE CONTROL. A validator that silently regressed to a no-op would print PASS
+// forever — exactly the failure mode this file exists to prevent, and the same reason
+// tools/fixture-replay.mjs carries a positive control on its formation checks. Feed a
+// known-bad instance through and require it to complain in every keyword class used.
+const control = [];
+chk({
+  fixture_id: 'BAD-1',                                        // fails `pattern`
+  purpose: 'x', category: 'x', spec_refs: [],                 // fails `minItems`
+  params: { tolerance_version: 'x', eps_break_locked: true }, // fails `const`
+  expected_ath_anchor: null, expected_second_anchor: null,
+  expected_state_transitions: [{ bar: 0, from: 'NOPE', to: 'ACTIVE', reason_code: 'MADE_UP' }],
+  expected_reason_codes: [], rejection_rationale: [], geometry_check: {},
+  not_a_real_field: 1,                                        // fails additionalProperties
+}, schema, '', 'NEGATIVE-CONTROL', control);
+const MUST_CATCH = ['pattern', 'const mismatch', 'not in enum', 'additional property', 'minItems'];
+const missed = MUST_CATCH.filter((k) => !control.some((e) => e.includes(k)));
+if (missed.length) {
+  errs.push(`NEGATIVE CONTROL FAILED — validator did not detect: ${missed.join(', ')}`
+    + ` (it reported: ${control.join(' | ') || 'nothing'})`);
+} else {
+  console.log(`negative control: PASS — a known-bad instance produced ${control.length} errors`
+    + ` covering all ${MUST_CATCH.length} keyword classes`);
+}
 
 console.log(errs.length ? `SCHEMA: ${errs.length} error(s)\n  ` + errs.join('\n  ')
   : `schema: PASS — ${ids.length} golden fixtures + RM-01 annotation validate`);

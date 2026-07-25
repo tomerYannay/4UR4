@@ -111,14 +111,14 @@
     {
       "bar": 16,
       "from": "ACTIVE",
-      "to": "BROKEN_OUT",
-      "reason_code": "BREAKOUT_CONFIRMED"
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
     },
     {
       "bar": 16,
       "from": "ACTIVE",
-      "to": "ACTIVE",
-      "reason_code": "LINE_ESTABLISHED"
+      "to": "BROKEN_OUT",
+      "reason_code": "BREAKOUT_CONFIRMED"
     },
     {
       "bar": 17,

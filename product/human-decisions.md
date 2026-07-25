@@ -268,7 +268,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   (the envelope rule); real-market evidence in `product/fixtures/real/RM-01/`.
 
 ## HD-12 — Anchor selection is rolling and causal (as-of-time), frozen at confirmed breakout · materiality: **high**
-- **Status:** APPROVED — **Decided by: Product Owner, 2026-07-25.** Resolves **OQ-TL-7**
+- **Status:** APPROVED **(relayed — ratification outstanding)** — **Decided by: Product Owner, 2026-07-25.** Resolves **OQ-TL-7**
   (surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
   [PR #18](https://github.com/tomerYannay/4UR4/pull/18), the stale-pivot sweep, which
   explicitly did **not** decide it).
@@ -359,7 +359,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   research before any selection or commitment.
 
 ## HD-13 — `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust · materiality: **high**
-- **Status:** APPROVED — **Decided by: Product Owner, 2026-07-25.**
+- **Status:** APPROVED **(relayed — ratification outstanding)** — **Decided by: Product Owner, 2026-07-25.**
 - **⚠ Provenance — read before relying on this entry.** Surfaced as "Decision 1" by the
   causal fixture audit on [Issue #16](https://github.com/tomerYannay/4UR4/issues/16), whose
   escalation comment explicitly declined to choose. **The ruling was then issued by the
@@ -395,7 +395,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   3. Ordinary fixtures MUST NOT be turned into tolerance-boundary tests as a
      side-effect of a redesign.
   4. A robust causal event is **preserved, not reverted**: where the as-of-time audit
-     produces a breakout with a robust margin (**GX-19**, margin 0.024613 log units),
+     produces a breakout with a robust margin (**GX-19**, margin 0.0246129 log units),
      the fixture keeps that breakout rather than being restored to its full-series
      `ACTIVE` expectation.
 - **Reason:** Locking `ε_break` now would pre-empt the Phase 0/Phase 4 evidence that
@@ -420,16 +420,26 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Cost of delaying:** n/a — resolved 2026-07-25.
 - **Safe default:** the documented illustrative `ε_break = 0.01` with
   `eps_break_locked: false` in every fixture, plus a recorded robustness sweep.
-- **Evidence:** every fixture carries `causal_record.eps_break_robustness`;
-  `tools/fixture-replay.mjs --robustness` re-runs the sweep. 22 of 23 fixtures are
-  invariant across a **0.5×–2×** sweep (wider than required); GX-15 is the intended
-  boundary case.
+- **Evidence:** every fixture that ever forms a line carries
+  `causal_record.eps_break_robustness` (the two input-guard-rejected fixtures, GX-10 and
+  GX-18, never consult `eps_break` at all). Rule 1 is **machine-enforced**:
+  `tools/fixture-replay.mjs --all` fails the run if any ordinary fixture's classification
+  moves under ±20%, with GX-15 whitelisted as the fixture this decision exempts. Counted
+  from the committed sweeps: **22 of 23 invariant at ±20%** — i.e. **all 22 ordinary
+  fixtures comply**, GX-15 being the designed exception — and **21 of 23 across the wider
+  0.5×–2× sweep**, the second exception being GX-12, which complies with this decision and
+  leaves the band only at 0.5×.
+  *(Correction, 2026-07-25: this clause previously read "22 of 23 … across a 0.5×–2× sweep;
+  GX-15 is the intended boundary case", and a first correction over-stated it as 23 of 23 at
+  ±20%. Both were wrong. The figures above are counted from the artifacts on disk. Three
+  successive wrong values for one statistic is why the rule is now enforced by the harness
+  rather than asserted in prose.)*
 - **Cross-references:** [HD-03](#hd-03--breakout-confirmation-policy--materiality-high)
   (unamended), [HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high),
   `trendline-specification.md` §13.5.
 
 ## HD-14 — Formation gates are first-class, `k`-independent parameters · materiality: **high**
-- **Status:** APPROVED — **Decided by: Product Owner, 2026-07-25.**
+- **Status:** APPROVED **(relayed — ratification outstanding)** — **Decided by: Product Owner, 2026-07-25.**
 - **⚠ Provenance — same limitation as HD-13 above.** Surfaced as "Decision 2" / **OQ-TL-8**
   by the §21 specification work on
   [Issue #16](https://github.com/tomerYannay/4UR4/issues/16). **The ruling was issued by the
@@ -473,10 +483,16 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Safe default:** `min_formation_bars = 8`, `min_ath_age_bars = 3` (the pre-existing
   values at `k = 3`).
 - **Evidence:** regression fixtures **GX-21** (minimum history binds alone), **GX-22**
-  (anchor recency binds alone, after a new-ATH reset) and **GX-23** (eligibility with
-  zero confirmed pivots in the formation prefix); `tools/fixture-replay.mjs
-  --formation` asserts all four properties across the whole set, including replaying
-  every fixture at `k ∈ {1,2,3,4,5,8}` and requiring identical output.
+  (anchor recency binds alone, after a new-ATH reset) and **GX-23** (eligibility with zero
+  confirmed pivots in the formation prefix), together with **GX-08** (a series containing no
+  pivots at all still has a canonical anchor) and **GX-19** (the canonical `B*` is a
+  non-pivot bar) — 9 of the 20 geometry fixtures have a non-pivot `B*`.
+  `tools/fixture-replay.mjs --formation` re-checks the gates mechanically and adds a
+  **positive control** so the checks cannot pass vacuously.
+  *(Correction, 2026-07-25: this clause previously offered a `k ∈ {1,2,3,4,5,8}` replay
+  sweep as proof. It is not proof — the reference model never reads `k`, so
+  `k`-independence is **structural** there and the sweep is incapable of failing. The
+  binding evidence is the fixture data above.)*
 - **Cross-references:** `trendline-specification.md` §18, §21.3 and **D-TL-12**;
   resolves **OQ-TL-8**.
 
@@ -499,13 +515,21 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
   Backtests and fixtures must never use future bars to revise an earlier event
   classification. See [`trendline-specification.md`](trendline-specification.md).
+  **⚠ Relayed, not posted:** this ruling reached the repository as a direct Product Owner
+  instruction to the autonomous session; no GitHub artifact exists and **ratification is
+  outstanding** — see the entry above.
+
 - **2026-07-25 — [HD-13](#hd-13--eps_break-stays-unlocked-ordinary-fixtures-must-be-tolerance-robust--materiality-high)
   approved:** `ε_break` **stays unlocked** (HD-03 unamended); instead, every **ordinary**
   fixture's expected classification must be invariant under **±20%** variation around the
   documented default, **GX-15** alone is retained as the dedicated tolerance-boundary
   fixture with both sides documented, ordinary fixtures must not become boundary tests,
-  and a robust causal breakout (**GX-19**, margin 0.024613) is **preserved rather than
+  and a robust causal breakout (**GX-19**, margin 0.0246129) is **preserved rather than
   reverted**.
+  **⚠ Relayed, not posted:** this ruling reached the repository as a direct Product Owner
+  instruction to the autonomous session; no GitHub artifact exists and **ratification is
+  outstanding** — see the entry above.
+
 - **2026-07-25 — [HD-14](#hd-14--formation-gates-are-first-class-k-independent-parameters--materiality-high)
   approved (resolves OQ-TL-8):** the formation gate is restated as **first-class,
   `k`-independent** parameters `min_formation_bars = 8` and `min_ath_age_bars = 3` —
@@ -513,6 +537,10 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   versioned with `spec_version`, backtestable, and carried in every fixture's `params`.
   Changing the pivot window `k` may no longer move any event. Locked by **GX-21**,
   **GX-22**, **GX-23** and by `tools/fixture-replay.mjs --formation`.
+  **⚠ Relayed, not posted:** this ruling reached the repository as a direct Product Owner
+  instruction to the autonomous session; no GitHub artifact exists and **ratification is
+  outstanding** — see the entry above.
+
 - **2026-07-25 — Historical Product Owner Decision Record — RM-01** (*recorded here, not
   newly decided*): PR #9 merged the RM-01 verification without a citable GitHub decision
   artifact (0 comments, 0 reviews), so this bullet supplies the missing precedence-1

@@ -1,6 +1,6 @@
 {
   "fixture_id": "GX-13",
-  "purpose": "A single intervening spike high invalidates the active line and RE-BINDS the upper hull at the spike: at t=20 the high pierces the line by 3x eps while the close sits 1.69% BELOW it, so the event is a pierce/re-selection (§10.1, §17 trigger 2/3) and not a breakout. B*=(20,95) from t=21 onward.",
+  "purpose": "A single intervening spike high invalidates the active line and RE-BINDS the upper hull at the spike: at t=20 the high pierces the line by 3x eps while the close sits 1.70% BELOW it, so the event is a pierce/re-selection (§10.1, §17 trigger 2/3) and not a breakout. B*=(20,95) from t=21 onward.",
   "category": "intervening highs invalidating a candidate",
   "spec_refs": [
     "§8",
@@ -114,7 +114,7 @@
       "Wick-break (§14): at t=20, ln(H)=4.55388 exceeds y_hat_20(20)=4.49448 by 0.0593948 > eps=0.02, while ln(C) is -0.0271453 relative to line+eps_break -> close does NOT confirm, state stays ACTIVE.",
       "Governing line: A=(0,100), B*=(20,95), m=-0.00256466, b=4.60517 — the line in force after the final bar (Lambda_n)."
     ],
-    "notes": "REDESIGNED for eps_break robustness. The previous construction broke out at t=8 with a margin of 0.000245 log units and flipped its breakout bar between 8 and 9 within +/-20% of the documented eps_break — the single genuinely fragile ordinary fixture in the set. The redesign preserves B*=(20,95) and its slope exactly while moving every outcome off the tolerance boundary: the fixture now holds ACTIVE across a 0.5x-2x eps_break sweep."
+    "notes": "REDESIGNED for eps_break robustness. The previous construction broke out at t=8 with a margin of 0.000245 log units and flipped its breakout bar between 8 and 9 within +/-20% of the documented eps_break — the single genuinely fragile ordinary fixture in the set. The redesign preserves B*=(20,95) and its slope exactly while moving every outcome off the tolerance boundary: no close in the fixture ever reaches the active line (the closest approach is -0.0171453 log units at t=20), so it holds ACTIVE at ANY eps_break >= 0."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",

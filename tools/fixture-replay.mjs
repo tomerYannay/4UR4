@@ -51,6 +51,7 @@
 //   node tools/fixture-replay.mjs --audit GX-01   # per-bar causal trace
 //   node tools/fixture-replay.mjs --hull          # brute-force hull at every prefix
 //   node tools/fixture-replay.mjs --nolookahead   # prefix-truncation invariance
+//   node tools/fixture-replay.mjs --ohlc          # OHLC coherence over every bar
 //   node tools/fixture-replay.mjs --robustness    # eps_break sensitivity sweep
 //   node tools/fixture-replay.mjs --all           # every check above
 //   node tools/fixture-replay.mjs --json          # machine-readable replay output
@@ -123,7 +124,7 @@ export function inputGuards(bars) {
   // OHLC coherence (§1): a bar whose open/close fall outside [low, high], or whose
   // low exceeds its high, is not a possible bar. The spec assumes well-formed OHLCV
   // rather than stating this, so it is enforced here as an INPUT guard and is
-  // asserted over the whole fixture set by --ohlc.
+  // asserted over the whole fixture set by --ohlc (and by --all).
   for (let t = 0; t < bars.length; t++) {
     const b = bars[t];
     if (b.low > b.high + FP || b.open < b.low - FP || b.open > b.high + FP
@@ -254,6 +255,19 @@ export function replay(bars, paramsIn) {
     const L = post ? frozen : g.lambda;              // line judging bar t
     const startState = post ? state : (g.lambda ? 'ACTIVE' : 'NONE');
 
+    // §21.2 step 1: the line effective at THIS bar is established before the bar is
+    // judged, so a pre-breakout re-selection that took effect here is recorded here,
+    // ahead of whatever event this bar then produces. Emitting it afterwards
+    // produced a transition list that was not a valid walk of the §11 machine
+    // (`from: ACTIVE` after the state had already moved to BROKEN_OUT) — found by
+    // Verification, Code Review and Strategic Review at head c0ede4d.
+    if (!post && state === 'ACTIVE' && lastLambda && L && lastLambda.B.t !== L.B.t) {
+      const tie = lastLambda.m === L.m;
+      reselections.push({ effective_bar: t, from: lastLambda.B.t, to: L.B.t, m: L.m, tie });
+      push(t, 'ACTIVE', 'ACTIVE', 'LINE_ESTABLISHED');
+      if (tie) push(t, 'ACTIVE', 'ACTIVE', 'ENVELOPE_TIE_LATER');
+    }
+
     // NONE -> ACTIVE (§11, §21.3) or ACTIVE -> NONE (F2/F3 lost)
     if (!post) {
       if (g.lambda && state === 'NONE') {
@@ -364,17 +378,10 @@ export function replay(bars, paramsIn) {
     }
 
     // ---- step 4: roll B* forward, effective t+1 (§21.6) ----------------------
-    if (lastLambda && L && !rec.frozen && lastLambda.B.t !== L.B.t) {
-      // A tie is BIT-EXACT equality of the two computed slopes. No slack is used:
-      // §20.3 requires order-stable tie rules, and a tolerance here would make the
-      // outcome depend on an unnamed constant (Verification finding, 2026-07-25).
-      const tie = lastLambda.m === L.m;
-      reselections.push({ effective_bar: t, from: lastLambda.B.t, to: L.B.t, m: L.m, tie });
-      // §21.6: the re-selected line effective at this bar emits LINE_ESTABLISHED;
-      // a tie additionally emits ENVELOPE_TIE_LATER (§18).
-      push(t, 'ACTIVE', 'ACTIVE', 'LINE_ESTABLISHED');
-      if (tie) push(t, 'ACTIVE', 'ACTIVE', 'ENVELOPE_TIE_LATER');
-    }
+    // The roll is *recorded* at the top of the bar it takes effect on (see above);
+    // here we only carry Λ forward. A tie is BIT-EXACT equality of the two computed
+    // slopes — no slack, because §20.3 requires order-stable tie rules and a
+    // tolerance would make the outcome depend on an unnamed constant.
     lastLambda = rec.frozen ? lastLambda : g.lambda;
     perBar.push(rec);
   }
@@ -790,6 +797,51 @@ function checkFrozen(fx) {
   return problems;
 }
 
+// §11: the recorded transition list must be a valid WALK of the state machine —
+// each entry's `from` must equal the previous entry's `to`. `compare()` checks the
+// list by exact equality, so an incoherent list would otherwise be baked into the
+// contract invisibly (found at head c0ede4d).
+function checkTransitionChain(fx) {
+  const p = paramsOf(fx.expected);
+  const r = replay(fx.bars, p);
+  const problems = [];
+  let state = 'NONE';
+  for (const tr of r.transitions) {
+    if (tr.from !== state) {
+      problems.push(`transition at bar ${tr.bar} (${tr.reason_code}) declares from=${tr.from} but the machine is in ${state}`);
+    }
+    state = tr.to;
+  }
+  if (state !== r.final_state) problems.push(`walking the transitions ends in ${state} but final_state is ${r.final_state}`);
+  return problems;
+}
+
+// §1 OHLC coherence over the whole set. GX-18's incoherence is deliberate and is
+// caught earlier by the INVALID_INPUT/INVALID_PRICE guards, so it is exempt.
+function checkOhlc(fx) {
+  const problems = [];
+  const guards = inputGuards(fx.bars);
+  if (guards.rejected && guards.codes.some((c) => c === 'INVALID_INPUT' || c === 'INVALID_PRICE')) return problems;
+  for (const [t, b] of fx.bars.entries()) {
+    if ([b.open, b.high, b.low, b.close].some((v) => v === null)) continue;
+    if (b.low > b.high || b.open < b.low || b.open > b.high || b.close < b.low || b.close > b.high) {
+      problems.push(`bar ${t}: incoherent OHLC ${b.open}/${b.high}/${b.low}/${b.close}`);
+    }
+  }
+  return problems;
+}
+
+// HD-13 rule 1 is a MUST: every ORDINARY fixture's classification is invariant
+// under ±20% around the documented eps_break. GX-15 is the one fixture HD-13
+// exempts by design. This must FAIL the run, not merely print.
+const EPS_BREAK_BOUNDARY_EXEMPT = new Set(['GX-15']);
+function checkEpsBreakRule(fx) {
+  if (EPS_BREAK_BOUNDARY_EXEMPT.has(fx.id)) return [];
+  const outcomes = new Set(robustness(fx, [0.8, 1.0, 1.2]).map((x) => `${x.state}/${x.breakout_bar}`));
+  return outcomes.size === 1 ? []
+    : [`HD-13 rule 1 violated: classification is not invariant under ±20% of eps_break (${[...outcomes].join(' vs ')})`];
+}
+
 function robustness(fx, scales = [0.8, 1.0, 1.2]) {
   const p = paramsOf(fx.expected);
   return scales.map((s) => {
@@ -850,6 +902,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (has('--nolookahead') || has('--all')) extra.push(...checkNoLookahead(fx).map((s) => `lookahead: ${s}`));
     if (has('--formation') || has('--all')) extra.push(...checkFormation(fx).map((s) => `formation: ${s}`));
     if (has('--frozen') || has('--all')) extra.push(...checkFrozen(fx).filter((s) => !s.startsWith('note:')).map((s) => `frozen: ${s}`));
+    if (has('--ohlc') || has('--all')) extra.push(...checkOhlc(fx).map((s) => `ohlc: ${s}`));
+    if (has('--all')) extra.push(...checkTransitionChain(fx).map((s) => `chain: ${s}`));
+    if (has('--all')) extra.push(...checkEpsBreakRule(fx).map((s) => `eps_break: ${s}`));
     const all = [...diffs, ...extra];
     if (all.length) failures++;
     report.push({ id, ok: all.length === 0, diffs: all, replay: r });

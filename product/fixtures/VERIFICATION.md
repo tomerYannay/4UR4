@@ -239,7 +239,7 @@ model omitted rule 5. GX-06's correct causal result is reset at t=10, re-formati
 
 ### Result — 23 / 23 fixtures reproduce exactly
 
-| ID | bars | `t_form` | governing `B*` | `m` | final state | BO bar | breakout margin | re-sel | k=3 pivots | `B*` is a pivot? |
+| ID | bars | formation bar(s) | governing `B*` | `m` | final state | BO bar | breakout margin | re-sel | k=3 pivots | `B*` is a pivot? |
 |----|-----:|---------:|----------------|-----|-------------|-------:|----------------:|-------:|-----------:|------------------|
 | GX-01 | 19 | 8 | (6, 93) | -0.0120951 | ACTIVE | — | — | 0 | 1 | yes |
 | GX-02 | 74 | 8 | (45, 92) | -0.00185292 | ACTIVE | — | — | 2 | 3 | yes |
@@ -247,20 +247,20 @@ model omitted rule 5. GX-06's correct causal result is reset at t=10, re-formati
 | GX-04 | 23 | 8 | (6, 93) | -0.0120951 | RETESTED | 16 | 0.032699 | 0 | 2 | yes |
 | GX-05 | 23 | 8 | (6, 93) | -0.0120951 | FAILED_BREAKOUT | 16 | 0.032699 | 0 | 2 | yes |
 | GX-06 | 21 | 8, then 14 | (13, 103) | -0.0219171 | ACTIVE | — | — | 0 | 2 | **no** |
-| GX-07 | 111 | 8 | (6, 94) | -0.0103126 | NONE (expired) | 10 | 0.0418324 | 0 | 2 | yes |
+| GX-07 | 111 | 8 | (6, 94) | -0.0103126 | NONE | 10 | 0.0418324 | 0 | 2 | yes |
 | GX-08 | 15 | 8 | (1, 98) | -0.0202027 | ACTIVE | — | — | 0 | 0 | **no** |
 | GX-09 | 15 | 8 | (10, 150) | -0.0287682 | ACTIVE | — | — | 1 | 2 | yes |
 | GX-10 | 10 | — | — | — | NONE | — | — | 0 | 0 | — |
 | GX-11 | 19 | 8 | (6, 93) | -0.0120951 | BROKEN_OUT | 16 | 0.032699 | 0 | 1 | yes |
 | GX-12 | 22 | 12 | (15, 118) | -0.00645666 | ACTIVE | — | — | 2 | 2 | yes |
 | GX-13 | 40 | 8 | (20, 95) | -0.00256466 | ACTIVE | — | — | 1 | 3 | yes |
-| GX-14 | 45 | 8 | (40, 65.61) | -0.0105361 | ACTIVE | — | — | 4 | 0 | **no** |
+| GX-14 | 23 | 8 | (18, 68.89) | -0.0207033 | ACTIVE | — | — | 2 | 0 | **no** |
 | GX-15 | 31 | 8 | (28, 87.9) | -0.00460609 | ACTIVE | — | — | 14 | 2 | **no** |
 | GX-16 | 19 | 8 | (6, 93) | -0.0120951 | BROKEN_OUT | 16 | 0.032699 | 0 | 1 | yes |
 | GX-17 | 24 | 8 | (6, 93) | -0.0120951 | FAILED_BREAKOUT | 16 | 0.032699 | 0 | 2 | yes |
 | GX-18 | 8 | — | — | — | NONE | — | — | 0 | 0 | — |
 | GX-19 | 21 | 8 | (15, 119) | -0.0346129 | RETESTED | 16 | 0.0246129 | 7 | 1 | **no** |
-| GX-20 | 26 | never | — | — | NONE | — | — | 0 | 1 | — |
+| GX-20 | 26 | — | — | — | NONE | — | — | 0 | 1 | — |
 | GX-21 | 12 | 8 | (3, 95) | -0.0170978 | ACTIVE | — | — | 0 | 0 | **no** |
 | GX-22 | 20 | 8, then 16 | (15, 105) | -0.0215128 | ACTIVE | — | — | 0 | 2 | **no** |
 | GX-23 | 13 | 8 | (7, 92) | -0.0119117 | ACTIVE | — | — | 0 | 1 | **no** |
@@ -290,9 +290,10 @@ between 8 and 9 within ±20% of the documented `eps_break`. Since HD-03 delibera
 **once**, as one shared price shape — **bars 0–15 are byte-identical across all seven** — so
 each still differs only in the behaviour it exists to lock. GX-14's tie was never actually
 exercised: it used a rounded near-collinear high (89.44 against an exact 89.4427), so the
-later candidate won outright rather than by tie-break; the exact geometric ladder
-(90.00 / 81.00 / 72.90 / 65.61 = 100·0.9^(t/10)) makes the tie real, and it now fires three
-times.
+later candidate won outright rather than by tie-break. Its first replacement — the decimal
+ladder `100·0.9^(t/10)` = 90.00 / 81.00 / 72.90 / 65.61 — was **also defective** and is
+described in the round-2 corrections below; the committed construction ties at t=9 / t=18
+and fires **once**.
 
 **GX-20 as previously committed was defective.** Its double top was designed with
 full-series reasoning ("no envelope-valid candidate over the whole series"), which HD-12
@@ -318,7 +319,8 @@ line ever exists, `eps_break` is never consulted — the result is invariant acr
 | No look-ahead (`--nolookahead`) | truncating the series at any bar leaves every classification at or before that bar unchanged (§21.8 streaming ≡ batch) | **0 violations** |
 | Frozen line (`--frozen`) | the reported event line **is** `Λ_b` computed from `S_b`, and no post-breakout bar moves it (§21.5) | **0 violations** |
 | Formation (`--formation`) | (a) no line ACTIVE before `min_formation_bars`; (b) none within `min_ath_age_bars` of its anchor; (c) formation is immediate once all three gates hold; (d) replaying at `k ∈ {1,2,3,4,5,8}` produces byte-identical output | **0 violations** |
-| `eps_break` robustness (`--robustness`) | ordinary fixtures invariant under ±20% (HD-13) | **23 / 23 invariant at ±20%; 21 / 23 across the wider 0.5×–2× sweep.** The two exceptions are **GX-15**, the intended boundary case (flips to `BROKEN_OUT@28` once `eps_break < 0.00824265`), and **GX-12**, which satisfies HD-13 and leaves the band only at 0.5× |
+| `eps_break` rule (`--all`, gating) | HD-13 rule 1: every ORDINARY fixture's classification is invariant under ±20% of the documented `eps_break`. **This now FAILS the run**, rather than printing a verdict — GX-15 is the single fixture HD-13 exempts by design and is whitelisted explicitly | **all 22 ordinary fixtures comply** |
+| `eps_break` sweep (`--robustness`, informational) | wider sensitivity picture | **22 / 23 invariant at ±20%** (exception: GX-15, by design) · **21 / 23 across 0.5×–2×** (exceptions: GX-15 and GX-12, the latter compliant with HD-13 and leaving the band only at 0.5×). Counted from the committed `causal_record.eps_break_robustness` sweeps, not asserted |
 
 ### Round-2 corrections (2026-07-25) — findings from the independent review chain
 
@@ -332,9 +334,9 @@ own misses is worth nothing.
 | **GX-14's tie was not a tie in IEEE754.** The exact-decimal ladder `100·0.9^(t/10)` ties in real arithmetic but not in doubles: computed slopes differed by ~1e-17, one step won outright and another did not re-bind at all. Decisively, the selected anchor **flipped between (40, 65.61) and (30, 72.90)** depending on whether the slope was computed as `(ln H − ln HA)/Δt` or `ln(H/HA)/Δt` — algebraically identical readings of §7. An expected value that depends on floating-point associativity is not reproducible evidence (§0, §20.3). | Rebuilt on a **bit-exact** tie: `r = 0.83`, `r² = 0.6889` exactly representable at 2dp, second candidate at exactly twice the bar distance. Verified identical under three formulations of §7. The harness's tie test now uses **exact equality with no tolerance**; its previous `1e-12` slack was what made a strictly-steeper candidate look like a tie. |
 | **GX-17 bar 20 was physically impossible** — close 74.00 below its own low 78.00 — and the design as stated was unachievable, since `FAILED_BREAKOUT` needs a close below 77.73 while `low ≤ close`. | Low corrected to 73.50. The real contrast with GX-05 is that GX-17's bar **straddles** the frozen line while GX-05's lies entirely below it. No expected value changed (§15 fires first, and the low is read only by the §16 return leg). An **OHLC-coherence input guard** was added so the class cannot recur; all 23 fixtures now pass it. |
 | **GX-12 bars 3–4 had `open` above `high`** (pre-existing, from before this branch). | Corrected; geometry never reads `open`, so no expectation changed. |
-| **The `eps_break` robustness count was wrong**: "22 of 23 invariant across 0.5×–2×, single exception GX-15". | **21 of 23** across 0.5×–2×; **23 of 23** across the ±20% band HD-13 actually requires. The exceptions are GX-15 (intended) and **GX-12** (satisfies HD-13; leaves the band only at 0.5×). |
+| **The `eps_break` robustness count was wrong**: "22 of 23 invariant across 0.5×–2×, single exception GX-15". | Corrected twice — the first correction ("23 of 23 at ±20%") was also wrong, because GX-15 flips at the 0.8× point. Counted from the committed sweeps: **22 of 23 at ±20%** (exception GX-15, which HD-13 exempts by design, so **all 22 ordinary fixtures comply**) and **21 of 23 across 0.5×–2×** (GX-15 and GX-12, the latter compliant and leaving the band only at 0.5×). Three successive wrong values for one statistic is why HD-13 rule 1 is now **enforced by the harness** rather than asserted in prose. |
 | **GX-20's tightest pierce was mis-stated** as `0.0322635` in prose while the fixture recorded `0.0322638`. | Prose corrected; the fixture was right. |
-| **GX-15's flip value was wrong** (`≤ 0.0082430`). | Corrected to `< 0.00824265`, and the `eps`-side flip (`< 0.0185343`) is now stated too. |
+| **GX-15's flip value was wrong** (`≤ 0.0082430`). | Corrected twice. The first correction (`< 0.00824265`) was still wrong *in the other direction*: 6-significant-figure rounding falls **below** the true boundary, so at exactly `0.00824265` the breakout does fire. The exact excesses are now quoted at full precision — `0.008242654587` (close/`eps_break`) and `0.018534340624` (high/`eps`) — and the false claim that the fixture stays `ACTIVE` at the rounded value is removed. |
 | **The fixtures omitted the §21.6 re-selection reason codes.** §21.6, §21.9 and the §10 note all state that a pre-breakout re-selection emits `LINE_ESTABLISHED` for the line effective at `t+1`; no fixture recorded it, so an engine written faithfully from the spec would have **failed** exact reproduction. | The fixtures now comply with the approved spec: every re-selection records a `LINE_ESTABLISHED` transition at its effective bar. The spec text was **not** amended — following an approved rule is compliance, changing it would have been a product decision. |
 | **`--formation` check (d) could not fail.** It replays at several `k`, but the model never reads `k`, so `k`-independence is *structural*, not empirical, and the sweep is not evidence. | The claim is downgraded to what it is, the binding evidence is re-attributed to the **fixtures** (GX-08, GX-19, GX-23 and the 9 non-pivot `B*` fixtures), and a **positive control** was added: perturbing either formation gate must change an outcome, so checks (a)–(d) cannot pass vacuously. |
 | **Nothing in CI re-derived the fixtures.** Every claim here was an author-run, point-in-time assertion. | `node tools/fixture-replay.mjs --all` and `node tools/check-evidence.mjs` now run in `.github/workflows/governance-validation.yml`, so this evidence is continuously enforced rather than asserted once. |

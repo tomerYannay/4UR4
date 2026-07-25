@@ -128,7 +128,7 @@
       "Failure (§15): at t=20, ln(C) is below y_hat_F(20)=4.36327 - eps_fail by 0.0492028 log units, within F_fail bars of the frozen breakout bar.",
       "Governing line: A=(0,100), B*=(6,93), m=-0.0120951, b=4.60517 — FROZEN at the breakout bar (§21.5)."
     ],
-    "notes": "Bar 20 lies ENTIRELY below the frozen line (its high 76.50 is below line(20)=78.5133), so the §16 return leg is never even reached: this is a pure §15 failure, cleanly distinct from GX-17 where the return leg IS satisfied and only the hold leg fails."
+    "notes": "Bar 20 lies ENTIRELY below the frozen line — its HIGH (76.50) is already below line(20)=78.5133 — so price never trades back at the broken level and there is no return-to-support to assess. Note that the §16 return INEQUALITY ln(L) <= y_hat_F + eps_retest is nevertheless satisfied, as it is by any bar below the line; what is absent is an approach from above, and in any case §15 fires first on the close. Cleanly contrasted with GX-17, whose bar 20 straddles the line."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",

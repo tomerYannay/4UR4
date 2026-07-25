@@ -36,13 +36,20 @@ correction**: GX-08 now expects the all-highs upper-log-hull result `B* = (1, 98
 covers the still-reachable `NO_VALID_SECOND_ANCHOR` case, and the stale pivot-conditioned text
 has been swept. The narrower question that sweep raised — whether §8 selection is evaluated
 over the **full history** or freezes at line formation — has since been **decided by the
-Product Owner as HD-12**: selection is **rolling, causal, as-of-time**, frozen at a confirmed
+Product Owner as HD-12** (a *relayed* ruling — see the caveat below): selection is **rolling, causal, as-of-time**, frozen at a confirmed
 breakout. Two consequential decisions followed on 2026-07-25: **HD-13** (`eps_break` stays
 unlocked; ordinary fixtures must be tolerance-robust, with GX-15 alone retained as the
 boundary fixture) and **HD-14** (formation gates restated as first-class, `k`-independent
 parameters `min_formation_bars = 8` / `min_ath_age_bars = 3`). The entire fixture set has been
 re-derived as-of-time and re-verified mechanically; the in-place
 `geometry_check.open_issue_2026_07_25` flags are resolved and removed.
+
+**⚠ All three rulings are RELAYED, not ratified.** HD-12, HD-13 and HD-14 reached the
+repository as Product Owner instructions issued directly to the autonomous session; nothing
+was posted to GitHub, so no citable decision artifact exists and each register entry is
+marked *"relayed — ratification outstanding"*. Everything downstream — the 23-fixture
+correctness contract, spec §18/§21, D-TL-11 and D-TL-12 — inherits that status until a
+ruling is posted naming the exact head.
 
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
@@ -82,8 +89,9 @@ re-derived as-of-time and re-verified mechanically; the in-place
   surfaced the full-history-vs-formation-window selection question, which the Product Owner
   decided as **HD-12** (as-of-time selection), followed by **HD-13** and **HD-14**. The branch
   now also carries the complete as-of-time re-derivation of the fixture set, the
-  `k`-independent formation parameters and their regression fixtures. **No Product-Owner-only
-  question is left open by this branch.**
+  `k`-independent formation parameters and their regression fixtures. **Two Product-Owner-only
+  items block merge:** ratification of the relayed rulings HD-12/13/14, and a GOV-015 scope
+  ruling on the committed causal reference model `tools/fixture-replay.mjs`.
 
 ## Next milestone
 Two tracks: (1) complete the **[#16](https://github.com/tomerYannay/4UR4/issues/16) Phase 0
@@ -102,7 +110,7 @@ until the freeze is lifted per-scope.
 
 ## Open issues / PRs (governed index)
 - Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (GX-08 + stale pivot-conditioned `NO_VALID_SECOND_ANCHOR` sweep, open, Phase 0 evidence correction).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **two rounds of the full review chain recorded**, blocked on two Product-Owner-only items — ratification of HD-12/13/14 and a GOV-015 scope ruling). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·

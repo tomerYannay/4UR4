@@ -1295,6 +1295,31 @@ While the state is `ACTIVE` and bar `t` produced **no** confirmed breakout:
   line effective at `t+1`; additionally `INVALID_PIERCE` for the superseded line when
   `y[t] > ŷ_t(t) + ε` (§10.1); additionally `WICK_BREAK` when the close also failed to
   confirm (§14). A single bar may legitimately emit all three.
+**Event-record form (normative — added 2026-07-25; decides no rule, fixes the encoding).**
+§21.6 states *which* codes a re-selection emits but not where they are recorded, and the
+golden fixtures cannot be a determinate contract without that. The following makes explicit
+what §21.2 and §21.9 already imply; it changes no classification and no threshold.
+
+1. **Bar attribution.** A re-selection is recorded at the bar the re-selected line takes
+   **effect** (`t+1`), not at the bar that caused it. This is §21.9's own presentation —
+   *"`LINE_ESTABLISHED`, **effective at bar 21**"* for a hull that re-bound during bar 20.
+   The causing bar records its own event (`WICK_BREAK`, `INVALID_PIERCE`) at `t`.
+2. **Within-bar ordering.** Records for a single bar are ordered by §21.2's processing
+   order: the line effective at bar `t` is established in **step 1**, so `LINE_ESTABLISHED`
+   (and `ENVELOPE_TIE_LATER`, where the slopes tie) precede any event that bar produces in
+   steps 2–4. A conforming emitter MUST NOT record a line as established *after* the event
+   it was used to judge.
+3. **State-machine coherence.** The emitted transition sequence MUST be a valid walk of
+   §11: each record's `from` state equals the previous record's `to`, and the final `to`
+   equals the reported end state. A re-selection while `ACTIVE` is an `ACTIVE → ACTIVE`
+   record.
+4. **Transition records vs reason codes.** A record with a `from`/`to` pair is emitted for
+   every event that the detector must be able to replay in order. `INVALID_PIERCE` is a
+   *characterisation of the superseded line* rather than an event of its own, so it is
+   carried in the emitted reason-code set alongside the `WICK_BREAK` record for that bar
+   rather than duplicating it. This is why §21.6 says a single bar "may emit all three":
+   three **codes**, across two records at two bars.
+
 - If instead the recomputation yields `B*_{t+1} = ⊥` (§10.4 — e.g. a high that **ties**
   the ATH and pierces every descending candidate beyond `ε`, fixture GX-20), the state
   becomes `NONE` with `NO_VALID_SECOND_ANCHOR` from `t+1`, and §21.3 governs any later
@@ -1312,8 +1337,9 @@ If `H[t] > HA` of the anchor `A_t` in force:
   (Rule 5 takes precedence over §21.2 step 3.)
 - A **new formation** begins with anchor `A_{t+1}` (which is `(t, H[t])` unless an
   earlier equal high exists, D-TL-02) and is subject to §21.3 — in particular (F2)
-  means the new line cannot become `ACTIVE` until at least `k` bars after the new
-  anchor are available.
+  means the new line cannot become `ACTIVE` until at least `min_ath_age_bars` bars after
+  the new anchor are available. (This gate is `k`-independent — D-TL-12, HD-14; it read
+  `k` before that decision and is numerically unchanged at `k = 3`.)
 - An `H[t]` that **equals** `HA` is **not** a new ATH (D-TL-02 keeps the earliest bar as
   the anchor); it is handled by §21.6 / §10.4 (the GX-20 double-top case).
 

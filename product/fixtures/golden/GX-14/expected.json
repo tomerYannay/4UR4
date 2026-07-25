@@ -1,10 +1,11 @@
 {
   "fixture_id": "GX-14",
-  "purpose": "Envelope tie. Bar highs at t=10, 20, 30 and 40 lie EXACTLY on one descending log line (100 * 0.9^(t/10) = 90.00, 81.00, 72.90, 65.61 — exact to two decimals), so each later collinear bar produces an identical dominating slope. The tie is broken in favour of the LATER anchor (ENVELOPE_TIE_LATER), three times, with the geometry unchanged at every step.",
+  "purpose": "Envelope tie, exercised for real. The candidates at t=9 (H=83.00) and t=18 (H=68.89) yield slopes that are equal to the last bit in IEEE754 double arithmetic, so the argmax of §8 is genuinely tied and only the §18 rule can decide it: the tie is broken in favour of the LATER anchor (ENVELOPE_TIE_LATER) and the line geometry is unchanged by the re-selection.",
   "category": "nearly equal slopes / envelope tie",
   "spec_refs": [
     "§8",
     "§18",
+    "§20.3",
     "§21.4",
     "§21.6",
     "D-TL-04",
@@ -115,7 +116,7 @@
       "Pre-breakout re-selection (§21.6, §21.4 Lemma): B* re-binds exactly when a bar high reaches the active line, and the new line is effective from the NEXT bar — B* 7->9 effective t=10; B* 9->18 effective t=19 (identical slope -> ENVELOPE_TIE_LATER).",
       "Governing line: A=(0,100), B*=(18,68.89), m=-0.0207033, b=4.60517 — the line in force after the final bar (Lambda_n)."
     ],
-    "notes": "REDESIGNED. The previous construction used a rounded near-collinear high (89.44 against an exact 89.4427), so the tie-break was never actually exercised — the later candidate won outright. The exact geometric ladder makes the tie real and reproducible: the slope is identical to floating-point noise at every tie, so only ENVELOPE_TIE_LATER can decide it."
+    "notes": "REDESIGNED TWICE, and the second redesign is the one that matters. The original used a rounded near-collinear high (89.44 against an exact 89.4427), so the later candidate won outright and the tie-break was never exercised. The first replacement used the decimal ladder 100*0.9^(t/10) = 90.00/81.00/72.90/65.61, which ties in exact real arithmetic but NOT in IEEE754: the computed slopes differed by ~1e-17, one step won outright, another did not re-bind at all, and — decisively — the selected anchor FLIPPED between (40,65.61) and (30,72.90) depending on whether the slope was computed as (ln H - ln HA)/dt or as ln(H/HA)/dt, two algebraically identical readings of §7. An expected value that depends on the associativity of a floating-point expression is not reproducible evidence (§0, §20.3). WHY THE CURRENT CONSTRUCTION TIES, stated precisely: it is NOT that 68.89 is exactly representable in binary — it is not (as a double it is 68.8900000000000005684...). The tie holds because log(68.89) equals 2*log(83) - log(100) bit-for-bit under the double rounding of the libms tested (V8 and CPython), which makes the two slopes identical under both natural readings of §7 and under a precomputed-y array. IEEE 754 does not require log() to be correctly rounded, so an engine built on a different math library MUST re-check this fixture specifically; a library that rounds log(68.89) one ulp differently would break the tie and select t=18 outright. That caveat is the honest limit of this construction, and it is far narrower than the previous one, which broke under a mere reassociation on the SAME library. The tie test in tools/fixture-replay.mjs uses exact equality with no tolerance, for the same reason."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",

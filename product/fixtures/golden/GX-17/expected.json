@@ -1,6 +1,6 @@
 {
   "fixture_id": "GX-17",
-  "purpose": "A post-breakout deep undercut that satisfies the §16 RETURN leg but fails the HOLD leg: at t=20 the low reaches the frozen line from above, yet the close plunges 5.9% below it and never reclaims within h_hold=3 bars. Not a retest — and the same close qualifies as FAILED_BREAKOUT.",
+  "purpose": "A post-breakout deep undercut. Bar 20 STRADDLES the frozen line — its high (80.00) is above the line (78.5133) and its low is far below — so price does trade back at the broken level, but the close plunges 5.7% below it and never reclaims within h_hold=3 bars. Not a retest, and the same close qualifies as FAILED_BREAKOUT.",
   "category": "deep undercut not a valid retest",
   "spec_refs": [
     "§15",
@@ -132,7 +132,7 @@
       "Failure (§15): at t=20, ln(C) is below y_hat_F(20)=4.36327 - eps_fail by 0.0492028 log units, within F_fail bars of the frozen breakout bar.",
       "Governing line: A=(0,100), B*=(6,93), m=-0.0120951, b=4.60517 — FROZEN at the breakout bar (§21.5)."
     ],
-    "notes": "Deliberately contrasted with GX-05: there the failing bar lies entirely below the line so §16 is never engaged; here the return leg IS satisfied, which is what makes the rejection informative. The three following bars are included to show the hold window elapsing without a reclaim."
+    "notes": "Deliberately contrasted with GX-05, and the contrast is PHYSICAL rather than algorithmic: there the failing bar lies entirely below the frozen line (high 76.50 < line 78.5133) so price never trades back at the broken level at all, whereas here the bar straddles it. Both reach FAILED_BREAKOUT through §15, which is evaluated first, so nothing in the expected output depends on the distinction — it is recorded because a reader should be able to tell the two rejections apart. The three following bars show the hold window elapsing without a reclaim. CORRECTED 2026-07-25: the first redesign gave bar 20 a low of 78.00 against a close of 74.00 — a physically impossible bar (close below its own low), and one whose stated design was unachievable, since FAILED_BREAKOUT needs a close below 77.73 while low <= close. The low is now 73.50. Geometry reads the low only in the §16 return leg and §15 fires first here, so no expected value changed. An OHLC-coherence guard was added to the replay harness so this class cannot recur."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",

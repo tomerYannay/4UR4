@@ -1,6 +1,6 @@
 {
   "fixture_id": "GX-15",
-  "purpose": "The dedicated tolerance-boundary fixture. Bar 28 sits simultaneously just INSIDE both boundaries: its high is 0.001466 log units below line+eps (so it does not pierce) and its close is 0.001757 log units below line+eps_break (so it does not break out). Both sides are shown numerically, including the exact tolerance values at which each flips.",
+  "purpose": "The dedicated tolerance-boundary fixture. Bar 28 sits just INSIDE both boundaries at once: its close exceeds the active line by 0.00824265 log units (against eps_break = 0.01, so no breakout) and its high exceeds it by 0.0185343 (against eps = 0.02, so no pierce). Both sides are shown numerically, with the exact tolerance at which each flips.",
   "category": "tolerance-boundary cases",
   "spec_refs": [
     "§9",
@@ -9,7 +9,8 @@
     "§21.4",
     "D-TL-05",
     "D-TL-06",
-    "D-TL-11"
+    "D-TL-11",
+    "HD-13"
   ],
   "input_convention": {
     "timestamp_kind": "ordinal",
@@ -181,7 +182,7 @@
       "Pre-breakout re-selection (§21.6, §21.4 Lemma): B* re-binds exactly when a bar high reaches the active line, and the new line is effective from the NEXT bar — B* 7->8 effective t=9; B* 8->9 effective t=10; B* 9->10 effective t=11; B* 10->11 effective t=12; B* 11->12 effective t=13; B* 12->13 effective t=14; B* 13->14 effective t=15; B* 14->15 effective t=16; B* 15->16 effective t=17; B* 16->17 effective t=18; B* 17->18 effective t=19; B* 18->19 effective t=20; B* 19->20 effective t=21; B* 20->28 effective t=29.",
       "Governing line: A=(0,100), B*=(28,87.9), m=-0.00460609, b=4.60517 — the line in force after the final bar (Lambda_n)."
     ],
-    "notes": "This is the ONE fixture in the set whose classification is deliberately tolerance-sensitive, and it is retained as such per the Product Owner ruling on eps_break: every OTHER fixture must be robust under an eps_break sweep, and GX-15 carries the boundary behaviour alone. It flips to BROKEN_OUT at t=28 once eps_break < 0.00824265 — at exactly that value the strict inequality of §13.1 is not met and the fixture stays ACTIVE — so the 0.8x sweep point (0.008) is on the far side of the boundary and the 1x point is not. The eps side flips at eps < 0.0185343. GX-12 is NOT a second boundary fixture: its expectation is invariant across the +/-20% band HD-13 requires, and only leaves that band at 0.5x."
+    "notes": "This is the ONE fixture in the set whose classification is deliberately tolerance-sensitive, and HD-13 retains it as such: every OTHER fixture must be invariant under +/-20% of the documented eps_break, and GX-15 carries the boundary behaviour alone. It is whitelisted explicitly in the harness rule check for that reason. EXACT BOUNDARIES, stated to full precision because the 6-significant-figure display rounds DOWN across them: bar 28 clears the line by 0.008242654587 log units, so a breakout fires at t=28 for any eps_break strictly below that — including the 6 s.f. display value 0.00824265 itself, and including the 0.8x sweep point 0.008. At the documented 0.01 no breakout fires. On the eps side the high clears the line by 0.018534340624, so the WICK_BREAK at t=28 appears for any eps strictly below that, including the display value 0.0185343; at the documented 0.02 it does not. An earlier revision claimed the fixture stayed ACTIVE at exactly 0.00824265 — that was false, and it was false because a 6 s.f. value was compared against a boundary it rounds below (Verification finding, 2026-07-25). GX-12 is NOT a second boundary fixture: it complies with HD-13 at +/-20% and leaves the band only at 0.5x."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
