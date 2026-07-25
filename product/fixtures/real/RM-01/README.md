@@ -6,60 +6,46 @@
 > [`../../real-market-plan.md`](../../real-market-plan.md) §2, complementing the synthetic
 > golden set in [`../../README.md`](../../README.md).
 >
-> **Status: `awaiting-market-data` · Product Owner approval: `pending`.**
-> No licensed/verified OHLCV exists for this fixture yet, so every
-> `verified_market_data` field is `null` and no geometry has been computed.
+> **Status: `verified` (geometry independently recomputed from licensed OHLCV) · Product
+> Owner approval: `pending` (awaiting PO review of the calculated result).**
 
 The machine-validated record is [`annotation.json`](annotation.json), conforming to
-[`../../schema/real-annotation.schema.json`](../../schema/real-annotation.schema.json).
+[`../../schema/real-annotation.schema.json`](../../schema/real-annotation.schema.json). The
+verified daily OHLCV is [`input.csv`](input.csv), derived from the immutable
+[`alphavantage-source.json`](alphavantage-source.json).
 
 ---
 
 ## 1. Immutable source evidence
 
-- **Image path:** `product/fixtures/real/RM-01/source-chart.png`
-- **SHA-256:** `d191300e3cde075aac86838185bfa5797a2c6d0e6dd6f1c2a8558a414ab05b15`
-- **Size:** 137151 bytes
-- **Dimensions:** 1272 × 672 (PNG)
+**Chart image (PO's original):**
+- **Path:** `source-chart.png` · **SHA-256:** `d191300e3cde075aac86838185bfa5797a2c6d0e6dd6f1c2a8558a414ab05b15` · 137151 bytes · 1272 × 672 (PNG)
 
-**DO NOT edit or regenerate this image; it is immutable source evidence.** The checksum
-above is recorded so any future change is detectable. The image is the externally supplied
-artifact that motivated the thesis object; it is preserved exactly as delivered.
+**Market-data source (Alpha Vantage):**
+- **Path:** `alphavantage-source.json` · **SHA-256:** `69a67469e08af3f43f5a05c4730a3c4e2c2ff4c297b7237e2f41ecb3d550c377`
+- **Source:** Alpha Vantage · **Symbol:** SPCX · **Interval:** daily · **Timezone:** US/Eastern
+- **Last refreshed:** 2026-07-24 · **Output size:** compact · **Bars:** 29 (2026-06-12 → 2026-07-24)
+- **Adjustment note:** Alpha Vantage `TIME_SERIES_DAILY` is raw **as-traded** (split-**un**adjusted). No split/corporate action is evident in this window, so it is consistent with **HD-01** (split-adjusted, dividend-unadjusted) over 2026-06-12 → 2026-07-24. A split in range would require adjustment before use.
 
-**Qualitative description (no pixel prices transcribed):** a dark-themed TradingView chart
-labelled "SPCX · 1D · … Corporation Technologies Corp". A candlestick sequence descends
-from a peak on the left to lower prices on the right. A single **orange descending
-trendline** is drawn from the top-left peak wick down toward the lower-right. The right-hand
-price axis uses **non-linear (logarithmic) spacing**. In the mid-section the orange line
-runs close to — and appears to graze — some intervening candle highs (see §6). A current
-price marker and post-market marker appear at the lower right. *No axis price value is read
-from pixels and recorded as market data.*
+**DO NOT edit or regenerate these files; they are immutable source evidence.** The checksums are recorded so any change is detectable. `input.csv` is a mechanical, chronologically-ascending re-encoding of the source; the source JSON remains the authority.
+
+**Qualitative image description (no pixel prices transcribed):** a dark-themed TradingView chart labelled "SPCX · 1D · … Corporation Technologies Corp"; candles descend from a left peak (~top of a logarithmic axis) to the lower-right; a single **orange descending trendline** runs from the top-left peak wick toward the lower-right; the price axis uses **non-linear (logarithmic) spacing** (the "L" scale toggle is active). *No axis price value is read from pixels and recorded as market data.*
 
 ---
 
 ## 2. Recorded metadata (requirement 2)
 
-All values below are **Product-Owner-stated** (PO-asserted, verbatim) or explicitly
-**unknown** — none are pixel-derived.
-
-- **Symbol:** SPCX (PO-stated)
-- **Exchange:** unknown
+- **Symbol:** SPCX (PO-stated) · **Exchange:** unknown
 - **Chart timeframe:** 1D (PO-stated)
-- **Chart scale:** logarithmic. *Log-scale confirmation:* the chart's right-hand price axis
-  is **visually confirmed to be logarithmic** (non-linear tick spacing — successive gridline
-  gaps compress toward higher prices), consistent with the PO's stated log scale. This is a
-  **qualitative** confirmation of the scale toggle/axis only; no pixel prices are read.
-- **Visible date range:** 2026-06-12 → 2026-07-24 (PO-stated)
-- **Data source shown in chart:** TradingView · **Timezone:** unknown
-- **Visible ATH anchor:** 2026-06-16 @ **225.64** (PO-stated ATH high/anchor; not
-  pixel-derived; awaits OHLCV verification)
-- **Expected second-anchor region:** 2026-07-21, price **unknown** (PO-stated date only; the
-  second-anchor high price is intentionally not inferred from pixels)
-- **Expected breakout region:** unknown (awaits verified OHLCV + first-daily-close test §13)
-- **Expected retest region:** unknown (awaits verified OHLCV §16)
+- **Chart scale:** logarithmic — **visually confirmed** (non-linear axis tick spacing; the log-scale toggle is active), consistent with the PO's stated log scale. Qualitative only; no pixel prices read.
+- **Visible date range:** 2026-06-12 → 2026-07-24 (PO-stated; matches the source's bar range)
+- **Data source shown in chart:** TradingView · **Timezone (chart display):** unknown (OHLCV source timezone is US/Eastern)
+- **Visible ATH anchor:** 2026-06-16 @ **225.64** (PO-stated **and OHLCV-verified** — see §3)
+- **Expected second-anchor region:** 2026-07-21 — high **now verified = 129.88** (was PO-stated unknown)
+- **Expected breakout region:** **none through 2026-07-24** (verified — no qualifying close)
+- **Expected retest region:** **none** (verified — no breakout occurred)
 
 ### Product Owner interpretation (verbatim, 6 bullets)
-
 1. Orange descending line starts from the stock's all-time-high wick.
 2. Intended second anchor is the later high wick on 2026-07-21.
 3. Line should remain above intervening highs per the approved upper-log-hull rule.
@@ -68,94 +54,70 @@ All values below are **Product-Owner-stated** (PO-asserted, verbatim) or explici
 6. A retest is a later contact/overlap with the line where the daily close holds above it.
 
 ### Drawn-line metadata (verbatim)
-
-- The orange line is a **manually extended TradingView trendline** (two-point construction);
-  **magnet mode** snapped endpoints to candle highs.
+- The orange line is a **manually extended TradingView trendline** (two-point construction); **magnet mode** snapped endpoints to candle highs.
 - Intended line connects the ATH high 2026-06-16 @ 225.64 to the later high on 2026-07-21.
-- The exact second-anchor price is **not** inferred from screenshot pixels.
-- The drawn line is **not** treated as algorithmic ground truth until verified against actual
-  OHLCV.
+- The exact second-anchor price was **not** inferred from pixels — it is now **verified from OHLCV** as 129.88.
+- The drawn line was **not** treated as algorithmic ground truth until verified against actual OHLCV (now done).
 
 ### Unknown / unresolved metadata
-
-- Exchange — unknown
-- Timezone — unknown
-- Second-anchor high price on 2026-07-21 — unknown (null until verified OHLCV)
-- Breakout date — unknown
-- Retest date — unknown
-- All verified OHLCV bars and the recomputed line geometry (slope/intercept/line values,
-  actual anchors, breakout/retest bars) — unavailable; awaits a licensed data provider
-  (HD-06) and a per-scope freeze lift.
+- Exchange — unknown · Chart-display timezone — unknown.
+- Lifetime-ATH assumption (see §3) — pending listing-history confirmation (HD-07).
+- SC-2 pivot-eligibility question — open (see §6).
 
 ---
 
-## 3. Data-integrity note (requirement 3)
+## 3. ATH verification (requirement 5) — no unverified "lifetime ATH" claim
 
-**No exact price, date, or OHLCV value has been inferred from screenshot pixels and recorded
-as factual market data.** The only numeric values present anywhere in RM-01 are
-**Product-Owner-stated**: the ATH high **225.64** and the calendar dates (visible range
-2026-06-12 → 2026-07-24, ATH 2026-06-16, second anchor 2026-07-21). Every other numeric
-market-data / geometry field — the second-anchor price, the log slope and intercept, the
-line values, the actual anchor bars, and the breakout/retest bars — is **`null`** in
-[`annotation.json`](annotation.json) and stays null until **licensed/verified OHLCV** exists.
-Reading axis prices or candle positions from the image and presenting them as data is
-explicitly forbidden here.
+Independently computed as the **maximum bar high over ALL available bars in the source**:
+**ATH = 225.64 on 2026-06-16** (bar index 2 of 29), a unique maximum (no tie). This matches the PO-stated ATH exactly.
+
+**Listing-history assumption (documented, not asserted):** the source's earliest bar is **2026-06-12**. Alpha Vantage `compact` output returns up to the latest **100** bars; only **29** were returned, so the full available history is these 29 bars — consistent with SPCX having **listed on/around 2026-06-12**. Treating 225.64 as a **lifetime** ATH therefore depends on 2026-06-12 being the listing/IPO date. That is recorded as an **assumption to confirm** against a listing-history/reference source (HD-07); over the *available* history it is unambiguously the ATH.
 
 ---
 
-## 4. Visual-acceptance checklist (requirement 5)
+## 4. Independent calculation (requirements 6–8, 10) — trading-bar indices
 
-To be checked against verified OHLCV once available. **All items are currently unchecked /
-pending verification.**
+Computed from `input.csv` using **trading-bar ordinal indices** (not calendar-day gaps), on `y = ln(high)` (§3):
 
-- [ ] (1) Line begins at the intended ATH wick on 2026-06-16 at 225.64.
-- [ ] (2) Line touches the intended later high wick on 2026-07-21.
-- [ ] (3) Line does not improperly cut through intervening highs.
-- [ ] (4) Projected line visually matches the PO's orange TradingView line.
-- [ ] (5) Breakout bar classification matches the PO's expectation.
-- [ ] (6) Retest, if present, matches the approved rule.
+| Quantity | Value |
+|----------|-------|
+| Anchor **A** (ATH) | bar `t=2`, 2026-06-16, high **225.64** |
+| Second anchor **B** (PO-intended) | bar `t=25`, 2026-07-21, high **129.88** |
+| Bar-index delta (tB − tA) | **23** trading bars |
+| `yA = ln(225.64)` | 5.41894 |
+| `yB = ln(129.88)` | 4.86661 |
+| **Log slope** `m = (yB−yA)/(tB−tA)` | **−0.0240143** per bar |
+| **Intercept** `b = yA − m·tA` | **5.46697** |
 
----
+**Envelope check (requirement 7).** Line value computed for **every** trading bar; every intervening high's distance from the line measured in % and log units. **Envelope violations: 0** — no intervening high pierces the line beyond ε = 0.02. **Maximum intervening approach: 2026-07-06** at **−0.740%** (log −0.00743) — the closest any high comes, and it is still **below** the line. (This matches the preliminary expectation, independently reproduced — not copied.)
 
-## 5. Product Owner approval (requirement 6)
+**Canonical-anchor check (requirement 8).** Among **all** later highs, the slope from A to the **2026-07-21** high (−0.0240143) is the **shallowest** (closest to zero). By the upper-log-hull rule (§8), the shallowest descending line from the ATH that dominates all later highs is the canonical line, so **2026-07-21 is the upper-log-hull canonical second anchor** — and the A→B line dominates all later highs. The PO's two-point line and the canonical hull line **coincide**.
 
-**Field: `product_owner_approval`** — possible values: `pending | approved | rejected |
-needs-adjustment`.
-
-**Current value: `pending`.**
-
-Approval follows the reviewed process in [`../../real-market-plan.md`](../../real-market-plan.md)
-§3 (analyst annotation against verified OHLCV, cross-check, dual sign-off) and cannot advance
-while `status` is `awaiting-market-data`.
+**Post-B evaluation (requirements 10–11).** Extending the line past B and evaluating 2026-07-22 → 2026-07-24: every high **and** close is **below** the line → **no wick-break, no qualifying close breakout, and therefore no retest** through 2026-07-24. (Independently reproduced.)
 
 ---
 
-## 6. Spec-contradiction report (requirement 11 — CRITICAL: recorded, NOT resolved)
+## 5. Visual-acceptance checklist (requirement 5) — now backed by OHLCV
 
-**Open verification question (SC-1).** The PO's orange line is a **two-point** construction
-(ATH 2026-06-16 → later high 2026-07-21) drawn in TradingView. The **approved canonical rule
-is the upper-log-hull** ([`../../../trendline-specification.md`](../../../trendline-specification.md)
-§8, D-TL-04): it selects the **shallowest descending log line from the ATH that stays above
-ALL intervening highs** within tolerance. A two-point line and the hull line **coincide only
-if** no intervening high pierces the two-point line and no shallower dominating line exists.
+| # | Item | Result | Evidence |
+|---|------|--------|----------|
+| 1 | Line begins at the ATH wick 2026-06-16 @ 225.64 | ✅ pass | 225.64 verified as the ATH (max high) at 2026-06-16 |
+| 2 | Line touches the later high wick 2026-07-21 | ✅ pass | Verified high 129.88; B lies on the line by construction |
+| 3 | Line does not improperly cut through intervening highs | ✅ pass | 0 envelope violations; closest approach −0.740% |
+| 4 | Projected line matches the PO's orange TradingView line | ✅ pass | Canonical hull line uses the same two endpoints as the PO line — geometrically identical |
+| 5 | Breakout bar classification matches the PO's expectation | ✅ pass | No breakout through 2026-07-24 |
+| 6 | Retest matches the approved rule | ✅ pass | No retest (no breakout occurred) |
 
-**Visually (qualitative, unverified) the drawn two-point line appears to run close to — and
-possibly through — some intervening candle highs in the mid-section.** Therefore it is
-**UNRESOLVED** whether the PO's intended second anchor (2026-07-21) equals the hull-canonical
-second anchor.
-
-Stated plainly: **this must be checked against real OHLCV once available.** If intervening
-highs pierce the two-point line, the hull rule (§8) would select a **different** second
-anchor than 2026-07-21 — and that discrepancy **must be surfaced to the Product Owner, NOT
-resolved by silently editing the spec or this annotation.** This is recorded as a
-**contradiction / risk** (`spec_contradiction_report.status = "open"`,
-`SC-1.resolution = "unresolved-awaiting-ohlcv"`), **not a decision**. Resolving it is out of
-scope under the build-freeze and requires verified OHLCV and/or a Product Owner ruling
-([GOV-007](../../../../governance/product-focus.md) — hidden scope is flagged, not absorbed).
+All six pass on the calculated result. **Product Owner review of this result is still required** before approval advances.
 
 ---
 
-*Design/evidence artifact under GOV-015. It authorizes no build and acquires no market data.
-Verified OHLCV is loaded only when a Ready ticket exists, the data-provider gate (HD-06)
-resolves, and the freeze is lifted per-scope
-([GOV-013](../../../../governance/approval-gate.md)).*
+## 6. Spec-contradiction report (requirement 11 & 13) — recorded, not silently changed
+
+**SC-1 — RESOLVED = `MATCH`.** The independent calculation confirms the PO's intended two-point line (ATH 2026-06-16 → 2026-07-21) **coincides with the canonical upper-log-hull line**: 2026-07-21 is the shallowest-slope (hull) anchor over all later highs, **no intervening high pierces** the line (0 violations; closest −0.740% at 2026-07-06). This rules out `MISMATCH_INTERVENING_HIGH` and `MISMATCH_DIFFERENT_CANONICAL_ANCHOR`; the evidence is exact (not a tolerance judgement), so `MATCH` rather than `VISUAL_MATCH_WITHIN_TOLERANCE`, and there is enough data (29 bars) so not `INSUFFICIENT_DATA`.
+
+**SC-2 — OPEN (surfaced, NOT resolved).** 2026-07-21 is the upper-log-hull vertex over *all* later highs **but is not a `k=3` pivot high** per §5/§6: 2026-07-17 (high 130.33) is a higher bar within 3 bars, so 2026-07-21 is only a `k=1` local high. The **only** `k=3` pivot after the ATH is 2026-06-30, whose steeper line does **not** dominate later highs. So a strict reading of the pivot-eligibility precondition (§5/§6, `k=3`) would exclude the very anchor the hull selects and the PO intends. **Open question for the Product Steward/PO:** reconcile the pivot filter `k` (D-TL-03) with the upper-log-hull-over-all-highs selection (e.g. a smaller/tunable `k`, or hull precedence for the ATH-adjacent anchor). **The spec and this annotation are left unchanged** pending a human decision ([GOV-007](../../../../governance/product-focus.md) — surfaced, not absorbed).
+
+---
+
+*Design/evidence artifact under GOV-015. It authorizes no build. The geometry above is independently computed from licensed OHLCV as verification evidence; the Product Owner's approval of this result remains `pending`.*

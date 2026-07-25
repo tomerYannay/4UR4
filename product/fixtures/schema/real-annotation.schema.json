@@ -30,12 +30,23 @@
       "enum": ["awaiting-market-data", "data-loaded", "verified"],
       "description": "Lifecycle: awaiting-market-data (no licensed/verified OHLCV yet; all verified_market_data null) -> data-loaded (real OHLCV present, geometry not yet verified) -> verified (geometry recomputed from real OHLCV and dual-signed)."
     },
+    "market_data_source": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Provenance of the verified OHLCV source (provider, symbol, interval, timezone, last_refreshed, output_size, sha256, immutable, derived_csv, date_range, adjustment_note). Present once real data is loaded; the raw file is immutable evidence."
+    },
+    "ath_verification": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "ATH verification over ALL available bars in the source, including the DOCUMENTED lifetime-ATH / listing-history assumption (do not assert a lifetime ATH without it)."
+    },
     "source_evidence": {
       "type": "object",
       "additionalProperties": false,
       "required": ["file", "sha256", "bytes", "dimensions", "immutable"],
       "description": "The immutable source screenshot. Recorded, never edited/regenerated.",
       "properties": {
+        "kind": { "type": "string", "description": "Evidence kind, e.g. 'chart-image'." },
         "file": { "type": "string", "description": "Path to the source image relative to the fixture directory or repo." },
         "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 checksum of the immutable source image." },
         "bytes": { "type": "integer", "minimum": 1, "description": "File size in bytes." },
@@ -209,7 +220,8 @@
             "type": "string",
             "enum": ["pending", "pass", "fail"],
             "description": "Verification result; pending until checked against verified OHLCV."
-          }
+          },
+          "note": { "type": "string", "description": "Optional evidence note for the result." }
         }
       }
     },
@@ -244,6 +256,11 @@
               "id": { "type": "string", "description": "Local id for the contradiction, e.g. SC-1." },
               "description": { "type": "string", "description": "Plain-language statement of the contradiction/risk." },
               "spec_refs": { "type": "array", "items": { "type": "string" }, "description": "Relevant spec sections/decisions." },
+              "verdict": {
+                "type": "string",
+                "enum": ["MATCH", "VISUAL_MATCH_WITHIN_TOLERANCE", "MISMATCH_INTERVENING_HIGH", "MISMATCH_DIFFERENT_CANONICAL_ANCHOR", "INSUFFICIENT_DATA", "open-spec-question"],
+                "description": "The verification verdict for this item once verified OHLCV is available (SC-1 resolution options)."
+              },
               "resolution": {
                 "type": "string",
                 "enum": ["unresolved-awaiting-ohlcv", "escalated-to-product-owner", "resolved"],

@@ -47,5 +47,50 @@ values reproduce independently within 6-significant-figure tolerance.**
   README legend. A follow-up may formally enumerate them in the trendline spec's reason-code
   list.
 
+---
+
+## RM-01 — real-market verification (Alpha Vantage SPCX)
+
+Independent verification of the first real-market fixture, computed by the primary session
+(verifier) from `real/RM-01/input.csv` (derived from immutable `alphavantage-source.json`,
+sha256 `69a67469…50c377`) using **trading-bar ordinal indices**, not calendar-day gaps. The
+preliminary conclusions supplied with the task were **recomputed, not copied**.
+
+**Inputs.** 29 daily bars, 2026-06-12 → 2026-07-24. A = ATH = bar `t=2` 2026-06-16 high
+**225.64** (max over all available bars; unique). B = bar `t=25` 2026-07-21 high **129.88**.
+
+**Computed geometry.** `yA=ln225.64=5.41894`, `yB=ln129.88=4.86661`,
+slope `m=(yB−yA)/(25−2)=−0.0240143`/bar, intercept `b=5.46697`.
+
+**Results (exact, independently reproduced):**
+
+| Check | Result |
+|-------|--------|
+| Envelope violations (intervening high pierces line, ε=0.02) | **0** |
+| Max intervening approach | **2026-07-06**, −0.740% (log −0.00743), below the line |
+| Shallowest slope from ATH over all later highs | **2026-07-21** (−0.0240143) → upper-log-hull vertex |
+| A→B line dominates all later highs within ε | **yes** |
+| Breakout through 2026-07-24 (first daily close above line) | **none** |
+| Wick-break through 2026-07-24 | **none** |
+| Retest | **none** (no breakout occurred) |
+
+Every preliminary expectation is **confirmed**: 2026-07-21 canonical anchor; no intervening
+high exceeds the line; closest approach near 2026-07-06; no breakout / wick-break / retest.
+
+**SC-1 → `MATCH`** (of the 5 options MATCH / VISUAL_MATCH_WITHIN_TOLERANCE /
+MISMATCH_INTERVENING_HIGH / MISMATCH_DIFFERENT_CANONICAL_ANCHOR / INSUFFICIENT_DATA): the PO's
+two-point line coincides with the canonical upper-log-hull line; exact evidence, adequate data.
+
+**Disagreement recorded — SC-2 (open, not resolved):** 2026-07-21 is the hull vertex but is
+**not a `k=3` pivot high** (2026-07-17 @130.33 is higher within 3 bars; the only `k=3` pivot
+after the ATH is 2026-06-30, whose line does not dominate). The strict pivot precondition
+(§5/§6) would exclude the anchor the hull selects and the PO intends — surfaced to the Product
+Steward/PO, spec and annotation left unchanged.
+
+`annotation.json` is machine-validated against `schema/real-annotation.schema.json`. Product
+Owner approval remains **`pending`** pending review of this calculated result.
+
+---
+
 *This log records verification only. It authorizes no build; a detector that reproduces these
 fixtures is implemented only when a Ready ticket exists and the freeze is lifted per-scope.*
