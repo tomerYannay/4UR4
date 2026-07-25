@@ -1,6 +1,6 @@
 {
   "fixture_id": "GX-13",
-  "purpose": "A single intervening spike high invalidates an otherwise-plausible steeper candidate line; the upper hull re-binds at the spike. Locks per-bar/pivot domination (D-TL-05).",
+  "purpose": "A single intervening spike high invalidates an otherwise-plausible steeper candidate line; the upper hull re-binds at the spike. Locks domination against EVERY bar high (D-TL-05).",
   "category": "intervening highs invalidating a candidate",
   "spec_refs": ["§8", "§10.1", "D-TL-04", "D-TL-05"],
   "input_convention": {
@@ -38,12 +38,12 @@
   "flags": [],
   "rejection_rationale": [
     {
-      "candidate": "B=(35,86) — the later, lower pivot (naive steeper 'next low pivot')",
+      "candidate": "B=(35,86) — the later, lower bar high (naive steeper 'next low' choice)",
       "rejected_because": "The A->(35,86) line passes BELOW the t=20 spike (95), which pierces beyond eps -> candidate invalid.",
       "numeric": "m=(ln86-ln100)/35=(4.454347-4.605170)/35=-0.0043092; y_hat(20)=4.605170-0.0043092*20=4.518986; ln95=4.553877 > 4.518986+0.02=4.538986 -> pierces by 0.014891."
     },
     {
-      "candidate": "B=(10,92) — an earlier pivot below the envelope",
+      "candidate": "B=(10,92) — an earlier bar high below the envelope",
       "rejected_because": "Its steeper line is also pierced by the t=20 spike and it sits below the selected line anyway.",
       "numeric": "m=(ln92-ln100)/10=-0.0083381; y_hat(20)=4.605170-0.166762=4.438408; ln95=4.553877 >> 4.438408+0.02 -> pierces massively."
     },
@@ -59,7 +59,7 @@
     "slope_formula": "m=(ln95-ln100)/(20-0)=(4.553877-4.605170)/20=-0.051293/20=-0.00256466",
     "intercept_formula": "b=yA-m*0=4.605170",
     "key_inequalities": [
-      "Eligible pivots: (10,92),(20,95),(35,86).",
+      "Candidacy = ALL later bar highs (§6, D-TL-05) — not a pivot subset; the competitors that matter are (10,92),(20,95),(35,86).",
       "The lone spike at t=20 (95) forces the hull vertex; steeper candidates (35,86) and (10,92) are pierced by it.",
       "B*=(20,95) is the shallowest line that still dominates the spike and all other highs.",
       "No close exceeds line+eps_break -> ACTIVE."

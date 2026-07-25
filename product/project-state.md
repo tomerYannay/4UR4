@@ -26,16 +26,24 @@
 complete and Phase 1 (market-data foundation) is in its **research** stage; Phase 1
 implementation and beyond remain **freeze-blocked**.
 
-**Qualifier on Phase 0 completeness:** Phase 0 exit is **not clean while
-[#16](https://github.com/tomerYannay/4UR4/issues/16) is open.** The fixture set is the
-**correctness contract**, and an engine reproducing **GX-08 as currently committed** would
-implement a precondition **HD-11 forbids**.
+**Phase 0 completeness qualifier — RETIRED (2026-07-25).** The qualifier recorded here (that
+Phase 0 exit was not clean because **GX-08 as committed** encoded a precondition **HD-11
+forbids**) is **removed by the [#16](https://github.com/tomerYannay/4UR4/issues/16) evidence
+correction**: GX-08 now expects the all-highs upper-log-hull result `B* = (1, 98)`, GX-20
+covers the still-reachable `NO_VALID_SECOND_ANCHOR` case, and the stale pivot-conditioned text
+has been swept. **One narrower item remains open** and was raised by that same sweep: whether
+§8 selection is evaluated over the **full history** or freezes at line formation — a question
+HD-11 left unstated once the pivot precondition was removed, which contests the stated anchors
+of **GX-09** and **GX-15** (flagged in-place under `geometry_check.open_issue_2026_07_25` and
+in [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md); **not decided** by #16, since it is a
+product-definition question).
 
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
 - Proposed MVP roadmap, PRD, specs, human-decision register (PR #8).
-- **Phase 0 golden fixtures** (19 synthetic) + **RM-01** real-market case, PO-approved;
-  **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9).
+- **Phase 0 golden fixtures** (**20 synthetic** — 17 geometry + 3 null-anchor, after the #16
+  correction added GX-20 and moved GX-08 into the geometry set) + **RM-01** real-market case,
+  PO-approved; **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9; fixtures corrected under #16).
 - ChatGPT↔Claude **handoff protocol** + PR template + Agent Coordination Queue (#10) (PR #11).
 - **Strategic Product Reviewer** added as the 10th permanent agent (PR #13).
 - **Six-record documentation reconciliation** to merged evidence, docs-only (Refs #14); also
@@ -62,7 +70,11 @@ implement a precondition **HD-11 forbids**.
   genuinely reachable `NO_VALID_SECOND_ANCHOR` case (duplicate ATH / double top). It
   **changes no rule** — **HD-11** and the canonical algorithm are untouched; this is a **stale
   Phase 0 evidence defect, not a new product-definition decision** (Product Owner ruling).
-  Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Open; no PR yet.**
+  Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Authored on branch
+  `fix/gx08-hd11-pivot-sweep`; awaiting verification/review and merge.** The sweep additionally
+  surfaced an **unresolved product-definition question** (full-history vs formation-window
+  selection, contesting the GX-09 / GX-15 anchors) which is **escalated, not decided** — see the
+  Phase-0 note above.
 
 ## Next milestone
 Two tracks: (1) complete the **[#16](https://github.com/tomerYannay/4UR4/issues/16) Phase 0

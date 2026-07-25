@@ -39,7 +39,7 @@
   "rejection_rationale": [
     {
       "candidate": "eps boundary — the t=28 high (87.90) INVALIDATING the line (INVALID_PIERCE)",
-      "rejected_because": "The t=28 high sits just INSIDE y_hat(28)+eps, so it is dominated-within-tolerance and the line stays ACTIVE. (It is a validity-only bar: within k of the series end it cannot be a confirmed pivot, so it never re-selects B*.)",
+      "rejected_because": "The t=28 high sits just INSIDE y_hat(28)+eps, so it is dominated-within-tolerance and no INVALID_PIERCE fires. (The parenthetical that previously stood here — 'within k of the series end it cannot be a confirmed pivot, so it never re-selects B*' — is STALE and has been removed: HD-11 removed the pivot precondition from candidacy AND from re-selection, so pivot confirmability can no longer be the reason a bar does not re-select B*. Whether the t=28 high DOES re-select the hull is an unresolved question flagged in geometry_check.open_issue_2026_07_25; it is deliberately NOT decided by this correction.)",
       "numeric": "ln(87.90)=4.475948 <= y_hat(28)+eps=4.457665+0.02=4.477665 (margin 0.001717 INSIDE). Counterfactual: H=88.10 -> ln=4.478220 > 4.477665 -> would PIERCE by 0.000555 -> INVALID_PIERCE."
     },
     {
@@ -59,11 +59,21 @@
     "slope_formula": "m=(ln90-ln100)/(20-0)=(4.499810-4.605170)/20=-0.105360/20=-0.00526803",
     "intercept_formula": "b=yA-m*0=4.605170",
     "key_inequalities": [
-      "B*=(20,90) is the unambiguous shallow-hull anchor; all intervening pivots sit below the line.",
+      "B*=(20,90) is the shallowest dominating line over bars 0..20 (the formation window); all bar highs up to t=20 sit at/below it. NOTE: over the FULL 31-bar history this is contested by the t=28 high — see geometry_check.open_issue_2026_07_25.",
       "eps boundary (validity): ln(H[28])=4.475948 vs y_hat(28)+eps=4.477665 -> INSIDE by 0.001717 (dominated).",
       "eps_break boundary (breakout): ln(C[30])=4.455494 vs y_hat(30)+eps_break=4.457129 -> BELOW by 0.001635 (no candidate).",
       "Both counterfactual perturbations (H=88.10; C=86.40) flip the outcome, pinning the exact decision thresholds."
     ],
-    "notes": "The t=28 bar is deliberately within k=3 of the series end so it is a validity-only bar (D-TL-05: selection uses pivots, validity uses every bar high) and cannot re-select the envelope. This isolates the eps domination boundary from hull re-selection."
+    "notes": "The t=28 bar was designed as a 'validity-only' bar under the PRE-HD-11 reading of D-TL-05 (selection over pivots, validity over every bar high), placed within k=3 of the series end so it could not re-select the envelope. That reading is SUPERSEDED: D-TL-05 as revised 2026-07-25 enforces domination over every bar high for BOTH selection and validity, and §6 removed the pivot precondition — so no bar is 'validity-only' by virtue of pivot confirmability. The eps-boundary arithmetic this fixture pins (both sides of eps at t=28 and both sides of eps_break at t=30) is unaffected; what is now open is whether t=28 re-selects the hull. See geometry_check.open_issue_2026_07_25.",
+    "open_issue_2026_07_25": {
+      "id": "OPEN-GX15-HULL-RESELECTION",
+      "raised_by": "Architect, during the Issue #16 stale-pivot sweep",
+      "status": "UNRESOLVED — escalated to the Orchestrator / Product Owner. NOT decided by Issue #16; the expected geometry below/above is left UNCHANGED.",
+      "summary": "With the pivot precondition removed (§6, HD-11), the t=28 bar high (87.90) is an eligible candidate. Its line from A is SHALLOWER than the stated B*=(20,90) line and it dominates every bar high in the series with ZERO violations even at eps=0. A plain reading of §8 step 4 (argmax slope among envelope-valid candidates, evaluated over the full history) therefore makes B*=(28,87.90), not (20,90) — which would change this fixture's expected slope, intercept, line values and narrative.",
+      "numeric": "m(28)=(ln87.90-ln100)/28=(4.476200-4.605170)/28=-0.128970/28=-0.00460611, which is SHALLOWER than the stated m=-0.00526803. Candidate (28,87.90) line: y_hat(t)=4.605170-0.00460611t; at t=20 it gives 4.513048 >= ln90=4.499810; at t=1 4.600564 >= ln97=4.574711; at t=29 4.471593 >= ln86.30=4.457830; at t=30 4.466987 >= ln86.40=4.458988 -> 0 violations at eps=0. Conversely the stated line puts the t=28 high ABOVE it by 0.018533 (inside eps=0.02, hence no pierce) — which is exactly the signature of a shallower valid candidate.",
+      "the_open_question": "Does a later, shallower, envelope-valid bar high RE-SELECT B* while the line is ACTIVE and unpierced (§17 recalculation trigger 2: 'a new bar high that changes the envelope hull'), or does selection freeze at formation (t=20) with later bars only validating? Before HD-11 this fixture never had to answer, because the pivot precondition excluded t=28 from selection. HD-11 removed that exclusion without stating a replacement, so the question is now live and material.",
+      "why_not_decided_here": "Answering it is a product-definition decision (it may imply a right-edge/recency rule for SELECTION, or a formation-freeze rule), and Issue #16 is explicitly an evidence correction that changes NO rule. Note the constraint from approved evidence: RM-01's PO-approved canonical anchor (2026-07-21) is itself only 3 bars from the end of its series, so any 'exclude bars within k of the series end from selection' answer would contradict RM-01/HD-11.",
+      "also_observed": "Pre-existing arithmetic slip, unrelated to pivots and NOT corrected here: this file states ln(87.90)=4.475948; the correct value is 4.476200 (delta 2.5e-4, larger than VERIFICATION.md's 5e-5 tolerance). The stated CONCLUSIONS are unaffected — the true margin inside y_hat(28)+eps is 0.001465 (stated 0.001717) and the counterfactual H=88.10 still pierces, by 0.000808 (stated 0.000555)."
+    }
   }
 }

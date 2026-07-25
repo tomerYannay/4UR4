@@ -61,10 +61,10 @@
     "intercept_formula": "b=yA-m*0=4.867534",
     "key_inequalities": [
       "HA=130 tied at t=0 and t=2; earliest (t=0) anchors (D-TL-02).",
-      "Eligible pivots below ATH: t=6 (122) and t=15 (118); hull binds at (15,118).",
+      "Candidacy = ALL later bar highs strictly below HA (§6) — which EXCLUDES the equal high at t=2 (130 = HA, not < HA) from candidacy while keeping it in the domination set (§8 step 3). The binding competitors are t=6 (122) and t=15 (118); the hull binds at (15,118). Pivot status plays no part (§5, D-TL-03, HD-11).",
       "line(2)=exp(4.85462)=128.332; the t=2 equal high (130) sits within eps -> dominated.",
       "No close exceeds line+eps_break -> ACTIVE."
     ],
-    "notes": "Locks the duplicate-ATH tie rule: earliest anchor, and a later equal high is tolerated within eps rather than breaking the line."
+    "notes": "Locks the duplicate-ATH tie rule: earliest anchor, and a later equal high is tolerated within eps rather than breaking the line. The complementary case — where the same geometry puts the equal high OUTSIDE eps and therefore leaves no envelope-valid second anchor at all — is GX-20 (the tie there is 15 bars from A, giving a gap of 0.106823 = 5.34x eps)."
   }
 }

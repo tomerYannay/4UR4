@@ -1,0 +1,109 @@
+{
+  "fixture_id": "GX-20",
+  "purpose": "The genuinely reachable NO_VALID_SECOND_ANCHOR: a DOUBLE TOP at the ATH. A later bar high (t=15) ties HA exactly, so it is excluded from candidacy by §6 (HB < HA strictly) but still belongs to the domination set of §8 (every bar high). Every descending line from A therefore passes below it and is pierced far beyond eps, leaving 24 candidates and 0 envelope-valid ones -> no line. Replaces the stale 'monotonic decline / no qualifying pivot' trigger that HD-11 made unreachable (see GX-08).",
+  "category": "invalidation (no envelope-valid second anchor — duplicate ATH / double top)",
+  "spec_refs": ["§4", "§6", "§8", "§9", "§10.3", "§10.4", "§18", "D-TL-02", "D-TL-04", "D-TL-05", "HD-11", "PO-decision-2026-07-25(SC-2)"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 26,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5). No line is fit here, so eps_break is not exercised. The outcome is governed by params.eps=0.02 (envelope domination, §9) only — eps_touch and eps_break never govern domination.",
+    "split_log_jump_threshold": 0.405465,
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 130.00 },
+  "expected_second_anchor": {
+    "t": null,
+    "H": null,
+    "reason": "No envelope-valid second anchor exists. Candidacy is over every later bar high (§6): 24 candidates (t=1..25, excluding t=15 whose high TIES HA and so fails the strict HB < HA test). Every candidate line descends from A, so it passes below the tying high at t=15 by exactly -15*m; the shallowest candidate (t=16, H=116) gives a pierce of 0.106823 log units = 5.34x eps=0.02. All 24 candidates are pierced -> NO_VALID_SECOND_ANCHOR (an explicit 'no signal' state, not an error, §10.4). NOT because any pivot is missing — pivot status is irrelevant to candidacy (§5, §6, D-TL-03, HD-11)."
+  },
+  "expected_log_slope": null,
+  "expected_intercept": null,
+  "expected_line_values": {},
+  "expected_state_transitions": [
+    { "bar": null, "from": "NONE", "to": "NONE", "reason_code": "NO_VALID_SECOND_ANCHOR" }
+  ],
+  "expected_final_state": "NONE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["NO_VALID_SECOND_ANCHOR"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "B=(16,116) — the SHALLOWEST of the 24 candidates (the would-be hull vertex)",
+      "rejected_because": "Its line passes below the t=15 high (130, the duplicate ATH), which pierces it by more than five times eps. This is the tightest candidate in the set; if it fails, every steeper candidate fails by more.",
+      "numeric": "m=(ln116-ln130)/16=(4.753590-4.867534)/16=-0.113944/16=-0.00712152; y_hat(15)=4.867534-0.00712152*15=4.867534-0.106823=4.760711; ln130=4.867534 > 4.760711+0.02=4.780711 -> pierces by 0.086823 beyond tolerance (raw gap 0.106823 = 5.34x eps)."
+    },
+    {
+      "candidate": "Any other later bar high as B (the remaining 23 candidates)",
+      "rejected_because": "For a line anchored at A the value at t=15 is yA+15m, and y[15]=yA exactly, so the pierce depth at t=15 is exactly -15*m = 15*|m| for EVERY candidate. Since t=16 has the smallest |m| in the set, every other candidate is pierced by more. 0 of 24 candidates are envelope-valid.",
+      "numeric": "Candidate slopes (shallowest first): t=16 -0.00712152 (gap 0.106823); t=14 -0.00813888 (gap 0.122083); t=17 -0.00824392 (gap 0.123659); t=18 -0.00928078 (gap 0.139212); t=13 -0.0121542 (gap 0.182313); ... t=1 -0.0635135 (gap 0.952703). min gap = 0.106823 > eps = 0.02 -> none valid."
+    },
+    {
+      "candidate": "The duplicate high at t=15 (130) as the second anchor B",
+      "rejected_because": "§6 requires HB < HA STRICTLY; an equal high is not a descending second anchor (its implied slope would be 0, not < 0). It is therefore excluded from CANDIDACY while remaining in the DOMINATION set of §8 step 3, which tests every bar high — which is exactly why it invalidates all 24 candidates.",
+      "numeric": "H[15]=130.00 = HA=130.00 -> HB < HA is false; implied slope m=(ln130-ln130)/15=0 (not < 0) -> not eligible (§6.2/§6.3)."
+    },
+    {
+      "candidate": "Re-anchoring at t=15 (RESET_NEW_ATH) or anchoring A at t=15",
+      "rejected_because": "§10.3/§17 reset on a later bar high that EXCEEDS HA; an equal high does not exceed it. §4/D-TL-02 and §18 'Equal ATHs' resolve the tie to the EARLIEST bar, so A stays (0,130) — the same rule GX-12 locks.",
+      "numeric": "H[15]=130.00 is not > HA=130.00 -> no RESET_NEW_ATH. Tied global max at t=0 and t=15; min tA among ties = 0 -> A=(0,130)."
+    },
+    {
+      "candidate": "SUSPECTED_UNADJUSTED_SPLIT instead of NO_VALID_SECOND_ANCHOR",
+      "rejected_because": "No single-bar log jump approaches the split threshold; the recovery into the double top is a normal multi-bar move.",
+      "numeric": "max_t |ln(H[t])-ln(H[t-1])| = |ln130-ln116| = 0.113944 (at t=15 and t=16) <= ln(1.5)=0.405465 -> guard silent."
+    },
+    {
+      "candidate": "INSUFFICIENT_BARS instead of NO_VALID_SECOND_ANCHOR",
+      "rejected_because": "The series is far longer than the §18 minimum-history guard.",
+      "numeric": "n = 26 >= 2k+2 = 8 (k=3) -> guard silent."
+    },
+    {
+      "candidate": "ATH_TOO_RECENT instead of NO_VALID_SECOND_ANCHOR",
+      "rejected_because": "The anchor is the FIRST bar of 26, with 25 later bars; even the duplicate-ATH bar at t=15 sits 10 bars before the end. There is ample room for a descending second anchor — the candidates exist, they are simply all pierced.",
+      "numeric": "tA=0, last index 25; 25 later bars >> k=3 -> guard silent. (The duplicate ATH at t=15 is likewise 10 bars from the end.)"
+    },
+    {
+      "candidate": "INVALID_PRICE / INVALID_INPUT instead of NO_VALID_SECOND_ANCHOR",
+      "rejected_because": "Every bar carries a complete OHLCV row with strictly positive prices and low <= open,close <= high.",
+      "numeric": "min price in the file = 86.00 (low at t=25) > 0; 26 complete rows, no missing high/close -> guards silent."
+    },
+    {
+      "candidate": "Emitting an error/exception rather than a named no-signal state",
+      "rejected_because": "Per §10.4/§18 this is a deterministic 'no line' outcome with a named reason code, not an error condition.",
+      "numeric": "envelope-valid candidate count = 0 -> NO_VALID_SECOND_ANCHOR (explicit no-signal), final state NONE."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.86753,
+    "yB": null,
+    "slope_formula": "n/a (no envelope-valid B -> no slope). Candidate slopes evaluated as m(t)=(ln H[t] - ln 130)/t for every t in 1..25 with H[t] < 130.",
+    "intercept_formula": "n/a",
+    "key_inequalities": [
+      "Highs (t=0..25): 130,122,118,120,115,117,113,115,111,113,110,112,109,111,116,130,116,113,110,107,104,101,98,95,92,89. Global max 130 is TIED at t=0 and t=15; earliest wins -> A=(0,130), yA=ln130=4.867534 (§4, D-TL-02, §18 Equal ATHs).",
+      "Candidacy (§6): every later bar high with HB < HA strictly -> t=1..25 minus t=15 = 24 candidates. NOT a pivot-restricted subset; pivot status is irrelevant (§5, §6, D-TL-03, HD-11).",
+      "Domination (§8 step 3, D-TL-05): the test runs over EVERY bar high, both intervening (tA < t_i < tB) and later (t_i > tB) — so the tying high at t=15 is tested against every candidate, whether it lies before or after that candidate.",
+      "Closed form: y[15] = yA exactly, so for any candidate with slope m the gap at t=15 is y[15]-y_hat(15) = yA-(yA+15m) = -15m = 15|m|. Validity therefore requires 15|m| <= eps, i.e. |m| <= 0.00133333.",
+      "Shallowest candidate: t=16 (H=116), m=(4.753590-4.867534)/16=-0.00712152. 15|m| = 0.106823 > eps = 0.02 (5.34x). Every other candidate is steeper, so 0 of 24 candidates are envelope-valid -> NO_VALID_SECOND_ANCHOR, no geometry (§10.4, §18).",
+      "eps-dependence (explicit, as in GX-12): the outcome is a TOLERANCE result, not a structural impossibility. It flips only for eps >= 0.106823. Re-checked at eps=0.05 (0.106823 > 0.05 -> still none) and eps=0.08 (0.106823 > 0.08 -> still none). Contrast GX-12, where the duplicate ATH sits 2 bars from A and its gap 0.012913 <= eps=0.02 is tolerated, so a line survives there; the geometry is identical in kind, only the lever arm (15 bars vs 2) differs.",
+      "No RESET_NEW_ATH: §10.3/§17 require a later high that EXCEEDS HA; H[15]=130 equals it (§18 Equal ATHs -> earliest anchor retained).",
+      "No ENVELOPE_TIE_LATER: the tie rule applies only among envelope-valid candidates; there are none.",
+      "Guards silent: max |y[t]-y[t-1]| = |ln130-ln116| = 0.113944 <= ln1.5 = 0.405465 (no SUSPECTED_UNADJUSTED_SPLIT); n=26 >= 2k+2=8 (no INSUFFICIENT_BARS); tA=0 with 25 later bars and the duplicate ATH 10 bars before the end (no ATH_TOO_RECENT); all prices > 0 and all rows complete (no INVALID_PRICE / INVALID_INPUT).",
+      "Consequently NO_VALID_SECOND_ANCHOR is reached here on the ENVELOPE test alone — never on an absence of pivots — which is precisely the trigger §18 now states."
+    ],
+    "pivot_analysis": {
+      "k": 3,
+      "note": "Recorded as descriptive metadata only; it has NO bearing on the outcome (§5, D-TL-03, HD-11). Whatever the k=3 pivot set is, candidacy is over all 24 later lower highs and all 24 are pierced by the t=15 tying high. Reporting NO_VALID_SECOND_ANCHOR here would be identical under any k, including k=1."
+    },
+    "notes": "Hand-verifiable (26 bars). Synthetic OHLCV convention: open = high-2, low = high-3, close = high-1, volume = 900000-1000*t; bars t=0 and t=15 are identical OHLC rows (128.00, 130.00, 127.00, 129.00), which is the double top. Added under Issue #16 (2026-07-25) to supply the genuinely reachable NO_VALID_SECOND_ANCHOR case after HD-11 made the previous 'monotonic decline / no qualifying pivot' trigger unreachable (see the corrected GX-08). It introduces NO new rule: candidacy (§6), domination (§8/D-TL-05), the equal-ATH tie (§4/D-TL-02) and the equal-high-within-eps treatment (GX-12) are all applied exactly as already approved."
+  }
+}

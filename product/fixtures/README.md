@@ -71,21 +71,34 @@ figures**; where hand computation of `exp()` leaves ambiguity at the 6th figure,
 | GX-17 | deep undercut not a valid retest | Return reaches line but close fails to hold -> **NOT RETESTED** + FAILED_BREAKOUT | §15, §16 |
 | GX-07 | expiry & recalculation | >=100 bars after breakout -> **EXPIRED_POST_BREAKOUT** -> recompute | §17 |
 | GX-06 | expiry & recalculation (recompute) | New ATH mid-series -> **RESET_NEW_ATH**, new line recomputed | §10.3, §17 |
-| GX-08 | invalidation | Monotonic decline -> **NO_VALID_SECOND_ANCHOR** (no line) | §5, §6, §18 |
+| GX-08 | normal valid (monotonic decline) — HD-11 regression | Strictly decreasing highs contain **zero** k=3 pivots, yet the all-highs hull binds at the **first** later bar: B*=(1,98) -> **ACTIVE**. A pivot prefilter would find no candidate at all. | §6, §8, §18, D-TL-03/05 |
 | GX-10 | stock split edge case | Unadjusted ~2:1 jump -> **SUSPECTED_UNADJUSTED_SPLIT**, do not fit | §2, §18 |
 | GX-18 | missing-data edge case | Missing high / non-positive price -> **INVALID_INPUT / INVALID_PRICE**, no geometry | §1, §18 |
 | GX-19 | non-pivot canonical anchor (SC-2 proof) | Non-pivot bar B*=(16,120) is the all-highs upper-log-hull anchor; a strict k=3 prefilter would wrongly pick the only k=3 pivot (4,160) whose steeper line is pierced/does-not-dominate -> all-highs hull selects correctly | §5, §6, §8, D-TL-03/05 |
+| GX-20 | invalidation (no envelope-valid second anchor) | **Duplicate ATH / double top**: a later bar high ties the ATH and pierces every descending candidate beyond eps (24 candidates, 0 valid) -> **NO_VALID_SECOND_ANCHOR** (no line). The genuinely reachable case for that code after HD-11 | §4, §6, §8, §10.4, §18, D-TL-02/05 |
 
-**Fixture count: 19.** (SC-2 proof GX-19 added per the Product Owner decision 2026-07-25;
-`k=3` pivots are non-authoritative for selection, and the canonical anchor is the all-highs
-upper-log-hull vertex.) **Existing fixtures' canonical anchors are unchanged** — each selected
-`B*` is already the all-highs upper-log-hull vertex, so removing the pivot precondition does
-not move any prior anchor. Category coverage: normal valid (GX-01, GX-09), repeated ATH
-(GX-12), multiple competing second anchors (GX-02), intervening-high invalidation (GX-13),
-nearly-equal slopes / envelope tie (GX-14), tolerance-boundary (GX-15), wick-only crossing
-(GX-03), first-close breakout (GX-16), volume-as-confidence (GX-11), false breakout
-(GX-05), clean retest (GX-04), deep-undercut-not-a-retest (GX-17), expiry & recalculation
-(GX-07, GX-06), invalidation / no-second-anchor (GX-08), stock-split (GX-10), missing-data
+**Fixture count: 20** — **17 geometry** fixtures + **3 null-anchor by design** (GX-10, GX-18,
+GX-20). (SC-2 proof GX-19 added per the Product Owner decision 2026-07-25; `k=3` pivots are
+non-authoritative for selection, and the canonical anchor is the all-highs upper-log-hull
+vertex. GX-20 added and GX-08 corrected under
+[Issue #16](https://github.com/tomerYannay/4UR4/issues/16), 2026-07-25.)
+
+**Effect of removing the pivot precondition on prior anchors.** Every geometry fixture's
+selected `B*` was already the all-highs upper-log-hull vertex, so no *existing* anchor moved —
+**with one exception: GX-08**, which previously expected **no anchor at all** on the
+pivot-precondition rationale HD-11 removed, and now correctly carries `B* = (1, 98)`. GX-08
+therefore moved from the null-anchor group into the geometry group; GX-20 was added to cover
+the `NO_VALID_SECOND_ANCHOR` case that is still genuinely reachable (a duplicate ATH, decided
+on the envelope test alone). This is an **evidence correction, not a rule change** — the
+governing rules (§5/§6/§8, D-TL-03/D-TL-05, HD-11) are unchanged.
+
+Category coverage: normal valid (GX-01, GX-09), monotonic decline / zero-pivot series
+(GX-08), repeated ATH (GX-12), multiple competing second anchors (GX-02),
+intervening-high invalidation (GX-13), nearly-equal slopes / envelope tie (GX-14),
+tolerance-boundary (GX-15), wick-only crossing (GX-03), first-close breakout (GX-16),
+volume-as-confidence (GX-11), false breakout (GX-05), clean retest (GX-04),
+deep-undercut-not-a-retest (GX-17), expiry & recalculation (GX-07, GX-06), no
+envelope-valid second anchor / duplicate ATH (GX-20), stock-split (GX-10), missing-data
 (GX-18), non-pivot canonical anchor / SC-2 proof (GX-19).
 
 Several breakout-family fixtures deliberately **share the same base line** `A=(0,100),
@@ -113,7 +126,7 @@ exactly.
 
 | Reason code | Meaning | Fixtures |
 |-------------|---------|----------|
-| `LINE_ESTABLISHED` | A valid A->B* line became ACTIVE | most |
+| `LINE_ESTABLISHED` | A valid A->B* line became ACTIVE | most (incl. GX-08) |
 | `ENVELOPE_TIE_LATER` | Envelope slope tie broken toward the later anchor (§18) | GX-14 |
 | `WICK_BREAK` | Intrabar high pierced, close did not confirm; stays ACTIVE (§14) | GX-03 |
 | `BREAKOUT_CONFIRMED` | First daily close above line+eps_break; alert fires (§13, HD-03) | GX-16, GX-11, GX-05, GX-04, GX-17, GX-07 |
@@ -121,7 +134,7 @@ exactly.
 | `RETEST_HELD` | Post-breakout dip to line that held as support (§16) | GX-04 |
 | `RESET_NEW_ATH` | New ATH retired the old line; recompute (§10.3, §17) | GX-06 |
 | `EXPIRED_POST_BREAKOUT` | >=E_expiry bars after breakout; retire + recompute (§17) | GX-07 |
-| `NO_VALID_SECOND_ANCHOR` | No eligible pivot below the ATH; no line (§10.4, §18) | GX-08 |
+| `NO_VALID_SECOND_ANCHOR` | Eligible candidates exist (all later bar highs below the ATH) but **none survives the envelope test**; no line (§10.4, §18). **Never** emitted for an absence of pivot highs (HD-11) | GX-20 |
 | `SUSPECTED_UNADJUSTED_SPLIT` | Impossible single-bar log jump > ln(1.5); do not fit (§18) | GX-10 |
 | `INVALID_PRICE` | Non-positive price; reject bar-set (§1, §18) | GX-18 |
 | `INVALID_INPUT` | Missing required field (high/close); reject bar-set (§1) | GX-18 |
@@ -129,7 +142,8 @@ exactly.
 Non-gating **flags** (confidence/quality only, never validity gates): `LOW_VOLUME` (GX-11),
 `NOT_RETESTED` (GX-17). Reason codes reserved by the spec but not exercised by a dedicated
 fixture here (documented for completeness): `INVALID_PIERCE`, `INSUFFICIENT_BARS`,
-`ATH_TOO_RECENT`.
+`ATH_TOO_RECENT` — GX-08 and GX-20 both record numerically **why these two guards do not
+fire** there, so they are not confused with `NO_VALID_SECOND_ANCHOR`.
 
 ## 6. Synthetic-vs-real principle (avoiding circular validation)
 
@@ -151,7 +165,7 @@ acquired now** (build-freeze + human-gated provider selection, HD-06/HD-07).
 
 | Layer | Count | Status | Location |
 |-------|-------|--------|----------|
-| **Synthetic golden fixtures** | **19** | complete, independently verified (see `VERIFICATION.md`); GX-19 added as the SC-2 proof | `golden/GX-01 … GX-19` |
+| **Synthetic golden fixtures** | **20** (17 geometry + 3 null-anchor) | complete; GX-01…GX-19 independently verified (see `VERIFICATION.md`); GX-19 added as the SC-2 proof; **GX-08 corrected and GX-20 added under Issue #16 (2026-07-25) — author-derived, independent re-verification pending** | `golden/GX-01 … GX-20` |
 | **Real-market fixtures** | **1 (RM-01)** | **verified from licensed OHLCV; SC-1 = MATCH; Product Owner approval `approved` (2026-07-25)** (`status: verified`) | `real/RM-01/` |
 
 The two layers are complementary and must not be conflated: the **synthetic** set pins the
@@ -162,7 +176,9 @@ source, with geometry **independently recomputed** from real data: **SC-1 resolv
 (2026-07-21 is the upper-log-hull canonical anchor; 0 envelope violations; no breakout through
 2026-07-24). **SC-2** (the anchor is not a `k=3` pivot) is now **RESOLVED by the Product
 Owner decision 2026-07-25**: the upper-log-hull over **all** highs is canonical and the pivot
-prefilter is non-authoritative (spec §5/§6/§8, D-TL-05); the synthetic proof is **GX-19**.
+prefilter is non-authoritative (spec §5/§6/§8, D-TL-05); the synthetic proofs are **GX-19**
+(a non-pivot bar is the canonical anchor) and **GX-08** (a series with **no** pivots at all
+still has a canonical anchor).
 Product Owner approval of the RM-01 *result* (the separate review of the verified geometry) **was
 granted on 2026-07-25**, in the same review that ruled HD-11 — see
 [`real/RM-01/README.md`](real/RM-01/README.md) (status header and §5 visual-acceptance record),
@@ -170,8 +186,10 @@ granted on 2026-07-25**, in the same review that ruled HD-11 — see
 [`real/RM-01/annotation.json`](real/RM-01/annotation.json)
 (`product_owner_approval: approved`), and
 [`../human-decisions.md`](../human-decisions.md) (HD-11, decided 2026-07-25).
-The process is in [`real-market-plan.md`](real-market-plan.md). The synthetic catalog in §3 is
-unchanged.
+The process is in [`real-market-plan.md`](real-market-plan.md). The synthetic catalog in §3 was
+last changed on 2026-07-25 by the Issue #16 evidence correction (GX-08 re-derived to
+`B* = (1, 98)`; GX-20 added): **20 fixtures, 17 geometry + 3 null-anchor**. RM-01 itself is
+untouched by that correction.
 
 ## 7. Files
 

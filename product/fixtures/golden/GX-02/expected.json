@@ -1,6 +1,6 @@
 {
   "fixture_id": "GX-02",
-  "purpose": "Envelope discrimination: among three descending pivots the upper log-hull selects the shallowest dominating line B*=(45,92), rejecting (20,96) and (70,80). Reproduces the spec §8 worked example exactly.",
+  "purpose": "Envelope discrimination: among three competing descending candidate bar highs the upper log-hull selects the shallowest dominating line B*=(45,92), rejecting (20,96) and (70,80). Reproduces the spec §8 worked example exactly.",
   "category": "multiple competing second anchors",
   "spec_refs": ["§8", "§8(worked example)", "D-TL-04", "D-TL-05"],
   "input_convention": {
@@ -59,12 +59,12 @@
     "slope_formula": "m=(ln92-ln100)/(45-0)=(4.521789-4.605170)/45=-0.083381/45=-0.00185291",
     "intercept_formula": "b=yA-m*0=4.605170",
     "key_inequalities": [
-      "Three eligible pivots: (20,96),(45,92),(70,80).",
+      "Candidacy is over ALL later bar highs (§6); the three competing candidates that matter here are (20,96),(45,92),(70,80).",
       "(20,96) invalid: y_hat(45)=4.513321 < ln92-eps.",
       "(70,80) invalid: y_hat(45)=4.461721 < ln92-eps.",
       "(45,92) valid: dominates t=20 (4.568112>=4.564348) and t=70 (4.475466>=4.382027).",
       "Hull selects the shallowest valid line -> B*=(45,92)."
     ],
-    "notes": "Direct reproduction of trendline-specification.md §8 worked example (eps=0.005). All intervening filler highs sit strictly below the envelope so the only eligible pivots are the three named ones."
+    "notes": "Direct reproduction of trendline-specification.md §8 worked example (eps=0.005). All intervening filler highs sit strictly below the envelope, so the only candidates that can bind the hull are the three named ones; pivot status plays no part in candidacy (§6, D-TL-03/D-TL-05, HD-11). B* is unchanged by that clarification."
   }
 }

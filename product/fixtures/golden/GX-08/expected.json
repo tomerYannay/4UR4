@@ -1,8 +1,8 @@
 {
   "fixture_id": "GX-08",
-  "purpose": "A strictly monotonic decline from the ATH has no confirmed pivot high below the anchor, so no second anchor exists and no line is fit: NO_VALID_SECOND_ANCHOR (an explicit 'no signal' state, not an error).",
-  "category": "invalidation (no valid second anchor)",
-  "spec_refs": ["§5", "§6", "§10.4", "§18(Monotonic decline)"],
+  "purpose": "HD-11 regression fixture (the second, alongside GX-19): a strictly monotonic decline contains ZERO k=3 pivot highs, yet the all-highs upper-log-hull still yields a canonical second anchor — the hull binds at the FIRST later bar, B*=(1,98), giving an ACTIVE line. A pivot-restricted prefilter would find no candidate at all and wrongly emit NO_VALID_SECOND_ANCHOR; under §6/§8 candidacy is over every later bar high, so a monotonic decline can never emit that code.",
+  "category": "normal valid (monotonic decline) — HD-11 regression: zero-pivot series with a canonical anchor",
+  "spec_refs": ["§4", "§5", "§6", "§7", "§8", "§9", "§11", "§18", "D-TL-02", "D-TL-03", "D-TL-04", "D-TL-05", "HD-11", "PO-decision-2026-07-25(SC-2)"],
   "input_convention": {
     "timestamp_kind": "ordinal",
     "bar_count": 15,
@@ -15,44 +15,94 @@
     "eps_touch": 0.01,
     "eps_break": 0.01,
     "eps_break_locked": false,
-    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5). No breakout occurs in this fixture, so eps_break is not exercised. Envelope domination is governed by params.eps=0.02 only (§9) — eps_touch and eps_break never govern it.",
     "tolerance_version": "tol-2026.07-illustrative"
   },
   "expected_ath_anchor": { "t": 0, "H": 100.00 },
-  "expected_second_anchor": { "t": null, "H": null, "reason": "No confirmed pivot high exists below the ATH; every bar high is strictly lower than the prior bar, so H[p] > H[p-1] is never satisfied." },
-  "expected_log_slope": null,
-  "expected_intercept": null,
-  "expected_line_values": {},
+  "expected_second_anchor": {
+    "t": 1,
+    "H": 98.00,
+    "reason": "All-highs upper-log-hull vertex: the shallowest descending line from A that dominates every later bar high within eps. With H[t]=100-2t the candidate slope is m(t)=ln(1-0.02t)/t, which is strictly decreasing in t, so the shallowest slope is at t=1. NOT a k=3 pivot — the series contains no pivot high at all (isPivotHigh needs H[p] > H[p-1], never true here) — yet canonical per §6/§8, D-TL-03/D-TL-05 and HD-11."
+  },
+  "expected_log_slope": -0.0202027,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "1": { "y_hat": 4.58497, "line": 98.0000 },
+    "2": { "y_hat": 4.56476, "line": 96.0400 },
+    "3": { "y_hat": 4.54456, "line": 94.1192 },
+    "4": { "y_hat": 4.52436, "line": 92.2368 },
+    "5": { "y_hat": 4.50416, "line": 90.3921 },
+    "6": { "y_hat": 4.48395, "line": 88.5842 },
+    "7": { "y_hat": 4.46375, "line": 86.8126 },
+    "8": { "y_hat": 4.44355, "line": 85.0763 },
+    "9": { "y_hat": 4.42335, "line": 83.3748 },
+    "10": { "y_hat": 4.40314, "line": 81.7073 },
+    "11": { "y_hat": 4.38294, "line": 80.0731 },
+    "12": { "y_hat": 4.36274, "line": 78.4717 },
+    "13": { "y_hat": 4.34253, "line": 76.9022 },
+    "14": { "y_hat": 4.32233, "line": 75.3642 }
+  },
   "expected_state_transitions": [
-    { "bar": null, "from": "NONE", "to": "NONE", "reason_code": "NO_VALID_SECOND_ANCHOR" }
+    { "bar": 1, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
   ],
-  "expected_final_state": "NONE",
+  "expected_final_state": "ACTIVE",
   "breakout_bar": null,
   "confirmed_bar": null,
-  "expected_reason_codes": ["NO_VALID_SECOND_ANCHOR"],
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
   "flags": [],
   "rejection_rationale": [
     {
-      "candidate": "Any bar as a second-anchor pivot high",
-      "rejected_because": "A pivot high requires H[p] > H[p-i] for i=1..k, but the series is strictly decreasing, so no bar is a local maximum on its left.",
-      "numeric": "For every p>=1: H[p] < H[p-1] (e.g. H[1]=98 < H[0]=100; H[2]=96 < H[1]=98; ...) -> isPivotHigh false for all p."
+      "candidate": "NO_VALID_SECOND_ANCHOR — the outcome this fixture previously expected, on the ground that no k=3 pivot high exists",
+      "rejected_because": "Pivot status is NOT a precondition for second-anchor candidacy (§6: 'There is no isPivotHigh(tB,k) precondition'; §5 and D-TL-03: pivots are secondary/non-authoritative; HD-11). Candidacy is over EVERY later bar high with HB < HA, so the absence of k-pivots cannot by itself produce this reason code. A fixture may not return NO_VALID_SECOND_ANCHOR merely because no k-pivot exists; the code fires only when NO candidate survives the §8 envelope test (the genuinely reachable case is GX-20, a duplicate ATH).",
+      "numeric": "k=3 pivots in this series: ZERO (isPivotHigh(p,3) requires H[p] > H[p-1]; H is strictly decreasing, so the strict-left test fails at every p>=1). Eligible candidates per §6: t=1..14 -> 14 candidates. Envelope-valid at eps=0.02: 14 of 14. Envelope-valid at eps=0: exactly 1 (t=1). Selected B* = (1,98)."
     },
     {
-      "candidate": "Emitting an error/exception",
-      "rejected_because": "Per §10.4/§18 this is a deterministic 'no line' state with a named reason, not an error condition.",
-      "numeric": "eligible-B count = 0 -> NO_VALID_SECOND_ANCHOR (explicit no-signal)."
+      "candidate": "B=(2,96) — the next bar; what a 'shallowest line that stays strictly above every high' reading would prefer",
+      "rejected_because": "Among envelope-valid candidates §8 step 4 selects the SHALLOWEST descending line (slope closest to zero). m(2) is steeper than m(1), so (2,96) is not the hull vertex. Its line also passes marginally BELOW the t=1 high; it is envelope-valid only because that shortfall (0.000208) sits inside eps=0.02.",
+      "numeric": "m(2)=(ln96-ln100)/2=(4.564348-4.605170)/2=-0.040822/2=-0.0204110 < m(1)=-0.0202027 (steeper). y_hat_(2,96)(1)=4.605170-0.020411=4.584759; ln98=4.584967 > 4.584759 by 0.000208 (<= eps=0.02, so valid but not dominating strictly, and not shallowest)."
+    },
+    {
+      "candidate": "B=(14,72) — the last and lowest bar (a naive 'most recent low' / steepest-line choice)",
+      "rejected_because": "It is envelope-valid at eps=0.02 but far from the hull vertex: its line is the steepest of the 14 candidates and dips up to 0.0134 log units below the intervening highs. §8 selects the shallowest dominating line, not the steepest.",
+      "numeric": "m(14)=(ln72-ln100)/14=(4.276666-4.605170)/14=-0.328504/14=-0.0234646 (steepest). Max gap for this candidate: y[7]-y_hat(7)=ln86-(4.605170-0.164252)=4.454347-4.440918=+0.013429 <= eps=0.02 (valid), and at t=8 +0.013364. Shallowest slope is still t=1 -> B*=(1,98)."
+    },
+    {
+      "candidate": "INSUFFICIENT_BARS or ATH_TOO_RECENT instead of a line",
+      "rejected_because": "Neither guard fires: the series is long enough and the ATH is the FIRST of 15 bars, leaving 14 later bars for the descent (§18).",
+      "numeric": "INSUFFICIENT_BARS needs n < 2k+2 = 8; n = 15 -> does not fire. ATH_TOO_RECENT needs the ATH on or within k=3 of the LAST bar; tA=0 with 14 later bars -> does not fire. All prices > 0 and max |y[t]-y[t-1]| = ln(74/72) = 0.0273999 << ln(1.5) = 0.405465 -> no INVALID_PRICE, no SUSPECTED_UNADJUSTED_SPLIT."
+    },
+    {
+      "candidate": "Any breakout (ACTIVE -> BROKEN_OUT) or wick-break",
+      "rejected_because": "No bar high and no daily close ever exceeds the line (let alone line + eps_break), because line(t)=100*0.98^t >= 100-2t = H[t] for every t (Bernoulli's inequality) and C[t] <= H[t]. End state is ACTIVE with breakout_bar = confirmed_bar = null and no retest.",
+      "numeric": "Tightest close: t=2, ln(C[2])=ln96=4.564348 vs y_hat(2)+eps_break=4.564765+0.01=4.574765 -> misses by 0.010417. Tightest high: t=1, ln98=4.584967 = y_hat(1) exactly (B* lies on the line). No t satisfies ln(C[t]) > y_hat(t)+eps_break or ln(H[t]) > y_hat(t)+eps."
     }
   ],
   "geometry_check": {
     "yA": 4.60517,
-    "yB": null,
-    "slope_formula": "n/a (no B* -> no slope)",
-    "intercept_formula": "n/a",
+    "yB": 4.58497,
+    "slope_formula": "m=(ln98-ln100)/(1-0)=(4.584967-4.605170)/1=-0.020203/1=-0.0202027",
+    "intercept_formula": "b=yA-m*tA=4.605170-(-0.0202027*0)=4.605170",
     "key_inequalities": [
-      "ATH anchor = (0,100) (global max).",
-      "Highs strictly decreasing: 100,98,96,...,72 -> zero pivot highs.",
-      "Eligible second-anchor set empty -> NO_VALID_SECOND_ANCHOR, no geometry."
+      "Anchor A=(0,100): earliest bar at the global max, unique (§4, D-TL-02). yA=ln100=4.605170.",
+      "Candidate set = ALL later bar highs with HB < HA (§6): t=1..14 -> 14 candidates. There is NO isPivotHigh(tB,k) precondition (§6, §5, D-TL-03, HD-11); the series in fact contains ZERO k=3 pivots.",
+      "Highs are H[t]=100-2t, so slope(A->t)=ln(1-0.02t)/t. ln(1-0.02t) is concave with value 0 at t=0, hence ln(1-0.02t)/t is strictly DECREASING in t: m(1)=-0.0202027 > m(2)=-0.0204110 > m(7)=-0.0215461 > m(14)=-0.0234646. The shallowest (hull) candidate is therefore t=1.",
+      "Domination over EVERY bar high (§8 step 3, D-TL-05): gap(t)=y[t]-y_hat(t)=ln(1-0.02t)+0.0202027073*t <= 0 for all t, so B* has 0 violations even at eps=0. Worst (largest) gap among t>=2 is at t=2: ln(0.96)+0.0404054=-0.0408220+0.0404054=-0.00041658.",
+      "Envelope tolerance is params.eps=0.02 (§9) — distinct from eps_touch=0.01 and eps_break=0.01, neither of which governs domination. At eps=0.02 ALL 14/14 candidates are envelope-valid (the worst case, t=14, peaks at +0.013429 < 0.02). At eps=0 exactly ONE survives: B* itself, because any candidate t0>=2 satisfies (1-0.02*t0)^(1/t0) < 0.98, so its line lies below 98 at t=1 and the t=1 high pierces it.",
+      "Selection (§8 step 4) among envelope-valid candidates = argmax slope = t=1 -> B*=(1,98), m=-0.0202027, b=4.605170. No ENVELOPE_TIE_LATER (all 14 slopes are distinct).",
+      "Touches (eps_touch=0.01, §12): |gap(t)| <= 0.01 for t=0..7 (t=7: 0.0094039) and > eps_touch from t=8 (0.0127317). A and B* are touches 1 and 2.",
+      "Guards silent: n=15 >= 2k+2=8 (no INSUFFICIENT_BARS); tA=0 with 14 later bars (no ATH_TOO_RECENT); all prices > 0; max |y[t]-y[t-1]|=ln(74/72)=0.0273999 << ln1.5=0.405465.",
+      "State: no close exceeds line+eps_break anywhere (line(t)=100*0.98^t >= 100-2t = C[t] for t>=1; C[0]=99 < 100) -> LINE_ESTABLISHED at t=1, final state ACTIVE, breakout_bar=null, confirmed_bar=null, no retest.",
+      "HD-11 regression: a k=3 pivot PREFILTER finds ZERO candidates here and would wrongly emit NO_VALID_SECOND_ANCHOR, while the all-highs hull yields B*=(1,98). Under §6, a strictly monotonic decline ALWAYS has an eligible B (the first later bar high), so it can NEVER produce NO_VALID_SECOND_ANCHOR."
     ],
-    "notes": "Locks the 'no valid line' outcome as a first-class, named state rather than an error."
+    "pivot_analysis": {
+      "k": 3,
+      "k3_pivots_after_ath": [],
+      "selected_anchor_is_k3_pivot": false,
+      "selected_anchor_local_high_order": "none — H[1]=98 < H[0]=100, so t=1 fails the strict-left test at every order k>=1; no bar in the series is a pivot high",
+      "disqualifying_higher_bars_within_k3": [{ "t": 0, "H": 100.00 }],
+      "note": "Complements GX-19: there the canonical anchor is a non-pivot bar in a series that HAS a pivot; here the series has NO pivots at all and the canonical anchor still exists. Pivot status is non-authoritative for selection (§5, D-TL-03, D-TL-05, HD-11)."
+    },
+    "notes": "Small, hand-verifiable (15 bars, highs 100,98,96,...,72). Geometry to 6 significant figures; where hand exp() is ambiguous at the 6th figure the inequalities above (not the rounded line display) are authoritative, per fixtures/README.md §2. CORRECTED under Issue #16 (2026-07-25): the previously committed expected output asserted NO_VALID_SECOND_ANCHOR on the pivot-high precondition that HD-11 removed. This correction re-derives the fixture against the already-approved all-highs rule (§5/§6/§8, D-TL-03/D-TL-05); it changes NO rule."
   }
 }

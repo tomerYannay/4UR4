@@ -39,7 +39,7 @@
   "rejection_rationale": [
     {
       "candidate": "B=(6,92) as second anchor",
-      "rejected_because": "The A->(6,92) line is shallower but the t=12 pivot high (88) pierces it beyond eps, so it is NOT envelope-valid.",
+      "rejected_because": "The A->(6,92) line is shallower but the t=12 bar high (88) pierces it beyond eps, so it is NOT envelope-valid.",
       "numeric": "m_6=(ln92-ln100)/6=(4.521789-4.605170)/6=-0.0138968; y_hat_6(12)=4.605170-0.0138968*12=4.438408; ln88=4.477337 > 4.438408+0.02=4.458408 -> pierces."
     },
     {
@@ -59,11 +59,11 @@
     "slope_formula": "m=(yB-yA)/(tB-tA)=(4.477337-4.605170)/(12-0)=-0.127833/12=-0.0106528",
     "intercept_formula": "b=yA-m*tA=4.605170-(-0.0106528*0)=4.605170",
     "key_inequalities": [
-      "Pivots below ATH are exactly t=6 (H=92) and t=12 (H=88); k=3 confirmed (3 strictly-lower bars left, 3 <= bars right).",
-      "Envelope: only (12,88) dominates all intervening pivot highs; (6,92) fails on t=12.",
+      "Candidacy is over ALL later bar highs (§6, D-TL-05) — not a pivot subset. The binding competitors are t=6 (H=92) and t=12 (H=88), which are also k=3 pivots (descriptive only, non-authoritative per §5/D-TL-03).",
+      "Envelope: only (12,88) dominates every intervening BAR high; (6,92) fails on t=12. Checked over the full 19-bar history: no bar high lies above the A->(12,88) line (tightest approaches t=6 92 vs line 93.8085, t=11 87 vs 88.9425, t=16 83 vs 84.3293), so (12,88) is also the shallowest envelope-valid candidate.",
       "line(6)=exp(4.54125)=93.8085 >= H[6]=92 -> intervening high dominated.",
       "No close exceeds line+eps_break -> stays ACTIVE."
     ],
-    "notes": "Anchor A is the earliest global-max high (t=0). B* is the shallowest descending line that dominates every intervening pivot high within eps (upper log-hull, D-TL-04)."
+    "notes": "Anchor A is the earliest global-max high (t=0). B* is the shallowest descending line that dominates every intervening BAR high within eps (upper log-hull, D-TL-04/D-TL-05 as revised 2026-07-25; pivot status is not a precondition, HD-11). B* is unchanged by that revision."
   }
 }

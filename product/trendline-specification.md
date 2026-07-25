@@ -36,7 +36,7 @@ stated rules.
 | `H[t], L[t], O[t], C[t], V[t]` | High, low, open, close, volume of `bar[t]`. |
 | `y[t]` | Log-price of the high: `y[t] = ln(H[t])` (see §3). |
 | `A = (tA, HA)` | Anchor pivot = the all-time-high bar (§4). |
-| `B = (tB, HB)` | Second anchor = the qualifying later pivot high (§6). |
+| `B = (tB, HB)` | Second anchor = the qualifying later **bar high** (pivot or not) selected by the all-highs envelope rule (§6, §8). |
 | `m` | Slope of the trendline in log space, per bar (§7). |
 | `b` | Intercept of the trendline in log space. |
 | `ŷ(t) = m·t + b` | The trendline value in log space at index `t`. |
@@ -427,9 +427,12 @@ A currently-tracked line is invalidated when **any** of:
    ~100 bars after breakout.
 3. **New ATH** forms (a later bar high exceeds `HA`): the old line is retired and
    a new anchor/line is computed from the new ATH.
-4. **Insufficient pivots:** fewer than one eligible `B` exists (§17 monotonic
-   decline / too-few-bars) → **no line** (not an error; an explicit "no signal"
-   state).
+4. **No envelope-valid second anchor:** no eligible `B` (§6) survives the envelope
+   rule (§8) — e.g. a later bar high **ties the ATH** and pierces every descending
+   candidate line beyond `ε` (double top, fixture GX-20), or the series is too
+   short (§18) → **no line** (not an error; an explicit "no signal" state).
+   **This is never triggered by an absence of pivot highs** — candidacy is over
+   every later bar high (§6, D-TL-03, D-TL-05).
 
 Every invalidation MUST emit a **named reason code** (e.g. `INVALID_PIERCE`,
 `RESET_NEW_ATH`, `EXPIRED_POST_BREAKOUT`, `NO_VALID_SECOND_ANCHOR`) for
@@ -646,8 +649,10 @@ bars of t=81 ✓ → **RETEST_HELD**.
 - **Recalculation triggers (any):**
   1. **New ATH** — a bar high exceeds the prior `HA`. Immediate reset: new anchor
      `A`, new envelope, new line. (Old line reason `RESET_NEW_ATH`.)
-  2. **New qualifying pivot** that changes the envelope hull (§8) — e.g. a new
-     lower-high pivot that becomes the binding `B*`. Recompute the canonical line.
+  2. **New bar high that changes the envelope hull** (§8) — e.g. a new lower high
+     that becomes the binding `B*`. Pivot status is irrelevant to this trigger:
+     **any** later bar high can re-bind the hull (§6, §8, D-TL-05). Recompute the
+     canonical line.
   3. **Structural pierce without breakout** (§10.1) — recompute.
   4. **Post-breakout expiry** (above).
 - **Determinism:** recomputation is a pure function of the current full history;
@@ -663,17 +668,34 @@ bars of t=81 ✓ → **RETEST_HELD**.
 
 | Case | Rule | Reason code |
 |------|------|-------------|
-| **Fewer than `2k+2` bars** | Cannot confirm any pivot → no line. | `INSUFFICIENT_BARS` |
-| **ATH on the first bar** (`tA = 0`) | Valid anchor; `B` is any later eligible pivot. Common for stocks in secular decline from IPO peak. | — |
-| **ATH on (or within `k` of) the last bar** | No room for a descending second anchor yet → no line; wait for more bars. | `ATH_TOO_RECENT` |
-| **Monotonic decline, no qualifying pivot** | No confirmed pivot below ATH that survives envelope → no line. | `NO_VALID_SECOND_ANCHOR` |
+| **Fewer than `2k+2` bars** | Minimum-history guard → no line. Threshold **unchanged**; re-derived under all-highs candidacy in the note below. | `INSUFFICIENT_BARS` |
+| **ATH on the first bar** (`tA = 0`) | Valid anchor; `B` is any later eligible **bar high** (§6 — pivot status is not a precondition). Common for stocks in secular decline from IPO peak. Fixtures GX-09, GX-08. | — |
+| **ATH on (or within `k` of) the last bar** | No room for a descending second anchor yet → no line; wait for more bars. The `k`-bar recency window is **retained unchanged** as a conservative guard (see the note below). | `ATH_TOO_RECENT` |
+| **No envelope-valid second anchor** — e.g. a later bar high **ties the ATH** (double top) and so pierces every descending candidate line beyond `ε` | Eligible candidates exist (§6: all later bar highs with `HB < HA`) but **none** survives the envelope test of §8 → no line. Fixture **GX-20**. **A strictly monotonic decline can never emit this code**: its first later bar high is always eligible and the hull binds there (fixture **GX-08**, `B* = (1,98)`). The former "no qualifying pivot" trigger is **superseded** — the absence of pivot highs is never a reason for this code (§5, §6, D-TL-03, D-TL-05, HD-11). | `NO_VALID_SECOND_ANCHOR` |
 | **Price gaps (overnight)** | Gaps are real bars; no interpolation. Gap-up through the line still requires **close** confirmation (§13). | — |
 | **Trading halt** (missing calendar days) | Handled by ordinal indexing (§1); no synthetic bars. Halt does not alter `t` continuity. | — |
 | **Unadjusted split slips through** | Detected as an impossible single-bar log jump `|y[t]−y[t−1]| > ln(1.5)` → flag `SUSPECTED_UNADJUSTED_SPLIT`, do not fit. | `SUSPECTED_UNADJUSTED_SPLIT` |
 | **Equal ATHs** | Earliest wins (§4, D-TL-02). | — |
-| **Ties in envelope (two pivots give identical dominating slope)** | Prefer the **later** `B` (longer confirmed structure). | `ENVELOPE_TIE_LATER` |
+| **Ties in envelope (two candidate bar highs give identical dominating slope)** | Prefer the **later** `B` (longer confirmed structure). | `ENVELOPE_TIE_LATER` |
 | **Non-positive price** | Invalid input, reject bar-set. | `INVALID_PRICE` |
 | **Flat-top plateau at a pivot** | Earliest bar of plateau is the pivot (§5 `≥` rule). | — |
+
+> **Note — re-derivation of the `2k+2` and `k`-recency guards under all-highs
+> candidacy (§6, D-TL-03/D-TL-05, HD-11).** Both thresholds are **retained
+> unchanged**; only their *justification* is restated, because "a bar within `k` of
+> the series end cannot be a confirmed pivot" (§5) is no longer a reason to exclude
+> a second-anchor candidate. Re-derived: under all-highs candidacy the **geometric**
+> minimum for a line is `A` plus one later bar high below it (**2 bars**), and the
+> shortest series that can clear the `k`-bar recency guard is **`k + 2` bars**.
+> `2k + 2` is therefore now a **conservative minimum-history guard** — it keeps the
+> secondary pivot layer of §5 (visualization, descriptive metadata, confidence
+> features) computable and refuses to fit a canonical line on a window too short to
+> exhibit structure — rather than a consequence of pivot confirmability. Whether to
+> relax either threshold toward its geometric minimum is a **tunable question left
+> open and NOT decided here** (changing a threshold would be a product-definition
+> decision; this section makes none). Both codes stay **distinct** from
+> `NO_VALID_SECOND_ANCHOR`, which concerns the §8 envelope test on a series that
+> *is* long enough.
 
 ---
 
@@ -706,7 +728,16 @@ build-lifted ticket must produce:
 6. **GX-06 New-ATH reset:** a new all-time high mid-series → `RESET_NEW_ATH`, new
    line recomputed.
 7. **GX-07 Expiry:** 100+ bars after breakout → `EXPIRED` → recompute.
-8. **GX-08 Monotonic decline:** no valid second anchor → `NO_VALID_SECOND_ANCHOR`.
+8. **GX-08 Monotonic decline — the hull binds at the first later bar:** strictly
+   decreasing highs (`100, 98, 96 … 72`) contain **zero** `k=3` pivots, yet
+   all-highs candidacy still yields a canonical anchor `B* = (1, 98)` →
+   `LINE_ESTABLISHED`, end state `ACTIVE`. A pivot-restricted prefilter would find
+   **no** candidate and wrongly emit `NO_VALID_SECOND_ANCHOR`. **Revised
+   2026-07-25 (HD-11 / SC-2):** the earlier expectation ("no valid second anchor →
+   `NO_VALID_SECOND_ANCHOR`") rested on the pivot precondition that §6 removed and
+   is **superseded**; GX-08 is now the **second HD-11 regression fixture** beside
+   GX-19 (GX-19: a non-pivot bar is the canonical anchor; GX-08: a series with no
+   pivots at all still has one).
 9. **GX-09 ATH on first bar:** IPO-peak decline; valid line from `t=0`.
 10. **GX-10 Split artifact:** an unadjusted 2:1 jump → `SUSPECTED_UNADJUSTED_SPLIT`.
 11. **GX-11 Low-volume breakout (volume is confidence-only):** a **first-close**
@@ -719,6 +750,15 @@ build-lifted ticket must produce:
     validity path) is **superseded** by "volume is a confidence feature, not a
     validity gate"; regenerate expected output accordingly when the build is lifted.
 12. **GX-12 Equal-ATH tie:** duplicate highs → earliest anchors (D-TL-02).
+13. **GX-20 Duplicate ATH (double top) → no envelope-valid second anchor:** a later
+    bar high **ties** the ATH far enough downstream that every descending candidate
+    line is pierced by it beyond `ε` (24 candidates, 0 valid) →
+    `NO_VALID_SECOND_ANCHOR`. This is the **genuinely reachable** case for that
+    reason code after HD-11 (§18); it is decided purely on the envelope test, never
+    on pivot status.
+
+*(The complete, superseding catalog — GX-01 … GX-20, including the SC-2 proof
+GX-19 — is maintained in [`fixtures/README.md`](fixtures/README.md) §3.)*
 
 Each fixture's expected JSON must include: selected anchors, `m`/`b`, state,
 every reason code emitted, and (for numeric geometry) values to **6 significant
@@ -799,3 +839,19 @@ The Architect proposes the Product Steward add these to
    (data-layer ticket dependency, not this spec).
 6. **OQ-6:** Should very long (multi-decade) histories switch to weekly bars to
    tame pivot noise (D-TL-00)?
+7. **OQ-7 (high, OPEN — raised 2026-07-25 by the Issue #16 stale-pivot sweep; NOT
+   decided there):** over **what window** is the §8 selection evaluated — the
+   **full history** (so a later, shallower, envelope-valid bar high **re-selects**
+   `B*` under §17 trigger 2, even while the current line is `ACTIVE` and unpierced)
+   or **frozen at line formation** (later bars only *validate*)? Before HD-11 the
+   pivot precondition answered this implicitly: a bar within `k` of the series end
+   could not be a confirmed pivot and so could not be selected. HD-11 removed that
+   exclusion **without stating a replacement**, and §6 imposes no end-window
+   condition on `B`. This is **material**: it contests the stated anchors of
+   fixtures **GX-09** (full-history vertex would be `t=14`, H=135) and **GX-15**
+   (`t=28`, H=87.90), both flagged in place under
+   `geometry_check.open_issue_2026_07_25` and in `fixtures/VERIFICATION.md`.
+   **Constraint on any answer:** RM-01's Product-Owner-approved canonical anchor is
+   itself only 3 bars from the end of its series, so "bars within `k` of the series
+   end are excluded from **selection**" would contradict RM-01 and HD-11. Requires a
+   Product Owner decision; **no fixture geometry has been changed pending it**.

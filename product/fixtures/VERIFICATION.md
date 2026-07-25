@@ -19,14 +19,14 @@ the fixture's own `input.csv` — **without** using the fixture's stated geometr
   `line(t) = exp(ŷ(t))` → compared to the stated values.
 
 Tolerance: relative ≤ 3×10⁻⁵ on slope/intercept, ≤ 5×10⁻⁵ on line values (6-significant-figure
-agreement). Null-anchor fixtures (GX-08, GX-10, GX-18) were checked for the correct
-no-geometry guard + reason codes.
+agreement). Null-anchor fixtures (**as of this pass**: GX-08, GX-10, GX-18) were checked for the
+correct no-geometry guard + reason codes. **GX-08 has since been corrected — see "Issue #16
+correction" below: the current null-anchor set is GX-10, GX-18, GX-20.**
 
-## Result
+## Result (verification pass of 2026-07-25, pre-#16)
 
-- **19 / 19 fixtures verified** (16 with geometry; 3 null-anchor by design — GX-08, GX-10,
-  GX-18). Consistent with the all-highs hull check below ("16 / 16 geometry fixtures") and with
-  the catalog of 19 in [`README.md`](README.md) §3.
+- **19 / 19 fixtures verified** (16 with geometry; 3 null-anchor **as committed at the time** —
+  GX-08, GX-10, GX-18).
 - All anchors, slopes, intercepts, and `y_hat` values reproduced independently.
 - **Two `line` (price) display values** were off in the 5th–6th significant figure due to
   manual `exp()` rounding and were **corrected to the independently computed values**:
@@ -101,11 +101,71 @@ later bar highs in the formation window (no pivot restriction) and confirmed it 
 stated second anchor and dominates all intervening highs:
 
 - **16 / 16 geometry fixtures**: stated `B*` **is** the all-highs upper-log-hull vertex — so
-  removing the pivot precondition **moves no existing anchor** (existing fixtures unchanged).
-- **GX-19** is the only fixture whose canonical `B*` is a **non-`k=3`-pivot** bar (`t=16`,
+  removing the pivot precondition **moved no anchor that already existed**.
+  **CORRECTED 2026-07-25 (Issue #16):** this check was run only over the fixtures that *had* a
+  stated anchor, so it missed the one fixture that had **none**. **GX-08** expected
+  `NO_VALID_SECOND_ANCHOR` on the pivot precondition HD-11 removed; under all-highs candidacy it
+  **gains** an anchor, `B* = (1, 98)`. The correct statement is therefore: removing the pivot
+  precondition moves no *existing* anchor **but creates one** (GX-08). The geometry set is now
+  **17** (GX-08 joined it) and the null-anchor set is **GX-10, GX-18, GX-20**.
+- **FURTHER CAVEAT on the same check (raised 2026-07-25 during the #16 sweep, UNRESOLVED).**
+  The check searched the shallowest line "over all later bar highs **in the formation window**",
+  i.e. up to the stated `B*`. Re-run over the **full** history, two fixtures do **not** satisfy
+  the claim: **GX-09** (the `t=11` high 146 sits above the stated `A→(10,150)` line; the
+  full-history argmax-slope valid candidate is `t=14`, H=135, `m=−0.0280745`, 0 violations at
+  `ε=0`) and **GX-15** (the `t=28` high 87.90 is a valid candidate with `m=−0.00460611`,
+  shallower than the stated `−0.00526803`, 0 violations at `ε=0`). Both fixtures previously
+  relied on the pivot precondition — a bar within `k` of the series end could not be a confirmed
+  pivot and so could not be selected — which **HD-11 removed without stating a replacement**.
+  Resolving this (full-history selection vs. formation-freeze) is a **product-definition
+  decision** and is therefore **out of scope for Issue #16, which changes no rule**; it is
+  **escalated** and recorded in each fixture under `geometry_check.open_issue_2026_07_25`. Note
+  that RM-01's PO-approved canonical anchor is itself only 3 bars from the end of its series, so
+  a "bars near the series end cannot be selected" answer would contradict RM-01/HD-11.
+- **GX-19** was the only fixture whose canonical `B*` is a **non-`k=3`-pivot** bar (`t=16`,
   H=120): the sole `k=3` pivot (`t=4`, H=160) yields a steeper line pierced at `t=5`, so a
   strict prefilter would pick the wrong anchor while the all-highs hull selects correctly —
-  the SC-2 proof. Geometry verifier: **19 / 19** fixtures reproduce to 6 significant figures.
+  the SC-2 proof. **CORRECTED 2026-07-25 (Issue #16):** the corrected **GX-08** is a second
+  such fixture — a stronger one, since its series contains **zero** `k=3` pivots yet still has
+  the canonical anchor `B* = (1, 98)`. Geometry verifier at that pass: **19 / 19** fixtures
+  reproduced to 6 significant figures.
+
+---
+
+## Issue #16 correction (2026-07-25) — GX-08 re-derived, GX-20 added
+
+> **Status: AUTHOR-SUPPLIED RE-DERIVATION — independent re-verification PENDING.** These two
+> entries were **authored**, not verified, in this change; under
+> [GOV-011](../../governance/separation-of-duties.md) the author is not the verifier, so the
+> numbers below must be reproduced by an independent verifier before this log claims them as
+> verified. Nothing above this section is re-verified by this change.
+
+- **GX-08 — corrected from `NO_VALID_SECOND_ANCHOR` to an `ACTIVE` line.** Highs
+  `100, 98, 96 … 72` (15 bars), `A = (0,100)`. Candidacy is over all later bar highs (§6), so
+  there are **14 candidates** despite **zero** `k=3` pivots. Slopes are
+  `m(t) = ln(1 − 0.02t)/t`, strictly decreasing in `t`, so the hull vertex is the **first**
+  later bar: `B* = (1, 98)`, `m = −0.0202027`, `b = ln 100 = 4.60517`. Domination holds with
+  **0 violations even at `ε = 0`** (worst gap `−4.1658×10⁻⁴` at `t = 2`); at `ε = 0.02` all
+  **14/14** candidates are envelope-valid and at `ε = 0` exactly **one** is (`B*` itself).
+  No close exceeds `line + ε_break` anywhere (`line(t) = 100·0.98ᵗ ≥ 100 − 2t = C[t]`), so the
+  end state is **ACTIVE**, `breakout_bar = confirmed_bar = null`. `INSUFFICIENT_BARS`
+  (`n = 15 ≥ 2k+2 = 8`) and `ATH_TOO_RECENT` (`tA = 0` of 15) do not fire.
+- **GX-20 — new fixture for the genuinely reachable `NO_VALID_SECOND_ANCHOR`.** A **double top
+  at the ATH**: `130` at both `t = 0` and `t = 15` of 26 bars. `A = (0,130)` (D-TL-02, earliest
+  wins). The tying high is excluded from **candidacy** by §6 (`HB < HA` strictly) but stays in
+  the **domination set** of §8 step 3 (every bar high), so for any candidate slope `m` the gap
+  at `t = 15` is exactly `−15m`. The shallowest of the **24** candidates (`t = 16, H = 116`,
+  `m = −0.00712152`) gives `0.106823` = **5.34 × ε** → **0 of 24** valid →
+  `NO_VALID_SECOND_ANCHOR`, `NONE`. Still none at `ε = 0.05` and `ε = 0.08`. Guards silent:
+  max single-bar `|log jump| = 0.113944 ≤ ln 1.5 = 0.405465`; `n = 26 ≥ 2k+2 = 8`; `tA = 0`
+  with 25 later bars; all prices positive. No `RESET_NEW_ATH` (§10.3 needs a high that
+  **exceeds** `HA`); the ε-treatment of the equal high follows the precedent already set by
+  **GX-12**.
+- **Rule impact: none.** This is a Phase 0 **evidence** correction. `human-decisions.md`,
+  HD-11 and the canonical algorithm are untouched; the fixtures are being aligned to rules
+  approved on 2026-07-25.
+- Catalog after the correction: **20 fixtures — 17 geometry + 3 null-anchor (GX-10, GX-18,
+  GX-20)** — consistent with [`README.md`](README.md) §3 and §6a.
 
 ---
 

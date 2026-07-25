@@ -62,7 +62,8 @@ verified daily OHLCV is [`input.csv`](input.csv), derived from the immutable
 ### Unknown / unresolved metadata
 - Exchange — unknown · Chart-display timezone — unknown.
 - Lifetime-ATH assumption (see §3) — pending listing-history confirmation (HD-07).
-- SC-2 pivot-eligibility question — open (see §6).
+- SC-2 pivot-eligibility question — **RESOLVED 2026-07-25 (HD-11)**; see §6. (No unresolved
+  metadata remains on this item — the pivot prefilter is non-authoritative.)
 
 ---
 

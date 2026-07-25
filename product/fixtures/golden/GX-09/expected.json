@@ -39,12 +39,12 @@
   "rejection_rationale": [
     {
       "candidate": "B=(5,170) as second anchor",
-      "rejected_because": "Its steeper line passes below the t=10 pivot high (150), which pierces beyond eps -> not envelope-valid.",
+      "rejected_because": "Its steeper line passes below the t=10 bar high (150), which pierces beyond eps -> not envelope-valid.",
       "numeric": "m_5=(ln170-ln200)/5=(5.135798-5.298317)/5=-0.0325038; y_hat_5(10)=5.298317-0.325038=4.973279; ln150=5.010635 > 4.973279+0.02=4.993279 -> pierces."
     },
     {
-      "candidate": "tA!=0 (treating t=0 as not-anchorable because it cannot be a k=3 confirmed pivot)",
-      "rejected_because": "The ATH bar is an anchor by construction regardless of pivot confirmation (§5, §18 ATH-on-first-bar).",
+      "candidate": "tA!=0 (treating t=0 as not-anchorable because no k=3 window exists to its left)",
+      "rejected_because": "The ATH bar is an anchor by construction (§4: earliest bar at the global max), independent of any pivot test (§5, §18 ATH-on-first-bar). Pivot status is non-authoritative throughout selection (§6, D-TL-03, HD-11).",
       "numeric": "HA=max H[t]=200 at t=0 (unique global max); anchor A=(0,200) accepted."
     }
   ],
@@ -54,11 +54,21 @@
     "slope_formula": "m=(ln150-ln200)/(10-0)=(5.010635-5.298317)/10=-0.287682/10=-0.0287682",
     "intercept_formula": "b=yA-m*0=5.298317",
     "key_inequalities": [
-      "Pivots below ATH: t=5 (170) and t=10 (150), both k=3 confirmed.",
+      "Candidacy = ALL later bar highs below the ATH (§6) — NOT a pivot subset; t=5 (170) and t=10 (150) are the two competitors this fixture was designed around (both are also k=3 pivots, which is descriptive only and not a candidacy condition). See geometry_check.open_issue_2026_07_25: over the full 15-bar history the candidate set is larger than these two and the stated B* is contested.",
       "line(5)=exp(5.15448)=173.201 >= H[5]=170 -> dominated.",
       "Only (10,150) dominates every intervening high within eps; (5,170) fails on t=10.",
       "No close exceeds line+eps_break -> ACTIVE."
     ],
-    "notes": "Demonstrates the §18 'ATH on the first bar' edge case resolves to a normal valid line, not an error."
+    "notes": "Demonstrates the §18 'ATH on the first bar' edge case resolves to a normal valid line, not an error. That headline behaviour (tA=0 is anchorable) is unaffected by the open issue below.",
+    "open_issue_2026_07_25": {
+      "id": "OPEN-GX09-HULL-VERTEX",
+      "raised_by": "Architect, during the Issue #16 stale-pivot sweep",
+      "status": "UNRESOLVED — escalated to the Orchestrator / Product Owner. NOT decided by Issue #16; the expected geometry in this file is left UNCHANGED.",
+      "summary": "With the pivot precondition removed (§6, HD-11), bars t=11..14 are eligible candidates even though none is a k=3 pivot (each is within k of the series end). The t=11 high (146) already sits ABOVE the stated A->(10,150) line (within eps, so not a pierce), which is the signature of a shallower valid candidate; the shallowest candidate over the full history is t=14 (H=135), whose line dominates every bar high with ZERO violations even at eps=0. A plain reading of §8 step 4 therefore makes B*=(14,135), not (10,150).",
+      "numeric": "y_hat_(10,150)(11)=5.298317-11*0.0287682=4.981867 (line 145.747) < ln146=4.983607 -> t=11 high is 0.001739 ABOVE the stated line. Candidate slopes from A=(0,200): t=10 -0.0287682; t=11 -0.0286101; t=12 -0.0297229; t=13 -0.0285434; t=14 -0.0280745 (shallowest). Candidate (14,135): line at t=5/9/10/11/12/13 = 173.77/155.35/151.04/146.86/142.80/138.85 >= highs 170/147/150/146/140/138 -> 0 violations at eps=0.",
+      "the_open_question": "Identical to OPEN-GX15-HULL-RESELECTION in GX-15: over what window is §8 step 4 evaluated — the full history (making a near-end bar the canonical anchor) or the formation window (freezing selection at t=10)? Before HD-11 the pivot precondition answered this implicitly by excluding bars within k of the series end; HD-11 removed the exclusion without stating a replacement.",
+      "why_not_decided_here": "It is a product-definition decision, and Issue #16 changes NO rule. Constraint from approved evidence: RM-01's PO-approved canonical anchor is itself only 3 bars from the end of its series, so 'exclude bars within k of the end from selection' would contradict RM-01/HD-11.",
+      "impact": "fixtures/VERIFICATION.md's claim that the stated B* is the all-highs upper-log-hull vertex for 16/16 geometry fixtures does not hold for this fixture (or GX-15) when the hull search is run over the FULL history rather than the formation window."
+    }
   }
 }

@@ -53,9 +53,10 @@ product, not speed or breadth.
 
 In scope for the MVP (traces to the trendline + confidence specs):
 
-- **One canonical trendline per name**: ATH (wick) anchor → later qualifying pivot
-  high, in **log price space**, selected by the **envelope / upper-log-hull rule**
-  (trendline spec §4–§9).
+- **One canonical trendline per name**: ATH (wick) anchor → later qualifying **bar
+  high** (candidacy is over **every** later bar high; **pivot status is not a
+  precondition** — HD-11, trendline spec §5/§6/§8, D-TL-03/D-TL-05), in **log price
+  space**, selected by the **envelope / upper-log-hull rule** (trendline spec §4–§9).
 - **Deterministic state machine** (trendline spec §11): ACTIVE, WICK_BREAK,
   BROKEN_OUT, RETESTED, FAILED_BREAKOUT, EXPIRED — each transition emits a **named
   reason code**.
@@ -138,7 +139,11 @@ Traceability: each FR cites the governing spec.
 - **FR-1** The engine MUST select the ATH anchor `A` as the earliest bar achieving
   the maximum **high** over the full delivered history (trendline §4, D-TL-02).
 - **FR-2** The engine MUST detect pivot highs by a symmetric `k`-bar fractal rule
-  with deterministic tie handling (trendline §5).
+  with deterministic tie handling (trendline §5). Pivot detection is
+  **secondary / non-authoritative**: it serves visualization, descriptive metadata,
+  confidence features and provably-lossless optimization only, and MUST NOT gate
+  second-anchor candidacy or change the canonical anchor (HD-11, trendline §5/§6/§8,
+  D-TL-03/D-TL-05).
 - **FR-3** The engine MUST select **one** canonical second anchor `B*` via the
   **upper-log-hull envelope rule** — the shallowest descending log line from `A`
   that dominates all intervening highs within tolerance `ε` (trendline §6, §8,
@@ -161,8 +166,8 @@ Traceability: each FR cites the governing spec.
 - **FR-8** The engine MUST detect **retest hold** and **failed breakout** within
   their windows, each with reason codes (trendline §15–§16).
 - **FR-9** The engine MUST **expire** a line ~`E_expiry` bars after breakout and
-  **recompute** on new ATH, envelope-changing pivot, or structural pierce
-  (trendline §17).
+  **recompute** on new ATH, an envelope-changing **bar high** (pivot or not), or a
+  structural pierce (trendline §17).
 - **FR-10** The engine MUST handle all enumerated **edge cases** deterministically
   with reason codes, including `INSUFFICIENT_BARS`, `ATH_TOO_RECENT`,
   `NO_VALID_SECOND_ANCHOR`, `SUSPECTED_UNADJUSTED_SPLIT`, `INVALID_PRICE`
