@@ -827,7 +827,7 @@ bars of t=81 ✓ → **RETEST_HELD**.
 | **No envelope-valid second anchor** — e.g. a later bar high **ties the ATH** (double top) and so pierces every descending candidate line beyond `ε` | Eligible candidates exist (§6: all later bar highs with `HB < HA`) but **none** survives the envelope test of §8 → no line. Fixture **GX-20**. **A strictly monotonic decline can never emit this code**: its first later bar high is always eligible and the hull binds there (fixture **GX-08**, `B* = (1,98)`). The former "no qualifying pivot" trigger is **superseded** — the absence of pivot highs is never a reason for this code (§5, §6, D-TL-03, D-TL-05, HD-11). | `NO_VALID_SECOND_ANCHOR` |
 | **Price gaps (overnight)** | Gaps are real bars; no interpolation. Gap-up through the line still requires **close** confirmation (§13). | — |
 | **Trading halt** (missing calendar days) | Handled by ordinal indexing (§1); no synthetic bars. Halt does not alter `t` continuity. | — |
-| **Unadjusted split slips through** | Detected as an impossible single-bar log jump `|y[t]−y[t−1]| > ln(1.5)` → flag `SUSPECTED_UNADJUSTED_SPLIT`, do not fit. | `SUSPECTED_UNADJUSTED_SPLIT` |
+| **Unadjusted split slips through** | Detected as an impossible single-bar log jump `\|y[t]−y[t−1]\| > ln(1.5)` → flag `SUSPECTED_UNADJUSTED_SPLIT`, do not fit. | `SUSPECTED_UNADJUSTED_SPLIT` |
 | **Equal ATHs** | Earliest wins (§4, D-TL-02). | — |
 | **Ties in envelope (two candidate bar highs give identical dominating slope)** | Prefer the **later** `B` (longer confirmed structure). | `ENVELOPE_TIE_LATER` |
 | **Non-positive price** | Invalid input, reject bar-set. | `INVALID_PRICE` |

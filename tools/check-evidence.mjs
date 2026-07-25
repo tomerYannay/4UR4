@@ -9,6 +9,8 @@
 //      product/fixtures/schema/fixture.schema.json, and the RM-01 annotation
 //      against real-annotation.schema.json.
 //   2. Every relative markdown link in the repository resolves — file AND #anchor.
+//   3. Every markdown table row is a single physical line with a consistent column
+//      count, so a wrapped row cannot silently render as empty cells.
 //
 // Usage: node tools/check-evidence.mjs   (exit 1 on any failure)
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
@@ -117,4 +119,34 @@ for (const f of md) {
 }
 console.log(broken.length ? `DOC LINKS: ${broken.length} broken\n  ` + broken.join('\n  ')
   : `doc links: PASS — ${md.length} markdown files, 0 broken links`);
-process.exit(errs.length || broken.length ? 1 : 0);
+
+// ------------------------------------------------- markdown table structure --
+// A table row wrapped across physical lines, or one that loses a column
+// separator, still renders — as several one-cell rows with empty trailing
+// columns. In an evidence log that silently turns a CORRECTED finding into an
+// apparently open one. Nothing caught this until a reviewer rendered the file
+// through GitHub's own GFM endpoint; this is that check.
+const tableErrs = [];
+for (const f of md) {
+  const lines = readFileSync(f, 'utf8').split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const isRow = (l) => l !== undefined && l.trimStart().startsWith('|');
+    if (!isRow(lines[i]) || !/^\s*\|[\s:|-]+\|\s*$/.test(lines[i + 1] ?? '')) continue;
+    // GFM: `|` splits cells even inside code spans; only `\|` is content. So count
+    // unescaped pipes, which is exactly what the renderer treats as a separator.
+    const pipes = (l) => (l.replace(/\\\|/g, '').match(/\|/g) || []).length;
+    const cols = pipes(lines[i]);
+    let j = i + 2;
+    for (; isRow(lines[j]); j++) {
+      const n = pipes(lines[j]);
+      if (n !== cols) {
+        tableErrs.push(`${f.replace(ROOT + '/', '')}:${j + 1}: table row has ${n} column separators, header has ${cols}`
+          + ` — a row wrapped across lines renders as separate one-cell rows`);
+      }
+    }
+    i = j;
+  }
+}
+console.log(tableErrs.length ? `MARKDOWN TABLES: ${tableErrs.length} malformed row(s)\n  ` + tableErrs.join('\n  ')
+  : `markdown tables: PASS — every row single-line with a matching column count`);
+process.exit(errs.length || broken.length || tableErrs.length ? 1 : 0);
