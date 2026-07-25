@@ -57,7 +57,9 @@ chk(JSON.parse(readFileSync(join(ROOT, 'product/fixtures/real/RM-01/annotation.j
 // NEGATIVE CONTROL. A validator that silently regressed to a no-op would print PASS
 // forever — exactly the failure mode this file exists to prevent, and the same reason
 // tools/fixture-replay.mjs carries a positive control on its formation checks. Feed a
-// known-bad instance through and require it to complain in every keyword class used.
+// known-bad instance through and require it to complain in each of the keyword
+// classes listed in MUST_CATCH (not every keyword the schema uses — `type`,
+// `required` and `minimum` are satisfied by this instance by construction).
 const control = [];
 chk({
   fixture_id: 'BAD-1',                                        // fails `pattern`
@@ -75,7 +77,7 @@ if (missed.length) {
     + ` (it reported: ${control.join(' | ') || 'nothing'})`);
 } else {
   console.log(`negative control: PASS — a known-bad instance produced ${control.length} errors`
-    + ` covering all ${MUST_CATCH.length} keyword classes`);
+    + ` covering all ${MUST_CATCH.length} asserted keyword classes`);
 }
 
 console.log(errs.length ? `SCHEMA: ${errs.length} error(s)\n  ` + errs.join('\n  ')

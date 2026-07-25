@@ -507,7 +507,9 @@ explainability and evidence.
 NONE ──(formation eligibility met on S_t, §21.3: |S_t| ≥ min_formation_bars, ATH not
         within min_ath_age_bars of the last available bar, and an envelope-valid B*
         exists)──▶ ACTIVE
-ACTIVE ──(bar high pierces > ε, close below)──▶ WICK_BREAK (transient, stays ACTIVE)
+ACTIVE ──(bar high pierces > ε, close below)──▶ ACTIVE, recorded as WICK_BREAK
+        (WICK_BREAK is a REASON CODE, not a state: the machine never leaves ACTIVE.
+         The fixture schema's `from`/`to` enum excludes it for that reason.)
 ACTIVE ──(FIRST daily close above line + ε_break, §13)──▶ BROKEN_OUT (alert fires here;
         the line is FROZEN as Λ^F at the start-of-bar state, §21.5)
 ACTIVE ──(new ATH)──▶ NONE (then recompute; new formation from t+1, §21.7)
@@ -1313,6 +1315,11 @@ what §21.2 and §21.9 already imply; it changes no classification and no thresh
    §11: each record's `from` state equals the previous record's `to`, and the final `to`
    equals the reported end state. A re-selection while `ACTIVE` is an `ACTIVE → ACTIVE`
    record.
+   *One corner this ordering does settle, named explicitly rather than left implicit:*
+   a bar that both takes a re-selection **and** makes a new ATH now records
+   `LINE_ESTABLISHED` (the line effective at that bar) followed by `RESET_NEW_ATH` — a
+   line established and retired within one bar. §21.2 rule 5 was silent on an incoming
+   re-selection, so this was previously under-determined; no fixture depends on it.
 4. **Transition records vs reason codes.** A record with a `from`/`to` pair is emitted for
    every event that the detector must be able to replay in order. `INVALID_PIERCE` is a
    *characterisation of the superseded line* rather than an event of its own, so it is

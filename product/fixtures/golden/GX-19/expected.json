@@ -1,6 +1,6 @@
 {
   "fixture_id": "GX-19",
-  "purpose": "SC-2 / HD-11 regression: the canonical second anchor is a NON-pivot bar high. Under as-of-time evaluation the hull rolls forward seven times and binds at B*=(15,119) — not a k=3 pivot — and bar 16 closes above that line by 0.024613 log units, firing a confirmed breakout that a pivot-restricted prefilter would never have produced.",
+  "purpose": "SC-2 / HD-11 regression: the canonical second anchor is a NON-pivot bar high. Under as-of-time evaluation the hull rolls forward seven times and binds at B*=(15,119) — not a k=3 pivot — and bar 16 closes above that line by 0.0246129 log units, firing a confirmed breakout that a pivot-restricted prefilter would never have produced.",
   "category": "non-pivot canonical anchor (SC-2 proof)",
   "spec_refs": [
     "§5",
@@ -171,7 +171,7 @@
       "Retest (§16) against the FROZEN line: at t=17, ln(L) <= y_hat_F(17)=4.7099 + eps_retest with room 0.0103674, and ln(C) >= y_hat_F - eps_retest with room 0.0230556.",
       "Governing line: A=(0,200), B*=(15,119), m=-0.0346129, b=5.29832 — FROZEN at the breakout bar (§21.5)."
     ],
-    "notes": "Input data is UNCHANGED by the causal audit; only the expectation moved. The breakout margin of 0.024613 log units is robust across a 0.5x-2x eps_break sweep, so this fixture keeps its causal breakout rather than being redesigned. The retest at t=17 is real and is recorded: its return leg holds even at eps_retest = 0, because the low (111.00) is below the frozen line (111.0408)."
+    "notes": "Input data is UNCHANGED by the causal audit; only the expectation moved. The breakout margin of 0.0246129 log units is robust across a 0.5x-2x eps_break sweep, so this fixture keeps its causal breakout rather than being redesigned. The retest at t=17 is real and is recorded: its return leg holds even at eps_retest = 0, because the low (111.00) is below the frozen line (111.0408)."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",

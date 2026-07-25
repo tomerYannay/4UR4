@@ -52,6 +52,8 @@
 //   node tools/fixture-replay.mjs --hull          # brute-force hull at every prefix
 //   node tools/fixture-replay.mjs --nolookahead   # prefix-truncation invariance
 //   node tools/fixture-replay.mjs --ohlc          # OHLC coherence over every bar
+//   (--all additionally asserts transition-list continuity and the HD-13 eps_break
+//    rule; neither has a standalone flag because both are unconditional gates)
 //   node tools/fixture-replay.mjs --robustness    # eps_break sensitivity sweep
 //   node tools/fixture-replay.mjs --all           # every check above
 //   node tools/fixture-replay.mjs --json          # machine-readable replay output
@@ -797,10 +799,12 @@ function checkFrozen(fx) {
   return problems;
 }
 
-// §11: the recorded transition list must be a valid WALK of the state machine —
-// each entry's `from` must equal the previous entry's `to`. `compare()` checks the
-// list by exact equality, so an incoherent list would otherwise be baked into the
-// contract invisibly (found at head c0ede4d).
+// §11: the recorded transition list must be CONTINUOUS — each entry's `from` equals
+// the previous entry's `to`, and the last `to` equals the reported final state. This
+// is continuity, NOT edge legality: it would not reject an `ACTIVE -> RETESTED` edge
+// that §11 does not draw. `compare()` checks the list by exact equality, so an
+// incoherent list would otherwise be baked into the contract invisibly (found at
+// head c0ede4d).
 function checkTransitionChain(fx) {
   const p = paramsOf(fx.expected);
   const r = replay(fx.bars, p);
@@ -820,8 +824,13 @@ function checkTransitionChain(fx) {
 // caught earlier by the INVALID_INPUT/INVALID_PRICE guards, so it is exempt.
 function checkOhlc(fx) {
   const problems = [];
-  const guards = inputGuards(fx.bars);
-  if (guards.rejected && guards.codes.some((c) => c === 'INVALID_INPUT' || c === 'INVALID_PRICE')) return problems;
+  // NO blanket exemption for guard-rejected fixtures. The previous version skipped
+  // any fixture whose inputGuards result carried INVALID_INPUT — but the coherence
+  // clause of inputGuards emits exactly that code, so the check silently exempted
+  // the one class it exists to catch (Code Review + Verification, head 9d704e0).
+  // Only bars with a MISSING field are skipped, which is GX-18's deliberate case;
+  // GX-18's non-positive low is coherent (0 <= every other field) and needs no
+  // exemption. A fixture that is legitimately incoherent must say so explicitly.
   for (const [t, b] of fx.bars.entries()) {
     if ([b.open, b.high, b.low, b.close].some((v) => v === null)) continue;
     if (b.low > b.high || b.open < b.low || b.open > b.high || b.close < b.low || b.close > b.high) {
@@ -836,8 +845,15 @@ function checkOhlc(fx) {
 // exempts by design. This must FAIL the run, not merely print.
 const EPS_BREAK_BOUNDARY_EXEMPT = new Set(['GX-15']);
 function checkEpsBreakRule(fx) {
-  if (EPS_BREAK_BOUNDARY_EXEMPT.has(fx.id)) return [];
   const outcomes = new Set(robustness(fx, [0.8, 1.0, 1.2]).map((x) => `${x.state}/${x.breakout_bar}`));
+  if (EPS_BREAK_BOUNDARY_EXEMPT.has(fx.id)) {
+    // Inverse assertion for HD-13 rule 2 ("EXACTLY ONE fixture ... is retained as the
+    // dedicated tolerance-boundary fixture"). If the exempt fixture ever became
+    // invariant, the set would silently lose its only boundary case and this gate
+    // would still pass. A whitelist entry must earn its exemption.
+    return outcomes.size > 1 ? []
+      : [`HD-13 rule 2 violated: ${fx.id} is whitelisted as THE tolerance-boundary fixture but is now invariant under ±20% — the set has no boundary case left, or the whitelist entry is stale`];
+  }
   return outcomes.size === 1 ? []
     : [`HD-13 rule 1 violated: classification is not invariant under ±20% of eps_break (${[...outcomes].join(' vs ')})`];
 }

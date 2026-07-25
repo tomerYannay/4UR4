@@ -16,7 +16,8 @@
     "expected_state_transitions",
     "expected_reason_codes",
     "rejection_rationale",
-    "geometry_check"
+    "geometry_check",
+    "expected_final_state"
   ],
   "properties": {
     "fixture_id": {
@@ -292,7 +293,15 @@
     },
     "expected_final_state": {
       "type": "string",
-      "description": "Terminal state of the series (NONE/ACTIVE/BROKEN_OUT/WICK_BREAK-stays-ACTIVE/RETESTED/FAILED_BREAKOUT/EXPIRED)."
+      "enum": [
+        "NONE",
+        "ACTIVE",
+        "BROKEN_OUT",
+        "RETESTED",
+        "FAILED_BREAKOUT",
+        "EXPIRED"
+      ],
+      "description": "Terminal state of the series (§11). Closed set — WICK_BREAK is NOT a state (§11 annotates it 'transient, stays ACTIVE'); a wick-break fixture ends ACTIVE."
     },
     "breakout_bar": {
       "type": [
