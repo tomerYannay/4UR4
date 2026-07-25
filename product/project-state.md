@@ -48,12 +48,17 @@ implement a precondition **HD-11 forbids**.
   survivorship/delisted research. **Draft; CI green; 0 reviews; awaiting ChatGPT/strategic
   review** (round 1 of 2).
 - **Issue [#16](https://github.com/tomerYannay/4UR4/issues/16)** — Phase 0 **evidence
-  correction** (freeze-permitted; created per Product Owner ruling 2026-07-25). **GX-08**'s
+  correction** (freeze-permitted; created per **Product Owner ruling 2026-07-25**, recorded in
+  the [rulings comment on #14](https://github.com/tomerYannay/4UR4/issues/14#issuecomment-5078902902)
+  and restated in the body of #16). **GX-08**'s
   expected output asserts `NO_VALID_SECOND_ANCHOR` on a justification **HD-11 removed** (the
   pivot-high precondition). The correction re-derives GX-08 to the all-highs upper-log-hull
   result (**`B* = (1, 98)`**), sweeps the remaining stale pivot-conditioned no-anchor text in
-  [`trendline-specification.md`](trendline-specification.md) and
-  [`fixtures/README.md`](fixtures/README.md), and adds a new fixture **GX-20** for the
+  [`trendline-specification.md`](trendline-specification.md),
+  [`fixtures/README.md`](fixtures/README.md) and
+  [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md) (its null-anchor list, its
+  `19 / 19 … 3 null-anchor by design` result line, and its SC-2 claim that removing the pivot
+  precondition **moves no existing anchor**), and adds a new fixture **GX-20** for the
   genuinely reachable `NO_VALID_SECOND_ANCHOR` case (duplicate ATH / double top). It
   **changes no rule** — **HD-11** and the canonical algorithm are untouched; this is a **stale
   Phase 0 evidence defect, not a new product-definition decision** (Product Owner ruling).
