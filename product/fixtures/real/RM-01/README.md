@@ -1,0 +1,123 @@
+# RM-01 — Product Owner's original chart (first real-market validation fixture)
+
+> **Real-market EVIDENCE + ANNOTATION under [GOV-015](../../../../governance/build-freeze.md)
+> build-freeze — DOCS/DATA only, no product code.** RM-01 is the first entry of the
+> human-reviewed real-market ground-truth layer reserved in
+> [`../../real-market-plan.md`](../../real-market-plan.md) §2, complementing the synthetic
+> golden set in [`../../README.md`](../../README.md).
+>
+> **Status: `verified` (geometry independently recomputed from licensed OHLCV) · Product
+> Owner approval: `approved` (2026-07-25).** SC-1 = MATCH; SC-2 resolved via HD-11.
+
+The machine-validated record is [`annotation.json`](annotation.json), conforming to
+[`../../schema/real-annotation.schema.json`](../../schema/real-annotation.schema.json). The
+verified daily OHLCV is [`input.csv`](input.csv), derived from the immutable
+[`alphavantage-source.json`](alphavantage-source.json).
+
+---
+
+## 1. Immutable source evidence
+
+**Chart image (PO's original):**
+- **Path:** `source-chart.png` · **SHA-256:** `d191300e3cde075aac86838185bfa5797a2c6d0e6dd6f1c2a8558a414ab05b15` · 137151 bytes · 1272 × 672 (PNG)
+
+**Market-data source (Alpha Vantage):**
+- **Path:** `alphavantage-source.json` · **SHA-256:** `69a67469e08af3f43f5a05c4730a3c4e2c2ff4c297b7237e2f41ecb3d550c377`
+- **Source:** Alpha Vantage · **Symbol:** SPCX · **Interval:** daily · **Timezone:** US/Eastern
+- **Last refreshed:** 2026-07-24 · **Output size:** compact · **Bars:** 29 (2026-06-12 → 2026-07-24)
+- **Adjustment note:** Alpha Vantage `TIME_SERIES_DAILY` is raw **as-traded** (split-**un**adjusted). No split/corporate action is evident in this window, so it is consistent with **HD-01** (split-adjusted, dividend-unadjusted) over 2026-06-12 → 2026-07-24. A split in range would require adjustment before use.
+
+**DO NOT edit or regenerate these files; they are immutable source evidence.** The checksums are recorded so any change is detectable. `input.csv` is a mechanical, chronologically-ascending re-encoding of the source; the source JSON remains the authority.
+
+**Qualitative image description (no pixel prices transcribed):** a dark-themed TradingView chart labelled "SPCX · 1D · … Corporation Technologies Corp"; candles descend from a left peak (~top of a logarithmic axis) to the lower-right; a single **orange descending trendline** runs from the top-left peak wick toward the lower-right; the price axis uses **non-linear (logarithmic) spacing** (the "L" scale toggle is active). *No axis price value is read from pixels and recorded as market data.*
+
+---
+
+## 2. Recorded metadata (requirement 2)
+
+- **Symbol:** SPCX (PO-stated) · **Exchange:** unknown
+- **Chart timeframe:** 1D (PO-stated)
+- **Chart scale:** logarithmic — **visually confirmed** (non-linear axis tick spacing; the log-scale toggle is active), consistent with the PO's stated log scale. Qualitative only; no pixel prices read.
+- **Visible date range:** 2026-06-12 → 2026-07-24 (PO-stated; matches the source's bar range)
+- **Data source shown in chart:** TradingView · **Timezone (chart display):** unknown (OHLCV source timezone is US/Eastern)
+- **Visible ATH anchor:** 2026-06-16 @ **225.64** (PO-stated **and OHLCV-verified** — see §3)
+- **Expected second-anchor region:** 2026-07-21 — high **now verified = 129.88** (was PO-stated unknown)
+- **Expected breakout region:** **none through 2026-07-24** (verified — no qualifying close)
+- **Expected retest region:** **none** (verified — no breakout occurred)
+
+### Product Owner interpretation (verbatim, 6 bullets)
+1. Orange descending line starts from the stock's all-time-high wick.
+2. Intended second anchor is the later high wick on 2026-07-21.
+3. Line should remain above intervening highs per the approved upper-log-hull rule.
+4. A breakout is the first daily close above the line.
+5. Persistence and volume are confidence features, not breakout validity gates.
+6. A retest is a later contact/overlap with the line where the daily close holds above it.
+
+### Drawn-line metadata (verbatim)
+- The orange line is a **manually extended TradingView trendline** (two-point construction); **magnet mode** snapped endpoints to candle highs.
+- Intended line connects the ATH high 2026-06-16 @ 225.64 to the later high on 2026-07-21.
+- The exact second-anchor price was **not** inferred from pixels — it is now **verified from OHLCV** as 129.88.
+- The drawn line was **not** treated as algorithmic ground truth until verified against actual OHLCV (now done).
+
+### Unknown / unresolved metadata
+- Exchange — unknown · Chart-display timezone — unknown.
+- Lifetime-ATH assumption (see §3) — pending listing-history confirmation (HD-07).
+- SC-2 pivot-eligibility question — open (see §6).
+
+---
+
+## 3. ATH verification (requirement 5) — no unverified "lifetime ATH" claim
+
+Independently computed as the **maximum bar high over ALL available bars in the source**:
+**ATH = 225.64 on 2026-06-16** (bar index 2 of 29), a unique maximum (no tie). This matches the PO-stated ATH exactly.
+
+**Listing-history assumption (documented, not asserted):** the source's earliest bar is **2026-06-12**. Alpha Vantage `compact` output returns up to the latest **100** bars; only **29** were returned, so the full available history is these 29 bars — consistent with SPCX having **listed on/around 2026-06-12**. Treating 225.64 as a **lifetime** ATH therefore depends on 2026-06-12 being the listing/IPO date. That is recorded as an **assumption to confirm** against a listing-history/reference source (HD-07); over the *available* history it is unambiguously the ATH.
+
+---
+
+## 4. Independent calculation (requirements 6–8, 10) — trading-bar indices
+
+Computed from `input.csv` using **trading-bar ordinal indices** (not calendar-day gaps), on `y = ln(high)` (§3):
+
+| Quantity | Value |
+|----------|-------|
+| Anchor **A** (ATH) | bar `t=2`, 2026-06-16, high **225.64** |
+| Second anchor **B** (PO-intended) | bar `t=25`, 2026-07-21, high **129.88** |
+| Bar-index delta (tB − tA) | **23** trading bars |
+| `yA = ln(225.64)` | 5.41894 |
+| `yB = ln(129.88)` | 4.86661 |
+| **Log slope** `m = (yB−yA)/(tB−tA)` | **−0.0240143** per bar |
+| **Intercept** `b = yA − m·tA` | **5.46697** |
+
+**Envelope check (requirement 7).** Line value computed for **every** trading bar; every intervening high's distance from the line measured in % and log units. **Envelope violations: 0** — no intervening high pierces the line beyond ε = 0.02. **Maximum intervening approach: 2026-07-06** at **−0.740%** (log −0.00743) — the closest any high comes, and it is still **below** the line. (This matches the preliminary expectation, independently reproduced — not copied.)
+
+**Canonical-anchor check (requirement 8).** Among **all** later highs, the slope from A to the **2026-07-21** high (−0.0240143) is the **shallowest** (closest to zero). By the upper-log-hull rule (§8), the shallowest descending line from the ATH that dominates all later highs is the canonical line, so **2026-07-21 is the upper-log-hull canonical second anchor** — and the A→B line dominates all later highs. The PO's two-point line and the canonical hull line **coincide**.
+
+**Post-B evaluation (requirements 10–11).** Extending the line past B and evaluating 2026-07-22 → 2026-07-24: every high **and** close is **below** the line → **no wick-break, no qualifying close breakout, and therefore no retest** through 2026-07-24. (Independently reproduced.)
+
+---
+
+## 5. Visual-acceptance checklist (requirement 5) — now backed by OHLCV
+
+| # | Item | Result | Evidence |
+|---|------|--------|----------|
+| 1 | Line begins at the ATH wick 2026-06-16 @ 225.64 | ✅ pass | 225.64 verified as the ATH (max high) at 2026-06-16 |
+| 2 | Line touches the later high wick 2026-07-21 | ✅ pass | Verified high 129.88; B lies on the line by construction |
+| 3 | Line does not improperly cut through intervening highs | ✅ pass | 0 envelope violations; closest approach −0.740% |
+| 4 | Projected line matches the PO's orange TradingView line | ✅ pass | Canonical hull line uses the same two endpoints as the PO line — geometrically identical |
+| 5 | Breakout bar classification matches the PO's expectation | ✅ pass | No breakout through 2026-07-24 |
+| 6 | Retest matches the approved rule | ✅ pass | No retest (no breakout occurred) |
+
+All six pass on the calculated result — **approved by the Product Owner (2026-07-25)**.
+
+---
+
+## 6. Spec-contradiction report (requirement 11 & 13) — recorded, not silently changed
+
+**SC-1 — RESOLVED = `MATCH`.** The independent calculation confirms the PO's intended two-point line (ATH 2026-06-16 → 2026-07-21) **coincides with the canonical upper-log-hull line**: 2026-07-21 is the shallowest-slope (hull) anchor over all later highs, **no intervening high pierces** the line (0 violations; closest −0.740% at 2026-07-06). This rules out `MISMATCH_INTERVENING_HIGH` and `MISMATCH_DIFFERENT_CANONICAL_ANCHOR`; the evidence is exact (not a tolerance judgement), so `MATCH` rather than `VISUAL_MATCH_WITHIN_TOLERANCE`, and there is enough data (29 bars) so not `INSUFFICIENT_DATA`.
+
+**SC-2 — RESOLVED 2026-07-25 (Product Owner decision, [HD-11](../../../human-decisions.md)).** The surfaced question — 2026-07-21 is the upper-log-hull vertex over *all* later highs **but is not a `k=3` pivot high** (2026-07-17 @130.33 is higher within 3 bars; the only `k=3` pivot after the ATH, 2026-06-30, does not dominate) — has been ruled on: **the upper-log-hull envelope rule is canonical and must not depend on a fixed pivot-high prefilter.** Pivot detection is secondary/non-authoritative (visualization, descriptive metadata, confidence, provably-lossless optimization only) and **must never change the canonical anchor**. The trendline spec §5/§6/§8/D-TL-03/D-TL-05 were revised accordingly, and golden fixture **GX-19** was added to prove a non-pivot high can be the canonical anchor (with a strict `k=3` prefilter choosing the wrong result). RM-01 is cited as the motivating real-world case. **This resolves the last open contradiction on RM-01.**
+
+---
+
+*Design/evidence artifact under GOV-015. It authorizes no build. The geometry above is independently computed from licensed OHLCV as verification evidence; the Product Owner **approved** this result on 2026-07-25 (SC-1 = MATCH, SC-2 resolved via HD-11).*

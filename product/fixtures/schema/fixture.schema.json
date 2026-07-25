@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://4ur4.local/fixtures/schema/fixture.schema.json",
+  "title": "4UR4 Trendline Golden Fixture — expected.json",
+  "description": "Machine-validated shape for a single golden-fixture expected-output document. This describes TEST DATA / RESEARCH EVIDENCE (not product implementation) under the GOV-015 build-freeze. Geometry fields are pinned to 6 significant figures so a future engine can be checked for exact reproduction of the approved trendline-specification.md definitions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "purpose",
+    "category",
+    "spec_refs",
+    "params",
+    "expected_ath_anchor",
+    "expected_second_anchor",
+    "expected_state_transitions",
+    "expected_reason_codes",
+    "rejection_rationale",
+    "geometry_check"
+  ],
+  "properties": {
+    "fixture_id": {
+      "type": "string",
+      "pattern": "^GX-[0-9]{2}$",
+      "description": "Stable fixture identifier, e.g. GX-01."
+    },
+    "purpose": {
+      "type": "string",
+      "description": "One-sentence statement of what spec behaviour this fixture locks."
+    },
+    "category": {
+      "type": "string",
+      "description": "Coverage category (e.g. 'normal valid', 'wick-only crossing', 'stock split edge case')."
+    },
+    "spec_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "description": "List of trendline/confidence spec sections and decisions used, e.g. ['§8','D-TL-04']."
+    },
+    "input_convention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timestamp_kind": {
+          "type": "string",
+          "enum": ["ordinal", "iso_date"],
+          "description": "Whether input.csv timestamp column is an ordinal index t or a synthetic ISO date."
+        },
+        "bar_count": { "type": "integer", "minimum": 0 },
+        "price_field_for_geometry": {
+          "type": "string",
+          "const": "high",
+          "description": "y[t]=ln(H[t]); geometry always uses the bar high (§3)."
+        },
+        "adjustment_basis": {
+          "type": "string",
+          "const": "split-adjusted, dividend-unadjusted (as-traded)",
+          "description": "HD-01 governing rule (§2)."
+        }
+      }
+    },
+    "params": {
+      "type": "object",
+      "description": "Named, versioned config used to derive the expected values (§20).",
+      "additionalProperties": true,
+      "required": ["tolerance_version", "eps_break_locked"],
+      "properties": {
+        "k": { "type": "integer", "minimum": 1, "description": "Pivot lookback/lookforward (§5)." },
+        "eps": { "type": "number", "description": "Envelope/domination tolerance in log units (§9)." },
+        "eps_touch": { "type": "number", "description": "Touch tolerance in log units (§9)." },
+        "eps_break": {
+          "type": "number",
+          "description": "Breakout tolerance in log units (§13.5). ILLUSTRATIVE, NOT LOCKED (HD-03)."
+        },
+        "eps_break_locked": {
+          "type": "boolean",
+          "const": false,
+          "description": "MUST be false — eps_break is versioned/backtestable, never locked (HD-03, §13.5)."
+        },
+        "eps_break_note": {
+          "type": "string",
+          "description": "Human note reaffirming eps_break is illustrative, not locked (HD-03)."
+        },
+        "eps_fail": { "type": "number", "description": "Failed-breakout tolerance (§15)." },
+        "F_fail": { "type": "integer", "description": "Failed-breakout window in bars (§15)." },
+        "eps_retest": { "type": "number", "description": "Retest tolerance (§16)." },
+        "W_retest": { "type": "integer", "description": "Retest return window in bars (§16)." },
+        "h_hold": { "type": "integer", "description": "Retest hold window in bars (§16)." },
+        "E_expiry": { "type": "integer", "description": "Post-breakout expiry horizon in bars (§17)." },
+        "tolerance_version": {
+          "type": "string",
+          "description": "Version tag for the tolerance set used (traceability, §20)."
+        }
+      }
+    },
+    "expected_ath_anchor": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "t": { "type": "integer", "description": "ATH bar ordinal index tA (§4)." },
+        "H": { "type": "number", "description": "ATH bar high HA." }
+      },
+      "description": "Anchor A=(tA,HA); null when no geometry is produced (invalid input / no ATH)."
+    },
+    "expected_second_anchor": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "t": { "type": "integer" },
+        "H": { "type": "number" },
+        "reason": { "type": "string", "description": "If null, why no B* was selected." }
+      },
+      "description": "Selected second anchor B*=(tB,HB) per §6/§8; null with reason when none."
+    },
+    "expected_log_slope": {
+      "type": ["number", "null"],
+      "description": "m=(yB−yA)/(tB−tA) to 6 significant figures (§7); null when no line."
+    },
+    "expected_intercept": {
+      "type": ["number", "null"],
+      "description": "b=yA−m·tA to 6 significant figures (§7); null when no line."
+    },
+    "expected_line_values": {
+      "type": "object",
+      "description": "Map of relevant bar index -> {y_hat, line} to 6 sig figs, where line=exp(y_hat).",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "y_hat": { "type": "number" },
+          "line": { "type": "number" }
+        }
+      }
+    },
+    "expected_state_transitions": {
+      "type": "array",
+      "description": "Ordered list of state transitions (§11).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bar", "from", "to", "reason_code"],
+        "properties": {
+          "bar": { "type": ["integer", "null"] },
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "reason_code": { "type": "string" }
+        }
+      }
+    },
+    "expected_final_state": {
+      "type": "string",
+      "description": "Terminal state of the series (NONE/ACTIVE/BROKEN_OUT/WICK_BREAK-stays-ACTIVE/RETESTED/FAILED_BREAKOUT/EXPIRED)."
+    },
+    "breakout_bar": { "type": ["integer", "null"], "description": "First qualifying close bar (§13); HD-03 confirmed_bar==breakout_bar." },
+    "confirmed_bar": { "type": ["integer", "null"], "description": "HD-03: equals breakout_bar (no persistence wait)." },
+    "expected_reason_codes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Set of every reason code emitted for this fixture."
+    },
+    "flags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Non-gating confidence/quality flags (e.g. LOW_VOLUME)."
+    },
+    "rejection_rationale": {
+      "type": "array",
+      "description": "Why each competing outcome is rejected, with the numeric comparison.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate", "rejected_because"],
+        "properties": {
+          "candidate": { "type": "string" },
+          "rejected_because": { "type": "string" },
+          "numeric": { "type": "string", "description": "The exact inequality evaluation used." }
+        }
+      }
+    },
+    "geometry_check": {
+      "type": "object",
+      "description": "Restated arithmetic so an independent verifier can confirm every number by hand.",
+      "additionalProperties": true,
+      "properties": {
+        "yA": { "type": ["number", "null"] },
+        "yB": { "type": ["number", "null"] },
+        "slope_formula": { "type": "string" },
+        "intercept_formula": { "type": "string" },
+        "key_inequalities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

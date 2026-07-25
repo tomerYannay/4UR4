@@ -22,6 +22,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-08 | high | Promoting sentiment into the confidence score | APPROVED |
 | HD-09 | med  | External Fear & Greed source + redistribution/display rights | APPROVED |
 | HD-10 | high | SaaS billing/PII security review | APPROVED |
+| HD-11 | high | Pivot-high prefilter is non-authoritative (upper-log-hull is canonical) | APPROVED |
 
 ---
 
@@ -60,6 +61,11 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   fixture-tested without the confirmed definition.
 - **Safe default:** Hold on upper-log-hull; encode discrimination fixture GX-02
   (must pick `B*=(45,92)`, not `(20,96)`).
+- **Refinement (see [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high)):**
+  the upper-log-hull rule stated here is canonical and does **not** depend on a
+  fixed pivot-high prefilter. Pivot-high detection is secondary/non-authoritative
+  and must never change the selected canonical anchor. HD-11 refines (does not
+  supersede) this rule following real-market evidence from RM-01.
 
 ## HD-03 — Breakout confirmation policy · materiality: **high**
 - **Status:** REVISED — **Decided by: Product Owner, 2026-07-24.**
@@ -225,6 +231,39 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Safe default:** Keep the MVP internal-only (no customer PII) until the review
   is done.
 
+## HD-11 — Pivot-high prefilter is non-authoritative (upper-log-hull is canonical) · materiality: **high**
+- **Status:** APPROVED — **Decided by: Product Owner, 2026-07-25.** Resolves **SC-2**
+  (raised by RM-01 real-market verification). Refines [HD-02](#hd-02--envelope-selection-rule--materiality-high).
+- **Decision:** Whether the canonical upper-log-hull envelope anchor selection may
+  depend on a fixed pivot-high (e.g. k=3) prefilter.
+- **Ruling (governing rule):**
+  1. Every valid later bar high may be a **second-anchor candidate** — after the ATH;
+     high below the ATH; descending log-space slope; satisfies the canonical envelope
+     rule plus tolerance.
+  2. A bar **need not be a k-pivot high** to become the canonical upper-log-hull anchor.
+  3. **Pivot-high detection is secondary and non-authoritative** — used only for
+     visualization, descriptive metadata, confidence features, and lossless
+     performance optimization.
+  4. A pivot filter **must never change the selected canonical anchor**.
+  5. Optimized implementations using pivot pruning **must fall back to / verify
+     against the full all-highs upper-hull result**.
+  6. RM-01 demonstrates why a strict k=3 precondition is invalid: **2026-07-21 @129.88**
+     is not a k=3 pivot yet is the canonical shallowest descending envelope anchor;
+     excluding it would contradict the approved upper-log-hull rule ([HD-02](#hd-02--envelope-selection-rule--materiality-high)).
+- **Reason:** RM-01 real-world evidence shows the canonical anchor was a **non-pivot
+  high**. A strict k=3 prefilter would wrongly exclude the shallowest descending
+  envelope anchor and select a different (incorrect) line, contradicting the
+  load-bearing product definition in HD-02. The all-highs upper-log-hull is the
+  authority; pivots are a descriptive/optimization convenience only.
+- **Alternatives:** Keep the strict pivot prefilter as a precondition for anchor
+  candidacy (**REJECTED** — would contradict the approved upper-log-hull rule and the
+  real RM-01 data by excluding a valid canonical anchor).
+- **Cost of delaying:** n/a — resolved 2026-07-25.
+- **Safe default:** All-highs upper-log-hull is canonical; treat any pivot filter as
+  a non-authoritative optimization that must reproduce the full-hull result.
+- **Cross-references:** refines [HD-02](#hd-02--envelope-selection-rule--materiality-high)
+  (the envelope rule); real-market evidence in `product/fixtures/real/RM-01/`.
+
 ---
 
 ## Decision log — 2026-07-24 (Product Owner)
@@ -247,6 +286,11 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   of a single label; +15/−7/60 kept as the initial research label only.
 - **Left pending:** HD-06 — data-provider selection + recurring spend; complete R1–R8
   research before any selection or commitment.
+
+## Decision log — 2026-07-25 (Product Owner)
+
+- **2026-07-25 — HD-11 approved (resolves SC-2 from RM-01):** upper-log-hull canonical,
+  pivot prefilter non-authoritative.
 
 *This register records the Product Owner's rulings of 2026-07-24. Ruled items are
 governing; HD-06 remains a proposal pending human decision

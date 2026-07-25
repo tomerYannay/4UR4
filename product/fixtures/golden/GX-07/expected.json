@@ -1,0 +1,66 @@
+{
+  "fixture_id": "GX-07",
+  "purpose": "A confirmed breakout that persists for E_expiry bars expires: at t - breakout_bar == 100 the line is retired (EXPIRED -> NONE) and the detector recomputes from scratch over the full updated history.",
+  "category": "expiry & recalculation",
+  "spec_refs": ["§11", "§13.2", "§17", "D-TL-10"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 111,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "E_expiry": 100,
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 6, "H": 94.00 },
+  "expected_log_slope": -0.0103125,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "6": { "y_hat": 4.54330, "line": 94.0000 },
+    "10": { "y_hat": 4.50205, "line": 90.2015 }
+  },
+  "expected_state_transitions": [
+    { "bar": 6, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 10, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" },
+    { "bar": 110, "from": "BROKEN_OUT", "to": "NONE", "reason_code": "EXPIRED_POST_BREAKOUT" }
+  ],
+  "expected_final_state": "NONE",
+  "breakout_bar": 10,
+  "confirmed_bar": 10,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED", "EXPIRED_POST_BREAKOUT"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "Expiry firing at t=109 (99 bars after breakout)",
+      "rejected_because": "Expiry requires t - breakout_bar >= E_expiry=100; at t=109 the gap is 99, still short.",
+      "numeric": "109 - 10 = 99 < 100 -> not yet expired."
+    },
+    {
+      "candidate": "Expiry firing before any retest/failure is possible",
+      "rejected_because": "The breakout never retested (price never dipped to the line) nor failed (never closed below line-eps_fail); it simply persisted until the expiry horizon.",
+      "numeric": "post-breakout plateau high=93, low=90 stays above the descending line (line(20)~81, line(110)~32) -> no retest/fail; expiry at 110-10=100."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.54330,
+    "slope_formula": "m=(ln94-ln100)/(6-0)=(4.543295-4.605170)/6=-0.061875/6=-0.0103125",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Line A=(0,100), B*=(6,94); breakout at t=10 (ln(C[10])=ln93=4.532599 > y_hat(10)+eps_break=4.502045+0.01=4.512045).",
+      "Post-breakout plateau persists above the line with no retest and no failure.",
+      "Expiry: first t with t - breakout_bar >= 100 is t=110 -> EXPIRED_POST_BREAKOUT -> NONE.",
+      "Recompute is then triggered over the full history (new line geometry is out of this fixture's pinned scope; the locked assertion is the expiry TIMING and transition)."
+    ],
+    "notes": "The expiry timing (breakout_bar + E_expiry) is the load-bearing assertion. Post-breakout bars are a deliberately flat plateau so no retest/failure intervenes before expiry."
+  }
+}

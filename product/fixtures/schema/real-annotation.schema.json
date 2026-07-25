@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://4ur4.local/fixtures/schema/real-annotation.schema.json",
+  "title": "4UR4 Real-Market Fixture — annotation.json",
+  "description": "Machine-validated shape for a single REAL-MARKET fixture annotation. This is real-market EVIDENCE + ANNOTATION (not synthetic, spec-derived expected output) under the GOV-015 build-freeze — DOCS/DATA only, no product code. CRITICAL DATA-INTEGRITY RULE: numeric market-data / geometry fields (verified_market_data.*) stay NULL until licensed/verified OHLCV exists. Exact prices, dates, and OHLCV values MUST NOT be inferred from screenshot pixels and recorded as factual market data. The only numeric values permitted before verification are Product-Owner-STATED values (explicitly asserted by the PO, not pixel-derived) and MUST be tagged as such.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fixture_id",
+    "status",
+    "source_evidence",
+    "product_owner_metadata",
+    "drawn_line_metadata",
+    "product_owner_interpretation",
+    "expected_regions",
+    "verified_market_data",
+    "visual_acceptance_checklist",
+    "product_owner_approval",
+    "unresolved_metadata",
+    "spec_contradiction_report"
+  ],
+  "properties": {
+    "fixture_id": {
+      "type": "string",
+      "pattern": "^RM-[0-9]{2}$",
+      "description": "Stable real-market fixture identifier, e.g. RM-01."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["awaiting-market-data", "data-loaded", "verified"],
+      "description": "Lifecycle: awaiting-market-data (no licensed/verified OHLCV yet; all verified_market_data null) -> data-loaded (real OHLCV present, geometry not yet verified) -> verified (geometry recomputed from real OHLCV and dual-signed)."
+    },
+    "market_data_source": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Provenance of the verified OHLCV source (provider, symbol, interval, timezone, last_refreshed, output_size, sha256, immutable, derived_csv, date_range, adjustment_note). Present once real data is loaded; the raw file is immutable evidence."
+    },
+    "ath_verification": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "ATH verification over ALL available bars in the source, including the DOCUMENTED lifetime-ATH / listing-history assumption (do not assert a lifetime ATH without it)."
+    },
+    "source_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256", "bytes", "dimensions", "immutable"],
+      "description": "The immutable source screenshot. Recorded, never edited/regenerated.",
+      "properties": {
+        "kind": { "type": "string", "description": "Evidence kind, e.g. 'chart-image'." },
+        "file": { "type": "string", "description": "Path to the source image relative to the fixture directory or repo." },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 checksum of the immutable source image." },
+        "bytes": { "type": "integer", "minimum": 1, "description": "File size in bytes." },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          },
+          "description": "Pixel dimensions of the source image."
+        },
+        "immutable": { "type": "boolean", "const": true, "description": "MUST be true. The source image is immutable evidence; never edit or regenerate it." }
+      }
+    },
+    "product_owner_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Metadata as STATED by the Product Owner (PO-asserted, verbatim). Not pixel-derived. Not yet verified against OHLCV. Use the string 'unknown' or null for fields the PO did not supply.",
+      "required": [
+        "symbol", "exchange", "timeframe", "scale",
+        "visible_date_range", "data_source", "timezone",
+        "stated_ath_anchor", "stated_second_anchor",
+        "stated_breakout_date", "stated_retest_date"
+      ],
+      "properties": {
+        "symbol": { "type": ["string", "null"], "description": "Ticker symbol as stated by the PO (e.g. SPCX). PO-stated, not verified." },
+        "exchange": { "type": ["string", "null"], "description": "Exchange; 'unknown' if not supplied." },
+        "timeframe": { "type": ["string", "null"], "description": "Chart timeframe as stated (e.g. 1D)." },
+        "scale": {
+          "type": ["string", "null"],
+          "enum": ["logarithmic", "linear", "unknown", null],
+          "description": "Chart price scale as stated / visually confirmed (qualitative)."
+        },
+        "visible_date_range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "to"],
+          "properties": {
+            "from": { "type": ["string", "null"], "description": "Visible range start (PO-stated ISO date or null/unknown)." },
+            "to": { "type": ["string", "null"], "description": "Visible range end (PO-stated ISO date or null/unknown)." }
+          },
+          "description": "Visible date range as stated by the PO (not pixel-derived)."
+        },
+        "data_source": { "type": ["string", "null"], "description": "Data source shown in the chart (e.g. TradingView). Descriptive; not a licensed OHLCV feed." },
+        "timezone": { "type": ["string", "null"], "description": "Chart timezone; 'unknown' if not supplied." },
+        "stated_ath_anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["date", "price", "source"],
+          "properties": {
+            "date": { "type": ["string", "null"], "description": "PO-stated ATH anchor date (ISO)." },
+            "price": { "type": ["number", "null"], "description": "PO-stated ATH high price. PO-ASSERTED value, explicitly not pixel-derived." },
+            "source": { "type": "string", "const": "product-owner-stated", "description": "Provenance tag: this number is Product-Owner-stated, not verified OHLCV and not pixel-read." }
+          }
+        },
+        "stated_second_anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["date", "price", "source"],
+          "properties": {
+            "date": { "type": ["string", "null"], "description": "PO-stated second-anchor (later high) date (ISO)." },
+            "price": { "type": ["number", "null"], "description": "PO-stated second-anchor high price. NULL when unknown; MUST NOT be inferred from pixels." },
+            "source": { "type": "string", "const": "product-owner-stated", "description": "Provenance tag: Product-Owner-stated, not verified OHLCV and not pixel-read." }
+          }
+        },
+        "stated_breakout_date": { "type": ["string", "null"], "description": "PO-stated breakout date; null/unknown if not supplied." },
+        "stated_retest_date": { "type": ["string", "null"], "description": "PO-stated retest date; null/unknown if not supplied." }
+      }
+    },
+    "drawn_line_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Metadata about the manually drawn orange trendline on the source chart. Recorded verbatim; the drawn line is NOT treated as algorithmic ground truth until verified against OHLCV.",
+      "required": ["construction", "magnet_mode", "intended_endpoints", "notes"],
+      "properties": {
+        "construction": { "type": "string", "description": "How the line was drawn (e.g. manually extended TradingView trendline, two-point)." },
+        "magnet_mode": { "type": ["boolean", "null"], "description": "Whether TradingView magnet mode snapped endpoints to candle highs." },
+        "intended_endpoints": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "to"],
+          "properties": {
+            "from": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "date": { "type": ["string", "null"] },
+                "price": { "type": ["number", "null"] },
+                "source": { "type": "string", "const": "product-owner-stated" }
+              },
+              "description": "Intended start endpoint (ATH). PO-stated values only; price null when unknown."
+            },
+            "to": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "date": { "type": ["string", "null"] },
+                "price": { "type": ["number", "null"] },
+                "source": { "type": "string", "const": "product-owner-stated" }
+              },
+              "description": "Intended end endpoint (later high). Price MUST be null until verified — do not infer from pixels."
+            }
+          }
+        },
+        "notes": { "type": "string", "description": "Verbatim caveats: e.g. line is a drawn artifact, not algorithmic ground truth until verified against actual OHLCV." }
+      }
+    },
+    "product_owner_interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The Product Owner's interpretation of the object, recorded verbatim.",
+      "required": ["bullets"],
+      "properties": {
+        "bullets": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Verbatim interpretation statements (line origin, second anchor, upper-log-hull expectation, breakout=first daily close, persistence/volume as confidence, retest definition)."
+        }
+      }
+    },
+    "expected_regions": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Expected qualitative regions on the chart. Each carries a date and a price where the price MAY be null (null until verified; PO-stated where explicitly asserted).",
+      "required": ["ath_anchor", "second_anchor", "breakout", "retest"],
+      "properties": {
+        "ath_anchor": { "$ref": "#/$defs/region" },
+        "second_anchor": { "$ref": "#/$defs/region" },
+        "breakout": { "$ref": "#/$defs/region" },
+        "retest": { "$ref": "#/$defs/region" }
+      }
+    },
+    "verified_market_data": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Actual, licensed/verified OHLCV and geometry RECOMPUTED from that OHLCV. ALL numeric fields are NULL until licensed/verified OHLCV exists (status awaiting-market-data). NOTHING here may be pixel-read or PO-asserted; it is filled only from a real data feed.",
+      "required": [
+        "ohlcv_bars", "ath_anchor", "second_anchor",
+        "log_slope", "intercept", "line_values",
+        "breakout_bar", "confirmed_bar", "retest_bar",
+        "adjustment_basis", "data_provider", "provenance"
+      ],
+      "properties": {
+        "ohlcv_bars": { "type": ["array", "null"], "items": { "$ref": "#/$defs/ohlcvBar" }, "description": "Verified OHLCV bars. NULL until real data loaded." },
+        "ath_anchor": { "$ref": "#/$defs/verifiedAnchor" },
+        "second_anchor": { "$ref": "#/$defs/verifiedAnchor" },
+        "log_slope": { "type": ["number", "null"], "description": "m=(yB-yA)/(tB-tA) recomputed from verified OHLCV (§7). NULL until data." },
+        "intercept": { "type": ["number", "null"], "description": "b=yA-m*tA recomputed from verified OHLCV (§7). NULL until data." },
+        "line_values": { "type": ["object", "null"], "description": "Map of bar index -> {y_hat, line} from verified geometry. NULL until data." },
+        "breakout_bar": { "type": ["integer", "null"], "description": "First qualifying daily close bar (§13). NULL until data." },
+        "confirmed_bar": { "type": ["integer", "null"], "description": "HD-03: equals breakout_bar. NULL until data." },
+        "retest_bar": { "type": ["integer", "null"], "description": "Retest bar (§16). NULL until data." },
+        "adjustment_basis": { "type": ["string", "null"], "description": "Must be split-adjusted, dividend-unadjusted (as-traded) per HD-01 when filled. NULL until data." },
+        "data_provider": { "type": ["string", "null"], "description": "Licensed OHLCV provider (HD-06). NULL until provider gate resolved." },
+        "provenance": { "type": ["string", "null"], "description": "Who loaded/verified the data and when. NULL until data." }
+      }
+    },
+    "visual_acceptance_checklist": {
+      "type": "array",
+      "description": "Human visual-acceptance items to be checked against verified OHLCV. All 'result' values are pending/unchecked until verification.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item", "result"],
+        "properties": {
+          "item": { "type": "string", "description": "The acceptance criterion." },
+          "result": {
+            "type": "string",
+            "enum": ["pending", "pass", "fail"],
+            "description": "Verification result; pending until checked against verified OHLCV."
+          },
+          "note": { "type": "string", "description": "Optional evidence note for the result." }
+        }
+      }
+    },
+    "product_owner_approval": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected", "needs-adjustment"],
+      "description": "Product Owner sign-off state for this fixture."
+    },
+    "unresolved_metadata": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit list of unknown/unresolved metadata (e.g. exchange, timezone, second-anchor price, breakout date, retest date)."
+    },
+    "spec_contradiction_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Recorded open verification questions / contradictions between the drawn artifact and the canonical spec. These are RISKS to surface, NOT decisions — never resolve by silently editing the spec or annotation.",
+      "required": ["status", "items"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["open", "resolved-with-po", "none"],
+          "description": "Whether unresolved contradictions remain."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "description", "resolution"],
+            "properties": {
+              "id": { "type": "string", "description": "Local id for the contradiction, e.g. SC-1." },
+              "description": { "type": "string", "description": "Plain-language statement of the contradiction/risk." },
+              "spec_refs": { "type": "array", "items": { "type": "string" }, "description": "Relevant spec sections/decisions." },
+              "verdict": {
+                "type": "string",
+                "enum": ["MATCH", "VISUAL_MATCH_WITHIN_TOLERANCE", "MISMATCH_INTERVENING_HIGH", "MISMATCH_DIFFERENT_CANONICAL_ANCHOR", "INSUFFICIENT_DATA", "open-spec-question"],
+                "description": "The verification verdict for this item once verified OHLCV is available (SC-1 resolution options)."
+              },
+              "resolution": {
+                "type": "string",
+                "enum": ["unresolved-awaiting-ohlcv", "escalated-to-product-owner", "resolved"],
+                "description": "Recorded status. MUST NOT be resolved by editing the spec/annotation; resolution requires real OHLCV and/or PO decision."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "price"],
+      "properties": {
+        "date": { "type": ["string", "null"], "description": "Region date (ISO). PO-stated or null/unknown; never pixel-derived." },
+        "price": { "type": ["number", "null"], "description": "Region price. MAY be null. PO-stated values are tagged via provenance; otherwise null until verified. Never pixel-derived." },
+        "provenance": {
+          "type": "string",
+          "enum": ["product-owner-stated", "verified-ohlcv", "unknown"],
+          "description": "Where a non-null value came from. 'product-owner-stated' = PO-asserted (not verified, not pixel-read); 'verified-ohlcv' = from real data; 'unknown' = not supplied."
+        },
+        "note": { "type": "string", "description": "Optional qualitative note about the region." }
+      }
+    },
+    "verifiedAnchor": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "t": { "type": ["integer", "null"], "description": "Bar ordinal index from verified series." },
+        "date": { "type": ["string", "null"], "description": "Bar date from verified series." },
+        "H": { "type": ["number", "null"], "description": "Verified bar high." }
+      },
+      "description": "Anchor recomputed from verified OHLCV. NULL until data available."
+    },
+    "ohlcvBar": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timestamp": { "type": ["string", "integer"] },
+        "open": { "type": ["number", "null"] },
+        "high": { "type": ["number", "null"] },
+        "low": { "type": ["number", "null"] },
+        "close": { "type": ["number", "null"] },
+        "volume": { "type": ["number", "null"] }
+      },
+      "description": "A single verified OHLCV bar (only present once real data is loaded)."
+    }
+  }
+}

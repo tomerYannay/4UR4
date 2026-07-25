@@ -1,0 +1,245 @@
+{
+  "$schema": "../../schema/real-annotation.schema.json",
+  "fixture_id": "RM-01",
+  "status": "verified",
+  "source_evidence": {
+    "kind": "chart-image",
+    "file": "source-chart.png",
+    "sha256": "d191300e3cde075aac86838185bfa5797a2c6d0e6dd6f1c2a8558a414ab05b15",
+    "bytes": 137151,
+    "dimensions": {
+      "width": 1272,
+      "height": 672
+    },
+    "immutable": true
+  },
+  "market_data_source": {
+    "file": "alphavantage-source.json",
+    "provider": "Alpha Vantage",
+    "symbol": "SPCX",
+    "interval": "daily",
+    "timezone": "US/Eastern",
+    "last_refreshed": "2026-07-24",
+    "output_size": "compact",
+    "sha256": "69a67469e08af3f43f5a05c4730a3c4e2c2ff4c297b7237e2f41ecb3d550c377",
+    "immutable": true,
+    "derived_csv": "input.csv",
+    "bar_count": 29,
+    "date_range": {
+      "from": "2026-06-12",
+      "to": "2026-07-24"
+    },
+    "adjustment_note": "Alpha Vantage TIME_SERIES_DAILY = raw as-traded (split-UNadjusted). No split/corporate action is evident in 2026-06-12..2026-07-24, so over this window it is consistent with HD-01 (split-adjusted, dividend-unadjusted). A split in range would require adjustment before use."
+  },
+  "ath_verification": {
+    "method": "maximum bar high over ALL available bars in this source",
+    "ath_date": "2026-06-16",
+    "ath_high": 225.64,
+    "ath_bar_index": 2,
+    "bar_count": 29,
+    "earliest_bar": "2026-06-12",
+    "tie_count": 1,
+    "lifetime_ath_assumption": "Earliest bar is 2026-06-12; 'compact' returns up to the latest 100 bars and only 29 were returned, so the full available history is these 29 bars, consistent with SPCX listing on/around 2026-06-12. Treating 225.64 as a LIFETIME ATH depends on 2026-06-12 being the listing/IPO date — DOCUMENTED as an assumption to confirm against a listing-history/reference source (HD-07), NOT asserted as fact."
+  },
+  "product_owner_metadata": {
+    "symbol": "SPCX",
+    "exchange": "unknown",
+    "timeframe": "1D",
+    "scale": "logarithmic",
+    "visible_date_range": {
+      "from": "2026-06-12",
+      "to": "2026-07-24"
+    },
+    "data_source": "TradingView",
+    "timezone": "unknown",
+    "stated_ath_anchor": {
+      "date": "2026-06-16",
+      "price": 225.64,
+      "source": "product-owner-stated"
+    },
+    "stated_second_anchor": {
+      "date": "2026-07-21",
+      "price": null,
+      "source": "product-owner-stated"
+    },
+    "stated_breakout_date": null,
+    "stated_retest_date": null
+  },
+  "drawn_line_metadata": {
+    "construction": "Manually extended TradingView trendline (two-point construction).",
+    "magnet_mode": true,
+    "intended_endpoints": {
+      "from": {
+        "date": "2026-06-16",
+        "price": 225.64,
+        "source": "product-owner-stated"
+      },
+      "to": {
+        "date": "2026-07-21",
+        "price": null,
+        "source": "product-owner-stated"
+      }
+    },
+    "notes": "Orange line = manually extended TradingView trendline; magnet mode snapped endpoints to candle highs. Intended ATH 2026-06-16 @ 225.64 -> later high 2026-07-21. Exact second-anchor price was NOT inferred from pixels; it is now VERIFIED from OHLCV as 129.88."
+  },
+  "product_owner_interpretation": {
+    "bullets": [
+      "Orange descending line starts from the stock's all-time-high wick.",
+      "Intended second anchor is the later high wick on 2026-07-21.",
+      "Line should remain above intervening highs per the approved upper-log-hull rule.",
+      "A breakout is the first daily close above the line.",
+      "Persistence and volume are confidence features, not breakout validity gates.",
+      "A retest is a later contact/overlap with the line where the daily close holds above it."
+    ]
+  },
+  "expected_regions": {
+    "ath_anchor": {
+      "date": "2026-06-16",
+      "price": 225.64,
+      "provenance": "verified-ohlcv",
+      "note": "PO-stated and OHLCV-verified: 225.64 is the max high over all available bars."
+    },
+    "second_anchor": {
+      "date": "2026-07-21",
+      "price": 129.88,
+      "provenance": "verified-ohlcv",
+      "note": "Verified high 129.88 (PO-stated unknown; now verified). Confirmed as the upper-log-hull canonical second anchor (SC-1 = MATCH)."
+    },
+    "breakout": {
+      "date": null,
+      "price": null,
+      "provenance": "verified-ohlcv",
+      "note": "No confirmed breakout through 2026-07-24 (no daily close above the line)."
+    },
+    "retest": {
+      "date": null,
+      "price": null,
+      "provenance": "verified-ohlcv",
+      "note": "No retest — no breakout occurred."
+    }
+  },
+  "verified_market_data": {
+    "ohlcv_bars": null,
+    "ath_anchor": {
+      "t": 2,
+      "date": "2026-06-16",
+      "H": 225.64
+    },
+    "second_anchor": {
+      "t": 25,
+      "date": "2026-07-21",
+      "H": 129.88
+    },
+    "log_slope": -0.0240143,
+    "intercept": 5.46697,
+    "line_values": {
+      "2026-06-12": 236.742,
+      "2026-06-15": 231.124,
+      "2026-06-16": 225.64,
+      "2026-06-17": 220.286,
+      "2026-06-18": 215.059,
+      "2026-06-22": 209.956,
+      "2026-06-23": 204.974,
+      "2026-06-24": 200.11,
+      "2026-06-25": 195.362,
+      "2026-06-26": 190.726,
+      "2026-06-29": 186.201,
+      "2026-06-30": 181.783,
+      "2026-07-01": 177.469,
+      "2026-07-02": 173.258,
+      "2026-07-06": 169.147,
+      "2026-07-07": 165.134,
+      "2026-07-08": 161.215,
+      "2026-07-09": 157.39,
+      "2026-07-10": 153.655,
+      "2026-07-13": 150.009,
+      "2026-07-14": 146.45,
+      "2026-07-15": 142.975,
+      "2026-07-16": 139.582,
+      "2026-07-17": 136.27,
+      "2026-07-20": 133.037,
+      "2026-07-21": 129.88,
+      "2026-07-22": 126.798,
+      "2026-07-23": 123.789,
+      "2026-07-24": 120.852
+    },
+    "breakout_bar": null,
+    "confirmed_bar": null,
+    "retest_bar": null,
+    "adjustment_basis": "Alpha Vantage as-traded (split-unadjusted); no split in range -> consistent with HD-01 over this window",
+    "data_provider": "Alpha Vantage",
+    "provenance": "Independently computed by Agent Zero (verifier) from input.csv using trading-bar ordinal indices (NOT calendar-day gaps). A=(t=2,2026-06-16,225.64) B=(t=25,2026-07-21,129.88) delta=23 bars. Envelope: 0 violation(s) within eps=0.02; dominates all later highs. Max intervening approach 2026-07-06 -0.7402% (log -0.00742992). Canonical check: 2026-07-21 is the shallowest descending slope over all later highs (upper-log-hull vertex). Post-B (07-22..07-24): no wick_break, no confirmed breakout, no retest. Source sha256 69a67469...50c377. See VERIFICATION.md."
+  },
+  "visual_acceptance_checklist": [
+    {
+      "item": "Line begins at the intended ATH wick on 2026-06-16 at 225.64.",
+      "result": "pass",
+      "note": "225.64 verified as the ATH (max high) at 2026-06-16."
+    },
+    {
+      "item": "Line touches the intended later high wick on 2026-07-21.",
+      "result": "pass",
+      "note": "Verified high 129.88 at 2026-07-21; anchor B lies on the line by construction."
+    },
+    {
+      "item": "Line does not improperly cut through intervening highs.",
+      "result": "pass",
+      "note": "0 envelope violations; closest approach 2026-07-06 at -0.740% (below the line)."
+    },
+    {
+      "item": "Projected line visually matches the PO's orange TradingView line.",
+      "result": "pass",
+      "note": "Canonical upper-log-hull line uses the same two endpoints as the PO's two-point line — geometrically identical; consistent with the chart."
+    },
+    {
+      "item": "Breakout bar classification matches the PO's expectation.",
+      "result": "pass",
+      "note": "No breakout through 2026-07-24 (matches PO)."
+    },
+    {
+      "item": "Retest, if present, matches the approved rule.",
+      "result": "pass",
+      "note": "No retest, because no breakout occurred (matches PO and the approved rule)."
+    }
+  ],
+  "product_owner_approval": "approved",
+  "unresolved_metadata": [
+    "exchange (still unknown)",
+    "chart display timezone (still unknown; OHLCV source timezone is US/Eastern)",
+    "lifetime-ATH assumption: 2026-06-12 as SPCX listing/IPO date (pending listing-history confirmation, HD-07)",
+    "SC-2 pivot-eligibility question (open; see spec_contradiction_report)"
+  ],
+  "spec_contradiction_report": {
+    "status": "resolved-with-po",
+    "items": [
+      {
+        "id": "SC-1",
+        "verdict": "MATCH",
+        "resolution": "resolved",
+        "description": "RESOLVED = MATCH. Independent calc from verified OHLCV (trading-bar indices): A=(t=2,2026-06-16,225.64), B=(t=25,2026-07-21,129.88); slope m=-0.0240143/bar, intercept b=5.46697. The A->B line dominates ALL later highs within eps=0.02 with 0 envelope violations; closest intervening approach 2026-07-06 at -0.7402% (below the line). 2026-07-21 yields the SHALLOWEST descending slope among all later highs => it IS the upper-log-hull canonical second anchor. So the PO's two-point line (ATH->2026-07-21) coincides with the canonical upper-log-hull line: MATCH. Not MISMATCH_INTERVENING_HIGH (no pierce), not MISMATCH_DIFFERENT_CANONICAL_ANCHOR (same anchor).",
+        "spec_refs": [
+          "§8",
+          "D-TL-04",
+          "D-TL-05",
+          "§13",
+          "§16"
+        ]
+      },
+      {
+        "id": "SC-2",
+        "verdict": "MATCH",
+        "resolution": "resolved",
+        "description": "RESOLVED 2026-07-25 by Product Owner decision (HD-11): the upper-log-hull envelope rule is CANONICAL and must NOT depend on a fixed pivot-high prefilter; pivot detection is secondary/non-authoritative and must never change the canonical anchor. RM-01 is the motivating case: 2026-07-21 (129.88) is NOT a k=3 pivot (2026-07-17 @130.33 is higher within 3 bars) yet IS the canonical shallowest descending envelope anchor over all later highs; excluding it would contradict the approved rule. The trendline spec §5/§6/§8/D-TL-03/D-TL-05 were revised accordingly and golden fixture GX-19 was added to prove a non-pivot high can be the canonical anchor. No longer an open contradiction.",
+        "spec_refs": [
+          "§5",
+          "§6",
+          "§8",
+          "D-TL-03",
+          "D-TL-05",
+          "HD-11",
+          "GX-19"
+        ]
+      }
+    ]
+  }
+}

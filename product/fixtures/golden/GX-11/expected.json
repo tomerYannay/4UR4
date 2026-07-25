@@ -1,0 +1,64 @@
+{
+  "fixture_id": "GX-11",
+  "purpose": "A first-close breakout on LOW volume: BROKEN_OUT fires normally and a LOW_VOLUME flag is raised. Volume is a confidence feature and NEVER gates validity (HD-03).",
+  "category": "volume-as-confidence",
+  "spec_refs": ["§11", "§13.1", "§13.2", "§13.4", "HD-03", "D-TL-07", "confidence §2.1 C4"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 19,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 12, "H": 88.00 },
+  "expected_log_slope": -0.0106528,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "12": { "y_hat": 4.47734, "line": 88.0000 },
+    "16": { "y_hat": 4.43473, "line": 84.3290 }
+  },
+  "expected_state_transitions": [
+    { "bar": 12, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 16, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" }
+  ],
+  "expected_final_state": "BROKEN_OUT",
+  "breakout_bar": 16,
+  "confirmed_bar": 16,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED"],
+  "flags": ["LOW_VOLUME"],
+  "rejection_rationale": [
+    {
+      "candidate": "Low volume VOIDING the breakout (a hard volume gate)",
+      "rejected_because": "There is no volume validity gate (HD-03, §13.4). Low volume only lowers the confidence C4 component and raises a LOW_VOLUME flag; the breakout still fires.",
+      "numeric": "V[16]=300000 vs trailing ~20-bar avg ~1,000,000 -> ratio ~0.30 -> LOW_VOLUME flag; but ln(C[16])=4.465908 > y_hat(16)+eps_break=4.444725 -> BROKEN_OUT fires at t=16 regardless."
+    },
+    {
+      "candidate": "confirmed_bar != breakout_bar (persistence/volume delay)",
+      "rejected_because": "HD-03: single-close confirmation; neither volume nor persistence delays the alert.",
+      "numeric": "confirmed_bar == breakout_bar == 16."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.47734,
+    "slope_formula": "m=(ln88-ln100)/(12-0)=-0.127833/12=-0.0106528",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Identical line and breakout close to GX-16 (B*=(12,88); breakout at t=16).",
+      "Only difference: V[16]=300000 (low) -> LOW_VOLUME flag.",
+      "Breakout validity is independent of volume (HD-03): BROKEN_OUT still fires, confirmed_bar==breakout_bar==16.",
+      "Volume feeds confidence component C4 only."
+    ],
+    "notes": "Companion to GX-16: same geometry/price, low volume. Proves volume is confidence-only, never a validity gate."
+  }
+}

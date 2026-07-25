@@ -1,0 +1,59 @@
+{
+  "fixture_id": "GX-10",
+  "purpose": "An unadjusted ~2:1 split injects an impossible single-bar log jump (|y[t]-y[t-1]| > ln 1.5); the detector flags SUSPECTED_UNADJUSTED_SPLIT and does NOT fit a line.",
+  "category": "stock split edge case",
+  "spec_refs": ["§2", "§18(Unadjusted split)", "D-TL-01"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 10,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded) — this fixture presents UNADJUSTED data to prove the guard fires"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "split_log_jump_threshold": 0.405465,
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": null,
+  "expected_second_anchor": { "t": null, "H": null, "reason": "Geometry is not fit: a suspected unadjusted split was detected, so the bar-set is rejected before anchoring/fitting." },
+  "expected_log_slope": null,
+  "expected_intercept": null,
+  "expected_line_values": {},
+  "expected_state_transitions": [
+    { "bar": 4, "from": "NONE", "to": "NONE", "reason_code": "SUSPECTED_UNADJUSTED_SPLIT" }
+  ],
+  "expected_final_state": "NONE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["SUSPECTED_UNADJUSTED_SPLIT"],
+  "flags": ["SUSPECTED_UNADJUSTED_SPLIT"],
+  "rejection_rationale": [
+    {
+      "candidate": "Fitting a line with ATH=(0,100) and a low pivot near 50",
+      "rejected_because": "The t=3->t=4 log jump exceeds ln(1.5), signalling an unadjusted split; per §18 the detector must NOT fit and instead flag.",
+      "numeric": "|y[4]-y[3]| = |ln(50)-ln(98)| = |3.912023-4.584967| = 0.672944 > ln(1.5)=0.405465 -> SUSPECTED_UNADJUSTED_SPLIT."
+    },
+    {
+      "candidate": "Treating the drop to ~50 as a genuine crash / valid lower highs",
+      "rejected_because": "A single-bar halving is physically an unadjusted corporate action, not a real price move; consistency rule (§2) requires split-adjusted input, so this data is rejected rather than fit.",
+      "numeric": "high 98 -> 50 is a ~49% single-bar drop; ln-jump 0.673 >> 0.405 threshold."
+    }
+  ],
+  "geometry_check": {
+    "yA": null,
+    "yB": null,
+    "slope_formula": "n/a (fit refused)",
+    "intercept_formula": "n/a",
+    "key_inequalities": [
+      "Split guard: max_t |ln(H[t]) - ln(H[t-1])| = |ln50 - ln98| = 0.672944 at t=4.",
+      "0.672944 > ln(1.5) = 0.405465 -> SUSPECTED_UNADJUSTED_SPLIT.",
+      "No anchor/line is produced; the bar-set is rejected for geometry."
+    ],
+    "notes": "Locks §18 unadjusted-split detection and the HD-01/D-TL-01 requirement that geometry runs only on split-adjusted data. expected_ath_anchor is null because fitting is refused before anchoring."
+  }
+}

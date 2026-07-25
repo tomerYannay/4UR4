@@ -1,0 +1,69 @@
+{
+  "fixture_id": "GX-13",
+  "purpose": "A single intervening spike high invalidates an otherwise-plausible steeper candidate line; the upper hull re-binds at the spike. Locks per-bar/pivot domination (D-TL-05).",
+  "category": "intervening highs invalidating a candidate",
+  "spec_refs": ["§8", "§10.1", "D-TL-04", "D-TL-05"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 40,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 20, "H": 95.00 },
+  "expected_log_slope": -0.00256466,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "10": { "y_hat": 4.57952, "line": 97.4682 },
+    "20": { "y_hat": 4.55388, "line": 95.0000 },
+    "35": { "y_hat": 4.51541, "line": 91.4148 }
+  },
+  "expected_state_transitions": [
+    { "bar": 20, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "B=(35,86) — the later, lower pivot (naive steeper 'next low pivot')",
+      "rejected_because": "The A->(35,86) line passes BELOW the t=20 spike (95), which pierces beyond eps -> candidate invalid.",
+      "numeric": "m=(ln86-ln100)/35=(4.454347-4.605170)/35=-0.0043092; y_hat(20)=4.605170-0.0043092*20=4.518986; ln95=4.553877 > 4.518986+0.02=4.538986 -> pierces by 0.014891."
+    },
+    {
+      "candidate": "B=(10,92) — an earlier pivot below the envelope",
+      "rejected_because": "Its steeper line is also pierced by the t=20 spike and it sits below the selected line anyway.",
+      "numeric": "m=(ln92-ln100)/10=-0.0083381; y_hat(20)=4.605170-0.166762=4.438408; ln95=4.553877 >> 4.438408+0.02 -> pierces massively."
+    },
+    {
+      "candidate": "B*=(20,95) itself being pierced",
+      "rejected_because": "No bar high after t=0 exceeds the A->(20,95) line + eps; the spike IS the binding anchor.",
+      "numeric": "line(10)=exp(4.57952)=97.4682 >= 92; line(35)=exp(4.51541)=91.4148 >= 86 -> all dominated."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.55388,
+    "slope_formula": "m=(ln95-ln100)/(20-0)=(4.553877-4.605170)/20=-0.051293/20=-0.00256466",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Eligible pivots: (10,92),(20,95),(35,86).",
+      "The lone spike at t=20 (95) forces the hull vertex; steeper candidates (35,86) and (10,92) are pierced by it.",
+      "B*=(20,95) is the shallowest line that still dominates the spike and all other highs.",
+      "No close exceeds line+eps_break -> ACTIVE."
+    ],
+    "notes": "Demonstrates D-TL-05: a single high (here also a pivot) pierces and thereby rejects steeper candidate lines; the resistance must stay above every intervening high."
+  }
+}

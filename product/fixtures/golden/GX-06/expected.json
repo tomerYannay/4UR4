@@ -1,0 +1,66 @@
+{
+  "fixture_id": "GX-06",
+  "purpose": "A new all-time high mid-series retires the old line (RESET_NEW_ATH) and a fresh line is recomputed from the new ATH anchor. The reported geometry is the CURRENT (post-reset) line.",
+  "category": "expiry & recalculation (new-ATH recompute)",
+  "spec_refs": ["§4", "§10.3", "§11", "§17(recalculation triggers)", "D-TL-02"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 21,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 10, "H": 110.00 },
+  "expected_second_anchor": { "t": 16, "H": 104.00 },
+  "expected_log_slope": -0.00934825,
+  "expected_intercept": 4.79396,
+  "expected_line_values": {
+    "10": { "y_hat": 4.70048, "line": 110.000 },
+    "11": { "y_hat": 4.69113, "line": 108.976 },
+    "16": { "y_hat": 4.64439, "line": 104.000 },
+    "20": { "y_hat": 4.60700, "line": 100.183 }
+  },
+  "expected_state_transitions": [
+    { "bar": 6, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 10, "from": "ACTIVE", "to": "NONE", "reason_code": "RESET_NEW_ATH" },
+    { "bar": 16, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "RESET_NEW_ATH"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "Treating t=10 as a BROKEN_OUT of the first line",
+      "rejected_because": "A bar high exceeding the prior ATH triggers an immediate reset (new-ATH check precedes breakout handling, §10.3/§17); the old line is retired, not broken out.",
+      "numeric": "H[10]=110 > HA_old=100 -> new ATH -> RESET_NEW_ATH; the first line (A1=(0,100),B1*=(6,92)) is retired at t=10."
+    },
+    {
+      "candidate": "Keeping the anchor at the original ATH (0,100)",
+      "rejected_because": "After the new ATH the anchor moves to the new global-max bar; geometry recomputes from scratch on the full history.",
+      "numeric": "New HA=110 at t=10 -> A2=(10,110); recompute picks B2*=(16,104)."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.70048,
+    "yB": 4.64439,
+    "slope_formula": "m2=(ln104-ln110)/(16-10)=(4.644391-4.700480)/6=-0.056089/6=-0.00934825",
+    "intercept_formula": "b2=yA2-m2*tA2=4.700480-(-0.00934825*10)=4.793963",
+    "key_inequalities": [
+      "First line: A1=(0,100), B1*=(6,92), m1=(ln92-ln100)/6=-0.0138968 (retired at t=10).",
+      "t=10 high 110 > prior ATH 100 -> RESET_NEW_ATH.",
+      "Second line: A2=(10,110), B2*=(16,104); all segment-2 highs dominated (line2(11)=108.976>=106 etc.).",
+      "Final state ACTIVE on the recomputed line."
+    ],
+    "notes": "The single expected_ath_anchor/second_anchor fields report the CURRENT (post-reset) line; the retired first line is documented here and in the transition list."
+  }
+}

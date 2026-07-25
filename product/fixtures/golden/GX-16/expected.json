@@ -1,0 +1,71 @@
+{
+  "fixture_id": "GX-16",
+  "purpose": "A clean first daily close above line+eps_break fires the breakout on that bar: BROKEN_OUT with confirmed_bar == breakout_bar and NO persistence wait (HD-03).",
+  "category": "first-close breakout",
+  "spec_refs": ["§11", "§13.1", "§13.2", "§13.3", "HD-03", "D-TL-07"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 19,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 12, "H": 88.00 },
+  "expected_log_slope": -0.0106528,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "12": { "y_hat": 4.47734, "line": 88.0000 },
+    "16": { "y_hat": 4.43473, "line": 84.3290 },
+    "17": { "y_hat": 4.42407, "line": 83.4354 },
+    "18": { "y_hat": 4.41342, "line": 82.5516 }
+  },
+  "expected_state_transitions": [
+    { "bar": 12, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" },
+    { "bar": 16, "from": "ACTIVE", "to": "BROKEN_OUT", "reason_code": "BREAKOUT_CONFIRMED" }
+  ],
+  "expected_final_state": "BROKEN_OUT",
+  "breakout_bar": 16,
+  "confirmed_bar": 16,
+  "expected_reason_codes": ["LINE_ESTABLISHED", "BREAKOUT_CONFIRMED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "confirmed_bar = 17 (a 2-bar persistence confirmation, superseded pre-HD-03 policy)",
+      "rejected_because": "HD-03 removed the persistence wait; the alert fires on the FIRST qualifying close, so confirmed_bar==breakout_bar==16.",
+      "numeric": "ln(C[16])=ln(87.00)=4.465908 > y_hat(16)+eps_break=4.434725+0.01=4.444725 -> first qualifying close IS the confirmation at t=16."
+    },
+    {
+      "candidate": "t=16 being only a WICK_BREAK",
+      "rejected_because": "The CLOSE (not just the high) clears line+eps_break, so this is a confirmed breakout, not a wick.",
+      "numeric": "close ln=4.465908 > 4.444725 -> close-confirmed."
+    },
+    {
+      "candidate": "breakout depending on t=17/t=18 persistence or volume",
+      "rejected_because": "Persistence above the line (t=17,t=18 hold) and volume are post-breakout CONFIDENCE/QUALITY signals only; they do not gate or delay the already-fired breakout (HD-03).",
+      "numeric": "t=17 close 88.00 and t=18 close 89.00 stay above the line -> durable, but the breakout already fired at t=16 regardless."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.47734,
+    "slope_formula": "m=(ln88-ln100)/(12-0)=-0.127833/12=-0.0106528",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Same clean line as GX-01: B*=(12,88).",
+      "First qualifying close: ln(C[16])=4.465908 > y_hat(16)+eps_break=4.444725.",
+      "confirmed_bar == breakout_bar == 16 (HD-03, no persistence gate).",
+      "Subsequent holds at t=17,18 are quality data, not a validity precondition."
+    ],
+    "notes": "Locks the revised HD-03 breakout policy: single-close confirmation, confirmed_bar==breakout_bar, persistence/volume are confidence-only."
+  }
+}

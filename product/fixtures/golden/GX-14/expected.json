@@ -1,0 +1,64 @@
+{
+  "fixture_id": "GX-14",
+  "purpose": "Two pivots are (near-)collinear with the ATH in log space, giving an identical dominating slope; the tie is broken in favour of the LATER anchor -> ENVELOPE_TIE_LATER.",
+  "category": "nearly equal slopes / envelope tie",
+  "spec_refs": ["§8", "§18(Ties in envelope)", "D-TL-04"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 45,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 40, "H": 80.00 },
+  "expected_log_slope": -0.00557858,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "10": { "y_hat": 4.54938, "line": 94.5741 },
+    "20": { "y_hat": 4.49360, "line": 89.4425 },
+    "40": { "y_hat": 4.38203, "line": 80.0000 }
+  },
+  "expected_state_transitions": [
+    { "bar": 40, "from": "NONE", "to": "ACTIVE", "reason_code": "ENVELOPE_TIE_LATER" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["ENVELOPE_TIE_LATER", "LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "B=(20,89.44) — the earlier of the two tied pivots",
+      "rejected_because": "Its slope is identical (to 6 sig figs) to B=(40,80); the tie rule prefers the LATER anchor for the longer confirmed structure (ENVELOPE_TIE_LATER).",
+      "numeric": "slope A->(20,89.4425)=(4.493598-4.605170)/20=-0.00557860; slope A->(40,80)=(4.382027-4.605170)/40=-0.00557858; equal to 6 sig figs -> later (t=40) wins."
+    },
+    {
+      "candidate": "B=(10,89) — an earlier lower-sloped-looking pivot",
+      "rejected_because": "It sits below the tie line and its own steeper line is pierced by the t=20 pivot -> invalid, not the envelope.",
+      "numeric": "m=(ln89-ln100)/10=-0.0116534; y_hat(20)=4.605170-0.233068=4.372102; ln89.44=4.493598 >> pierces -> invalid."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.38203,
+    "slope_formula": "m=(ln80-ln100)/(40-0)=(4.382027-4.605170)/40=-0.223143/40=-0.00557858",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Pivots (20,89.4425) and (40,80) are collinear with A in log space (same slope to 6 sig figs).",
+      "Both dominate all intervening highs -> both envelope-valid.",
+      "Tie broken toward the later anchor: B*=(40,80), reason ENVELOPE_TIE_LATER (§18).",
+      "The farther collinear point is the hull vertex; the earlier point lies on the same edge."
+    ],
+    "notes": "H[20]=89.4425 is chosen so P1 lies (to 6 sig figs) on the A->(40,80) log line, producing a genuine slope tie resolved deterministically by 'later wins'."
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "fixture_id": "GX-08",
+  "purpose": "A strictly monotonic decline from the ATH has no confirmed pivot high below the anchor, so no second anchor exists and no line is fit: NO_VALID_SECOND_ANCHOR (an explicit 'no signal' state, not an error).",
+  "category": "invalidation (no valid second anchor)",
+  "spec_refs": ["§5", "§6", "§10.4", "§18(Monotonic decline)"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 15,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.02,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5).",
+    "tolerance_version": "tol-2026.07-illustrative"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": null, "H": null, "reason": "No confirmed pivot high exists below the ATH; every bar high is strictly lower than the prior bar, so H[p] > H[p-1] is never satisfied." },
+  "expected_log_slope": null,
+  "expected_intercept": null,
+  "expected_line_values": {},
+  "expected_state_transitions": [
+    { "bar": null, "from": "NONE", "to": "NONE", "reason_code": "NO_VALID_SECOND_ANCHOR" }
+  ],
+  "expected_final_state": "NONE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["NO_VALID_SECOND_ANCHOR"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "Any bar as a second-anchor pivot high",
+      "rejected_because": "A pivot high requires H[p] > H[p-i] for i=1..k, but the series is strictly decreasing, so no bar is a local maximum on its left.",
+      "numeric": "For every p>=1: H[p] < H[p-1] (e.g. H[1]=98 < H[0]=100; H[2]=96 < H[1]=98; ...) -> isPivotHigh false for all p."
+    },
+    {
+      "candidate": "Emitting an error/exception",
+      "rejected_because": "Per §10.4/§18 this is a deterministic 'no line' state with a named reason, not an error condition.",
+      "numeric": "eligible-B count = 0 -> NO_VALID_SECOND_ANCHOR (explicit no-signal)."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": null,
+    "slope_formula": "n/a (no B* -> no slope)",
+    "intercept_formula": "n/a",
+    "key_inequalities": [
+      "ATH anchor = (0,100) (global max).",
+      "Highs strictly decreasing: 100,98,96,...,72 -> zero pivot highs.",
+      "Eligible second-anchor set empty -> NO_VALID_SECOND_ANCHOR, no geometry."
+    ],
+    "notes": "Locks the 'no valid line' outcome as a first-class, named state rather than an error."
+  }
+}

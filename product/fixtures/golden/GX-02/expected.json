@@ -1,0 +1,70 @@
+{
+  "fixture_id": "GX-02",
+  "purpose": "Envelope discrimination: among three descending pivots the upper log-hull selects the shallowest dominating line B*=(45,92), rejecting (20,96) and (70,80). Reproduces the spec §8 worked example exactly.",
+  "category": "multiple competing second anchors",
+  "spec_refs": ["§8", "§8(worked example)", "D-TL-04", "D-TL-05"],
+  "input_convention": {
+    "timestamp_kind": "ordinal",
+    "bar_count": 74,
+    "price_field_for_geometry": "high",
+    "adjustment_basis": "split-adjusted, dividend-unadjusted (as-traded)"
+  },
+  "params": {
+    "k": 3,
+    "eps": 0.005,
+    "eps_touch": 0.01,
+    "eps_break": 0.01,
+    "eps_break_locked": false,
+    "eps_break_note": "eps=0.005 is used here to match the spec §8 worked example exactly; eps_break stays illustrative, not locked (HD-03).",
+    "tolerance_version": "tol-2026.07-spec8-worked"
+  },
+  "expected_ath_anchor": { "t": 0, "H": 100.00 },
+  "expected_second_anchor": { "t": 45, "H": 92.00 },
+  "expected_log_slope": -0.00185291,
+  "expected_intercept": 4.60517,
+  "expected_line_values": {
+    "0": { "y_hat": 4.60517, "line": 100.000 },
+    "20": { "y_hat": 4.56811, "line": 96.3620 },
+    "45": { "y_hat": 4.52179, "line": 92.0000 },
+    "70": { "y_hat": 4.47547, "line": 87.8352 }
+  },
+  "expected_state_transitions": [
+    { "bar": 45, "from": "NONE", "to": "ACTIVE", "reason_code": "LINE_ESTABLISHED" }
+  ],
+  "expected_final_state": "ACTIVE",
+  "breakout_bar": null,
+  "confirmed_bar": null,
+  "expected_reason_codes": ["LINE_ESTABLISHED"],
+  "flags": [],
+  "rejection_rationale": [
+    {
+      "candidate": "B=(20,96) — the shallowest two-point line",
+      "rejected_because": "Its line is pierced by the t=45 high (92) beyond eps; the shallow line pokes under the intervening high.",
+      "numeric": "m=(ln96-ln100)/20=(4.564348-4.605170)/20=-0.00204110; y_hat(45)=4.605170-0.00204110*45=4.513321; ln92=4.521789 > 4.513321+0.005=4.518321 -> pierces."
+    },
+    {
+      "candidate": "B=(70,80) — the steepest two-point line",
+      "rejected_because": "Its steeper line passes far below the t=45 high (92), which pierces hugely.",
+      "numeric": "m=(ln80-ln100)/70=(4.382027-4.605170)/70=-0.00318776; y_hat(45)=4.605170-0.00318776*45=4.461721; ln92=4.521789 > 4.461721+0.005=4.466721 -> pierces by 0.055068."
+    },
+    {
+      "candidate": "B*=(45,92) itself piercing any intervening high",
+      "rejected_because": "The selected line dominates both (20,96) and (70,80) within eps -> it is the valid envelope.",
+      "numeric": "y_hat(20)=4.568112 >= ln96=4.564348 (ok); y_hat(70)=4.475466 >= ln80=4.382027 (ok)."
+    }
+  ],
+  "geometry_check": {
+    "yA": 4.60517,
+    "yB": 4.52179,
+    "slope_formula": "m=(ln92-ln100)/(45-0)=(4.521789-4.605170)/45=-0.083381/45=-0.00185291",
+    "intercept_formula": "b=yA-m*0=4.605170",
+    "key_inequalities": [
+      "Three eligible pivots: (20,96),(45,92),(70,80).",
+      "(20,96) invalid: y_hat(45)=4.513321 < ln92-eps.",
+      "(70,80) invalid: y_hat(45)=4.461721 < ln92-eps.",
+      "(45,92) valid: dominates t=20 (4.568112>=4.564348) and t=70 (4.475466>=4.382027).",
+      "Hull selects the shallowest valid line -> B*=(45,92)."
+    ],
+    "notes": "Direct reproduction of trendline-specification.md §8 worked example (eps=0.005). All intervening filler highs sit strictly below the envelope so the only eligible pivots are the three named ones."
+  }
+}

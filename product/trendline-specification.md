@@ -163,7 +163,42 @@ Default picks `tA = 0`.
 
 ---
 
-## 5. Pivot-high rule (fractal / N-bar pivot)
+## 5. Pivot-high rule (fractal / N-bar pivot) — **SECONDARY / NON-AUTHORITATIVE**
+
+> **Product Owner decision 2026-07-25 — resolves SC-2 (upper-log-hull is canonical;
+> pivot prefilter is non-authoritative).** The upper-log-hull envelope rule (§8) is
+> **canonical** and **MUST NOT depend on a fixed pivot-high prefilter.**
+> Specifically:
+> 1. **Every valid later bar high may be a second-anchor candidate**, subject to:
+>    it occurs after the ATH; its high is below the ATH; it produces a descending
+>    log-space slope; and it satisfies the canonical envelope rule + tolerance (§8).
+> 2. A bar does **NOT** need to qualify as a `k`-pivot high to become the canonical
+>    upper-log-hull anchor.
+> 3. **Pivot-high detection is SECONDARY and NON-AUTHORITATIVE.** It may be used
+>    only for: **visualization**; **descriptive metadata**; **confidence
+>    features**; and **performance optimization ONLY IF proven lossless** against
+>    the all-highs canonical calculation.
+> 4. A pivot filter **must NEVER change the selected canonical anchor.**
+> 5. If a future optimized implementation uses pivot pruning, it **MUST fall back
+>    to / verify against the full all-highs upper-hull result.**
+> 6. **RM-01 demonstrates why a strict `k=3` precondition is invalid:** 2026-07-21
+>    @ 129.88 is **NOT** a `k=3` pivot, yet it **is** the canonical shallowest
+>    descending envelope anchor; excluding it would contradict the approved
+>    upper-log-hull rule.
+>
+> **Motivating case: RM-01.** On the Product Owner's original SPCX chart the
+> canonical second anchor is **2026-07-21 @ 129.88** — the shallowest descending
+> line from the ATH that dominates all later highs (0 envelope violations). That
+> bar is only a `k=1` local high (2026-07-17 @ 130.33 is higher within 3 bars), so
+> it is **not** a `k=3` pivot. The only `k=3` pivot after the ATH (2026-06-30)
+> yields a **steeper** line that does **not** dominate later highs, so a strict
+> `k=3` prefilter would **wrongly exclude the correct canonical anchor**. The SC-2
+> proof fixture is **GX-19** (`fixtures/golden/GX-19`).
+
+Pivots below are retained **only** for the secondary, non-authoritative uses
+listed above (visualization, descriptive metadata, confidence features, and
+provably-lossless performance optimization). **Pivot status is not a precondition
+for second-anchor candidacy or selection** (§6, §8).
 
 A **pivot high** at index `p` is a local maximum of the high series over a
 symmetric lookback/lookforward window of `k` bars:
@@ -187,6 +222,12 @@ isPivotHigh(p, k)  iff  H[p] > H[p−i]  for all i in 1..k
 > Alternative: `k = 5` (fewer, stronger pivots) or ATR-scaled. · Materiality: med
 > (affects candidate density and line stability). · Human-approval: no (tunable
 > default; changing it does not change signal *semantics*, only sensitivity).
+> · **NON-AUTHORITATIVE FOR SELECTION (Product Owner 2026-07-25, resolves SC-2):**
+> `k` governs only the secondary pivot uses in §5 (visualization / metadata /
+> confidence / lossless optimization). It **does not gate second-anchor candidacy
+> and must never change the canonical upper-log-hull anchor** (§6, §8). Changing
+> `k` — including to any strict value — **cannot** exclude a bar high from
+> canonical candidacy.
 
 **Worked example.** Highs (index:value): `0:80 1:120 2:95 3:130 4:110 5:105 6:118
 7:112`. With `k = 2`: `t=3` (130) is a pivot (`>` 120,95 left; `≥` 110,105
@@ -198,19 +239,31 @@ right neighbour at `t=8` which is absent → **not confirmable** if it is within
 
 ## 6. Second-anchor eligibility
 
+> **Revised per Product Owner decision 2026-07-25 (resolves SC-2, see §5).** The
+> pivot-high requirement is **REMOVED** from candidacy and selection. **Candidacy
+> is over every later bar high**; pivots are **no longer a precondition**.
+
 The line runs from `A` (the ATH) down to a **second anchor** `B = (tB, HB)`.
-`B` is eligible iff **all** hold:
+**Every later bar high is a candidate.** `B` is eligible iff **all** hold:
 
 1. `tB > tA` — strictly later than the ATH.
-2. `isPivotHigh(tB, k)` — `B` is a confirmed pivot high (§5).
-3. `HB < HA` — strictly below the ATH (the line descends).
-4. The implied slope `m = (yB − yA)/(tB − tA)` is `< 0` (guaranteed by 1 & 3,
+2. `HB < HA` — strictly below the ATH (the line descends).
+3. The implied slope `m = (yB − yA)/(tB − tA)` is `< 0` (guaranteed by 1 & 2,
    stated for completeness).
-5. `B` survives the **envelope rule** (§8) — i.e. the line `A→B` keeps all
-   intervening highs at/below it within tolerance.
+4. `B` survives the **envelope rule** (§8) — i.e. the line `A→B` keeps **all
+   intervening bar highs** at/below it within tolerance `ε`.
 
-The **selected** `B` among all eligible candidates is chosen by the envelope
-rule in §8 (not simply "the next pivot").
+There is **no `isPivotHigh(tB, k)` precondition**: a candidate need **not** be a
+confirmed pivot high. The former requirement (previously listed here as
+"`isPivotHigh(tB, k)` — `B` is a confirmed pivot high") is **superseded** by the
+all-highs candidacy above; pivot detection is secondary and non-authoritative
+(§5). A non-pivot bar high can be — and, per the RM-01 / GX-19 case, sometimes
+**is** — the canonical anchor.
+
+The **selected** `B*` among all eligible candidates is the canonical upper-log-hull
+vertex chosen by the envelope rule in §8 (the shallowest descending line from `A`
+that dominates **all later bar highs** within `ε`), **not** "the next pivot" and
+**not** restricted to pivots.
 
 ---
 
@@ -248,32 +301,43 @@ of the price highs from the ATH forward — the tightest descending straight lin
 in log space that stays **at or above every intervening high** (within tolerance
 `ε`), anchored at `A`.
 
+> **Candidates are ALL later bar highs (Product Owner 2026-07-25, resolves SC-2).**
+> The candidate set is **every** bar high with `t > tA`, **not** a pivot-restricted
+> subset. The canonical anchor is the **all-highs upper-log-hull vertex** — the
+> shallowest descending line from `A` that dominates all later **bar** highs within
+> `ε`. Pivot status is irrelevant to which candidate is selected; a non-pivot bar
+> high can be the canonical anchor (see §5 motivating case RM-01, and GX-19).
+
 This is equivalent to walking the **upper convex hull** (in log space) of the
-pivot-high point set to the right of the ATH:
+**bar-high point set** (all later highs) to the right of the ATH:
 
 ### Algorithm (deterministic)
 
 ```
-Given anchor A=(tA,yA) and the ordered set P of pivot highs with t>tA:
-1. Consider candidate second anchors B ∈ P with yB < yA (descending).
+Given anchor A=(tA,yA) and the ordered set H of ALL bar highs with t>tA:
+1. Consider candidate second anchors B ∈ H with yB < yA (descending).   # ALL highs, not pivots
 2. For each candidate B, define ŷ_B(t) = slope(A,B)·(t−tA)+yA.
-3. B is ENVELOPE-VALID iff for every pivot high P_i with tA < t_i < tB:
-        y[t_i] ≤ ŷ_B(t_i) + ε          # no intervening high pierces above tol
-   AND for every bar high (not just pivots) in (tA, tB):
-        H-check optional per D-TL-05.
-4. Among ENVELOPE-VALID candidates choose B* = the one giving the LINE THAT
-   BINDS: the least-steep (highest) line that still dominates all highs — i.e.
-   the FIRST hull vertex. Concretely: B* = argmin over valid B of slope
-   magnitude? NO — see selection rule below.
+3. B is ENVELOPE-VALID iff for EVERY bar high (not just pivots) with tA < t_i < tB
+   AND for every bar high with t_i > tB:
+        y[t_i] ≤ ŷ_B(t_i) + ε          # no bar high pierces the line above tol (D-TL-05)
+4. Among ENVELOPE-VALID candidates choose B* = the canonical upper-hull vertex:
+   the least-steep (highest / shallowest) descending line that still dominates
+   ALL later bar highs — i.e. the FIRST hull vertex after A. Equivalently
+   B* = argmax over valid B of slope(A,B) (slope closest to zero). See below.
 ```
 
+> **Note (pivots are NOT a pre-filter).** A performance-optimized implementation
+> MAY prune candidates using pivots **only if** it is proven lossless against this
+> all-highs calculation and it **falls back to / verifies against** the full
+> all-highs upper-hull result; it must **never** change the selected `B*` (§5).
+
 **Selection rule (canonical).** The canonical line is the **upper convex hull
-edge** emanating from `A`: choose `B*` such that **no intervening high pierces
+edge** emanating from `A`: choose `B*` such that **no bar high pierces
 the line beyond `ε`** and the line is the **highest** such descending line
-(smallest `|m|` that still dominates). Equivalently, `B*` is the pivot high that
-maximizes the slope `m` (closest to zero, i.e. shallowest) subject to the
-domination constraint — because any steeper line would pass **below** some
-intervening high, violating "resistance stays above highs."
+(smallest `|m|` that still dominates). Equivalently, `B*` is the **bar high** (any
+later bar high, pivot or not) that maximizes the slope `m` (closest to zero, i.e.
+shallowest) subject to the domination constraint — because any steeper line would
+pass **below** some later high, violating "resistance stays above highs."
 
 > Intuition: resistance must sit **above** the highs it caps. Of all descending
 > lines from the ATH that stay above every intervening high, the **lowest**
@@ -281,17 +345,17 @@ intervening high, violating "resistance stays above highs."
 > the **upper hull** — the shallowest line that still dominates everything. This
 > is the first convex-hull vertex after `A` in log space.
 
-**Worked example (hull selection).** Log-space pivot highs after `A=(0, y=4.605
-[H=100])`:
+**Worked example (hull selection).** Log-space **later bar highs** (all highs, not
+a pivot subset) after `A=(0, y=4.605 [H=100])`:
 
-| pivot t | H | y=lnH |
+| bar t | H | y=lnH |
 |--------:|----:|--------:|
 | 20 | 96 | 4.56435 |
 | 45 | 92 | 4.52179 |
 | 70 | 80 | 4.38203 |
 
 - Candidate `B=(20,96)`: `m = (4.56435−4.60517)/20 = −0.0020410`. Line at t=45 =
-  `4.60517 − 0.0020410·45 = 4.51333`; pivot y at 45 is `4.52179` >
+  `4.60517 − 0.0020410·45 = 4.51333`; the bar-high y at 45 is `4.52179` >
   `4.51333 + ε`? If `ε=0.005`, `4.51333+0.005 = 4.51833 < 4.52179` → **pierces →
   invalid** (the t=45 high pokes above this shallow line).
 - Candidate `B=(45,92)`: `m = (4.52179−4.60517)/45 = −0.0018529`. Line at t=20 =
@@ -313,12 +377,18 @@ This is the correct canonical resistance.
 > (defines the core object). · Human-approval: yes — **granted 2026-07-24 (HD-02)**;
 > this is the load-bearing geometric definition of the product.
 
-> **Decision D-TL-05 — Domination set: pivots-only vs every bar high** · Default:
-> enforce domination against **pivot highs** for line *selection*, and against
-> **every bar high** for line *validity monitoring* (§10). · Rationale: hull over
-> pivots is stable and noise-tolerant; per-bar check catches a single spike that
-> should invalidate. · Alternative: pivots-only everywhere (ignores lone spikes).
-> · Materiality: med · Human-approval: no.
+> **Decision D-TL-05 — Domination set: every bar high** · **REVISED — Product
+> Owner 2026-07-25 (resolves SC-2).** Enforce domination against **every bar high**
+> for **both** line *selection* **and** line *validity monitoring* (§10). The prior
+> default (domination against **pivot highs** for *selection*, every bar high for
+> *monitoring*) is **SUPERSEDED**: selection domination is now over **ALL bar
+> highs**, so the selected `B*` is the all-highs upper-log-hull vertex and pivots
+> never restrict the selection set. · Rationale: the canonical object is the
+> all-highs upper log-hull (§8); a pivot-restricted selection could pick a
+> different, non-canonical anchor (exactly the SC-2 failure — see RM-01 / GX-19). ·
+> Rejected alternative: pivots-only for selection (can exclude the true canonical
+> anchor). · Materiality: **high** (defines the selected anchor). · Human-approval:
+> yes — **granted 2026-07-25**.
 
 ---
 
@@ -681,10 +751,13 @@ The Architect proposes the Product Steward add these to
 [`glossary.md`](glossary.md):
 
 - **Anchor (A)** — the all-time-high bar that begins the descending trendline.
-- **Second anchor (B / B\*)** — the qualifying later pivot high selected by the
-  envelope rule to define the line.
+- **Second anchor (B / B\*)** — the qualifying later **bar high** (pivot or not)
+  selected by the all-highs envelope rule to define the line (revised 2026-07-25,
+  SC-2; pivot status is not a precondition).
 - **Pivot high** — a bar high that is a local maximum over a symmetric `k`-bar
-  window.
+  window; **secondary / non-authoritative** for line selection (visualization,
+  descriptive metadata, confidence features, and provably-lossless optimization
+  only — §5, 2026-07-25 SC-2 decision).
 - **Envelope rule / upper log-hull** — the selection rule choosing the shallowest
   descending log-space line from the ATH that stays above all intervening highs
   within tolerance `ε`.
@@ -718,8 +791,10 @@ The Architect proposes the Product Steward add these to
    persistence wait); persistence and volume are confidence features; `ε_break` is
    a versioned, backtestable tolerance (%-based and ATR-based, evaluated Phase 0 +
    Phase 4). The prior "close + persistence 2 + soft volume" policy is superseded.
-4. **OQ-4:** Should the touch/domination check use pivot highs only or every bar
-   high (D-TL-05)? Default hybrid proposed.
+4. **OQ-4 (D-TL-05, high) — RESOLVED 2026-07-25 (resolves SC-2):** selection
+   domination uses **every bar high** (not pivots-only); the canonical anchor is
+   the all-highs upper-log-hull vertex and **pivot detection is
+   non-authoritative** (§5, §6, §8). Proof fixture: **GX-19**.
 5. **OQ-5:** Universe/data-vendor and split/dividend data availability for S&P 500
    (data-layer ticket dependency, not this spec).
 6. **OQ-6:** Should very long (multi-decade) histories switch to weekly bars to
