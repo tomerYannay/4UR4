@@ -39,14 +39,21 @@ style), and **Major risks**. Freeze status is marked per phase.
 
 - **Goal:** Lock the deterministic contract of the product — trendline geometry,
   breakout/retest/expiry semantics, Confidence v1 decomposition — as specs plus
-  **golden-example fixtures** (GX-01..12, CF-EV-01..07) that later implementation
-  must satisfy. No product code.
+  **golden-example fixtures** that later implementation must satisfy. The fixture
+  set is **whatever is committed**, not a list restated here: every fixture
+  directory under [`fixtures/golden/`](fixtures/golden/), the real-market
+  fixture(s) under [`fixtures/real/`](fixtures/real/), and every `CF-EV-*`
+  case enumerated in [`confidence-specification.md`](confidence-specification.md)
+  §11. No product code.
 - **Entry criteria:** Vision, trendline/confidence/sentiment specs, data-provider
   research, and MVP architecture drafted; this roadmap proposed.
 - **Exit criteria:** Human-approved specs; complete golden-fixture set (synthetic
   OHLCV + expected-output JSON pinned to 6 sig figs) reviewed and committed as
   docs/fixtures; open questions OQ-1..OQ-4 resolved into HD decisions or explicitly
-  deferred.
+  deferred. Machine-checkable form: every `expected.json` under
+  `product/fixtures/golden/` schema-validates and every documentation link and
+  markdown table resolves under `node tools/check-evidence.mjs`, which **derives**
+  its fixture list from the directory rather than from any written list.
 - **Dependencies:** None external. Human decisions HD-01..HD-04 inform fixtures.
 - **Evidence required:** Committed spec docs; committed fixture files with expected
   outputs; a review record mapping each spec section to its fixture(s).
@@ -75,28 +82,130 @@ style), and **Major risks**. Freeze status is marked per phase.
 ### Phase 2 — Trendline detection engine  ·  **Blocked: build-freeze (GOV-015)**
 
 - **Goal:** The pure, deterministic `engine/` that fits the canonical ATH-anchored
-  log descending line (envelope rule) and runs the ACTIVE-side state machine.
+  log descending line (envelope rule) as-of-time and runs the **pre-breakout**
+  state machine — formation gates, input guards, rolling re-selection (§21.6) and
+  the `ACTIVE → ACTIVE` wick-break edge (§14), which is not a state.
 - **Entry criteria:** Phase 0 golden fixtures approved; **HD-02** (envelope rule)
-  approved; freeze lifted for this scope.
-- **Exit criteria:** Engine reproduces GX-01, GX-02, GX-06, GX-08, GX-09, GX-10,
-  GX-12 exactly; every accept/reject emits a reason code; determinism guard passes.
-- **Dependencies:** Phase 0 fixtures; **HD-01**, **HD-02**; (bars can be fixtures,
-  so Phase 2 does not strictly require Phase 1).
+  approved; freeze lifted for this scope; **and the clean-room authorship
+  criterion below (E2-AUTHOR) is satisfied.**
+
+- **Entry criterion E2-AUTHOR — clean-room authorship (HD-15 condition 2,
+  [#20](https://github.com/tomerYannay/4UR4/issues/20)).**
+  `tools/fixture-replay.mjs` is a causal reference model permitted under GOV-015
+  **only** as Phase-0 evidence tooling, on the stated conditions that it confers
+  **no Phase-2 credit** and that the Phase-2 engine is *"authored from the
+  specification by an agent that has not read this model"*
+  ([HD-15](human-decisions.md); [`build-freeze.md`](../governance/build-freeze.md)).
+  With no mechanism, that clause is unenforceable and HD-15 degrades from a scope
+  ruling into a de facto partial freeze lift. Phase 2 may therefore not be entered
+  until **all four** hold:
+  1. **The Ready ticket names the constraint.** The Phase-2 implementation
+     ticket's Definition of Ready carries an explicit clean-room clause naming
+     `tools/fixture-replay.mjs` — and any successor reference model under
+     `tools/` — as **must-not-read** for the authoring agent.
+  2. **The authoring agent is configuration-denied, not merely instructed.** The
+     agent that writes `engine/` cannot read the reference model because its
+     tool/permission configuration forbids that path. A prompt-level instruction
+     is not a mechanism and does not satisfy this criterion.
+  3. **Authorship is separated from verification.** The agent that runs the
+     reference model against the engine is **not** the agent that wrote the
+     engine. The verifier may read the model; the author may not.
+  4. **The claim is attested and citable.** Before the Phase-2 exit gate is
+     assessed, a clean-room attestation exists as an artifact — naming the
+     authoring agent, its deny configuration, and the commit range it authored —
+     recorded by a party other than the authoring agent.
+
+  Criterion 4 is not satisfiable until
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) (review verdicts must be
+  able to become artifacts; single-account attribution) is resolved, so **Phase 2
+  entry is blocked on #21 in addition to the per-scope freeze lift.** Nothing in
+  this criterion weakens [GOV-015](../governance/build-freeze.md).
+
+- **Exit criteria:** The engine reproduces, **exactly and as-of-time**
+  (§21 / HD-12 / D-TL-11), the Phase-2-owned behaviour of **every** fixture
+  directory under [`product/fixtures/golden/`](fixtures/golden/) — no fixture is
+  exempt, and no list of fixture IDs is maintained here. For each fixture the
+  engine must reproduce:
+  - `expected_ath_anchor`, `expected_second_anchor`, `expected_log_slope`,
+    `expected_intercept` and `expected_line_values` to 6 significant figures,
+    including **every** pre-breakout re-selection recorded in
+    `causal_record.reselections`;
+  - the formation-gate trace (`causal_record.formation`, with F1/F2/F3 evaluated
+    independently) and the §18 input guards;
+  - every entry of `expected_state_transitions`, with its `reason_code`, at a bar
+    **strictly before** that fixture's top-level `confirmed_bar`.
+
+  For every fixture whose top-level `confirmed_bar` is `null`, the above is the
+  **whole** fixture: `expected_final_state` and the complete
+  `expected_reason_codes` set must also match. **The Phase-2/Phase-3 split is a
+  derived partition, not a list:** a fixture is Phase-2-complete iff
+  `confirmed_bar == null`, evaluated against the committed `expected.json` files
+  at gate time. Adding a fixture therefore tightens this gate automatically.
+  Additionally: RM-01 (see below); every accept/reject emits a `reason_code` from
+  the schema's closed set; the determinism guard passes.
+- **Exit criteria (RM-01, the non-circular ground truth):** The engine also
+  reproduces the **approved** RM-01 geometry from the committed
+  [`fixtures/real/RM-01/input.csv`](fixtures/real/RM-01/input.csv) — anchor, canonical
+  second anchor, slope and intercept to 6 significant figures, zero envelope
+  violations, and no breakout in range (`confirmed_bar == null`). This needs no
+  data provider and so creates **no Phase 1 dependency**: the OHLCV is committed.
+  The synthetic set proves the engine is self-consistent with the written spec;
+  RM-01 is the only committed evidence that the spec captures the object the
+  Product Owner actually drew.
+- **Why this gate is stated as a derived set, not an enumeration.** The previous
+  form named seven fixture IDs here and five under Phase 3 — a hand-maintained
+  restatement of a fact the repository already holds on disk, stored apart from
+  it and never re-derived. It had already drifted: it silently omitted the
+  HD-11/SC-2 non-pivot-`B*` proof, the sole HD-13 tolerance-boundary fixture, the
+  `NO_VALID_SECOND_ANCHOR` reachability case and all three HD-14 formation-gate
+  regressions, so **an engine could have passed this exit gate while contradicting
+  three ratified Product Owner rulings**
+  ([#19](https://github.com/tomerYannay/4UR4/issues/19)). That defect class —
+  a human restatement of a machine-derivable fact — is the one this project has
+  already paid for in Phase 0, and it is not repeated here. Fixture-level detail
+  belongs in [`fixtures/README.md`](fixtures/README.md) §3, which is its home.
+- **Dependencies:** Phase 0 fixtures; **HD-01**, **HD-02**, **HD-11**, **HD-12**,
+  **HD-13**, **HD-14**, **HD-15**; Issue **#20** (E2-AUTHOR mechanism) and Issue
+  **#21** (attestation artifacts); (bars can be fixtures, so Phase 2 does not
+  strictly require Phase 1).
 - **Evidence required:** Passing fixture tests to 6 sig figs; determinism test
-  (same input twice → identical output); reason-code coverage report; CI green.
-- **Major risks:** Envelope mis-implementation (R-2); float/tie non-determinism.
+  (same input twice → identical output); reason-code coverage report; the
+  E2-AUTHOR clean-room attestation; CI green. **Explicitly not evidence:**
+  reproducing, resembling, or agreeing with `tools/fixture-replay.mjs` earns
+  **no** Phase-2 credit (HD-15 condition 1). The contract is the committed
+  fixtures and the specification; where the model and the spec disagree the
+  **spec governs**, and the divergence is filed as a spec-defect report or a
+  model bug — never resolved by copying the model.
+- **Major risks:** Envelope mis-implementation (R-2); float/tie non-determinism
+  (see the GX-14 libm caveat in [`fixtures/README.md`](fixtures/README.md));
+  **transcription of the reference model in place of conformance to the spec**, if
+  E2-AUTHOR is asserted rather than mechanically enforced.
 
 ### Phase 3 — Breakout & retest engine  ·  **Blocked: build-freeze (GOV-015)**
 
-- **Goal:** Extend the engine with confirmed-breakout, wick-break, retest,
-  failed-breakout, and expiry/recompute logic.
+- **Goal:** Extend the engine with confirmed-breakout, line freezing (`Λ^F`,
+  §21.5), retest, failed-breakout, and expiry/recompute logic — i.e. everything
+  from the confirming bar onward. (Wick-break moved to Phase 2: §14 is an
+  `ACTIVE → ACTIVE` edge on the *live* line, not a post-breakout behaviour, and
+  the fixture schema's closed `expected_final_state` set confirms `WICK_BREAK` is
+  not a state. This is a boundary clarification, not new scope.)
 - **Entry criteria:** Phase 2 exit met; **HD-03** (breakout confirmation policy)
-  approved; freeze lifted for this scope.
-- **Exit criteria:** Engine reproduces GX-03, GX-04, GX-05, GX-07, GX-11 exactly;
-  full state machine + reason codes verified.
-- **Dependencies:** Phase 2; **HD-03**.
+  approved; freeze lifted for this scope. E2-AUTHOR (Phase 2) continues to bind
+  the authoring agent for the whole engine.
+- **Exit criteria:** The engine reproduces **every** fixture directory under
+  [`product/fixtures/golden/`](fixtures/golden/) **in full and exactly** — the
+  complete `expected_state_transitions` list, the complete `expected_reason_codes`
+  set and `expected_final_state` of each — with no fixture named or exempted here.
+  This is the Phase-2 gate plus all post-`confirmed_bar` behaviour on the **frozen**
+  line `Λ^F` (§21.5): failure, retest, expiry and recompute. Together the two gates
+  cover the committed set exactly once; the split between them is the derived
+  `confirmed_bar` partition stated under Phase 2, not a list. Full state machine +
+  reason codes verified against the schema's closed code set.
+- **Dependencies:** Phase 2; **HD-03**, **HD-12** (as-of-time freezing).
 - **Evidence required:** Passing breakout/retest/expiry fixture tests; state-machine
-  transition coverage; CI green.
+  transition coverage; CI green. The Phase-2 exclusion carries over: agreement with
+  `tools/fixture-replay.mjs` is **not** evidence and earns no credit (HD-15
+  condition 1).
 - **Major risks:** Confirmation policy too loose/tight (false positives/negatives);
   volume-qualifier data dependency on Phase 1.
 
@@ -117,11 +226,16 @@ style), and **Major risks**. Freeze status is marked per phase.
 
 ### Phase 5 — Confidence v1  ·  **Blocked: build-freeze (GOV-015)**
 
-- **Goal:** The deterministic, decomposable Confidence v1 heuristic (C1–C7) with
-  full explainability output and the no-sentiment guard.
+- **Goal:** The deterministic, decomposable Confidence v1 heuristic — the component
+  set defined in [`confidence-specification.md`](confidence-specification.md), which
+  HD-03/HD-05 revised to **C1–C8** (this line previously said "C1–C7") — with full
+  explainability output and the no-sentiment guard.
 - **Entry criteria:** Phases 2–4 exit met; confidence spec + CF-EV fixtures
   approved; **HD-04** wording policy set; freeze lifted for this scope.
-- **Exit criteria:** Reproduces CF-EV-01..07 exactly; `score_kind:"heuristic"`,
+- **Exit criteria:** Reproduces **every** `CF-EV-*` case enumerated in
+  [`confidence-specification.md`](confidence-specification.md) §11 exactly — the
+  spec section is the single source and is not restated here (the previous form,
+  "CF-EV-01..07", had already fallen behind CF-EV-08/09); `score_kind:"heuristic"`,
   disclaimers enforced, `Σ contributions == score`; no sentiment field present;
   rank-ordering lift measured on the historical set (**HD-05** label needed only
   for the win/loss validation).
@@ -205,3 +319,7 @@ style), and **Major risks**. Freeze status is marked per phase.
 |------|--------|-------------|
 | 2026-07-23 | Roadmap created, empty, under build-freeze. | pending |
 | 2026-07-24 | Proposed MVP roadmap (Phases 0–9) drafted for approval. | PENDING (human) |
+| 2026-07-26 | **Fixture-coverage reconciliation ([#19](https://github.com/tomerYannay/4UR4/issues/19)).** Phase 0/2/3/5 exit criteria no longer enumerate fixture IDs. Phase 2 and Phase 3 now gate on *every* committed fixture, split by the derived predicate `confirmed_bar == null`; Phase 5 defers to `confidence-specification.md` §11. The old enumeration covered 12 of the committed golden fixtures and omitted the HD-11/SC-2, HD-13 and HD-14 evidence. | PENDING (human) |
+| 2026-07-26 | **E2-AUTHOR added as a Phase 2 *entry* criterion ([#20](https://github.com/tomerYannay/4UR4/issues/20)).** Gives HD-15 condition 2 (clean-room authorship w.r.t. `tools/fixture-replay.mjs`) a four-part mechanism, and makes Phase 2 entry depend on [#21](https://github.com/tomerYannay/4UR4/issues/21). No freeze lift; [GOV-015](../governance/build-freeze.md) unchanged and still ON. | PENDING (human) |
+| 2026-07-26 | **Two further stale enumerations of the same defect class, found while doing the above and fixed here.** Phase 0's goal said the fixture set was "GX-01..12, CF-EV-01..07"; Phase 5's goal said the Confidence v1 component set was "C1–C7". Both had drifted: 23 golden fixtures are committed, `confidence-specification.md` §11 defines CF-EV-01..09, and HD-03/HD-05 revised the component set to C1–C8. All three now defer to their source instead of restating it. | PENDING (human) |
+| 2026-07-26 | **Two Steward judgement calls needing human confirmation, beyond the literal text of #19.** (a) **RM-01 added to the Phase 2 exit gate** — it is the only committed non-circular ground truth and was in no phase gate at all; its OHLCV is committed, so this adds no Phase 1 dependency. (b) **Wick-break (§14) reassigned from the Phase 3 goal to Phase 2**, since `WICK_BREAK` is an `ACTIVE → ACTIVE` edge on the live line and falls in the `confirmed_bar == null` partition. Both are coherence fixes, not new scope; flag them if either is unwanted. | PENDING (human) |
