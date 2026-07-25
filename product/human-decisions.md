@@ -291,6 +291,20 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 
 - **2026-07-25 — HD-11 approved (resolves SC-2 from RM-01):** upper-log-hull canonical,
   pivot prefilter non-authoritative.
+- **2026-07-25 — Historical Product Owner Decision Record — RM-01** (*recorded here, not
+  newly decided*): PR #9 merged the RM-01 verification without a citable GitHub decision
+  artifact (0 comments, 0 reviews), so this bullet supplies the missing precedence-1
+  (Product-Owner-decision) record. Decision content: **RM-01 approved**; **SC-1 resolved as
+  `MATCH`**; **SC-2 resolved by
+  [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high)**;
+  the **canonical upper-log-hull rule is retained**; the **pivot prefilter is
+  non-authoritative**. Decision made by the Product Owner on 2026-07-25. This record only
+  documents the existing decision and does not create or self-approve a new Product Owner
+  decision. The same decision is already carried by
+  [`fixtures/real/RM-01/annotation.json`](fixtures/real/RM-01/annotation.json)
+  (`product_owner_approval: approved`),
+  [`fixtures/real/RM-01/README.md`](fixtures/real/RM-01/README.md) and
+  [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md).
 
 *This register records the Product Owner's rulings of 2026-07-24. Ruled items are
 governing; HD-06 remains a proposal pending human decision
