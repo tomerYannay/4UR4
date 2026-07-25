@@ -508,7 +508,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   [GOV-015](../governance/build-freeze.md), or is it **product functionality** implemented
   under a freeze?
 - **Why it is genuinely contested, stated from both sides:**
-  - *For permitting:* the alternative is hand arithmetic, which **demonstrably drifted twice**
+  - *For permitting:* the alternative is hand arithmetic, which **demonstrably drifted, repeatedly**
     — the whole pre-#16 fixture set was derived with full-series hulls, and the replacement
     GX-20 was designed with full-series reasoning and shipped defective. A correctness
     contract nobody can mechanically re-derive is the larger Phase-2 hazard. The file creates

@@ -12,9 +12,10 @@
 > so neither can drift from the fixtures without failing the build.
 >
 > **What is NOT guarded, named precisely:** each fixture's `geometry_check` block — including
-> `key_inequalities` — has its **presence and types** validated by the schema in CI, but **no
-> tool evaluates whether the arithmetic it restates, or the inequalities it asserts, are
-> true**. It sits inside the fixture JSON next to the gated `causal_record`, which makes the
+> `key_inequalities` — has the **presence of the block, and the types of whatever
+> keys it does carry**, validated by the schema in CI — note `geometry_check` declares no
+> `required` keys, so an individual key's absence is not caught either. **No tool evaluates
+> whether the arithmetic it restates, or the inequalities it asserts, are true.** It sits inside the fixture JSON next to the gated `causal_record`, which makes the
 > distinction easy to miss. It has drifted more than once (see the corrections table). The
 > same is true of the prose in this file and in `README.md`: hand-verified at the head named
 > in each section, and nowhere else. A content gate for `geometry_check` is outstanding work,

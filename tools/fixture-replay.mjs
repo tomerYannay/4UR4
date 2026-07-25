@@ -712,7 +712,7 @@ function checkGoverningTable() {
 
 // Every committed causal_record must still equal what buildRecord() derives from
 // input.csv. Without this the whole narrative evidence layer is unchecked — which is
-// where six of seven review rounds found their defects.
+// where most rounds of this review chain found their defects.
 function checkCausalRecord(fx) {
   if (!fx.expected.causal_record) return [];
   const fresh = buildRecord(fx);
