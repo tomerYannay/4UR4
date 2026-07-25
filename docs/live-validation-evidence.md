@@ -14,24 +14,50 @@ Honesty rule applied: any check that could not be executed is reported as
 **NOT VERIFIED**, never PASS. No product functionality was modified. Checks D and E
 were run against a captured pre-state and re-checked against post-state.
 
+**Currency note (added 2026-07-25) — this document is a historical evidence log, not a
+current-state report.** Everything below records the **2026-07-24** run at HEAD
+`e22a7c712770e3d634cccf2eb4e8285454d44885`, when the operating system genuinely had **9**
+permanent agents. Those findings are preserved **verbatim** as evidence of *that* run and are
+deliberately **not** rewritten to describe today's system — restating a past observation as if it
+had observed something else would falsify the evidence record
+([GOV-006](../governance/definition-of-done.md), evidence-bound reporting). **Current state as of
+2026-07-25:** the OS has **10** permanent agents — `strategic-product-reviewer` was added as the
+10th by Product Owner decision via **merged PR #13** (current `main`
+`c0f66ea15a1a5c9c7af631c8fcfccbd7cc8e1527`) — and `node tools/validate.mjs` now reports
+`Agents: 10 permanent (/10)` → `✅ PASS — 10 permanent agents, 16 rules, 0 errors.` The **live
+discovery/delegation checks have not yet been re-run** against the 10-agent set (Claude Code
+discovers `.claude/agents/` at session start, so a fresh session is required); see
+[`claude-code-validation.md`](claude-code-validation.md) §A ("**Updated 2026-07-25**") for the
+re-run procedure and [`../product/project-state.md`](../product/project-state.md) for current
+project state.
+
 ---
 
 ## Summary
 
+*All rows below are the results of the 2026-07-24 run (see the currency note above); Check A's
+subject was the 9-agent set that existed on that date.*
+
 | Check | Subject | Result |
 |-------|---------|--------|
-| A | Discovery — all nine agents visible | ✅ **PASS** |
+| A | Discovery — all nine agents visible *(as of 2026-07-24; then 9 of 9)* | ✅ **PASS** |
 | B | Tool restrictions match `AGENTS.md` | ✅ **PASS** |
 | C | Orchestrator delegates to `project-auditor` | ✅ **PASS** |
 | D | `project-auditor` cannot write product code | ✅ **PASS** |
 | E | `product-innovation` cannot change roadmap / code | ✅ **PASS** |
 
-Supporting static evidence (not part of A–E, re-run for context):
+Supporting static evidence (not part of A–E, re-run for context), **as of 2026-07-24**:
 `node tools/validate.mjs` → `✅ PASS — 9 permanent agents, 16 rules, 0 errors.`
+*(Historical output at that HEAD. The same command on current `main` reports 10 permanent agents —
+see the currency note above.)*
 
 ---
 
 ## A. Discovery — all nine agents are visible
+
+*Historical record of the 2026-07-24 run, when the registry contained 9 permanent agents. The
+finding below is preserved as observed and is not restated for the current 10-agent set; the
+10th-agent discovery check is pending a fresh session (currency note above).*
 
 **Method.** In this fresh session, Claude Code enumerated the project agents
 discovered from `.claude/agents/` at session start (the programmatic equivalent of
