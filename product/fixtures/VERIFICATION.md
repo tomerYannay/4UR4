@@ -369,7 +369,13 @@ own misses is worth nothing.
 | **The HD-13 boundary whitelist fired falsely on scoped runs** — `checkBoundaryWhitelist` read the invocation's scoped fixture list rather than the set, so `--all GX-01` reported a repository-wide violation that was false. Found at `53b554a`. | It now reads the full set. A whitelist of size ≠ 1, or one naming a fixture that no longer exists, still fails. |
 | **The governing table below was hand-maintained and unguarded**, and had gone stale on GX-14 after that fixture was rebuilt. Found at `c0ede4d`. | The table is now **emitted by `tools/fixture-replay.mjs --table` and diffed against this file by `--all`**, so a row that disagrees with the fixtures fails CI. |
 | **The committed `causal_record` blocks were never re-derived.** The narrative evidence layer — where most rounds of this chain found their defects — had no check at all. | `--all` now regenerates each block via `buildRecord()` and fails on any difference. |
-| **The decision-register provenance for HD-12/13/14 was overstated**, and HD-13 cited an artifact that does not exist. | Corrected in `human-decisions.md`: all three now disclose that the ruling reached the repository as a direct Product Owner instruction to the session, with **no posted GitHub artifact**, and that ratification is outstanding. |
+| **The decision-register provenance for HD-12/13/14 was overstated**, and HD-13 cited an artifact that does not exist. Corrected in
+`human-decisions.md`: all three disclosed that the ruling had reached the repository as a
+direct Product Owner instruction to the session, with no posted GitHub artifact, and that
+ratification was outstanding. **Since closed** — the Product Owner ratified on 2026-07-25
+([artifact](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), against
+head `2651cd0`), and the provenance blocks are retained as history with the gap marked
+closed. |
 
 ### Scope of the "23 / 23 reproduce exactly" claim
 
