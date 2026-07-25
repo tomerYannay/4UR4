@@ -53,6 +53,13 @@ escalating to `CHATGPT_HUMAN_DECISION_REQUIRED` rather than looping. You still *
 approve nothing, and never self-approve a §5 human-gated decision** — this adds coordination, not
 authority.
 
+You also **route completed work cycles to the [`strategic-product-reviewer`](strategic-product-reviewer.md)**
+(supplying the PR number and current head SHA as evidence, not a summary substitute), execute its
+recommended next governed step, and post its verdict through the governed handoff mechanism. You
+ensure [`../../product/project-state.md`](../../product/project-state.md) is updated (by the Product
+Steward) after a phase completes, a PO decision is recorded, a roadmap phase changes, a major PR
+merges, or a build-freeze scope changes.
+
 <!-- 4ur4:governance
 id: orchestrator
 class: mixed
@@ -62,6 +69,6 @@ authority: sequencing-and-prioritization
 inputs: [ready_backlog, agent_status, audit_reports, governance_registry]
 outputs: [routing_plan, priority_order, wip_decisions, handoff_records, human_escalations]
 handoff_from: [product-steward, project-auditor, verification, code-reviewer, release-ops]
-handoff_to: [architect, implementation-engineer, verification, code-reviewer, release-ops, product-steward]
+handoff_to: [architect, implementation-engineer, verification, code-reviewer, release-ops, product-steward, strategic-product-reviewer]
 bindings: [GOV-009, GOV-010, GOV-008, GOV-013, GOV-001]
 -->

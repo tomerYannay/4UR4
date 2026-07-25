@@ -27,7 +27,7 @@ This bootstrap deliberately **does not** implement any of it (requirement 13).
 
 | Area | Purpose | Entry point |
 |------|---------|-------------|
-| **Executable agents** | The 9 permanent agents as Claude Code subagents (single source of truth) | [`.claude/agents/`](.claude/agents/) |
+| **Executable agents** | The 10 permanent agents as Claude Code subagents (single source of truth) | [`.claude/agents/`](.claude/agents/) |
 | Agents (registry) | Missions, tools, boundaries, invocation, temporary specialists | [`AGENTS.md`](AGENTS.md) |
 | Governance | The rules every agent obeys (`GOV-001`…`GOV-016`) | [`GOVERNANCE.md`](GOVERNANCE.md) |
 | Workflows | Issues, Project, PRs, Ideas Inbox, experiments, audit, status | [`workflows/`](workflows/) |
@@ -54,7 +54,7 @@ node tools/validate.mjs
 
 The validator enforces: canonical agents under `.claude/agents/` (single source
 of truth), valid Claude Code frontmatter and **real tool identifiers**, required
-governance metadata, agent-class rules, the ≤9 permanent-agent ceiling,
+governance metadata, agent-class rules, the ≤10 permanent-agent ceiling,
 separation of duties, handoff integrity, governance cross-references, that
 deterministic and innovation agents **cannot write**, temporary-specialist
 governance, the build-freeze state, and the presence of the CI workflow. It exits

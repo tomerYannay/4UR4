@@ -45,5 +45,5 @@ Each rule file states:
   into designated sinks (the Ideas Inbox) and **only** within tagged constraints
   (value/effort/risk, budgets). They hold **no commit authority**.
 - **Mixed agents** (Orchestrator, Product Steward, Architect, Implementation
-  Engineer, Code Reviewer) declare, per action, whether they are acting
-  deterministically (gated by rules) or creatively (bounded and escalatable).
+  Engineer, Code Reviewer, Strategic Product Reviewer) declare, per action, whether they
+  are acting deterministically (gated by rules) or creatively (bounded and escalatable).

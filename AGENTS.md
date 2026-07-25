@@ -1,8 +1,9 @@
 # Agent Registry
 
-The 4UR4 operating system runs on **9 permanent agents** — the hard ceiling
-(requirement 2) — plus **temporary, ticket-scoped specialists** ([GOV-016](governance/temporary-specialists.md))
-that do **not** count toward it.
+The 4UR4 operating system runs on **10 permanent agents** — the hard ceiling
+(requirement 2; raised from 9 to 10 by **Product Owner decision 2026-07-25** to add the
+**Strategic Product Reviewer**) — plus **temporary, ticket-scoped specialists**
+([GOV-016](governance/temporary-specialists.md)) that do **not** count toward it.
 
 Each permanent agent has **exactly one** authority so responsibilities never
 overlap ([GOV-011 Separation of Duties](governance/separation-of-duties.md)).
@@ -27,7 +28,7 @@ Prove discovery with [`docs/claude-code-validation.md`](docs/claude-code-validat
 | **bounded-creative** | Generates novel options *inside* explicit constraints. | Bounded |
 | **mixed** | Deterministic where it decides, creative where it proposes. | Scoped per action |
 
-## The nine permanent agents
+## The ten permanent agents
 
 | Agent (`name`) | Class | Sole authority | Tools | Cannot write? | File |
 |----------------|-------|----------------|-------|---------------|------|
@@ -40,9 +41,14 @@ Prove discovery with [`docs/claude-code-validation.md`](docs/claude-code-validat
 | `code-reviewer` | mixed | Judgement on diff quality | Read, Grep, Glob, Bash | no file edits | [.claude/agents/code-reviewer.md](.claude/agents/code-reviewer.md) |
 | `release-ops` | deterministic | Merge, release, move to Done | Read, Grep, Glob, Bash | no file edits (git/gh only) | [.claude/agents/release-ops.md](.claude/agents/release-ops.md) |
 | `project-auditor` | deterministic | Health, traceability, reports | Read, Grep, Glob | **yes — read-only** | [.claude/agents/project-auditor.md](.claude/agents/project-auditor.md) |
+| `strategic-product-reviewer` | mixed | Independent strategic checkpoint & next-step decision | Read, Grep, Glob, WebFetch | **yes — read-only** (no Write/Edit/Bash) | [.claude/agents/strategic-product-reviewer.md](.claude/agents/strategic-product-reviewer.md) |
 
-Distribution: **3 deterministic, 1 bounded-creative, 5 mixed**. `model: inherit`
-and `permissionMode: default` on all nine (see "Model & permission choices" below).
+Distribution: **3 deterministic, 1 bounded-creative, 6 mixed**. `model: inherit`
+and `permissionMode: default` on all ten (see "Model & permission choices" below).
+The Strategic Product Reviewer is **read-only** (Read, Grep, Glob, WebFetch — no Write,
+Edit, Bash, or NotebookEdit): it reviews evidence and recommends the next governed step,
+but holds **no write, merge, roadmap, governance, or issue-creation authority**, and its
+approval is **never** Product Owner approval.
 
 ## How each agent is invoked by Claude Code
 
@@ -62,7 +68,7 @@ To cover quant, market-data, ML, backend, frontend, security, and DevOps depth
 without growing the permanent roster:
 
 - Created **per approved ticket**, justified by the **Orchestrator or Architect**,
-  retired when the ticket is Done. **Do not count** toward the nine.
+  retired when the ticket is Done. **Do not count** toward the ten.
 - Declare `status: temporary`, a `ticket`, and a `parent_authority` (the accountable
   permanent agent). Their output **returns to that parent**.
 - **Advisory** specialists (quant-research, trendline-math, market-data,
