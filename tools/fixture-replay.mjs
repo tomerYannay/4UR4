@@ -16,6 +16,29 @@
 //   build-lifted engine must be written separately and must reproduce the
 //   fixtures; reproducing THIS script is not the contract.
 //
+// THE SPECIFICATION IS AUTHORITATIVE, NOT THIS FILE
+//   Where this model and product/trendline-specification.md disagree, the
+//   specification governs and the divergence is a SPEC DEFECT REPORT or a MODEL
+//   BUG — never a silent model behaviour. Known divergences, disclosed:
+//
+//   1. §16 `h_hold` — NOT IMPLEMENTED. The spec allows the retest hold leg to be
+//      satisfied "within h_hold = 3 bars" of the return; this model requires both
+//      legs on the same bar, so it is STRICTER than the spec and could miss a
+//      deferred-hold retest. Verified against every post-breakout bar of every
+//      fixture: no fixture contains such a case, so no expected value depends on
+//      it. A fixture exercising the clause is outstanding work.
+//   2. §12 touch counting and `eps_touch` — NOT IMPLEMENTED (confidence input
+//      only; no fixture asserts a touch list).
+//   3. §13.4 volume / `LOW_VOLUME` — NOT IMPLEMENTED. `flags` are authored per
+//      fixture and are NOT compared by `compare()`.
+//   4. §1 OHLC coherence is enforced here as an input guard although the spec
+//      only assumes it; a fixture with an impossible bar is rejected rather than
+//      silently evaluated.
+//
+//   Consequently "23/23 reproduce exactly" means: anchors, second anchor, slope,
+//   intercept, line values, state transitions, reason codes, final state and
+//   breakout bar. It does NOT cover flags, touches, volume or the h_hold branch.
+//
 // SPEC BASIS (product/trendline-specification.md)
 //   §3 log transform · §4/D-TL-02 anchor · §6 candidacy (all later bar highs,
 //   HD-11) · §7 slope/intercept · §8/D-TL-04/D-TL-05 all-highs upper log hull ·
@@ -97,6 +120,23 @@ export function inputGuards(bars) {
   }
   if (codes.length) return { rejected: true, codes, transitions };
 
+  // OHLC coherence (§1): a bar whose open/close fall outside [low, high], or whose
+  // low exceeds its high, is not a possible bar. The spec assumes well-formed OHLCV
+  // rather than stating this, so it is enforced here as an INPUT guard and is
+  // asserted over the whole fixture set by --ohlc.
+  for (let t = 0; t < bars.length; t++) {
+    const b = bars[t];
+    if (b.low > b.high + FP || b.open < b.low - FP || b.open > b.high + FP
+      || b.close < b.low - FP || b.close > b.high + FP) {
+      return {
+        rejected: true,
+        codes: ['INVALID_INPUT'],
+        transitions: [{ bar: t, from: 'NONE', to: 'NONE', reason_code: 'INVALID_INPUT' }],
+        detail: { bar: t, reason: 'OHLC incoherent', open: b.open, high: b.high, low: b.low, close: b.close },
+      };
+    }
+  }
+
   for (let t = 1; t < bars.length; t++) {
     const jump = Math.abs(Math.log(bars[t].high) - Math.log(bars[t - 1].high));
     if (jump > SPLIT_LOG_JUMP + FP) {
@@ -136,8 +176,10 @@ export function bStarAt(y, upto, tA, eps) {
       if (gap > eps + FP) { ok = false; break; }
     }
     if (!ok) continue;
-    // argmax slope; ENVELOPE_TIE_LATER (§18) — ascending i, so ties replace.
-    if (best === null || m > best.m - FP) best = { t: i, y: y[i], m, worstGap: worst, tie: best !== null && Math.abs(m - best.m) <= FP };
+    // argmax slope, with NO slack: a strictly steeper candidate must never replace
+    // the incumbent, and a BIT-EXACT tie goes to the later bar (§18
+    // ENVELOPE_TIE_LATER; ascending i, so `>=` implements "later wins").
+    if (best === null || m >= best.m) best = { t: i, y: y[i], m, worstGap: worst, tie: best !== null && m === best.m };
   }
   if (!best) return null;
   return { t: best.t, y: best.y, m: best.m, b: y[tA] - best.m * tA, worstGap: best.worstGap, tie: best.tie };
@@ -323,8 +365,14 @@ export function replay(bars, paramsIn) {
 
     // ---- step 4: roll B* forward, effective t+1 (§21.6) ----------------------
     if (lastLambda && L && !rec.frozen && lastLambda.B.t !== L.B.t) {
-      const tie = Math.abs(lastLambda.m - L.m) <= 1e-9;
+      // A tie is BIT-EXACT equality of the two computed slopes. No slack is used:
+      // §20.3 requires order-stable tie rules, and a tolerance here would make the
+      // outcome depend on an unnamed constant (Verification finding, 2026-07-25).
+      const tie = lastLambda.m === L.m;
       reselections.push({ effective_bar: t, from: lastLambda.B.t, to: L.B.t, m: L.m, tie });
+      // §21.6: the re-selected line effective at this bar emits LINE_ESTABLISHED;
+      // a tie additionally emits ENVELOPE_TIE_LATER (§18).
+      push(t, 'ACTIVE', 'ACTIVE', 'LINE_ESTABLISHED');
       if (tie) push(t, 'ACTIVE', 'ACTIVE', 'ENVELOPE_TIE_LATER');
     }
     lastLambda = rec.frozen ? lastLambda : g.lambda;
@@ -498,7 +546,7 @@ export function buildRecord(fx) {
       for (let i = A.t + 1; i < t; i++) {
         if (!(y[i] < y[A.t] - FP)) continue;
         const s = (y[i] - y[A.t]) / (i - A.t);
-        if (s > bestSlope - FP) { bestSlope = Math.max(bestSlope, s); arg = i; }
+        if (s >= bestSlope) { bestSlope = s; arg = i; }
       }
       const ties = [];
       for (let i = A.t + 1; i < t; i++) if (Math.abs(y[i] - y[A.t]) <= FP) ties.push(i);
@@ -567,7 +615,11 @@ export function buildRecord(fx) {
       t_form,
       rule: 'FORMATION_ELIGIBLE(t) iff |S_t| >= min_formation_bars (F1) AND tA <= (t-1) - min_ath_age_bars (F2) AND B*_t exists (F3). Both thresholds are first-class versioned parameters, independent of the pivot window k (§21.3, D-TL-12).',
       gate_trace: gate.filter((x) => x.t <= (t_form ?? gate.length - 1) + 1).map(gateLine),
-      gate_trace_full: gate.map(gateLine),
+      // Only emitted when it adds information beyond gate_trace.
+      ...(t_form !== null && t_form + 1 < gate.length ? {
+        gate_trace_full: gate.map(gateLine),
+        gate_trace_full_caveat: 'This trace re-evaluates the §21.3 gates statelessly at every bar, INCLUDING bars at which the state is BROKEN_OUT/RETESTED. While the state is frozen (§21.5) re-selection is suspended and no formation occurs, so an "ELIGIBLE" entry after the breakout bar describes gate arithmetic only, not an active line. It also runs to t = bar_count, the line that would judge a hypothetical next bar.',
+      } : {}),
     },
     as_of_time_candidate_set: candSet,
     ...(noAnchorProof ? { no_anchor_proof: noAnchorProof } : {}),
@@ -684,12 +736,29 @@ function checkFormation(fx) {
   for (let t = 0; t <= fx.bars.length; t++) if (lambdaAt(y, t, p).lambda) { leastEligible = t; break; }
   if (firstActive !== leastEligible) problems.push(`(c) first ACTIVE bar ${firstActive} != least eligible bar ${leastEligible}`);
 
-  // (d) k-independence
+  // (d) k-independence. NOTE ON WHAT THIS DOES AND DOES NOT PROVE: `replay()` never
+  // reads `params.k` at all — k-independence is STRUCTURAL in this model, not an
+  // empirical result, so a k-sweep here cannot fail and is not evidence. What the
+  // sweep does establish is that no k leaks in indirectly (via defaults, or via a
+  // future edit). The load-bearing evidence that k is non-authoritative is the
+  // fixture data: GX-08 (zero pivots, canonical anchor exists), GX-19/GX-23
+  // (non-pivot B*), and 9 of 20 geometry fixtures with a non-pivot B*.
   const base = JSON.stringify({ tr: r.transitions, st: r.final_state, bo: r.breakout_bar, line: r.line });
   for (const k of [1, 2, 3, 4, 5, 8]) {
     const alt = replay(fx.bars, { ...p, k });
     if (JSON.stringify({ tr: alt.transitions, st: alt.final_state, bo: alt.breakout_bar, line: alt.line }) !== base) {
       problems.push(`(d) changing the pivot window to k=${k} changed the outcome — formation/selection must be k-independent (HD-11, D-TL-12)`);
+    }
+  }
+  // (e) POSITIVE CONTROL for (d): the formation parameters MUST be outcome-bearing.
+  // If perturbing them changes nothing, the gates are not wired up and (a)-(d)
+  // would pass vacuously. Every fixture that forms a line must react.
+  if (r.line || r.bars.some((x) => x.state_at_start === 'ACTIVE')) {
+    const later = replay(fx.bars, { ...p, min_formation_bars: p.min_formation_bars + 1 });
+    const older = replay(fx.bars, { ...p, min_ath_age_bars: p.min_ath_age_bars + 1 });
+    const same = (a, b) => JSON.stringify(a.transitions) === JSON.stringify(b.transitions);
+    if (same(later, r) && same(older, r)) {
+      problems.push('(e) positive control FAILED: neither min_formation_bars+1 nor min_ath_age_bars+1 changed any transition — the formation gates are not outcome-bearing in this fixture, so checks (a)-(d) pass vacuously');
     }
   }
   return problems;

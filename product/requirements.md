@@ -79,7 +79,7 @@ In scope for the MVP (traces to the trendline + confidence specs):
   Confidence v1 (confidence spec §7).
 - **Internal dashboard** to inspect scans, lines, breakouts, retests, and the
   **decomposed** score.
-- **Golden-example fixtures** (trendline GX-01..GX-12; confidence CF-EV-01..07) as
+- **Golden-example fixtures** (trendline GX-01..GX-23; confidence CF-EV-01..07) as
   the correctness contract.
 
 ## 5. Explicit non-goals (out of scope for the MVP)
@@ -137,7 +137,18 @@ signal page.
 Traceability: each FR cites the governing spec.
 
 - **FR-1** The engine MUST select the ATH anchor `A` as the earliest bar achieving
-  the maximum **high** over the full delivered history (trendline §4, D-TL-02).
+  the maximum **high** over the history **available as of the evaluation bar** — the
+  prefix `S_t` = bars `0 … t−1` (trendline §4, §21.1, D-TL-02, D-TL-11). **Revised
+  2026-07-25 (HD-12):** the prior wording, "over the full delivered history", predates
+  as-of-time evaluation and would license look-ahead; anchor selection is causal.
+- **FR-1a** The engine MUST evaluate every bar **as of time**: bar `t` is classified
+  against the canonical line built from bars `0 … t−1` only, a non-breakout bar's high
+  enters the candidate set with effect from `t+1`, and a confirmed breakout **freezes**
+  the event line for breakout/retest/failure/expiry (trendline §21, HD-12, D-TL-11). No
+  bar at index `≥ t` may establish, revise, re-label or withdraw the classification of
+  bar `t`. Streaming the series bar-by-bar and batch-processing it MUST yield identical
+  output — the operational test for no look-ahead, and a precondition for any Phase-4
+  backtest to be meaningful.
 - **FR-2** The engine MUST detect pivot highs by a symmetric `k`-bar fractal rule
   with deterministic tie handling (trendline §5). Pivot detection is
   **secondary / non-authoritative**: it serves visualization, descriptive metadata,
@@ -208,7 +219,7 @@ Traceability: each FR cites the governing spec.
 ## 8. Non-functional requirements
 
 - **NFR-1 — Correctness (primary).** Signals and scores MUST be right before they
-  are fast or pretty. Golden fixtures (GX-01..12, CF-EV-01..07) are the acceptance
+  are fast or pretty. Golden fixtures (GX-01..GX-23, CF-EV-01..07) are the acceptance
   contract; a failing fixture blocks Done.
 - **NFR-2 — Explainability.** Every score MUST be decomposable into named,
   inspectable contributions with reason strings; every accept/reject/transition
@@ -259,6 +270,13 @@ Traceability: each FR cites the governing spec.
 
 ## 10. Open questions
 
+> **Identifier namespace.** The `OQ-n` identifiers in this file are the
+> **product-level** open questions and are governing (this document is precedence 3).
+> The trendline specification keeps its own document-local register, renamed
+> **`OQ-TL-n`** on 2026-07-25 to end a collision in which `OQ-7` meant the external
+> Fear & Greed question here and the anchor-selection-window question there. An
+> unqualified `OQ-n` anywhere in the repository means **this** list.
+
 - **OQ-1 (high, D-TL-01):** Confirm price-adjustment basis (split-adjusted,
   dividend-unadjusted). → HD-01.
 - **OQ-2 (high, D-TL-04):** Confirm upper-log-hull envelope as the canonical
@@ -272,13 +290,6 @@ Traceability: each FR cites the governing spec.
   store a **multi-label set** (horizons 5/10/20/60; barriers +5/−3, +10/−5, +15/−7;
   MFE/MAE/failed-breakout/successful-retest), with +15/−7/60 kept only as the
   initial research label. → HD-05.
-> **Identifier namespace.** The `OQ-n` identifiers in this file are the
-> **product-level** open questions and are governing (this document is precedence 3).
-> The trendline specification keeps its own document-local register, renamed
-> **`OQ-TL-n`** on 2026-07-25 to end a collision in which `OQ-7` meant the external
-> Fear & Greed question here and the anchor-selection-window question there. An
-> unqualified `OQ-n` anywhere in the repository means **this** list.
-
 - **OQ-5 (high):** Data-provider selection and recurring cost. → HD-06.
 - **OQ-6 (high):** Survivorship-bias-free constituents + delisted history (paid). → HD-07.
 - **OQ-7 (high, GOV-014):** External F&G source + redistribution/display rights,
@@ -294,7 +305,7 @@ Traceability: each FR cites the governing spec.
 **Leading (product):**
 - Daily EOD S&P 500 batch completes within the overnight window (green
   `scan_run`), ≥ N consecutive days.
-- 100% of GX-01..12 and CF-EV-01..07 fixtures pass on every engine build.
+- 100% of GX-01..GX-23 and CF-EV-01..07 fixtures pass on every engine build.
 - 100% of emitted signals carry a full, reproducible decomposition + reason codes.
 
 **Lagging (product):**

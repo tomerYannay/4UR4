@@ -78,7 +78,7 @@
   "rejection_rationale": [
     {
       "candidate": "Any breakout (ACTIVE -> BROKEN_OUT)",
-      "rejected_because": "No daily close exceeds the line active at the start of its own bar by more than eps_break, at any bar.",
+      "rejected_because": "No daily close exceeds the line active at the start of its own bar by more than eps_break on any bar at which a breakout could fire (§13.1).",
       "numeric": "Closest approach is t=13: ln(C)-y_hat_13(13)-eps_break = -0.0451354 < 0 (eps_break = 0.01)."
     },
     {
@@ -145,7 +145,8 @@
         "t=17: ELIGIBLE [F1 |S_t|=17>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
         "t=18: ELIGIBLE [F1 |S_t|=18>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
         "t=19: ELIGIBLE [F1 |S_t|=19>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
-      ]
+      ],
+      "gate_trace_full_caveat": "This trace re-evaluates the §21.3 gates statelessly at every bar, INCLUDING bars at which the state is BROKEN_OUT/RETESTED. While the state is frozen (§21.5) re-selection is suspended and no formation occurs, so an \"ELIGIBLE\" entry after the breakout bar describes gate arithmetic only, not an active line. It also runs to t = bar_count, the line that would judge a hypothetical next bar."
     },
     "as_of_time_candidate_set": {
       "at_bar": 8,

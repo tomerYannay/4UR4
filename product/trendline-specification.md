@@ -891,23 +891,22 @@ These are **deterministic fixtures** (synthetic OHLCV CSV + expected output
 JSON) that Verification will check. No code is built now; this lists what the
 build-lifted ticket must produce:
 
-1. **GX-01 Clean single line:** ATH at `t=0`, three descending pivots, one clear
-   envelope line, **no** breakout. Expected: `ACTIVE`, correct `A`, `B*`, `m`,
-   `b`, touch list.
+1. **GX-01 Clean single line:** ATH at `t=0`, a clean descending sequence, one clear
+   envelope line that never re-binds, **no** breakout. Expected: `ACTIVE`, correct `A`,
+   `B*`, `m`, `b`. **Revised 2026-07-25 (HD-12 audit):** the earlier wording ("three
+   descending pivots", "touch list") described a pivot-framed design that the all-highs
+   rule (HD-11) makes irrelevant — the redesigned fixture contains **one** confirmed `k=3`
+   pivot and pivot count is not a property it asserts. Touch counting (§12) is a confidence
+   input and is not asserted by any fixture.
 2. **GX-02 Envelope discrimination:** a shallow candidate line pierced by a mid
    high (like §8 example) — asserts the hull picks `B*=(45,92)`, not `(20,96)`.
-3. **GX-03 Wick-break vs breakout:** one bar wick-pierces (rejected
-   `WICK_BREAK`), a later bar's **first daily close** above line + `ε_break`
-   confirms (`BROKEN_OUT`). **Revised per HD-03 (2026-07-24):** this fixture must
-   **no longer require a 2-bar persistence confirmation**. The expected output
-   must assert the breakout fires on the **first qualifying close** with
-   `confirmed_bar == breakout_bar` (the alert bar is the crossing bar itself).
-   Any subsequent above-line closes are expected to appear as **persistence
-   *quality* data** feeding confidence, **not** as a precondition of `BROKEN_OUT`.
-   The prior expected fixture (breakout confirmed one bar *after* the cross, at
-   `t = crossbar + 1`) is **superseded** and must be regenerated to the
-   single-close-confirms policy. (Describe/regenerate the fixture when the build
-   is lifted — do not build it now.)
+3. **GX-03 Wick-break (stays ACTIVE):** one bar wick-pierces beyond `ε` while its close
+   fails to confirm → `WICK_BREAK`, state remains `ACTIVE`, and under §21.6 that same bar
+   re-selects `B*` effective `t+1`. **Corrected 2026-07-25 (HD-12 audit):** this entry
+   previously required GX-03 to end `BROKEN_OUT`, which the fixture has never done — the
+   *first-close-breakout* behaviour it described is locked by **GX-16** (and, with volume,
+   by GX-11). The HD-03 policy statement it carried is retained there. GX-03's job is the
+   wick-vs-close distinction alone.
 4. **GX-04 Retest hold:** post-breakout dip to line that holds → `RETESTED`.
 5. **GX-05 Failed breakout:** post-breakout re-close below line within
    `F_fail` → `FAILED_BREAKOUT`.
@@ -1182,16 +1181,21 @@ to test against, and a bar that cannot be evaluated MUST NOT be evaluated later.
 > parameters rather than by-products of a pivot window HD-11 declared
 > non-authoritative — so re-tuning `k` can never move an event.
 >
-> **Regression evidence (binding).** Three fixtures lock the gate, and
-> `tools/fixture-replay.mjs --formation` asserts all four properties over the whole
-> set on every run:
+> **Regression evidence (binding).** The binding evidence is the **fixtures**; the replay
+> harness is a convenience for re-checking them, never itself a source of the rule.
 >
-> | Property | Asserted by |
+> | Property | Locked by (binding evidence) |
 > |---|---|
-> | No line is ever `ACTIVE` before `min_formation_bars` | check (a) over every fixture; **GX-21** is the dedicated case — F2 and F3 are already satisfied, so F1 alone binds |
-> | No line is ever `ACTIVE` within `min_ath_age_bars` of its own anchor | check (b) over every fixture; **GX-22** is the dedicated case — F1 stays satisfied across a new-ATH reset, so F2 alone binds |
-> | Formation happens **immediately** once all three gates hold — not one bar later | check (c): the first `ACTIVE` bar must equal `min { t : F1 ∧ F2 ∧ F3 }` |
-> | Pivot status never affects eligibility | check (d): every fixture is replayed at `k ∈ {1,2,3,4,5,8}` and must produce byte-identical transitions, anchors and states. **GX-23** is the dedicated case — its formation prefix contains **zero** confirmed `k=3` pivots and its `B*` is a bar that could never be confirmed as one, yet it forms on exactly the same bar as **GX-21**, whose prefix does contain pivot structure |
+> | No line is ever `ACTIVE` before `min_formation_bars` | **GX-21** — F2 and F3 are already satisfied from `t = 4` and `t = 2`, so F1 alone binds and the line forms at exactly `t = 8` |
+> | No line is ever `ACTIVE` within `min_ath_age_bars` of its own anchor | **GX-22** — F1 stays satisfied across a new-ATH reset at `t = 12`, so F2 alone binds; `ATH_TOO_RECENT` at `t = 13…15` and `ACTIVE` at exactly `t = 16` |
+> | Formation happens **immediately** once all three gates hold — not one bar later | every fixture's recorded `t_form`, each equal to the least `t` satisfying F1 ∧ F2 ∧ F3 |
+> | Pivot status never affects eligibility **or selection** | **GX-08** (a series with zero pivots still has a canonical anchor), **GX-19** and **GX-23** (the canonical `B*` is a non-pivot bar), and 9 of the 20 geometry fixtures whose `B*` is not a confirmed pivot. **GX-23** additionally forms on the same bar as **GX-21** with a structurally different prefix |
+>
+> `tools/fixture-replay.mjs --formation` re-checks all of the above mechanically and adds a
+> positive control (perturbing either gate must change an outcome, so the checks cannot pass
+> vacuously). Note that `k`-independence of *this rule* is **structural, not empirical**: the
+> formation predicate does not mention `k`, so a `k`-sweep cannot fail and is not offered as
+> proof — the fixtures above are.
 
 ### 21.4 `Λ_t` in closed form — the running-max lemma (computability)
 

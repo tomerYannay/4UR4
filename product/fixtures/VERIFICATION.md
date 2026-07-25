@@ -303,7 +303,7 @@ so **every** evaluable prefix already contains it. Proof, recorded per prefix in
 `causal_record.no_anchor_proof`: at each prefix the shallowest descending candidate is
 pierced by the ATH-tying bar by more than `eps`, and the shallowest candidate *minimises*
 that pierce, so no candidate is envelope-valid at any prefix. The tightest case over the
-whole series is the t=19 high (115), pierced by `0.0322635` = **1.61 × eps**. Because no
+whole series is the t=19 high (115), pierced by `0.0322638` = **1.61 × eps**. Because no
 line ever exists, `eps_break` is never consulted — the result is invariant across the entire
 0.5×–2× sweep by construction, not by margin.
 
@@ -318,7 +318,36 @@ line ever exists, `eps_break` is never consulted — the result is invariant acr
 | No look-ahead (`--nolookahead`) | truncating the series at any bar leaves every classification at or before that bar unchanged (§21.8 streaming ≡ batch) | **0 violations** |
 | Frozen line (`--frozen`) | the reported event line **is** `Λ_b` computed from `S_b`, and no post-breakout bar moves it (§21.5) | **0 violations** |
 | Formation (`--formation`) | (a) no line ACTIVE before `min_formation_bars`; (b) none within `min_ath_age_bars` of its anchor; (c) formation is immediate once all three gates hold; (d) replaying at `k ∈ {1,2,3,4,5,8}` produces byte-identical output | **0 violations** |
-| `eps_break` robustness (`--robustness`) | ordinary fixtures invariant under ±20% (HD-13) | **22 / 23 invariant across 0.5×–2×**; GX-15 is the intended boundary case, flipping to `BROKEN_OUT@28` at `eps_break ≤ 0.0082430` |
+| `eps_break` robustness (`--robustness`) | ordinary fixtures invariant under ±20% (HD-13) | **23 / 23 invariant at ±20%; 21 / 23 across the wider 0.5×–2× sweep.** The two exceptions are **GX-15**, the intended boundary case (flips to `BROKEN_OUT@28` once `eps_break < 0.00824265`), and **GX-12**, which satisfies HD-13 and leaves the band only at 0.5× |
+
+### Round-2 corrections (2026-07-25) — findings from the independent review chain
+
+The first head of this audit (`c27a2d6`) was routed through Verification, Code Review,
+Project Audit and Strategic Review. They found the following, all of which are corrected in
+the head this section describes. They are recorded because a verification log that hides its
+own misses is worth nothing.
+
+| Finding | Correction |
+|---|---|
+| **GX-14's tie was not a tie in IEEE754.** The exact-decimal ladder `100·0.9^(t/10)` ties in real arithmetic but not in doubles: computed slopes differed by ~1e-17, one step won outright and another did not re-bind at all. Decisively, the selected anchor **flipped between (40, 65.61) and (30, 72.90)** depending on whether the slope was computed as `(ln H − ln HA)/Δt` or `ln(H/HA)/Δt` — algebraically identical readings of §7. An expected value that depends on floating-point associativity is not reproducible evidence (§0, §20.3). | Rebuilt on a **bit-exact** tie: `r = 0.83`, `r² = 0.6889` exactly representable at 2dp, second candidate at exactly twice the bar distance. Verified identical under three formulations of §7. The harness's tie test now uses **exact equality with no tolerance**; its previous `1e-12` slack was what made a strictly-steeper candidate look like a tie. |
+| **GX-17 bar 20 was physically impossible** — close 74.00 below its own low 78.00 — and the design as stated was unachievable, since `FAILED_BREAKOUT` needs a close below 77.73 while `low ≤ close`. | Low corrected to 73.50. The real contrast with GX-05 is that GX-17's bar **straddles** the frozen line while GX-05's lies entirely below it. No expected value changed (§15 fires first, and the low is read only by the §16 return leg). An **OHLC-coherence input guard** was added so the class cannot recur; all 23 fixtures now pass it. |
+| **GX-12 bars 3–4 had `open` above `high`** (pre-existing, from before this branch). | Corrected; geometry never reads `open`, so no expectation changed. |
+| **The `eps_break` robustness count was wrong**: "22 of 23 invariant across 0.5×–2×, single exception GX-15". | **21 of 23** across 0.5×–2×; **23 of 23** across the ±20% band HD-13 actually requires. The exceptions are GX-15 (intended) and **GX-12** (satisfies HD-13; leaves the band only at 0.5×). |
+| **GX-20's tightest pierce was mis-stated** as `0.0322635` in prose while the fixture recorded `0.0322638`. | Prose corrected; the fixture was right. |
+| **GX-15's flip value was wrong** (`≤ 0.0082430`). | Corrected to `< 0.00824265`, and the `eps`-side flip (`< 0.0185343`) is now stated too. |
+| **The fixtures omitted the §21.6 re-selection reason codes.** §21.6, §21.9 and the §10 note all state that a pre-breakout re-selection emits `LINE_ESTABLISHED` for the line effective at `t+1`; no fixture recorded it, so an engine written faithfully from the spec would have **failed** exact reproduction. | The fixtures now comply with the approved spec: every re-selection records a `LINE_ESTABLISHED` transition at its effective bar. The spec text was **not** amended — following an approved rule is compliance, changing it would have been a product decision. |
+| **`--formation` check (d) could not fail.** It replays at several `k`, but the model never reads `k`, so `k`-independence is *structural*, not empirical, and the sweep is not evidence. | The claim is downgraded to what it is, the binding evidence is re-attributed to the **fixtures** (GX-08, GX-19, GX-23 and the 9 non-pivot `B*` fixtures), and a **positive control** was added: perturbing either formation gate must change an outcome, so checks (a)–(d) cannot pass vacuously. |
+| **Nothing in CI re-derived the fixtures.** Every claim here was an author-run, point-in-time assertion. | `node tools/fixture-replay.mjs --all` and `node tools/check-evidence.mjs` now run in `.github/workflows/governance-validation.yml`, so this evidence is continuously enforced rather than asserted once. |
+| **The decision-register provenance for HD-12/13/14 was overstated**, and HD-13 cited an artifact that does not exist. | Corrected in `human-decisions.md`: all three now disclose that the ruling reached the repository as a direct Product Owner instruction to the session, with **no posted GitHub artifact**, and that ratification is outstanding. |
+
+### Scope of the "23 / 23 reproduce exactly" claim
+
+It covers: the ATH anchor, the second anchor, slope, intercept, line values (exact at 6
+significant figures), state transitions, reason codes, final state and breakout bar. It does
+**not** cover `flags` (authored per fixture, not compared), §12 touch counting, §13.4 volume,
+or the §16 `h_hold` deferred-hold branch — all four are unimplemented in the reference model
+and disclosed in its header. No committed fixture depends on the `h_hold` branch: every
+retest in the set satisfies both legs on the same bar, which was checked explicitly.
 
 ### Discharge of the two open items carried above
 

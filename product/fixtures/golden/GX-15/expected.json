@@ -60,6 +60,90 @@
       "from": "NONE",
       "to": "ACTIVE",
       "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 9,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 10,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 11,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 12,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 13,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 14,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 15,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 16,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 17,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 18,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 19,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 20,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 21,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
+    },
+    {
+      "bar": 29,
+      "from": "ACTIVE",
+      "to": "ACTIVE",
+      "reason_code": "LINE_ESTABLISHED"
     }
   ],
   "expected_final_state": "ACTIVE",
@@ -72,7 +156,7 @@
   "rejection_rationale": [
     {
       "candidate": "Any breakout (ACTIVE -> BROKEN_OUT)",
-      "rejected_because": "No daily close exceeds the line active at the start of its own bar by more than eps_break, at any bar.",
+      "rejected_because": "No daily close exceeds the line active at the start of its own bar by more than eps_break on any bar at which a breakout could fire (§13.1).",
       "numeric": "Closest approach is t=28: ln(C)-y_hat_28(28)-eps_break = -0.00175735 < 0 (eps_break = 0.01)."
     },
     {
@@ -97,7 +181,7 @@
       "Pre-breakout re-selection (§21.6, §21.4 Lemma): B* re-binds exactly when a bar high reaches the active line, and the new line is effective from the NEXT bar — B* 7->8 effective t=9; B* 8->9 effective t=10; B* 9->10 effective t=11; B* 10->11 effective t=12; B* 11->12 effective t=13; B* 12->13 effective t=14; B* 13->14 effective t=15; B* 14->15 effective t=16; B* 15->16 effective t=17; B* 16->17 effective t=18; B* 17->18 effective t=19; B* 18->19 effective t=20; B* 19->20 effective t=21; B* 20->28 effective t=29.",
       "Governing line: A=(0,100), B*=(28,87.9), m=-0.00460609, b=4.60517 — the line in force after the final bar (Lambda_n)."
     ],
-    "notes": "This is the ONE fixture in the set whose classification is deliberately tolerance-sensitive, and it is retained as such per the Product Owner ruling on eps_break: every OTHER fixture must be robust under an eps_break sweep, and GX-15 carries the boundary behaviour alone. It flips to BROKEN_OUT at t=28 once eps_break <= 0.0082430 (i.e. at 0.8x the documented default)."
+    "notes": "This is the ONE fixture in the set whose classification is deliberately tolerance-sensitive, and it is retained as such per the Product Owner ruling on eps_break: every OTHER fixture must be robust under an eps_break sweep, and GX-15 carries the boundary behaviour alone. It flips to BROKEN_OUT at t=28 once eps_break < 0.00824265 — at exactly that value the strict inequality of §13.1 is not met and the fixture stays ACTIVE — so the 0.8x sweep point (0.008) is on the far side of the boundary and the 1x point is not. The eps side flips at eps < 0.0185343. GX-12 is NOT a second boundary fixture: its expectation is invariant across the +/-20% band HD-13 requires, and only leaves that band at 0.5x."
   },
   "causal_record": {
     "semantics": "As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.",
@@ -151,7 +235,8 @@
         "t=29: ELIGIBLE [F1 |S_t|=29>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
         "t=30: ELIGIBLE [F1 |S_t|=30>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]",
         "t=31: ELIGIBLE [F1 |S_t|=31>=8:ok; F2 tA=0<=(t-1)-3:ok; F3 B*_t exists:ok]"
-      ]
+      ],
+      "gate_trace_full_caveat": "This trace re-evaluates the §21.3 gates statelessly at every bar, INCLUDING bars at which the state is BROKEN_OUT/RETESTED. While the state is frozen (§21.5) re-selection is suspended and no formation occurs, so an \"ELIGIBLE\" entry after the breakout bar describes gate arithmetic only, not an active line. It also runs to t = bar_count, the line that would judge a hypothetical next bar."
     },
     "as_of_time_candidate_set": {
       "at_bar": 8,

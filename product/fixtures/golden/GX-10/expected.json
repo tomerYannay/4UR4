@@ -19,7 +19,7 @@
     "eps_touch": 0.01,
     "eps_break": 0.01,
     "eps_break_locked": false,
-    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. This fixture is verified robust across an eps_break sweep — see causal_record.eps_break_robustness.",
+    "eps_break_note": "eps_break is illustrative, not locked (HD-03, §13.5); versioned/backtestable. It is never consulted in this fixture: the §18 input guards reject the bar-set before any line exists, so the outcome is invariant under every value of eps_break and no sweep is recorded.",
     "split_log_jump_threshold": 0.405465,
     "tolerance_version": "tol-2026.07-illustrative",
     "min_formation_bars": 8,
