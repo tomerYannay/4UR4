@@ -58,8 +58,9 @@ chk(JSON.parse(readFileSync(join(ROOT, 'product/fixtures/real/RM-01/annotation.j
 // forever — exactly the failure mode this file exists to prevent, and the same reason
 // tools/fixture-replay.mjs carries a positive control on its formation checks. Feed a
 // known-bad instance through and require it to complain in each of the keyword
-// classes listed in MUST_CATCH. `minimum` is the only schema keyword this instance
-// does not exercise (nothing it carries has a numeric lower bound).
+// classes listed in MUST_CATCH. `type` and `minimum` are the two schema keywords this
+// instance does not trip — every field it carries is of the right type by
+// construction, and nothing it carries has a numeric lower bound.
 const control = [];
 chk({
   fixture_id: 'BAD-1',                                        // fails `pattern`

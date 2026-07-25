@@ -799,7 +799,8 @@ function checkFrozen(fx) {
   return problems;
 }
 
-// §11: the recorded transition list must be CONTINUOUS — each entry's `from` equals
+// §21.6 rule 3 (state-machine coherence): the recorded transition list must be
+// CONTINUOUS — each entry's `from` equals
 // the previous entry's `to`, and the last `to` equals the reported final state. This
 // is continuity, NOT edge legality: it would not reject an `ACTIVE -> RETESTED` edge
 // that §11 does not draw. `compare()` checks the list by exact equality, so an
@@ -830,7 +831,8 @@ function checkOhlc(fx) {
   // the one class it exists to catch (Code Review + Verification, head 9d704e0).
   // Only bars with a MISSING field are skipped, which is GX-18's deliberate case;
   // GX-18's non-positive low is coherent (0 <= every other field) and needs no
-  // exemption. A fixture that is legitimately incoherent must say so explicitly.
+  // exemption. There is deliberately NO opt-out: an exemption marker on this gate
+  // would be one edit away from re-opening the hole closed at head 9d704e0.
   for (const [t, b] of fx.bars.entries()) {
     if ([b.open, b.high, b.low, b.close].some((v) => v === null)) continue;
     if (b.low > b.high || b.open < b.low || b.open > b.high || b.close < b.low || b.close > b.high) {
@@ -848,7 +850,11 @@ const EPS_BREAK_BOUNDARY_EXEMPT = new Set(['GX-15']);
 // whitelist itself is assertable: it must name exactly one fixture, and that fixture
 // must exist. Checked once, outside the per-fixture loop — the per-fixture inverse
 // assertion cannot detect a whitelisted fixture that was DELETED from the set.
-function checkBoundaryWhitelist(ids) {
+function checkBoundaryWhitelist() {
+  // Reads the FULL fixture set, never the scoped `ids` of this invocation: HD-13
+  // rule 2 is a property of the set, so a scoped run like `--all GX-01` must not
+  // report a violation that is false about the repository.
+  const ids = listFixtures();
   const problems = [];
   if (EPS_BREAK_BOUNDARY_EXEMPT.size !== 1) {
     problems.push(`HD-13 rule 2 violated: the boundary-fixture whitelist names ${EPS_BREAK_BOUNDARY_EXEMPT.size} fixtures; the decision retains EXACTLY ONE`);
@@ -870,10 +876,6 @@ function checkEpsBreakRule(fx) {
   }
   return outcomes.size === 1 ? []
     : [`HD-13 rule 1 violated: classification is not invariant under ±20% of eps_break (${[...outcomes].join(' vs ')})`];
-}
-
-function reportBoundaryWhitelist(ids) {
-  return checkBoundaryWhitelist(ids);
 }
 
 function robustness(fx, scales = [0.8, 1.0, 1.2]) {
@@ -926,8 +928,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
 
+  let setLevelFailures = 0;
   if (has('--all')) {
-    for (const p of reportBoundaryWhitelist(ids)) { console.log(`✗ whitelist  ${p}`); failures++; }
+    for (const p of checkBoundaryWhitelist()) { console.log(`✗ whitelist  ${p}`); setLevelFailures++; }
   }
   for (const id of ids) {
     const fx = loadFixture(id);
@@ -960,5 +963,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   if (has('--json')) console.log(JSON.stringify(report, null, 2));
   else console.log(`\n${ids.length - failures}/${ids.length} fixtures reproduce exactly under as-of-time (§21/HD-12) replay.`);
-  process.exit(failures ? 1 : 0);
+  process.exit(failures || setLevelFailures ? 1 : 0);
 }
