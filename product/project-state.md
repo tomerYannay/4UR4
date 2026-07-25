@@ -10,7 +10,7 @@
 > [`roadmap.md`](roadmap.md) → merged fixture evidence → open PR proposals → agent summaries.
 
 - **Last updated:** 2026-07-25
-- **Last reviewed commit SHA (main):** `c0f66ea15a1a5c9c7af631c8fcfccbd7cc8e1527`
+- **Last reviewed commit SHA (main):** `bd5ab575d0461d033c7c54741d25d632ed74a10c`
 - **Build-freeze status:** **ON** ([GOV-015](../governance/build-freeze.md)) — no product implementation until a human lifts it per-scope.
 
 ## Product objective
@@ -26,6 +26,11 @@
 complete and Phase 1 (market-data foundation) is in its **research** stage; Phase 1
 implementation and beyond remain **freeze-blocked**.
 
+**Qualifier on Phase 0 completeness:** Phase 0 exit is **not clean while
+[#16](https://github.com/tomerYannay/4UR4/issues/16) is open.** The fixture set is the
+**correctness contract**, and an engine reproducing **GX-08 as currently committed** would
+implement a precondition **HD-11 forbids**.
+
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
 - Proposed MVP roadmap, PRD, specs, human-decision register (PR #8).
@@ -33,24 +38,33 @@ implementation and beyond remain **freeze-blocked**.
   **SC-1 = MATCH**, **SC-2 resolved (HD-11)** (PR #9).
 - ChatGPT↔Claude **handoff protocol** + PR template + Agent Coordination Queue (#10) (PR #11).
 - **Strategic Product Reviewer** added as the 10th permanent agent (PR #13).
+- **Six-record documentation reconciliation** to merged evidence, docs-only (Refs #14); also
+  committed the **Historical Product Owner Decision Record — RM-01** in
+  [`human-decisions.md`](human-decisions.md), supplying the citable approval artifact PR #9
+  lacked (PR #15).
 
 ## Active work
 - **PR #12** — Phase 1 market-data research (Issues **#4**, **#5**): provider comparison +
   survivorship/delisted research. **Draft; CI green; 0 reviews; awaiting ChatGPT/strategic
   review** (round 1 of 2).
-- **Issue #14** — documentation reconciliation (freeze-permitted, **docs only**): refresh this
-  file's reviewed-SHA/PR-#13 currency, the RM-01 Product-Owner-approval references in
-  [`fixtures/README.md`](fixtures/README.md), the stale fixture count in
-  [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md), SC-2 hygiene in
-  `fixtures/real/RM-01/annotation.json`, and a currency note on
-  [`../docs/live-validation-evidence.md`](../docs/live-validation-evidence.md). **PR #15
-  (draft)** on branch `docs/reconcile-project-state-phase0-traceability`. Changes **no** product
-  definition, spec rule, fixture data, or roadmap entry.
+- **Issue [#16](https://github.com/tomerYannay/4UR4/issues/16)** — Phase 0 **evidence
+  correction** (freeze-permitted; created per Product Owner ruling 2026-07-25). **GX-08**'s
+  expected output asserts `NO_VALID_SECOND_ANCHOR` on a justification **HD-11 removed** (the
+  pivot-high precondition). The correction re-derives GX-08 to the all-highs upper-log-hull
+  result (**`B* = (1, 98)`**), sweeps the remaining stale pivot-conditioned no-anchor text in
+  [`trendline-specification.md`](trendline-specification.md) and
+  [`fixtures/README.md`](fixtures/README.md), and adds a new fixture **GX-20** for the
+  genuinely reachable `NO_VALID_SECOND_ANCHOR` case (duplicate ATH / double top). It
+  **changes no rule** — **HD-11** and the canonical algorithm are untouched; this is a **stale
+  Phase 0 evidence defect, not a new product-definition decision** (Product Owner ruling).
+  Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Open; no PR yet.**
 
 ## Next milestone
-Complete the Phase 1 research review, then obtain the **Product Owner decision on HD-06**
-(data-provider selection + recurring spend). Phase 1 *implementation* cannot start until the
-freeze is lifted per-scope.
+Two tracks: (1) complete the **[#16](https://github.com/tomerYannay/4UR4/issues/16) Phase 0
+evidence correction** (GX-08 re-derivation + stale-text sweep + GX-20); (2) complete the
+**PR #12 Phase 1 research review**, which is the path to the **Product Owner decision on
+HD-06** (data-provider selection + recurring spend). Phase 1 *implementation* cannot start
+until the freeze is lifted per-scope.
 
 ## Blocked work
 - **#6** Market-data ingestion service (Phase 1 impl) — `blocked: freeze`.
@@ -61,8 +75,8 @@ freeze is lifted per-scope.
 - **HD-06** — data-provider selection + recurring spend (**human-gated**; research in PR #12).
 
 ## Open issues / PRs (governed index)
-- Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#14](https://github.com/tomerYannay/4UR4/issues/14)** (documentation reconciliation, open, docs-only).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#15](https://github.com/tomerYannay/4UR4/pull/15)** (documentation reconciliation, draft, docs-only, Refs #14, branch `docs/reconcile-project-state-phase0-traceability`). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (GX-08 + stale pivot-conditioned `NO_VALID_SECOND_ANCHOR` sweep, open, Phase 0 evidence correction).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·
