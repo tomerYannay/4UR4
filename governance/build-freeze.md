@@ -18,7 +18,8 @@ human approves the system, **no product functionality may be implemented**
    [GOV-013](approval-gate.md).
 2. While frozen, **no product code** may be written or merged. Permitted work is
    limited to: this operating system, governance, workflows, templates, and
-   **context-only** research/design.
+   **context-only** research/design. *(One ruled exception — see the HD-15 scope
+   ruling below, which permits a specific Phase-0 evidence-tooling file.)*
 3. The **Implementation Engineer is inactive** while frozen; the Architect may
    *design* but not build.
 4. Lifting the freeze is **per-scope**, tied to a specific approved, Ready ticket —
@@ -47,7 +48,10 @@ not a ruling. Against that: the alternative is hand arithmetic, which drifted re
 and shipped a defective fixture, and a correctness contract nobody can mechanically
 re-derive is the larger hazard.
 
-**Conditions attached to the permission:**
+**Conditions attached to the permission.** Condition 4 is the ruling's own scope, stated in
+the artifact. Conditions 1–3 are the **review chain's recommended terms**, adopted as the
+detail of the permission rather than separately quoted Product Owner words — the artifact
+records that distinction and invites them to be struck if a bare permission was intended.
 
 1. It confers **no Phase-2 credit**. Phase 2 is not partly done because this exists.
 2. The Phase-2 engine MUST be authored **from the specification, by an agent that has not

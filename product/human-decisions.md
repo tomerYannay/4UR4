@@ -273,9 +273,10 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   (surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
   [PR #18](https://github.com/tomerYannay/4UR4/pull/18), the stale-pivot sweep, which
   explicitly did **not** decide it).
-- **⚠ Provenance.** As with HD-13 and HD-14, this ruling reached the repository as a Product
-  Owner instruction to the autonomous session rather than as a posted GitHub artifact; the
-  issue thread contains the escalation but no answer. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). It mattered more
+- **⚠ Provenance.** As with HD-13 and HD-14, this ruling originally reached the repository as a
+  Product Owner instruction to the autonomous session rather than as a posted GitHub
+  artifact, and until the ratification below the issue thread carried the escalation with no
+  answer. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). It mattered more
   here than anywhere else, because the entire 23-fixture correctness contract derives from
   this rule. Builds on
   [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
@@ -364,8 +365,9 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **⚠ Provenance — read before relying on this entry.** Surfaced as "Decision 1" by the
   causal fixture audit on [Issue #16](https://github.com/tomerYannay/4UR4/issues/16), whose
   escalation comment explicitly declined to choose. **The ruling was then issued by the
-  Product Owner directly to the autonomous session as continuation instructions — it was NOT
-  posted to GitHub, so no citable decision artifact exists on the issue or the PR.** This
+  Product Owner directly to the autonomous session as continuation instructions and was NOT
+  posted to GitHub at the time, so for the whole of that period no citable decision artifact
+  existed on the issue or the PR.** (One does now — see *Ratification* below.) This
   entry is the relay record, written by the agent that received and implemented the
   instruction. An earlier revision claimed the decision was "answered there" on Issue #16;
   that citation was **false** and is corrected here (found independently by the Project
@@ -447,7 +449,8 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   by the §21 specification work on
   [Issue #16](https://github.com/tomerYannay/4UR4/issues/16). **The ruling was issued by the
   Product Owner directly to the autonomous session as continuation instructions and was not
-  posted to GitHub, so no citable decision artifact exists.** This entry is the relay record.
+  posted to GitHub at the time, so no citable decision artifact existed until the
+  ratification below.** This entry is the relay record.
   Unlike HD-13, the substance here matches option (b) exactly as escalated — only the
   parameter names differ (`min_bars`/`min_bars_after_anchor` → `min_formation_bars`/
   `min_ath_age_bars`) and no threshold value changed. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). Implemented in
@@ -542,13 +545,15 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 - **Alternatives:** (a) permit but bar CI from depending on it — keeps the freeze tighter, but
   removes the continuous enforcement the review chain specifically demanded; (b) require its
   removal before merge — returns Phase 0 to the hand derivation that failed repeatedly.
-- **Cost of delaying:** PR #18 cannot merge; Phase 0 cannot close.
-- **Safe default (in force):** the freeze stays **ON** and the PR stays **draft**.
-- **⚠ Note on the disclaimers already in the tree.** `tools/fixture-replay.mjs`,
+- **Cost of delaying:** n/a — resolved 2026-07-25.
+- **Safe default (superseded by the ruling):** the freeze stays **ON** — which remains true;
+  the ruling is a scope clarification about one file, not a freeze lift.
+- **Note on the disclaimers in the tree (history).** `tools/fixture-replay.mjs`,
   `fixtures/README.md` §7 and `fixtures/VERIFICATION.md` each state that the file is evidence
-  tooling and confers no Phase-2 credit. Those statements are the **proposed** disposition
-  recorded above — they are **not** a ruling, and an artifact cannot settle a question
-  reserved to the Product Owner in its own header. They are labelled as proposals in each file.
+  tooling and confers no Phase-2 credit. Before this ruling those statements were the
+  **proposed** disposition and were labelled as proposals in each file, because an artifact
+  may not settle a question reserved to the Product Owner in its own header — the Project
+  Auditor's finding. They are now labelled as **ruled**, citing this decision.
 
 ## Decision log — 2026-07-25 (Product Owner)
 
