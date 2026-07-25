@@ -119,7 +119,7 @@
     "key_inequalities": [
       "Candidacy is over ALL later bar highs (§6, D-TL-05, HD-11) — never a pivot subset — and every value below is computed from bars strictly EARLIER than the bar it judges (§21.1, HD-12).",
       "Formation (§21.3): t_form = 8 — the first bar with |S_t| >= min_formation_bars = 8 and tA <= (t-1) - min_ath_age_bars = (t-1) - 3 and an envelope-valid B*_t.",
-      "No re-selection occurs: no bar high ever reaches the active line, so B*_t is constant from formation to the final bar (§21.4 Lemma).",
+      "No PRE-BREAKOUT re-selection occurs within any episode: no bar high reaches the active line while a line is ACTIVE (§21.4 Lemma). B* nevertheless changes across the series, because bar 12 makes a new ATH and a NEW formation begins from the new anchor (§21.7) — that is an episode boundary, not a re-selection.",
       "New ATH (§10.3, §21.7): bar 12 makes a new all-time high, so the previous structure is retired with RESET_NEW_ATH. Rule 5 takes precedence over the breakout test — a close above a line whose own high made a new ATH is a reset, NOT a breakout.",
       "Governing line: A=(12,112), B*=(15,105), m=-0.0215128, b=4.97665 — the line in force after the final bar (Lambda_n)."
     ],

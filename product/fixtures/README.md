@@ -201,7 +201,8 @@ invariant across the wider sweep:
   `eps_break` strictly below that — including the 6-significant-figure display value
   `0.00824265` itself, and including the 0.8× sweep point. At the documented `0.01` it does
   not fire. The `eps` side flips at **0.018534340624**. Both boundaries are quoted at full
-  precision deliberately: the 6 s.f. rounding falls *below* each of them (at exactly that value §13.1's
+  precision deliberately: the 6-significant-figure rounding falls *below* each true boundary,
+so quoting the rounded value alone would state the wrong side of it (at exactly that value §13.1's
   strict inequality is not met and it stays `ACTIVE`).
 - **GX-12** — **not** a second boundary fixture. It satisfies HD-13 (invariant at ±20%) and
   only leaves that band at 0.5×, where its t=15 wick becomes a breakout. Its input data is
@@ -237,8 +238,10 @@ line twice across a new-ATH reset. The re-selection entry is stamped at the bar 
 re-selected line takes **effect** (§21.6), and is emitted **before** that bar's own event, so
 the transition list is always continuous — each `from` equals the previous `to` (§21.6 rule 3, asserted by `--all`).
 
-`INSUFFICIENT_BARS` is the standing reason for every bar before `t_form` in **every**
-fixture. It is not recorded as an event transition — a series always starts short — but it
+`INSUFFICIENT_BARS` is the standing reason for the bars before the FIRST `t_form`. It is not
+the only such reason: after a new-ATH reset the standing reason is `ATH_TOO_RECENT`
+(GX-06, GX-22), and where no candidate is envelope-valid it is `NO_VALID_SECOND_ANCHOR`
+(GX-20 permanently, GX-12 transiently). It is not recorded as an event transition — a series always starts short — but it
 is visible bar by bar in `causal_record.formation.gate_trace`, which evaluates F1, F2 and
 F3 **independently**, so a reader can always see exactly which gate binds at which bar and
 never confuses a formation guard with `NO_VALID_SECOND_ANCHOR`.
@@ -295,8 +298,10 @@ by that audit — its approved anchor and its SC-1 = MATCH result are unaffected
 
 - `README.md` — this document.
 - `../../tools/fixture-replay.mjs` — the causal (as-of-time) **reference model and replay
-  harness** that re-derives and re-checks every fixture. Phase-0 **evidence tooling**, not
-  the product detector: it lives in `tools/` beside `validate.mjs`, creates no product-code
+  harness** that re-derives and re-checks every fixture. **Whether committing it is permitted
+  under the GOV-015 build-freeze is an OPEN Product Owner question — HD-15, PENDING.** The
+  characterisation that follows is the *proposed* disposition, not a ruling. Phase-0
+  **evidence tooling**, not the product detector: it lives in `tools/` beside `validate.mjs`, creates no product-code
   directory, is wired into no product surface, and confers no Phase-2 credit. A future
   build-lifted engine must be written separately and must reproduce the **fixtures** —
   reproducing this script is not the contract.

@@ -8,7 +8,8 @@
 //   specification — instead of by hand arithmetic that has already been shown to
 //   drift (Issue #16).
 //
-// WHAT THIS IS NOT
+// WHAT THIS IS NOT  (PROPOSED disposition — HD-15 is PENDING with the Product Owner;
+//   this header does not settle a question reserved to them)
 //   It is NOT the product detector and confers no Phase-2 credit. It lives in
 //   tools/ alongside validate.mjs, creates no product-code directory, is not
 //   wired into any product surface, and deliberately implements only the subset
@@ -52,6 +53,7 @@
 //   node tools/fixture-replay.mjs --hull          # brute-force hull at every prefix
 //   node tools/fixture-replay.mjs --nolookahead   # prefix-truncation invariance
 //   node tools/fixture-replay.mjs --ohlc          # OHLC coherence over every bar
+//   node tools/fixture-replay.mjs --table         # emit the VERIFICATION.md governing table
 //   (--all additionally asserts transition-list continuity and the HD-13 eps_break
 //    rule; neither has a standalone flag because both are unconditional gates)
 //   node tools/fixture-replay.mjs --robustness    # eps_break sensitivity sweep
@@ -672,6 +674,52 @@ export function buildRecord(fx) {
 
 const CAUSAL_NOTE = 'As-of-time (rolling causal) evaluation per §21 / HD-12 / D-TL-11. Every value below is derived ONLY from bars strictly earlier than the bar it judges; no expectation here uses a full-series hull.';
 
+// The governing result table in product/fixtures/VERIFICATION.md restates, in prose,
+// facts that are derivable from the fixtures. Restatements stored apart from the fact
+// they restate are exactly what drifted repeatedly on this branch, so the table is
+// EMITTED here and DIFFED against the committed markdown by --table (and --all).
+export function governingTableRows() {
+  return listFixtures().map((id) => {
+    const fx = loadFixture(id);
+    const p = paramsOf(fx.expected);
+    const r = replay(fx.bars, p);
+    const bo = r.events.find((e) => e.event === 'BREAKOUT_CONFIRMED');
+    const forms = r.transitions.filter((t) => t.from === 'NONE' && t.to === 'ACTIVE').map((t) => t.bar);
+    const pv = confirmedPivots(fx.bars.map((b) => b.high), p.k ?? 3);
+    return '| ' + [
+      id, fx.bars.length, forms.length ? forms.join(', then ') : '—',
+      r.line ? `(${r.line.B.t}, ${sig6(r.line.B.H)})` : '—',
+      r.line ? sig6(r.line.m) : '—', r.final_state,
+      r.breakout_bar === null ? '—' : r.breakout_bar, bo ? sig6(bo.margin) : '—',
+      r.reselections.length, pv.length,
+      r.line && pv.includes(r.line.B.t) ? 'yes' : (r.line ? '**no**' : '—'),
+    ].join(' | ') + ' |';
+  });
+}
+
+function checkGoverningTable() {
+  const md = readFileSync(join(ROOT, 'product/fixtures/VERIFICATION.md'), 'utf8').split('\n');
+  const want = governingTableRows();
+  const problems = [];
+  for (const row of want) {
+    const id = row.slice(2, 7);
+    const got = md.find((l) => l.startsWith(`| ${id} |`));
+    if (!got) problems.push(`${id}: no row in VERIFICATION.md's governing table`);
+    else if (got.trim() !== row.trim()) problems.push(`${id}: VERIFICATION.md row disagrees with the fixtures\n      doc:  ${got.trim()}\n      disk: ${row.trim()}`);
+  }
+  return problems;
+}
+
+// Every committed causal_record must still equal what buildRecord() derives from
+// input.csv. Without this the whole narrative evidence layer is unchecked — which is
+// where six of seven review rounds found their defects.
+function checkCausalRecord(fx) {
+  if (!fx.expected.causal_record) return [];
+  const fresh = buildRecord(fx);
+  return JSON.stringify(fresh) === JSON.stringify(fx.expected.causal_record) ? []
+    : [`committed causal_record differs from a fresh buildRecord() derivation — the evidence block has drifted from the fixture`];
+}
+
 // ------------------------------------------------------------------- checks ---
 function checkHull(fx) {
   // §21.4 lemma vs §8 brute force at EVERY evaluable prefix.
@@ -898,6 +946,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   let failures = 0;
   const report = [];
 
+  if (has('--table')) { console.log(governingTableRows().join('\n')); process.exit(0); }
+
   if (has('--record') && only) {
     console.log(JSON.stringify(buildRecord(loadFixture(only)), null, 2));
     process.exit(0);
@@ -932,6 +982,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   let setLevelFailures = 0;
   if (has('--all')) {
     for (const p of checkBoundaryWhitelist()) { console.log(`✗ whitelist  ${p}`); setLevelFailures++; }
+    for (const p of checkGoverningTable()) { console.log(`✗ table      ${p}`); setLevelFailures++; }
   }
   for (const id of ids) {
     const fx = loadFixture(id);
@@ -944,6 +995,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (has('--formation') || has('--all')) extra.push(...checkFormation(fx).map((s) => `formation: ${s}`));
     if (has('--frozen') || has('--all')) extra.push(...checkFrozen(fx).filter((s) => !s.startsWith('note:')).map((s) => `frozen: ${s}`));
     if (has('--ohlc') || has('--all')) extra.push(...checkOhlc(fx).map((s) => `ohlc: ${s}`));
+    if (has('--all')) extra.push(...checkCausalRecord(fx).map((s) => `causal_record: ${s}`));
     if (has('--all')) extra.push(...checkTransitionChain(fx).map((s) => `chain: ${s}`));
     if (has('--all')) extra.push(...checkEpsBreakRule(fx).map((s) => `eps_break: ${s}`));
     const all = [...diffs, ...extra];

@@ -26,6 +26,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-12 | high | Anchor selection is rolling/causal (as-of-time), frozen at confirmed breakout | APPROVED (relayed — ratification outstanding) |
 | HD-13 | high | `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust | APPROVED (relayed — ratification outstanding) |
 | HD-14 | high | Formation gates are first-class `k`-independent parameters | APPROVED (relayed — ratification outstanding) |
+| HD-15 | high | GOV-015 scope: is a committed causal reference model permitted evidence tooling? | **PENDING** |
 
 ---
 
@@ -495,6 +496,45 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   binding evidence is the fixture data above.)*
 - **Cross-references:** `trendline-specification.md` §18, §21.3 and **D-TL-12**;
   resolves **OQ-TL-8**.
+
+## HD-15 — GOV-015 scope: is `tools/fixture-replay.mjs` permitted under the build-freeze? · materiality: **high**
+- **Status:** **PENDING** — raised 2026-07-25 by the Project Auditor and the Strategic Product
+  Reviewer, independently, during the review of
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18). **No agent may decide this.**
+- **Decision:** [PR #18](https://github.com/tomerYannay/4UR4/pull/18) commits
+  `tools/fixture-replay.mjs`, a ~970-line executable causal reference model implementing
+  §3, §4, §6, §7, §8, §9, §10, §11, §13, §14, §15, §16, §17, §18 and §21 of the trendline
+  specification, and CI now depends on it. Is that **permitted evidence tooling** under
+  [GOV-015](../governance/build-freeze.md), or is it **product functionality** implemented
+  under a freeze?
+- **Why it is genuinely contested, stated from both sides:**
+  - *For permitting:* the alternative is hand arithmetic, which **demonstrably drifted twice**
+    — the whole pre-#16 fixture set was derived with full-series hulls, and the replacement
+    GX-20 was designed with full-series reasoning and shipped defective. A correctness
+    contract nobody can mechanically re-derive is the larger Phase-2 hazard. The file creates
+    none of the `PRODUCT_CODE_DIRS` the validator guards, is wired to no product surface, and
+    the freeze validator passes.
+  - *Against:* GOV-015 rule 2's permitted list is **closed** ("this operating system,
+    governance, workflows, templates, and **context-only** research/design") and an executing
+    implementation of the detection algorithm is not obviously on it; rule 3 says the
+    Architect "may **design** but not build". The validator's check is **directory-name-based**
+    and does not reach file contents, so passing it is not clearance — it is a gap in the
+    enforcement, not a ruling.
+- **Recommended option:** **permit as Phase-0 evidence tooling**, recording the conditions
+  explicitly in `governance/build-freeze.md`: it confers no Phase-2 credit; the Phase-2 engine
+  MUST be authored from the specification by an agent that has not read it, so that "exact
+  reproduction" tests conformance rather than transcription; and the specification remains
+  authoritative wherever the two disagree.
+- **Alternatives:** (a) permit but bar CI from depending on it — keeps the freeze tighter, but
+  removes the continuous enforcement the review chain specifically demanded; (b) require its
+  removal before merge — returns Phase 0 to the hand derivation that failed twice.
+- **Cost of delaying:** PR #18 cannot merge; Phase 0 cannot close.
+- **Safe default (in force):** the freeze stays **ON** and the PR stays **draft**.
+- **⚠ Note on the disclaimers already in the tree.** `tools/fixture-replay.mjs`,
+  `fixtures/README.md` §7 and `fixtures/VERIFICATION.md` each state that the file is evidence
+  tooling and confers no Phase-2 credit. Those statements are the **proposed** disposition
+  recorded above — they are **not** a ruling, and an artifact cannot settle a question
+  reserved to the Product Owner in its own header. They are labelled as proposals in each file.
 
 ## Decision log — 2026-07-25 (Product Owner)
 

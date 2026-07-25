@@ -914,7 +914,7 @@ build-lifted ticket must produce:
    `F_fail` → `FAILED_BREAKOUT`.
 6. **GX-06 New-ATH reset:** a new all-time high mid-series → `RESET_NEW_ATH`, new
    line recomputed.
-7. **GX-07 Expiry:** 100+ bars after breakout → `EXPIRED` → recompute.
+7. **GX-07 Expiry:** 100+ bars after breakout → `EXPIRED_POST_BREAKOUT` → `NONE` → recompute.
 8. **GX-08 Monotonic decline — the hull binds at the first later bar:** strictly
    decreasing highs (`100, 98, 96 … 72`) contain **zero** `k=3` pivots, yet
    all-highs candidacy still yields a canonical anchor `B* = (1, 98)` →
@@ -1122,7 +1122,17 @@ per-gate trace in `causal_record.formation.gate_trace`.
 
 and for every `t < t_form` the state is `NONE`, with reason code
 `INSUFFICIENT_BARS`, `ATH_TOO_RECENT` or `NO_VALID_SECOND_ANCHOR` respectively (the
-first unmet condition in the order F1, F2, F3). While the state is `NONE` **no**
+first unmet condition in the order F1, F2, F3).
+
+**Emission form while `NONE` (normative — added 2026-07-25; an encoding, not a rule).**
+The reason above is a **standing condition**, not a per-bar event, so a conforming detector
+records it **once per contiguous `NONE` run**, at the first bar of that run — not once per
+bar. Two consequences, both relied on by the fixtures: a run whose reason is merely
+`INSUFFICIENT_BARS` at the head of a series is **not** recorded as an event at all (every
+series begins short, so the record would carry no information); and a reason that *changes*
+within a `NONE` run, or a new `NONE` run opened by a reset, starts a new record. Fixtures
+GX-06 and GX-22 (`ATH_TOO_RECENT` after a new-ATH reset), GX-20 (`NO_VALID_SECOND_ANCHOR`
+permanently) and GX-12 (the same, transiently) encode exactly this. While the state is `NONE` **no**
 breakout, wick-break, retest or failure event may be emitted (§11) — there is no line
 to test against, and a bar that cannot be evaluated MUST NOT be evaluated later.
 
@@ -1253,6 +1263,16 @@ unchanged. ∎
   and §8, an implementation MAY use it **only if** it is lossless against the §8
   recomputation over `S_t`, and MUST fall back to the full recomputation whenever the
   anchor changes, a candidate ties the ATH, or `B*_t = ⊥` (§10.4).
+
+> **The line a detector REPORTS for a series (normative — added 2026-07-25; an encoding,
+> not a rule).** `Λ_t` and `Λ^F` define which line judges which bar. Separately, a detector
+> asked "what is this name's line?" reports: **the frozen event line `Λ^F` if a confirmed
+> breakout occurred anywhere in the series — retained even after `EXPIRED_POST_BREAKOUT`,
+> because it is the line the market actually broke — and otherwise `Λ_n`**, the line in
+> force after the last available bar. This is what every fixture's `expected_second_anchor`,
+> `expected_log_slope` and `expected_intercept` denote. Note the deliberate consequence:
+> GX-07 reports `B* = (6, 94)` while its `expected_final_state` is `NONE`, because the line
+> expired but the event it carried is still the reportable one.
 
 ### 21.5 Freeze on confirmed breakout
 

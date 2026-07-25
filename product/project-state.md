@@ -82,8 +82,14 @@ ruling is posted naming the exact head.
   `19 / 19 … 3 null-anchor by design` result line, and its SC-2 claim that removing the pivot
   precondition **moves no existing anchor**), and adds a new fixture **GX-20** for the
   genuinely reachable `NO_VALID_SECOND_ANCHOR` case (duplicate ATH / double top). It
-  **changes no rule** — **HD-11** and the canonical algorithm are untouched; this is a **stale
-  Phase 0 evidence defect, not a new product-definition decision** (Product Owner ruling).
+  **changed no rule as originally scoped** — **HD-11** and the canonical algorithm are
+  untouched. **⚠ The branch has since grown beyond that scope:** Product Owner rulings HD-12,
+  HD-13 and HD-14 arrived mid-flight, and the branch now also carries spec §21, D-TL-11,
+  D-TL-12, a full as-of-time re-derivation of all 23 fixtures, three new fixtures and a
+  committed reference model. That growth was forced by discovered defects rather than chosen,
+  and is disclosed here and in the PR — but **Issue #16 has not been re-scoped to match**, so
+  the ticket→PR traceability link is incomplete (Project Auditor, GOV-007). Re-scoping #16, or
+  splitting the HD-12 audit into its own ticket, is a one-line ticket edit owed before merge.
   Labels: `documentation`, `epic: product-quant-spec`, `ready-eligible`. **Authored on branch
   `fix/gx08-hd11-pivot-sweep`; awaiting verification/review and merge.** The sweep additionally
   surfaced the full-history-vs-formation-window selection question, which the Product Owner
@@ -110,7 +116,7 @@ until the freeze is lifted per-scope.
 
 ## Open issues / PRs (governed index)
 - Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (GX-08 + stale pivot-conditioned `NO_VALID_SECOND_ANCHOR` sweep, open, Phase 0 evidence correction).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **two rounds of the full review chain recorded**, blocked on two Product-Owner-only items — ratification of HD-12/13/14 and a GOV-015 scope ruling). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **seven successive heads and six correction rounds of the full review chain recorded**; blocked on three Product-Owner-only items — ratification of HD-12/13/14 and the HD-15 GOV-015 scope ruling). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·
