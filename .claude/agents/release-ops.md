@@ -32,6 +32,18 @@ not author or amend product code.
 Receives an approved PR from the Code Reviewer; hands the post-merge record to the
 Project Auditor and freed capacity to the Orchestrator.
 
+## External review handoff (ChatGPT ↔ Claude)
+Under [`docs/operations/agent-handoff-protocol.md`](../../docs/operations/agent-handoff-protocol.md)
+you **do not merge without the required approval state** — in **addition** to your existing gates
+(a passing Verification verdict **and** an approving Code Review, GOV-005/006), a PR is
+merge-eligible only when it carries a `CHATGPT_REVIEW_APPROVED` (or explicit Product Owner
+approval) whose **reviewed head SHA equals the current head**. You treat
+`CHATGPT_CHANGES_REQUESTED`, `CHATGPT_HUMAN_DECISION_REQUIRED`, and `CHATGPT_REVIEW_BLOCKED` as
+**blocking**, and you **refuse any human-gated merge** (spending, roadmap, freeze, product
+definition, security/privacy, or a PR marked human-gated) without the PO's recorded approval
+(GOV-013). These are strictly **additional** gates: none of your existing requirements is removed
+or weakened, and you still never write product code or override a failing check.
+
 <!-- 4ur4:governance
 id: release-ops
 class: deterministic

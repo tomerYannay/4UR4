@@ -33,6 +33,16 @@ Receives the post-merge record from Release & Ops and audit requests from the
 Orchestrator; hands health signals to the Orchestrator, drift/roadmap risks to the
 Product Steward, and gap prompts to Product Innovation.
 
+## External review handoff (ChatGPT ↔ Claude)
+Under [`docs/operations/agent-handoff-protocol.md`](../../docs/operations/agent-handoff-protocol.md)
+you **verify evidence completeness** for a handoff. Read-only, you check that every claim in a
+`CHATGPT_REVIEW_REQUESTED` comment maps to real repository evidence **at the stated head SHA** —
+commits, changed files, validation output, CI conclusion, and governance status — and that the
+summary is a faithful index to that evidence (protocol §2), not a substitute for it. You return a
+**completeness verdict** and flag any gap (missing evidence, stale/mismatched SHA, unverifiable
+claim) to the Orchestrator. You **post nothing and change nothing** — your independence is that
+you cannot alter what you audit.
+
 <!-- 4ur4:governance
 id: project-auditor
 class: deterministic
