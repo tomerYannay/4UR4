@@ -5,10 +5,19 @@
 > Because Claude Code discovers `.claude/agents/` **at session start**, the agent itself
 > cannot be dispatched in the session that created it (same constraint as
 > [`claude-code-validation.md`](../claude-code-validation.md)). This review was therefore
-> produced by a general-purpose agent **applying the new agent's framework verbatim** against
-> the **merged** Phase 0 golden-fixture work at head
-> `3c172e033770a08d9d856c5a3271dffab12bf767` (PR #9). It is a **simulation of the framework**,
-> not a live `/agents` dispatch; a fresh-session live run remains part of discovery validation.
+> produced by a **general-purpose agent applying the new agent's framework verbatim**
+> (because the new **permanent** agent only becomes discoverable after a **new Claude Code
+> session**) against the **merged** Phase 0 golden-fixture work at Phase-0 main commit
+> `3c172e033770a08d9d856c5a3271dffab12bf767` (PR #9). It is **behavioral validation of the
+> framework, NOT a live-agent discovery test**; a fresh-session `/agents` discovery run
+> remains a separate check (see [`claude-code-validation.md`](../claude-code-validation.md) §A).
+>
+> **Recorded facts for this simulation:** executed via general-purpose agent (agent not yet
+> session-discoverable when run) · reviewed Phase-0 main SHA `3c172e0…` · evidence inspected =
+> the fixture/spec/decision files listed below (via `git show <sha>:<path>`) · **verdict =
+> `STRATEGIC_HUMAN_DECISION_REQUIRED`** · the review is **head-specific** (bound to `3c172e0`;
+> a new commit invalidates it) · **human-gated decision identified = HD-06** (data-provider
+> selection + spend) · **next step = review PR #12** (Phase-1 research), freeze kept ON.
 
 ## What the trial demonstrates (requirement 14)
 - **Evidence-first inspection** — it read the actual files at the reviewed SHA (`git show <sha>:<path>`), not summaries, and tied each claim to a file.
@@ -22,7 +31,52 @@ The trial independently caught genuine **pre-existing** Phase 0 traceability def
 1. **RM-01 result-approval record is inconsistent:** `product/fixtures/README.md` §6a says approval `pending` while `product/fixtures/real/RM-01/annotation.json` says `approved`; PR #9 carries **no** GitHub PO-approval comment/review.
 2. **`product/fixtures/VERIFICATION.md`** reads "18 / 18 fixtures verified" in the Result header but "19 / 19" in the SC-2 regression section (GX-19 added).
 
-**Recommended follow-up (separate PR, not this one):** the **Product Steward** reconciles the RM-01 approval record to a single value across the four files and records the Product Owner's RM-01 approval as a **citable GitHub artifact**; and corrects the VERIFICATION.md count to 19/19. An agent must not silently choose which status is true (precedence: latest PO decision → `human-decisions.md` → …).
+**Recommended follow-up (separate PR, not this one):** the **Product Steward** reconciles the RM-01 approval record to a single value across the affected files and records the Product Owner's RM-01 approval as a **citable GitHub artifact**; and corrects the VERIFICATION.md count to 19/19. An agent must not silently choose which status is true (precedence: latest PO decision → `human-decisions.md` → …).
+
+---
+
+## Evidence report (pre-existing Phase 0 inconsistency)
+
+### 1. Exact inconsistency
+**(A) RM-01 Product-Owner result-approval recorded inconsistently.** The authoritative value is **`approved`** (the PO approved RM-01 on 2026-07-25), but the top-level fixtures index was not updated and still says `pending`.
+- `product/fixtures/real/RM-01/annotation.json:205` → `"product_owner_approval": "approved"` ✅ authoritative
+- `product/fixtures/real/RM-01/README.md:10` → "Owner approval: `approved` (2026-07-25)" ✅
+- `product/fixtures/VERIFICATION.md` (RM-01 section) → "Product Owner approval: `approved` (2026-07-25)" ✅
+- `product/fixtures/README.md:155` (§6a index), `:166`, `:184` → approval **`pending`** ❌ **stale outlier**
+- **Expected:** one consistent value across all records for a human-gated approval, with a citable artifact.
+- **Actual:** three RM-01-local records say `approved`; the fixtures index says `pending`; and **PR #9 carries no GitHub PO-approval comment/review** (`gh pr view 9` → `comments: 0, reviews: 0`), so precedence-1 evidence (a PO GitHub artifact) is absent.
+
+**(B) Fixture-count mismatch in the evidence log.** `product/fixtures/VERIFICATION.md:27` reads "**18 / 18** fixtures verified" while `:106` (SC-2 regression) reads "**19 / 19**" after GX-19 was added. Expected: a single current count (**19/19**).
+
+**(C) Annotation internal traceability (cosmetic).** `product/fixtures/real/RM-01/annotation.json:213` marks `spec_contradiction_report.status: "resolved-with-po"` and SC-2 `resolution: "resolved"`, yet `:210` `unresolved_metadata` still lists "SC-2 pivot-eligibility question (open)"; and SC-2's `verdict` (`:230`) reuses SC-1's enum value `"MATCH"`.
+
+### 2. Classification
+- (A) RM-01 approval record → **Governance / process** (a human-gated approval record).
+- (B) count + (C) annotation internal → **Implementation / test-evidence** (traceability of the evidence docs).
+- **None** is a *Product-definition* or *Technical-design* defect — no rule, formula, or geometry is in conflict.
+
+### 3. Severity
+- (A) RM-01 approval record → **Major** on the governance/traceability axis (a human-gated approval must be unambiguous and citable); **functional impact is documentation-only** (not Blocking — see §5).
+- (B) count → **Minor**. (C) annotation internal → **Minor**.
+
+### 4. Why it is genuinely pre-existing
+- It exists on **merged `main`**: shown above via `git show main:<path>` (README lines 155/166/184 = `pending`; annotation:205 = `approved`; VERIFICATION 18/18 vs 19/19).
+- It was **introduced by commit `3c172e0`** ("Phase 0 research: golden-fixture dataset … (#9)"), the PR #9 squash-merge — **before** this agent-creation PR existed.
+- This PR (`governance/add-strategic-product-reviewer`) touches **no** `product/fixtures/` files: `git diff --name-only main...HEAD` lists only the agent, registry/validator, `project-state.md`, wiring, and this simulation doc. The inconsistency is therefore **not introduced here**.
+
+### 5. Impact
+- Changes the selected canonical line? **No.**
+- Changes breakout/retest classification? **No.**
+- Invalidates any golden fixture? **No** — all 19 verify to 6 sig figs; anchors unchanged; GX-19 is the sole non-pivot anchor.
+- Changes an approved Product Owner decision? **No** — the PO's RM-01 approval and HD-11 stand; the correct value is `approved`; only a stale index line disagrees.
+- Blocks future implementation? **No** — documentation only; Phase 1+ is freeze-blocked regardless (GOV-015).
+
+### 6. Recommended resolution
+- **Smallest safe correction:** update `product/fixtures/README.md` lines 155/166/184 `pending` → `approved` to match the authoritative RM-01 records; fix `VERIFICATION.md:27` "18/18" → "19/19"; remove the stale "SC-2 (open)" entry from `annotation.json:210` `unresolved_metadata` (optionally give SC-2 its own verdict token).
+- **Files that would change:** `product/fixtures/README.md`, `product/fixtures/VERIFICATION.md`, `product/fixtures/real/RM-01/annotation.json`.
+- **Product Owner decision required?** **No** for the correction (the approval already happened and is the authoritative value). *Optionally* the PO/Steward records a **citable GitHub PO-approval artifact** for RM-01 (a comment on PR #9 or the coordination queue) to close the precedence-1 gap — a traceability nicety, not a new decision.
+- **Reopen #2 / #3?** Not recommended — both are evidence-backed **Done** (reopening churns closed tickets against GOV-005/006). Prefer a **new small Product-Steward doc-reconciliation follow-up** (its own issue or a fix-up PR). If the team prefers reopening, `#3` (owns the breakout/RM-01-adjacent fixtures) is the closer match; `#2` (pure geometry) is unaffected by the approval line.
+- **Owner:** Product Steward (content), routed by the Orchestrator; re-reviewed by the Strategic Product Reviewer on the new head.
 
 ---
 
