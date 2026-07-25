@@ -23,10 +23,10 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-09 | med  | External Fear & Greed source + redistribution/display rights | APPROVED |
 | HD-10 | high | SaaS billing/PII security review | APPROVED |
 | HD-11 | high | Pivot-high prefilter is non-authoritative (upper-log-hull is canonical) | APPROVED |
-| HD-12 | high | Anchor selection is rolling/causal (as-of-time), frozen at confirmed breakout | APPROVED (relayed — ratification outstanding) |
-| HD-13 | high | `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust | APPROVED (relayed — ratification outstanding) |
-| HD-14 | high | Formation gates are first-class `k`-independent parameters | APPROVED (relayed — ratification outstanding) |
-| HD-15 | high | GOV-015 scope: is a committed causal reference model permitted evidence tooling? | **PENDING** |
+| HD-12 | high | Anchor selection is rolling/causal (as-of-time), frozen at confirmed breakout | **APPROVED — RATIFIED** |
+| HD-13 | high | `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust | **APPROVED — RATIFIED** |
+| HD-14 | high | Formation gates are first-class `k`-independent parameters | **APPROVED — RATIFIED** |
+| HD-15 | high | GOV-015 scope: a committed causal reference model is permitted evidence tooling | **APPROVED** |
 
 ---
 
@@ -269,15 +269,15 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   (the envelope rule); real-market evidence in `product/fixtures/real/RM-01/`.
 
 ## HD-12 — Anchor selection is rolling and causal (as-of-time), frozen at confirmed breakout · materiality: **high**
-- **Status:** APPROVED **(relayed — ratification outstanding)** — **Decided by: Product Owner, 2026-07-25.** Resolves **OQ-TL-7**
+- **Status:** **APPROVED and RATIFIED** — **Decided by: Product Owner, 2026-07-25**, and [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`. Resolves **OQ-TL-7**
   (surfaced by [Issue #16](https://github.com/tomerYannay/4UR4/issues/16) /
   [PR #18](https://github.com/tomerYannay/4UR4/pull/18), the stale-pivot sweep, which
   explicitly did **not** decide it).
 - **⚠ Provenance.** As with HD-13 and HD-14, this ruling reached the repository as a Product
   Owner instruction to the autonomous session rather than as a posted GitHub artifact; the
-  issue thread contains the escalation but no answer. **Ratification is outstanding**, and it
-  matters more here than anywhere else, because the entire 23-fixture correctness contract is
-  derived from this rule. Builds on
+  issue thread contains the escalation but no answer. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). It mattered more
+  here than anywhere else, because the entire 23-fixture correctness contract derives from
+  this rule. Builds on
   [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
 - **Decision:** Over what window is the canonical §8 anchor selection evaluated —
   full history (later bars may retroactively re-select `B*`), frozen at line
@@ -360,7 +360,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   research before any selection or commitment.
 
 ## HD-13 — `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust · materiality: **high**
-- **Status:** APPROVED **(relayed — ratification outstanding)** — **Decided by: Product Owner, 2026-07-25.**
+- **Status:** **APPROVED and RATIFIED** — **Decided by: Product Owner, 2026-07-25**, and [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`.
 - **⚠ Provenance — read before relying on this entry.** Surfaced as "Decision 1" by the
   causal fixture audit on [Issue #16](https://github.com/tomerYannay/4UR4/issues/16), whose
   escalation comment explicitly declined to choose. **The ruling was then issued by the
@@ -373,9 +373,11 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   pattern as the *Historical Product Owner Decision Record — RM-01* below, and it falls short
   of the standard the Product Owner set on
   [#14](https://github.com/tomerYannay/4UR4/issues/14#issuecomment-5078902902) (*"the record
-  must be a committed, citable artifact"*). **Ratification by a posted Product Owner comment
-  naming the exact head is outstanding**; until then treat this as a relayed, unratified
-  record rather than a precedence-1 artifact. Implemented in
+  must be a committed, citable artifact"*). **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), naming head
+  `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`. The gap this block discloses is closed; the
+  block is retained because the record of how a decision reached the repository is itself
+  evidence (GOV-006), and because the false "answered there" citation it retracts must stay
+  retracted. Implemented in
   [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
 - **Decision:** Under [HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high)
   `ε_break` became **outcome-determining**: at least one fixture's expected
@@ -417,7 +419,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   2. **GX-15** as the dedicated boundary fixture — option (b) had named **GX-01**;
   3. rule 3 (ordinary fixtures must not become boundary tests) and rule 4 (a robust causal
      event is preserved, not reverted) — neither appeared in any option.
-  A ratifying comment should confirm these four clauses **specifically**.
+  **Ratified as recorded** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) states explicitly that HD-13 is ratified *as recorded*, which includes these four clauses, and invites correction if any was meant to be excepted.
 - **Cost of delaying:** n/a — resolved 2026-07-25.
 - **Safe default:** the documented illustrative `ε_break = 0.01` with
   `eps_break_locked: false` in every fixture, plus a recorded robustness sweep.
@@ -440,7 +442,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   `trendline-specification.md` §13.5.
 
 ## HD-14 — Formation gates are first-class, `k`-independent parameters · materiality: **high**
-- **Status:** APPROVED **(relayed — ratification outstanding)** — **Decided by: Product Owner, 2026-07-25.**
+- **Status:** **APPROVED and RATIFIED** — **Decided by: Product Owner, 2026-07-25**, and [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`.
 - **⚠ Provenance — same limitation as HD-13 above.** Surfaced as "Decision 2" / **OQ-TL-8**
   by the §21 specification work on
   [Issue #16](https://github.com/tomerYannay/4UR4/issues/16). **The ruling was issued by the
@@ -448,8 +450,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   posted to GitHub, so no citable decision artifact exists.** This entry is the relay record.
   Unlike HD-13, the substance here matches option (b) exactly as escalated — only the
   parameter names differ (`min_bars`/`min_bars_after_anchor` → `min_formation_bars`/
-  `min_ath_age_bars`) and no threshold value changed. **Ratification by a posted Product
-  Owner comment naming the exact head is outstanding.** Implemented in
+  `min_ath_age_bars`) and no threshold value changed. **Ratification: DONE** — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012). Implemented in
   [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
 - **Decision:** Under HD-12 the §18 formation guards became **outcome-determining** —
   they fix `t_form`, the first bar at which any event can fire, and therefore which
@@ -498,9 +499,22 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   resolves **OQ-TL-8**.
 
 ## HD-15 — GOV-015 scope: is `tools/fixture-replay.mjs` permitted under the build-freeze? · materiality: **high**
-- **Status:** **PENDING** — raised 2026-07-25 by the Project Auditor and the Strategic Product
-  Reviewer, independently, during the review of
-  [PR #18](https://github.com/tomerYannay/4UR4/pull/18). **No agent may decide this.**
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-25** ([ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), against head
+  `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`). Raised by the Project Auditor and the Strategic
+  Product Reviewer, independently, during the review of
+  [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
+- **Ruling:** `tools/fixture-replay.mjs` is **permitted under GOV-015 as Phase-0 evidence
+  tooling** — the recommended option below. Recorded in
+  [`governance/build-freeze.md`](../governance/build-freeze.md) so the ruling lives in the
+  governance file rather than only in the artifact it licenses. **GOV-015 itself remains ON:**
+  this is a scope clarification about one file, not a freeze lift, and it authorizes no
+  product code.
+- **Conditions carried with the permission** (the recommended option's own terms, implemented
+  as the detail of the ruling rather than separately quoted): it confers **no Phase-2 credit**;
+  the Phase-2 engine MUST be authored from the specification by an agent that has **not read
+  this model**, so that "exact reproduction" tests conformance rather than transcription; and
+  the **specification governs** wherever the two disagree, with any divergence handled as a
+  spec-defect report or a model bug, never as silent model behaviour.
 - **Decision:** [PR #18](https://github.com/tomerYannay/4UR4/pull/18) commits
   `tools/fixture-replay.mjs`, a roughly thousand-line executable causal reference model implementing
   §3, §4, §6, §7, §8, §9, §10, §11, §13, §14, §15, §16, §17, §18 and §21 of the trendline
@@ -555,9 +569,8 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   [HD-11](#hd-11--pivot-high-prefilter-is-non-authoritative-upper-log-hull-is-canonical--materiality-high).
   Backtests and fixtures must never use future bars to revise an earlier event
   classification. See [`trendline-specification.md`](trendline-specification.md).
-  **⚠ Relayed, not posted:** this ruling reached the repository as a direct Product Owner
-  instruction to the autonomous session; no GitHub artifact exists and **ratification is
-  outstanding** — see the entry above.
+  **Relayed, then ratified:** this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012).
 
 - **2026-07-25 — [HD-13](#hd-13--eps_break-stays-unlocked-ordinary-fixtures-must-be-tolerance-robust--materiality-high)
   approved:** `ε_break` **stays unlocked** (HD-03 unamended); instead, every **ordinary**
@@ -566,9 +579,8 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   fixture with both sides documented, ordinary fixtures must not become boundary tests,
   and a robust causal breakout (**GX-19**, margin 0.0246129) is **preserved rather than
   reverted**.
-  **⚠ Relayed, not posted:** this ruling reached the repository as a direct Product Owner
-  instruction to the autonomous session; no GitHub artifact exists and **ratification is
-  outstanding** — see the entry above.
+  **Relayed, then ratified:** this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012).
 
 - **2026-07-25 — [HD-14](#hd-14--formation-gates-are-first-class-k-independent-parameters--materiality-high)
   approved (resolves OQ-TL-8):** the formation gate is restated as **first-class,
@@ -577,10 +589,16 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
   versioned with `spec_version`, backtestable, and carried in every fixture's `params`.
   Changing the pivot window `k` may no longer move any event. Locked by **GX-21**,
   **GX-22**, **GX-23** and by `tools/fixture-replay.mjs --formation`.
-  **⚠ Relayed, not posted:** this ruling reached the repository as a direct Product Owner
-  instruction to the autonomous session; no GitHub artifact exists and **ratification is
-  outstanding** — see the entry above.
+  **Relayed, then ratified:** this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact — [ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012).
 
+- **2026-07-25 — HD-12, HD-13 and HD-14 RATIFIED, and HD-15 approved** ([ratified 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), against head
+  `2651cd0efffb7d48ec6e9929aed8fa3c4f22afcd`): *"Ratify HD-12, HD-13 and HD-14; permit the
+  reference model under GOV-015."* The three relayed rulings now carry the citable artifact
+  their entries disclosed as missing, HD-13 ratified **as recorded** including the four clauses
+  its entry enumerates as going beyond the escalated options. `tools/fixture-replay.mjs` is
+  permitted under GOV-015 as Phase-0 evidence tooling, conferring no Phase-2 credit;
+  **GOV-015 remains ON.**
 - **2026-07-25 — Historical Product Owner Decision Record — RM-01** (*recorded here, not
   newly decided*): PR #9 merged the RM-01 verification without a citable GitHub decision
   artifact (0 comments, 0 reviews), so this bullet supplies the missing precedence-1

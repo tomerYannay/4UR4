@@ -234,7 +234,7 @@ checked *against* it. Geometry is compared at **exactly 6 significant figures** 
 of the rounded value), not with a fuzzy tolerance, which is stricter than the ≤3×10⁻⁵ /
 ≤5×10⁻⁵ relative tolerances used in the passes above.
 
-The model is **proposed as Phase-0 evidence tooling, not the product detector** — its status under the GOV-015 build-freeze is an open Product Owner question (**HD-15, PENDING**), and the following is the proposed disposition rather than a ruling: it lives in `tools/`
+The model is **Phase-0 evidence tooling, not the product detector** — permitted under the GOV-015 build-freeze by **HD-15 (Product Owner, 2026-07-25)**, on the conditions recorded in `governance/build-freeze.md`: it lives in `tools/`
 beside `validate.mjs`, creates no product-code directory, is wired into no product surface,
 and confers no Phase-2 credit. A build-lifted engine must still be written separately and
 must reproduce the **fixtures**.

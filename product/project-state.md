@@ -44,12 +44,13 @@ parameters `min_formation_bars = 8` / `min_ath_age_bars = 3`). The entire fixtur
 re-derived as-of-time and re-verified mechanically; the in-place
 `geometry_check.open_issue_2026_07_25` flags are resolved and removed.
 
-**⚠ All three rulings are RELAYED, not ratified.** HD-12, HD-13 and HD-14 reached the
-repository as Product Owner instructions issued directly to the autonomous session; nothing
-was posted to GitHub, so no citable decision artifact exists and each register entry is
-marked *"relayed — ratification outstanding"*. Everything downstream — the 23-fixture
-correctness contract, spec §18/§21, D-TL-11 and D-TL-12 — inherits that status until a
-ruling is posted naming the exact head.
+**All three rulings are RATIFIED.** HD-12, HD-13 and HD-14 originally reached the repository
+as Product Owner instructions with no posted artifact; that gap is closed by the
+[ratification of 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012),
+given against head `2651cd0`, with HD-13 ratified *as recorded* — including the four clauses
+its entry enumerates as going beyond the escalated options. **HD-15** was approved in the same
+ruling: the causal reference model is permitted under GOV-015 as Phase-0 evidence tooling,
+conferring no Phase-2 credit. **GOV-015 itself remains ON.**
 
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
@@ -95,10 +96,10 @@ ruling is posted naming the exact head.
   surfaced the full-history-vs-formation-window selection question, which the Product Owner
   decided as **HD-12** (as-of-time selection), followed by **HD-13** and **HD-14**. The branch
   now also carries the complete as-of-time re-derivation of the fixture set, the
-  `k`-independent formation parameters and their regression fixtures. **Three Product-Owner-only
-  items block merge:** (1) ratification of the relayed rulings HD-12/13/14; (2) the HD-15
-  GOV-015 scope ruling on the committed causal reference model `tools/fixture-replay.mjs`;
-  and (3) re-scoping Issue #16 to cover what this branch actually delivers.
+  `k`-independent formation parameters and their regression fixtures. **The Product-Owner-only items are
+  resolved** — HD-12/13/14 ratified and HD-15 approved on 2026-07-25. Re-scoping Issue #16 to
+  cover what this branch actually delivers is an Orchestrator ticket-hygiene action, not a
+  Product Owner decision, and is handled as such.
 
 ## Next milestone
 Two tracks: (1) complete the **[#16](https://github.com/tomerYannay/4UR4/issues/16) Phase 0
@@ -115,9 +116,15 @@ until the freeze is lifted per-scope.
 ## Pending Product Owner decisions
 - **HD-06** — data-provider selection + recurring spend (**human-gated**; research in PR #12).
 
+*Resolved 2026-07-25 and no longer pending:* **HD-12**, **HD-13** and **HD-14** ratified, and
+**HD-15** approved (the causal reference model is permitted under GOV-015 as Phase-0 evidence
+tooling, conferring no Phase-2 credit) — one ruling, recorded as a citable artifact
+[on #16](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head
+`2651cd0`. **GOV-015 itself remains ON.**
+
 ## Open issues / PRs (governed index)
 - Issues: **#4**, **#5** (Phase 1 research, open), **#6**, **#7** (impl, `blocked: freeze`), **#10** (Agent Coordination Queue, permanent index), **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (GX-08 + stale pivot-conditioned `NO_VALID_SECOND_ANCHOR` sweep, open, Phase 0 evidence correction).
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **the full review chain re-run against every head of this audit**, with each round's findings recorded in `fixtures/VERIFICATION.md`; blocked on three Product-Owner-only items — (1) ratification of HD-12/13/14, (2) the HD-15 GOV-015 scope ruling, and (3) re-scoping Issue #16 to cover what the branch actually delivers). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review) · **[#18](https://github.com/tomerYannay/4UR4/pull/18)** (Phase 0 evidence correction + as-of-time fixture audit, draft, CI green, **the full review chain re-run against every head of this audit**, with each round's findings recorded in `fixtures/VERIFICATION.md`; Product-Owner items resolved 2026-07-25 — HD-12/13/14 ratified and HD-15 approved; awaiting the head-specific review chain at the ratification head, then merge). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·

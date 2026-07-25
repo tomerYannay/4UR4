@@ -300,9 +300,10 @@ by that audit — its approved anchor and its SC-1 = MATCH result are unaffected
 
 - `README.md` — this document.
 - `../../tools/fixture-replay.mjs` — the causal (as-of-time) **reference model and replay
-  harness** that re-derives and re-checks every fixture. **Whether committing it is permitted
-  under the GOV-015 build-freeze is an OPEN Product Owner question — HD-15, PENDING.** The
-  characterisation that follows is the *proposed* disposition, not a ruling. Phase-0
+  harness** that re-derives and re-checks every fixture. **Permitted under the GOV-015 build-freeze as Phase-0
+  evidence tooling — HD-15, ruled by the Product Owner 2026-07-25**, on condition that it
+  confers no Phase-2 credit and that Phase 2's engine is authored from the specification by
+  an agent that has not read it. Phase-0
   **evidence tooling**, not the product detector: it lives in `tools/` beside `validate.mjs`, creates no product-code
   directory, is wired into no product surface, and confers no Phase-2 credit. A future
   build-lifted engine must be written separately and must reproduce the **fixtures** —
