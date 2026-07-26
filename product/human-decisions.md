@@ -1287,12 +1287,10 @@ gate rather than adding one. `annotation.json` and its schema are **unchanged**.
 and asserts the Half B surface under `--all`, and `check-evidence.mjs` schema-validates it
 and **fails** on a real fixture directory that carries no expectation) · **the 23 golden fixtures unchanged** · `project-state.md` (Product Steward).
 
-*This list is a **change surface**, mixing delivered and owed items. **Three** are owed and
-each is marked **(new)** or **(OWED)** above — `expected-causal.json`, its additive
-`real-annotation.schema.json` change, and the `real/`-reading tool extension — so that
-nothing here has to be read against a neighbouring document to tell which is which.
-(An earlier revision of this sentence said "two", leaving the schema entry unmarked; it
-re-created the exact defect it claims to remove.)*
+*This list is a **change surface**. As of 2026-07-26 **nothing on it is owed**:
+`expected-causal.json` exists, the schema question was resolved by adding a separate
+`real-causal.schema.json` rather than editing `real-annotation.schema.json`, and both
+evidence tools now cover `real/`. RM-01 is under mechanical causal replay in CI.*
 
 **Four records are RETAINED, not deleted** — HD-21 permits adding to or superseding a
 record, never removing one, and each of these is the kind a well-meaning tidy-up would

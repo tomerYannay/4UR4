@@ -45,8 +45,9 @@ jobs:
         # its SPR-D-01 Half B surface asserted — the formation trace, the as-of-time
         # selection over the bars strictly before the stop, and line_at_stop at an
         # ENGINE-DERIVED stop index. It asserts the exclusions too (no Λ^F, no final
-        # state, no BREAKOUT_CONFIRMED), and it FAILS rather than skips on a real
-        # fixture directory with no expectation, so the walk cannot pass vacuously.
+        # state, no BREAKOUT_CONFIRMED), and it FAILS rather than skips on ANY real
+        # fixture directory lacking an expectation, so the walk cannot pass vacuously.
+        # (check-evidence.mjs asserts the same per-directory, so the gate is closed twice.)
         run: node tools/fixture-replay.mjs --all
 
       - name: Validate fixture JSON against the schema, and documentation links

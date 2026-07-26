@@ -496,7 +496,17 @@ export function buildRealRecord(fx) {
   const stop = r.breakout_bar;
   if (stop === null) return { stop_index: null, unreachable: 'no engine-derived stop' };
   const surface = r.bars.filter((x) => x.t < stop);
+  // `replay()` permits formation and breakout on the same bar, which leaves no bar
+  // strictly before the stop carrying a line. Report that instead of dereferencing
+  // undefined — a harness that dies with a stack trace reports nothing at all.
   const first = surface.find((x) => x.line);
+  if (!first) {
+    return {
+      stop_index: stop,
+      unreachable: `the line first forms at the stop bar (${stop}), so no bar strictly`
+        + ` before it carries one — this fixture has no assertable pre-stop surface`,
+    };
+  }
   const rec = r.bars.find((x) => x.t === stop);
   const L = rec.line;
   const lnClose = Math.log(fx.bars[stop].close);
@@ -603,8 +613,14 @@ export function compareReal(fx) {
   }
 
   // The expectation is void if the bytes it was derived from changed underneath it.
+  // REQUIRED, not optional: this is the only check covering bars AFTER the stop, which
+  // no asserted value touches. While it was optional, deleting the block made the whole
+  // comparison pass.
   const ib = e.input_binding;
-  if (ib && ib.input_csv_sha256) {
+  if (!ib || !ib.input_csv_sha256) {
+    diffs.push('input_binding.input_csv_sha256 is REQUIRED — without it an edit to bars after'
+      + ' the stop index would change no asserted value and go undetected');
+  } else {
     const actual = createHash('sha256')
       .update(readFileSync(join(fx.dir, ib.input_csv || 'input.csv'))).digest('hex');
     eq('input_binding.input_csv_sha256', actual, ib.input_csv_sha256);
@@ -1203,9 +1219,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // vacuous walk reports coverage it does not have, which is worse than a failing
     // one. `real/` is not empty — RM-01 is committed — so zero discoveries here
     // means the expectation is missing, not that there is nothing to check.
-    const realDirs = existsSync(REAL) ? readdirSync(REAL).filter((d) => /^RM-\d\d$/.test(d)) : [];
-    if (realDirs.length && !realIds.length) {
-      console.log(`✗ real       ${realDirs.length} real fixture dir(s) present but none carries expected-causal.json`);
+    const realDirs = existsSync(REAL) ? readdirSync(REAL).filter((d) => /^RM-\d\d$/.test(d)).sort() : [];
+    // Per-directory, not "only if ALL of them lack one" — that weaker form would let a
+    // second real fixture added without an expectation be silently skipped while RM-01
+    // kept the walk looking healthy.
+    for (const d of realDirs.filter((d) => !realIds.includes(d))) {
+      console.log(`✗ ${d}       no expected-causal.json — a real fixture with no causal`
+        + ` expectation is unguarded, and this walk must not pass over it silently`);
       realFailures++;
     }
     for (const id of realIds) {

@@ -25,7 +25,24 @@
 | M-05 | Six pre-existing broken same-file `#anchor` links, and `check-evidence.mjs` structurally skips `#`-prefixed links. The header limit is now stated honestly rather than overclaimed | `survivorship-bias-findings.md` ×5, `data-provider-findings.md` ×1 | link cleanup | tracked on [#22](https://github.com/tomerYannay/4UR4/issues/22) |
 | M-06 | `- **1b.**` renders as a bullet interrupting an ordered list; some renderers restart numbering at "1." for the following item. Text is unambiguous and the numbering intent is stated inline | `fixtures/README.md`, `real/RM-01/README.md` | formatting | Product Steward |
 | M-07 | [#16](https://github.com/tomerYannay/4UR4/issues/16) was closed without being re-scoped to what PR #18 actually delivered (HD-12/13/14, spec §21, D-TL-11/12, three fixtures, the reference model), so the ticket→PR traceability link is incomplete (GOV-007) | GitHub #16 | traceability | Orchestrator |
-| M-08 | `check-evidence.mjs`'s golden census filter is `/^GX-\d\d$/`, so a stray `golden/RM-02` or `GX-024` directory is invisible to the census rather than reported as unexpected | `check-evidence.mjs` | tooling hardening | — |
+| M-08 | `check-evidence.mjs`'s golden census filter is `/^GX-\d\d$/`, so a stray `golden/RM-02` or `GX-024` directory is invisible to the census rather than reported as unexpected. The same applies to `/^RM-\d\d$/` in both tools — `RM-1`, `RM-001`, `rm-02` are ignored rather than reported | `check-evidence.mjs`, `fixture-replay.mjs` | tooling hardening | — |
+
+## From the PR #30 review (RM-01 causal replay)
+
+Three findings from that review were **not** logged here — they were fixed before merge,
+because a gate you can silently disable is not a wording issue: the deletable
+`input_binding` byte-binding, the `real/` walk that failed only when *every* directory
+lacked an expectation, and a `TypeError` where a diff should have been reported. The rest:
+
+| # | Item | Class | Why it can wait |
+|---|------|-------|-----------------|
+| M-09 | **The quarantine table does not classify `real/**`.** `phase2-independence-mechanism.md` classifies `golden/**` — *including every `causal_record`* — as **R2, permeable by necessity, "this is the contract"**, and says nothing about `real/**`. `expected-causal.json` is the same class (it *is* the B-clause conformance target), so quarantining it from the engine author is a **de facto quarantine item no decision record ratifies**, hard-coded into a schema description | ratification gap | Runs in the **restrictive** direction, so E2-AUTHOR is not weakened. **But it decides whether the Phase 2 engine author may read the B-clause target, so it must be ruled before priority 6 starts** |
+| M-13 | `params` is fixture-supplied and unpinned — `eps = 0.05` still passes, because RM-01's geometry is ε-insensitive in that range. A silent retune away from the ratified D-TL-12 set is caught by nothing | tooling hardening | Not live: a retune that *does* move geometry breaks the comparison. `const`-pinning the ratified values would close it |
+| M-14 | The `robustness` block is **recorded but never compared** — `compareReal` runs its own sweep and ignores it. Hand-recorded numbers inside an artifact whose purpose is mechanical verification; its `eps_break = 0.05` row also sits outside the checked 0.5×–2× range | evidence hygiene | The sweep that gates HD-13 robustness *is* mechanical; only the recorded copy is decorative |
+| M-15 | A real fixture with **no breakout cannot be expressed** — `compareReal` hard-fails it. Correct and deliberate for RM-01 (it is what makes the check non-vacuous), but "stop index" has no meaning for a series that never breaks out | design limit | Blocks nothing until a second real fixture arrives; needs a decision then |
+| M-18 | `--real` is undocumented in the USAGE block, and a bare `node tools/fixture-replay.mjs` prints "23/23" without touching RM-01 | docs | CI runs `--all`, so the gate is closed; only the bare run's summary is incomplete |
+| M-19 | `line_at_stop.stop_index` is asserted explicitly and again inside the `Object.keys` loop — the identical diff prints twice on failure | cosmetic | — |
+| M-20 | That loop iterates the *derived* keys, so a key present only in the expectation is invisible to the harness | none — caught by the schema's `additionalProperties: false` | Worth a one-line comment saying so |
 
 ## Promoted out (was here, turned out to block)
 
