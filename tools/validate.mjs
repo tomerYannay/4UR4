@@ -53,7 +53,13 @@ const AGENT_STATUSES = ['permanent', 'temporary'];
 const NO_WRITE_CLASSES = new Set(['deterministic']);       // + product-innovation by id
 const RESERVED_PERMANENT_AUTHORITIES = new Set(['merge-and-release', 'evidence-verdict']);
 const PSEUDO_AGENTS = new Set(['human']);
-const PRODUCT_CODE_DIRS = ['src', 'lib', 'app', 'server', 'client', 'packages', 'engine'];
+// Every directory the freeze is meant to forbid must be NAMED here — the check is a name
+// list, not a heuristic, so an unlisted directory is unguarded no matter what the prose says.
+// The second row is drawn from the surfaces build-freeze.md's own NOT-authorized list names.
+const PRODUCT_CODE_DIRS = [
+  'src', 'lib', 'app', 'server', 'client', 'packages', 'engine',
+  'api', 'services', 'scanner', 'worker', 'dashboard', 'web', 'backend', 'frontend', 'db',
+];
 
 // ---- parsing helpers --------------------------------------------------------
 const unquote = (s) => s.replace(/^["']|["']$/g, '');
@@ -204,14 +210,22 @@ let freezeOn = false;
 let freezeScope = [];
 if (existsSync(freezeFile)) {
   const t = readFileSync(freezeFile, 'utf8');
-  if (!/build_freeze:\s*ON/.test(t)) err('build-freeze.md: expected `build_freeze: ON`');
+  // Parse the MACHINE-READABLE MARKER ONLY. Scanning the whole file let PROSE satisfy the
+  // gate: the Enforcement paragraph contains the literal string "build_freeze: ON", so
+  // flipping the marker to OFF still passed. The most-cited control in the repository was
+  // therefore never actually enforced. Anchoring to the fenced block fixes that, and fixes
+  // the same class of hole in the `scope:` parse below, which previously took the first
+  // line-initial `scope:` anywhere in the file.
+  const marker = (t.match(/##\s*Freeze marker[^\n]*\n+```ya?ml\n([\s\S]*?)```/) || [])[1] || '';
+  if (!marker) err('build-freeze.md: no machine-readable freeze marker block found');
+  if (!/^build_freeze:\s*ON\s*$/m.test(marker)) err('build-freeze.md: expected `build_freeze: ON` in the freeze marker block');
   else {
     freezeOn = true;
     // A scoped lift is only a scope if it is enumerated. `scope:` in the freeze marker
     // names the product-code directories the Product Owner has authorized; every other
     // guarded directory still fails. Deleting an entry re-freezes that directory on the
     // next CI run, which is what makes the boundary mechanical rather than declaratory.
-    const scopeLine = (t.match(/^\s*scope:\s*(.+)$/m) || [])[1] || 'null';
+    const scopeLine = (marker.match(/^\s*scope:\s*(.+)$/m) || [])[1] || 'null';
     freezeScope = [...scopeLine.matchAll(/["']([^"']+)["']/g)].map((m) => m[1].replace(/\/+$/, ''));
     for (const d of PRODUCT_CODE_DIRS) {
       if (!existsSync(join(ROOT, d))) continue;
@@ -251,7 +265,11 @@ console.log(`Canonical dir: ${AGENTS_DIR}/`);
 console.log(`Agents:        ${permanent.length} permanent (/${MAX_PERMANENT_AGENTS}), ${temporary.length} temporary`);
 console.log(`Classes:       ${classCounts}`);
 console.log(`Gov rules:     ${govIds.size} defined, ${registryIds.size} in registry`);
-console.log(`Build-freeze:  ${freezeOn ? 'ON (autonomous implementation disabled)' : 'UNKNOWN'}`);
+console.log(`Build-freeze:  ${freezeOn
+  ? (freezeScope.length
+    ? `ON — lifted scope: ${freezeScope.map((d) => `${d}/`).join(', ')} (all other product dirs frozen)`
+    : 'ON (autonomous implementation disabled)')
+  : 'UNKNOWN'}`);
 console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present' : 'MISSING'}`);
 console.log(`Bash hook:     ${hookOk ? 'configured (PreToolUse → bash-guard.mjs)' : 'MISSING/INVALID'}`);
 console.log('─'.repeat(58));

@@ -83,8 +83,16 @@ strictly required by the engine.
 
 **NOT authorized, and still frozen:** provider integration · live market-data ingestion ·
 API, database, scanner, worker, dashboard, alerts or SaaS work · spend, licensing, privacy,
-billing or external deployment. Every product-code directory other than `engine/` remains
-forbidden and is asserted as such by the validator.
+billing or external deployment.
+
+**How far the machine check actually reaches, stated precisely.** `tools/validate.mjs` guards
+a **named list** of product-code directories, not a heuristic: `src`, `lib`, `app`, `server`,
+`client`, `packages`, `engine`, `api`, `services`, `scanner`, `worker`, `dashboard`, `web`,
+`backend`, `frontend`, `db`. A directory outside that list is **unguarded no matter what this
+section says** — the prose forbids it, the validator does not. The list was extended to cover
+the surfaces the NOT-authorized list above names, because it previously stopped at six and
+`engine/` itself was not on it at all. **Add the name here and to `PRODUCT_CODE_DIRS`
+together, or the ban is decorative.**
 
 **Binding requirements on the engine**, quoted from the ruling:
 1. **independently authored** from the fixture reference model;

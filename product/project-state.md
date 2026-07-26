@@ -13,8 +13,9 @@
 - **Last reviewed commit SHA (main):** `54b16ee34d0af3863290df6b51a545ea724e4d70` — the merge
   commit of [PR #30](https://github.com/tomerYannay/4UR4/pull/30), a true merge of branch head
   `b3fc658` into `d1a1c41`. `main` and `origin/main` sit at that SHA. **Every artifact this
-  file describes as delivered is on `main`** — the one thing it reports that is *not* yet in
-  the repository is the #31 Product Owner ruling below, and it says so. CI is green
+  file describes as delivered is on `main`, except this branch's own contents** — the #31
+  ruling record (HD-22), the scoped freeze marker and this refresh land together with it.
+  CI is green
   at this SHA across the four governance-validation gates (`tools/validate.mjs`,
   `.claude/hooks/bash-guard.test.mjs`, `tools/fixture-replay.mjs --all`,
   `tools/check-evidence.mjs`).
@@ -29,14 +30,15 @@
   **independently authored** from the reference model and must not import, execute or
   mechanically translate it (HD-15 condition 2 / E2-AUTHOR); it must pass **23/23 golden +
   RM-01**; it must preserve **HD-11…HD-20**; and it must be deterministic and free of
-  look-ahead bias. **Propagation is owed and this is the only current-state record of it:**
-  [`../governance/build-freeze.md`](../governance/build-freeze.md) still reads
-  `build_freeze: ON`, `autonomous_implementation: DISABLED`, `lifted_by: null`, and
-  [`human-decisions.md`](human-decisions.md) carries **no entry** for this ruling —
-  verified on disk at this SHA. Under the precedence header the GitHub ruling governs, but
-  until the register and the freeze file are updated, **no ticket should be treated as
-  Ready on the strength of this bullet alone**. **Full branch protection on `main` is
-  required before any Phase 2 product code merges** (same ruling).
+  look-ahead bias. **Propagation is complete and lands with this PR:** the ruling is recorded
+  as **HD-22** in [`human-decisions.md`](human-decisions.md), and
+  [`../governance/build-freeze.md`](../governance/build-freeze.md) carries the scoped-lift
+  section with `scope: ["engine/"]`, `autonomous_implementation: ENABLED_FOR_SCOPE` and a
+  named `lifted_by`. The scope is **machine-enforced**: `tools/validate.mjs` guards `engine`
+  alongside every other listed product-code directory and permits one **only** when the
+  marker names it, so deleting the scope entry re-freezes `engine/` on the next CI run.
+  **Full branch protection on `main` is required before any Phase 2 product code merges**
+  (same ruling).
 
 ## Product objective
 - **Final:** a reliable commercial SaaS that detects ATH-anchored logarithmic descending

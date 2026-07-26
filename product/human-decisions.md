@@ -998,6 +998,15 @@ or mechanically translate `tools/fixture-replay.mjs` or any successor model unde
 **Agreement with the reference model earns no credit** (HD-15 condition 1): the engine is
 proven against the **fixtures**, never against the model.
 
+**Binding condition 6 — offered by the requesting session and accepted as part of the
+scope.** **No fixture, `expected.json`, `annotation.json`, or parameter may be edited to make
+the engine pass.** If the engine and a committed fixture disagree, that is **escalated, never
+reconciled**. This is the strongest single control on the Phase 2 work: fitting the object to
+the gate is precisely the failure the whole fixture corpus exists to catch, and it is the one
+control that cannot be recovered after the fact — a fixture edited to accommodate an engine
+looks identical to a fixture that was always right. It is a **Phase-2 ticket acceptance
+criterion**, not advice.
+
 **What this does not do.** It does not touch **HD-06** — no provider is selected and no spend
 is authorized. It does not resolve **M-09** (the `real/**` quarantine classification), which
 remains open and must be ruled before the Phase 2 ticket meets its Definition of Ready. It
