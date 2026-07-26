@@ -32,6 +32,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-18 | high | 4UR4 computes its own point-in-time universe (4UR4 US Large-Cap 500) | **APPROVED** |
 | HD-19 | med  | Independence checker permitted as verification tooling | **APPROVED** |
 | HD-20 | high | RM-01: as-of-time result diverges from the approved full-series record | **PENDING** |
+| HD-21 | high | Bounded autonomous product-decision authority delegated to the Strategic Product Reviewer | **APPROVED** |
 
 ---
 
@@ -939,6 +940,68 @@ confirmation remains mandatory before financial authorization.**
   RM-01.** `check-evidence.mjs` only schema-validates its annotation and
   `fixture-replay.mjs` never reads `real/`. That is why this survived the 2026-07-25
   causal audit — a gap in the evidence system, not a one-off.
+
+## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/27), against head `6af5261`).
+- **Decision:** the permanent **Strategic Product Reviewer** may decide **reversible
+  product-definition questions** autonomously, so the project is not blocked on the
+  Product Owner for ambiguities that cost nothing to get wrong and can be undone.
+- **Supersedes and widens [HD-17](#hd-17--bounded-delegation-for-reversible-ambiguity--materiality-high).**
+  HD-17 permitted the safest reversible option on a *new ambiguity* under six conditions.
+  This grants authority to **decide product-definition questions** under ten, with a
+  mandatory record format and an independent audit. Where the two differ, **this governs**.
+- **All ten conditions must hold:** (1) no purchase, subscription, recurring spend or
+  financial commitment; (2) no acceptance of licensing, redistribution, trademark or
+  commercial terms; (3) **GOV-015 remains ON** and no implementation permission is
+  expanded; (4) no privacy, security, billing, PII, authentication or legal exposure;
+  (5) reversible through a later specification revision; (6) no material change to the
+  target customer, core product thesis or roadmap phase order; (7) at least one option
+  clearly has lower look-ahead bias, lower false-evidence risk, stronger causal
+  correctness or better testability; (8) justifiable from approved product goals,
+  existing human decisions, real-market evidence and reproducible analysis; (9) the
+  decision **and its alternatives** recorded transparently; (10) **the Project Auditor
+  confirms the delegation conditions were satisfied.**
+- **Condition 10 is what makes the other nine safe, and it differs in kind.** Conditions
+  1–9 are self-assessed by the deciding agent. Condition 10 requires the **Project
+  Auditor** — read-only, and not the producer of the work — to confirm the decision was
+  the decider's to make. Without it an agent would certify its own eligibility to decide,
+  which is the failure mode this repository has spent its whole history removing. Every
+  delegated decision therefore carries **two** records: the decision, and an independent
+  confirmation of authority.
+- **Required record:** decision · rationale · rejected alternatives · evidence ·
+  reversibility · risks · affected fixtures/specifications · what would trigger
+  reconsideration. Assigned a decision ID, marked
+  `DELEGATED_PRODUCT_DECISION_APPROVED`, and stating explicitly *"Approved under bounded
+  Product Owner delegation; not direct Product Owner authorship."*
+- **Tie-break order** when options remain defensible: (1) no look-ahead bias; (2) causal
+  real-time correctness; (3) mechanically verifiable evidence; (4) reversible
+  implementation; (5) lower false-confidence risk; (6) **preserve information rather than
+  discard it**; (7) **defer economic interpretation to backtesting rather than fit a rule
+  to one example.**
+  > **Tie-breaks 6 and 7 are the substantive ones**, and they were written knowing what
+  > they would bite. 7 forbids the cheapest wrong answer to HD-20 — raising
+  > `min_formation_bars` to 12 so one 29-bar sample behaves, which the corrected evidence
+  > shows would work. 6 forbids resolving an ambiguity by dropping a valid analytical
+  > layer. Tie-break 1 outranks all of them, and matters because the HD-20 options are
+  > not symmetric: the as-of-time result is the causal one and the full-series record is,
+  > by construction, look-ahead.
+- **Never delegated — Product-Owner-only:** HD-06 provider purchase or spend; licensing
+  acceptance or redistribution rights; paid data contracts; lifting or widening GOV-015;
+  roadmap phase-order changes; changing the core product thesis or target customer;
+  security/privacy/billing/PII; irreversible external actions; public claims carrying
+  legal or financial exposure; and **deletion of important evidence or historical
+  decision records** — nothing delegated permits removing a record, only adding to or
+  superseding one.
+- **HD-20 specifically** is delegated, to be decided from the evidence on
+  [#26](https://github.com/tomerYannay/4UR4/issues/26), and returns to the Product Owner
+  only if the chosen resolution would introduce a new commercial threshold, change the
+  core product thesis, require spend or licensing, or lift GOV-015.
+- **What this does not do:** it does not lift GOV-015 (condition 3 restates it), authorize
+  spend, or make **HD-06** decidable. HD-06 remains **PENDING** and Product-Owner-only,
+  with [#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band confirmation
+  still mandatory before any financial authorization.
 
 ## Decision log — 2026-07-26 (Product Owner, second batch)
 
