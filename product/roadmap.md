@@ -461,7 +461,7 @@ style), and **Major risks**. Freeze status is marked per phase.
     only controls on it.
   - **Limit 4 — no [GOV-015](../governance/build-freeze.md) clearance is granted.**
     SPR-D-01 lifts nothing: the build-freeze stays **ON** and
-    `autonomous_implementation: DISABLED`. A new executable tool file, detection
+    `autonomous_implementation: DISABLED` *(as of that decision; the marker now reads `ENABLED_FOR_SCOPE` with `scope: ["engine/"]` under HD-22 — the freeze stays ON everywhere else)*. A new executable tool file, detection
     logic beyond what the permitted reference model already implements, or a
     product-code directory is a **fresh GOV-015 question and Product-Owner-only**.
 

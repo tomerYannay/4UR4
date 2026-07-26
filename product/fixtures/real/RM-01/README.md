@@ -81,7 +81,7 @@
 >    human-approved geometry and the real, undesigned prices** — not to Half B's
 >    provenance.
 > 4. **No [GOV-015](../../../../governance/build-freeze.md) clearance is granted.** The
->    build-freeze remains **ON** and `autonomous_implementation: DISABLED`.
+>    build-freeze remains **ON** and `autonomous_implementation: DISABLED` *(as of that decision; the marker now reads `ENABLED_FOR_SCOPE` with `scope: ["engine/"]` under HD-22 — the freeze stays ON everywhere else)*.
 >
 > **Non-endorsement (required by SPR-D-01 to appear on the artifacts, not only in the
 > register).** The B-clause is an **evidentiary conformance expectation, not an economic

@@ -134,7 +134,7 @@ values reproduce independently within 6-significant-figure tolerance.**
 > **model-derived**, and therefore a **regression guard against today's model, not an
 > independent correctness check**, leaving RM-01's non-circularity attached to Half A's
 > human-approved geometry and the real prices; and (4) **no GOV-015 clearance is
-> granted** — the build-freeze remains **ON** and `autonomous_implementation: DISABLED`.
+> granted** — the build-freeze remains **ON** and `autonomous_implementation: DISABLED` *(as of that decision; the marker now reads `ENABLED_FOR_SCOPE` with `scope: ["engine/"]` under HD-22 — the freeze stays ON everywhere else)*.
 >
 > Half B is an **evidentiary conformance expectation, not an economic endorsement**: 4UR4
 > does not assert the bar-10 signal is a good trade, and whether the short-history /

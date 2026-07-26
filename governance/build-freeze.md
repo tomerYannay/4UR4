@@ -86,9 +86,13 @@ API, database, scanner, worker, dashboard, alerts or SaaS work · spend, licensi
 billing or external deployment.
 
 **How far the machine check actually reaches, stated precisely.** `tools/validate.mjs` guards
-a **named list** of product-code directories, not a heuristic: `src`, `lib`, `app`, `server`,
-`client`, `packages`, `engine`, `api`, `services`, `scanner`, `worker`, `dashboard`, `web`,
-`backend`, `frontend`, `db`, `alerts`, `billing`, `providers`. A directory outside that list is
+a **named list** of product-code directories, not a heuristic.
+<!-- GUARDED-DIRS-LIST — tools/validate.mjs parses the backticked names between these
+     markers and fails the build if they disagree with PRODUCT_CODE_DIRS. Do not remove. -->
+`src`, `lib`, `app`, `server`, `client`, `packages`, `engine`, `api`, `services`, `scanner`,
+`worker`, `dashboard`, `web`, `backend`, `frontend`, `db`, `alerts`, `billing`, `providers`.
+<!-- /GUARDED-DIRS-LIST -->
+A directory outside that list is
 **unguarded no matter what this section says** — the prose forbids it, the validator does not.
 
 **Still unguarded, named here so the gap is not rediscovered as a surprise:** any directory

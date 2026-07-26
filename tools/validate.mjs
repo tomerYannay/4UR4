@@ -62,9 +62,13 @@ const PRODUCT_CODE_DIRS = [
   'alerts', 'billing', 'providers',
 ];
 // INVARIANT: this list and the enumeration in governance/build-freeze.md's scoped-lift
-// section must agree. They drifted once already - the prose named three directories the
-// code did not guard, in the same commit that added a paragraph about prose over-claiming
-// the gate. The parity check below makes that drift a build failure, not a discovery.
+// section must agree. The reason is a real over-claim, stated accurately: 685b65a's prose
+// said the list "was extended to cover the surfaces the NOT-authorized list above names"
+// while `alerts`, `billing` and provider integration were named as forbidden and left
+// unguarded. (An earlier version of this comment said the two LISTS had drifted in that
+// commit. They had not — both held the same 16 names; the divergence existed only in an
+// uncommitted working tree. The over-claim was real, the drift framing was not.)
+// The parity check below makes any future divergence a build failure, not a discovery.
 
 // ---- parsing helpers --------------------------------------------------------
 const unquote = (s) => s.replace(/^["']|["']$/g, '');
@@ -224,7 +228,7 @@ if (existsSync(freezeFile)) {
   const markers = [...t.matchAll(/##[ \t]*Freeze marker[^\r\n]*(?:\r?\n)+```ya?ml\r?\n([\s\S]*?)```/g)];
   // Exactly one marker, or none of this means anything. First-wins would let an
   // illustrative block placed ABOVE the real one shadow it, which fails OPEN.
-  let marker = null;
+  let marker = null;   // assigned only on the single-valid-marker path below
   if (markers.length === 0) {
     err('build-freeze.md: no machine-readable freeze marker block found'
       + ' (expected a ```yaml fence under a `## Freeze marker` heading)');
@@ -257,12 +261,19 @@ if (existsSync(freezeFile)) {
 // something a reviewer has to notice.
 if (existsSync(freezeFile)) {
   const ft = readFileSync(freezeFile, 'utf8');
-  const sec = (ft.match(/How far the machine check actually reaches[\s\S]*?\n\n/) || [''])[0];
-  if (sec) {
-    const named = [...sec.matchAll(/`([a-z]+)`/g)].map((m) => m[1])
-      .filter((d) => d !== 'engine' || true);
+  // Anchored on an explicit marker comment, not on prose wording, and CRLF-tolerant.
+  // The first version keyed on a sentence and was gated behind `if (sec)`, so renaming
+  // the paragraph — or checking out with CRLF — made the check SILENTLY DISAPPEAR. A
+  // drift detector that vanishes when its anchor moves is the failure it exists to catch,
+  // so a missing anchor is now an error rather than a skip.
+  const sec = (ft.match(/<!-- GUARDED-DIRS-LIST[\s\S]*?-->([\s\S]*?)<!--\s*\/GUARDED-DIRS-LIST\s*-->/) || [])[1];
+  if (sec === undefined) {
+    err('build-freeze.md: GUARDED-DIRS-LIST markers not found — the prose/code parity check'
+      + ' cannot run, so the guarded-directory list is unverified');
+  } else {
+    const named = [...sec.matchAll(/`([a-z]+)`/g)].map((m) => m[1]);
     const codeOnly = PRODUCT_CODE_DIRS.filter((d) => !named.includes(d));
-    const proseOnly = named.filter((d) => !PRODUCT_CODE_DIRS.includes(d) && d !== 'yaml');
+    const proseOnly = named.filter((d) => !PRODUCT_CODE_DIRS.includes(d));
     if (codeOnly.length || proseOnly.length) {
       err('build-freeze.md prose and PRODUCT_CODE_DIRS disagree on guarded directories —'
         + (proseOnly.length ? ` prose names but code does not guard: ${proseOnly.join(', ')}.` : '')
