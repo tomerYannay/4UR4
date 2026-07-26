@@ -9,8 +9,15 @@
 > **Authority.** This document is the Architect's design deliverable for
 > [HD-18](../../product/human-decisions.md#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high)
 > (Product Owner, 2026-07-26, [issue #24](https://github.com/tomerYannay/4UR4/issues/24)).
-> Under HD-18's delegation clause it **chooses safest reversible initial research
-> defaults**. It does **not** decide anything that changes the intended market segment —
+> **On the defaults in §11.1 — an authority correction (2026-07-26).** An earlier revision
+> said this document *"chooses"* the safest reversible initial research defaults "under
+> HD-18's delegation clause". **HD-18 grants that delegation to the Strategic Product
+> Reviewer, not to the Architect.** The §11.1 entries are therefore **Architect
+> proposals**, valid as design input and **not yet exercised delegation**; they must be
+> adopted by the delegated role, or the delegation widened by ruling, before they are
+> settled. The document polices the delegation's *reversibility* condition carefully — it
+> downgraded `security_uid` to provisional for failing it — but had not policed the *role*
+> condition. It does **not** decide anything that changes the intended market segment —
 > every such item is routed to the Product Owner in [§11](#11-open-questions--decided-defaults-vs-product-owner-gated).
 > It selects no provider, commits no spend, and does not modify
 > [`roadmap.md`](../../product/roadmap.md), [`human-decisions.md`](../../product/human-decisions.md)
@@ -107,7 +114,7 @@ ticker.
 | Layer | What it is | Stable key | Changes when |
 |---|---|---|---|
 | **Issuer** | The company | `issuer_uid` (4UR4-minted); SEC CIK is an *attribute* | Reincorporation, holdco formation, post-bankruptcy succession |
-| **Security** | One share class of one issuer | `security_uid` (4UR4-minted); CUSIP/FIGI are *attributes* | Never — a security's identity outlives every identifier it carries |
+| **Security** | One share class of one issuer | `security_uid` (4UR4-minted, **provisional — OQ-U7**); CUSIP/FIGI are *attributes* | Never — a security's identity outlives every identifier it carries |
 | **Listing** | A tradeable line: venue + ticker | none — a listing is an interval, not an entity | Ticker change, venue change, delisting, OTC continuation |
 
 **Ranking happens at the issuer layer. Membership is recorded at the security layer.
@@ -714,9 +721,16 @@ number using only data the reconstruction already holds.
 
 ### 5.1 `UR-ID` — the identity model
 
-**Decision: the canonical key is a 4UR4-minted, immutable `security_uid` (and
-`issuer_uid`). Every external identifier — ticker, CIK, CUSIP, FIGI, exchange symbol —
-is an *attribute with a validity interval*, never a key.**
+**Decision — PROVISIONAL, escalated as [OQ-U7](#112-escalated-to-the-product-owner): the
+canonical key is a 4UR4-minted, immutable `security_uid` (and `issuer_uid`). Every
+external identifier — ticker, CIK, CUSIP, FIGI, exchange symbol — is an *attribute with a
+validity interval*, never a key.**
+
+> **Why provisional.** This was taken as a delegated default, but its own reversal cost is
+> *"not reversible cheaply"* — and HD-17 permits a delegated call only where the decision
+> **is** reversible. It therefore does not qualify as settled. The design proceeds on it
+> and flags it here at the point of use. **The objection is to its authority, not its
+> merits.**
 
 `(security_uid, identifier_type, value, valid_from, valid_to, source_ref)`
 
@@ -1113,7 +1127,7 @@ below the line requires a **per-scope GOV-015 lift** ([GOV-013](../../governance
 
 ## 11. Open questions — decided defaults vs Product-Owner-gated
 
-### 11.1 Decided here as safe reversible research defaults (HD-18 delegation)
+### 11.1 Proposed as safe reversible research defaults — Architect proposals, pending adoption by the delegated role
 
 Each is reversible by a rule-version bump plus a re-run — no rewrite, no data
 re-acquisition.
@@ -1159,7 +1173,7 @@ reserves both.
 | **OQ-U3** | **Are REITs in?** [§2.1.2](#212-the-exclusion-register) | Excluding a sector is a segment change; including is the lower-surprise default | Included |
 | **OQ-U4** | **Is R9 (point-in-time shares outstanding) opened, and does any spend attach?** [§4.1](#41-the-dependency-chain-and-where-it-breaks) | HD-06 and HD-07 make provider selection and spend human-gated | R9 opened as **free-path-only** research; no vendor contact |
 | **OQ-U5** | **How far back must the backtest window reach?** [§4.3](#43-where-the-data-comes-from) | The free SEC/XBRL path has a hard historical bound; reaching further is a spend or a text-extraction project | Window starts where the free structured path starts, and the start date is disclosed |
-| **OQ-U7** | **Is the 4UR4-minted `security_uid` the canonical identity key?** [§11.1](#111-safe-reversible-research-defaults-taken-here) | Chosen as a delegated default, but its own reversal cost is "not reversible cheaply" — HD-17 delegation requires reversibility, so it does not qualify | Provisional; the design proceeds on it and flags it in every artifact |
+| **OQ-U7** | **Is the 4UR4-minted `security_uid` the canonical identity key?** [§11.1](#111-proposed-as-safe-reversible-research-defaults--architect-proposals-pending-adoption-by-the-delegated-role) | Chosen as a delegated default, but its own reversal cost is "not reversible cheaply" — HD-17 delegation requires reversibility, so it does not qualify | Provisional; the design proceeds on it and flags it in every artifact |
 | **OQ-U6** | **Is a *first-class* universe-methodology disclosure required on user-facing surfaces at MVP, or only internally?** [§6.3](#63-backtest-results-are-not-comparable--and-where-that-must-be-disclosed) | It is a product and legal-posture question, not a technical one | All five surfaces, D-1…D-5 |
 
 **Nothing in this section is a decision on the Product Owner's behalf.** Where a default

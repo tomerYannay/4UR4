@@ -77,8 +77,12 @@ one file and lifts nothing.
   *Counted from disk on 2026-07-26: `product/fixtures/golden/` holds exactly 23 fixture
   directories, `GX-01`…`GX-23`, each with `input.csv` + `expected.json`, plus `real/RM-01/`.*
 - **[PR #18](https://github.com/tomerYannay/4UR4/pull/18) MERGED** as `e56ed8e` — the Phase 0
-  evidence correction and the HD-12 as-of-time fixture audit. The whole set — **23 golden
-  (GX-01…GX-23) + RM-01** — reproduces **exactly** under as-of-time replay in CI. Landed with
+  evidence correction and the HD-12 as-of-time fixture audit. The **23 golden fixtures
+  (GX-01…GX-23)** reproduce **exactly** under as-of-time replay in CI. *(Corrected
+  2026-07-26: this previously read "23 golden + RM-01". **RM-01 is not replayed** —
+  `fixture-replay.mjs` reads only `golden/`, and `check-evidence.mjs` only schema-validates
+  RM-01's annotation. No mechanical guard has ever covered RM-01's geometry, which is why
+  the divergence now escalated as HD-20 survived that audit.)* Landed with
   it: spec §21, D-TL-11, D-TL-12, GX-20, the HD-14 formation-gate regressions
   GX-21/GX-22/GX-23, and `tools/fixture-replay.mjs` (permitted under HD-15).
 - **Roadmap fixture-coverage reconciliation** (Refs #19, #20): Phase 2/3 exit gates now cover
@@ -133,10 +137,22 @@ PR #12 Phase 1 research review**, the path to the **Product Owner decision on HD
 - All of Phases 2–9 — behind the build-freeze and their entry criteria.
 
 ## Pending Product Owner decisions
-- **HD-06** — data-provider selection + recurring spend (**human-gated**; research in PR #12).
-  **This remains the only pending Product Owner decision.** It is unaffected by anything in
-  this refresh, and [#21](https://github.com/tomerYannay/4UR4/issues/21) is required before it
-  can be taken.
+- **HD-06** — data-provider selection + recurring spend (**human-gated**). Research is
+  delivered ([`data-provider-findings.md`](data-provider-findings.md),
+  [`hd06-due-diligence.md`](hd06-due-diligence.md)); **Intrinio Startup is recorded as the
+  leading candidate at ≈\$5,994 year 1 and is explicitly not selected.** Eight evidence
+  prerequisites remain, two of them blocking — most sharply that the candidate's
+  history-depth claim is contradicted by its own upstream, and depth is the only ground on
+  which it leads. [#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band
+  confirmation is required before any financial authorization.
+- **HD-20** — **RM-01's as-of-time result diverges from its approved full-series record**
+  ([#26](https://github.com/tomerYannay/4UR4/issues/26)). Both are arithmetically correct
+  about different objects; no tolerance suppresses the divergence. **Phase 2
+  implementation is blocked on this** and on nothing else downstream of RM-01.
+
+*(Corrected 2026-07-26: this section previously asserted HD-06 was "the only pending
+Product Owner decision". HD-20 is now pending, and HD-16/17/18/19 were ruled on
+2026-07-26 — see [`human-decisions.md`](human-decisions.md).)*
 
 *Resolved 2026-07-25 and no longer pending:* **HD-12**, **HD-13** and **HD-14** ratified, and
 **HD-15** approved (the causal reference model is permitted under GOV-015 as Phase-0 evidence

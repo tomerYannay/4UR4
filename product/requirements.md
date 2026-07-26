@@ -247,8 +247,12 @@ Traceability: each FR cites the governing spec.
 ## 8. Non-functional requirements
 
 - **NFR-1 — Correctness (primary).** Signals and scores MUST be right before they
-  are fast or pretty. Golden fixtures (GX-01..GX-23, CF-EV-01..07) are the acceptance
-  contract; a failing fixture blocks Done.
+  are fast or pretty. The acceptance contract is the **committed** fixture set — the
+  golden fixtures in `product/fixtures/golden/`, the real-market fixture `RM-01`, and the
+  CF-EV set defined in [`confidence-specification.md`](confidence-specification.md) §11 —
+  and a failing fixture blocks Done. Referenced by location, not enumerated: the previous
+  typed list here read `CF-EV-01..07` when the spec defines **CF-EV-01..09**, in the one
+  clause that calls this *the acceptance contract*.
 - **NFR-2 — Explainability.** Every score MUST be decomposable into named,
   inspectable contributions with reason strings; every accept/reject/transition
   MUST emit a reason code. No hidden terms.

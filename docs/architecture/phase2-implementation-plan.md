@@ -391,6 +391,16 @@ The gate is **derived, not enumerated**: the harness walks
 directory it did not check. Adding a fixture tightens the gate automatically; that is
 the roadmap's own design and it must not be re-broken by a hand-maintained list.
 
+> **`real/*` has no comparison contract yet — see §7.3 before implementing this walk.**
+> The field table below is headed *per **golden** fixture* for a reason: RM-01 carries an
+> `annotation.json` on a different schema, with **no `expected.json` and no
+> `causal_record`**. As written, a `real/*` walk would therefore either fail permanently
+> or pass vacuously — and a vacuous walk is worse, because it reports coverage it does
+> not have. The missing artifact is RM-01 "Half B" (§7.3), which cannot be authored until
+> **HD-20** is ruled; **S0 in §8 already blocks on exactly that.** Do not implement the
+> `real/*` branch of this walk before then, and do not quietly narrow the walk to
+> `golden/*` to make it pass.
+
 Per golden fixture, the engine must reproduce:
 
 | Field | Comparison |
@@ -587,9 +597,9 @@ illustrative `ε_break = 0.01`):
 | Bar | Date | Event | Arithmetic |
 |---|---|---|---|
 | — | — | anchor | `A = (2, 225.64)`, `yA ≈ 5.418942` |
-| 8 | 2026-06-25 | `t_form = 8` (F1 binds; F2 satisfied from `t = 6`) | `B*_8 = (3, 213.7999)`, `m ≈ −0.053893`, envelope-valid over `S_8` |
-| 9 | 2026-06-26 | pierce beyond `ε` → `INVALID_PIERCE` + `WICK_BREAK`; re-selects | `y(158.40) ≈ 5.065119 > ŷ_9(9) + 0.02 ≈ 5.061691`; close `153.23` does not confirm |
-| 10 | 2026-06-29 | **breakout predicate fires** | `Λ_10`: `B* = (9, 158.40)`, `m ≈ −0.050546`, `ŷ_10(10) ≈ 5.014574`; `ln(164.19) ≈ 5.101024 > 5.014578`, **margin ≈ 0.086446 log units (≈ 9.0%) over the line** |
+| 8 | 2026-06-25 | `t_form = 8` (F1 binds; F2 satisfied from `t = 6`) | `B*_8 = (3, 213.7999)`, `m ≈ −0.0539003`, envelope-valid over `S_8` |
+| 9 | 2026-06-26 | pierce beyond `ε` → `INVALID_PIERCE` + `WICK_BREAK`; re-selects | `y(158.40) ≈ 5.0651235 > ŷ_9(9) + 0.02 ≈ 5.0616389`; close `153.23` does not confirm |
+| 10 | 2026-06-29 | **breakout predicate fires** | `Λ_10`: `B* = (9, 158.40)`, `m ≈ −0.0505453`, `ŷ_10(10) ≈ 5.014578`; `ln(164.19) ≈ 5.101024 > 5.014578`, **margin ≈ 0.086446 log units (≈ 9.0%) over the line** |
 
 The margin is roughly thirty times any plausible hand-arithmetic error, and it
 survives every sweep point HD-13 contemplates.

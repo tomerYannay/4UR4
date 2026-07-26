@@ -83,7 +83,10 @@
 >
 > **What this ruling did *not* change.** [GOV-015](../governance/build-freeze.md)
 > remains **ON**, with `autonomous_implementation: DISABLED`. **HD-06 remains
-> PENDING** and is still the only open Product Owner decision. This ruling is
+> PENDING.** *(Corrected 2026-07-26: this previously said HD-06 was "the only open
+> Product Owner decision". **HD-20** — RM-01's as-of-time divergence
+> ([#26](https://github.com/tomerYannay/4UR4/issues/26)) — is now open too, and
+> `universe-methodology.md` §11.2 escalates OQ-U1…OQ-U7.)* This ruling is
 > **not a freeze lift** and **not a provider selection**; it authorizes no spend
 > and accepts no licence terms. It changes *which universe is being described*,
 > not whether any of it may yet be built or bought.
@@ -390,7 +393,7 @@ style), and **Major risks**. Freeze status is marked per phase.
   **Steward drafting**; the ruled text — RM-01's membership in the gate — is not
   Steward-suspendable and has not been suspended.
 
-  **What a split would cost — recorded because it bears on HD-20 (Strategic Product
+  **What a split would cost — one side of a contested assessment — recorded because it bears on HD-20 (Strategic Product
   Reviewer finding under its [HD-17](human-decisions.md) bounded delegation).** One
   resolution under consideration would replace the end-to-end RM-01 check with a §8
   **unit-level** assertion on the full-series hull (the *"Half A"* proposal). That
@@ -401,8 +404,15 @@ style), and **Major risks**. Freeze status is marked per phase.
   §8 is the **most fixture-covered rule in the corpus**, a unit test on it **bites
   less** than the end-to-end real-data check that the synthetic-vs-real independence
   design ([`fixtures/README.md`](fixtures/README.md) §6) relies on RM-01 to provide.
-  Recording this **decides nothing**; it exists so the cost is in front of whoever
-  rules HD-20 rather than lost.
+  **The contrary assessment, recorded alongside it so this is disclosure and not
+  advocacy:** [`../docs/architecture/phase2-implementation-plan.md`](../docs/architecture/phase2-implementation-plan.md)
+  §7.3 calls that same §8 check *"the strongest single test of the envelope selector in
+  the whole corpus"*, and its actual proposal is **not** a replacement — it is Half A
+  **retained now** *plus* Half B **escalated**, asking the Product Owner to rule
+  "Half A, Half B, **or both**". Two documents in this PR reach opposite judgements on
+  the same check; both are before whoever rules HD-20.
+  Recording this **decides nothing**; it exists so the cost — and the disagreement about
+  it — is in front of whoever rules HD-20 rather than lost.
 - **Why this gate is stated as a derived set, not an enumeration.** The previous
   form named seven fixture IDs here and five under Phase 3 — a hand-maintained
   restatement of a fact the repository already holds on disk, stored apart from

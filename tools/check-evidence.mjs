@@ -195,6 +195,17 @@ for (const f of md) {
   tableErrs.push(...r.errs);
   nTables += r.tables; nRows += r.rows;
 }
+// The census is only a signal if it is ASSERTED. Printing it and exiting 0 on
+// "0 rows in 0 tables" is exactly the silent no-op this gate exists to catch —
+// a scanner that stopped recognising input would report a clean sweep of nothing.
+// The floor is deliberately loose: it asserts the scanner still works, not how
+// much prose the repository happens to contain.
+const TABLE_FLOOR = 100;
+if (nTables < TABLE_FLOOR) {
+  tableErrs.push(`TABLE CENSUS FAILED — found only ${nTables} tables (${nRows} rows) across`
+    + ` ${md.length} files; expected at least ${TABLE_FLOOR}. Either the scanner stopped`
+    + ` recognising tables, or the repository shrank drastically. Both need a human.`);
+}
 console.log(tableErrs.length ? `MARKDOWN TABLES: ${tableErrs.length} malformed row(s)\n  ` + tableErrs.join('\n  ')
   : `markdown tables: PASS — ${nRows} body rows in ${nTables} tables, every row single-line with a matching column count`);
 process.exit(errs.length || broken.length || tableErrs.length ? 1 : 0);

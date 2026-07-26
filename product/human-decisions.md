@@ -27,6 +27,11 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-13 | high | `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust | **APPROVED — RATIFIED** |
 | HD-14 | high | Formation gates are first-class `k`-independent parameters | **APPROVED — RATIFIED** |
 | HD-15 | high | GOV-015 scope: a committed causal reference model is permitted evidence tooling | **APPROVED** |
+| HD-16 | high | Roadmap baseline approved under GOV-013 | **APPROVED** |
+| HD-17 | high | Bounded delegation to the Strategic Product Reviewer for reversible ambiguity | **APPROVED** |
+| HD-18 | high | 4UR4 computes its own point-in-time universe (4UR4 US Large-Cap 500) | **APPROVED** |
+| HD-19 | med  | Independence checker permitted as verification tooling | **APPROVED** |
+| HD-20 | high | RM-01: as-of-time result diverges from the approved full-series record | **PENDING** |
 
 ---
 
@@ -184,10 +189,10 @@ what flips the ranking.
 
 | # | Prerequisite | Status at 2026-07-26 |
 |---|---|---|
-| 1 | Written confirmation that daily high/low are **consolidated-tape** | **BLOCKING (C-1)** — but now a one-sentence question; see below |
-| 2 | Exact historical-depth coverage | **BLOCKING (C-2) — the leading candidate's claim is contradicted by its own upstream** |
+| 1 | Written confirmation that daily high/low are **consolidated-tape** | **BLOCKING (C-1)** — the one condition the Product Owner has already accepted; now a one-sentence question, see below |
+| 2 | Exact historical-depth coverage | **BLOCKING — C-2 \[proposed\]** — the leading candidate's claim is contradicted by its own upstream |
 | 3 | **Split-only** adjustment availability (HD-01) | raw OHLC + `split_ratio` exposed; `adj_*` bundles dividends and must be banned |
-| 4 | Delisted-history coverage | partial |
+| 4 | Delisted-history coverage | partial — capped at 2007 for the leading candidate; see proposed **C-3** |
 | 5 | Redistribution / display rights | published display licence; terms to be confirmed |
 | 6 | **Point-in-time universe implications** | **new work** — created by HD-18; not evaluated by the original research |
 | 7 | Complete first-year and recurring cost | ≈\$5,994 year 1; recurring to confirm |
@@ -198,6 +203,11 @@ because of [HD-18](#hd-18--4ur4-computes-its-own-point-in-time-universe--materia
 and 8 was surfaced by a finding about other vendors that must now be put to the leading
 one. Preparation: [`hd06-due-diligence.md`](hd06-due-diligence.md).
 
+> **C-2, C-3 and C-5 are agent-*proposed*, not established.** Only **C-1** pre-existed.
+> An agent may recommend a blocking condition; it may not impose one. The Product Owner
+> may accept, modify or reject each. Recorded here so this register cannot be read as
+> asserting gates nobody ruled.
+
 **The due-diligence pass materially weakened the leading candidate.** Four findings from
 [`hd06-due-diligence.md`](hd06-due-diligence.md), all from vendor documentation read
 directly:
@@ -207,18 +217,18 @@ directly:
    are **sourced from its data partner EDI**, and **EDI's own FAQ says its EOD prices
    begin 1 January 2007.** **Depth is the *only* ground on which Intrinio outranks
    Massive.** If EDI's date governs, the ranking does not merely narrow — it inverts.
-   New blocking condition **C-2**; one question (first-bar dates for ten named symbols)
+   Proposed blocking condition **C-2** (agent-proposed; the Product Owner may accept, modify or reject it); one question (first-bar dates for ten named symbols)
    settles it.
 2. **Delisted history likewise starts 2007**, which caps the survivorship-bias-free
-   backtest window regardless of the ATH question. New blocking condition **C-3**.
+   backtest window regardless of the ATH question. Proposed blocking condition **C-3** (agent-proposed).
 3. **The consolidated-tape question (C-1) was aimed at the wrong party.** EDI sells both
    a per-exchange file and a **US Composite (CTA)** file. C-1 collapses to: *which file
    does Intrinio buy?*
 4. **Retention: the runner-up requires deletion; the leader is silent.** Massive's ToS
    §11.4 requires deleting all information on termination. Both Intrinio terms pages
    were read in full and contain **no post-termination data clause at all** — and
-   **silence is weaker than a written grant**, not stronger. New blocking condition
-   **C-5** (express Order Form term).
+   **silence is weaker than a written grant**, not stronger. Proposed blocking condition
+   **C-5** (agent-proposed; express Order Form term).
 
 Also recorded: on **point-in-time shares outstanding** — the input HD-18 newly requires —
 Intrinio serves the SEC cover-page count with **no filing-date field or as-of parameter
@@ -871,6 +881,56 @@ confirmation remains mandatory before financial authorization.**
 - **Not a freeze lift.** `build_freeze` stays `ON`. Like HD-15, this covers specific
   tooling for a specific purpose and is **not a precedent** for committing executable
   product functionality under the freeze.
+
+## HD-20 — RM-01: as-of-time result diverges from the approved full-series record · materiality: **high**
+
+- **Status:** **PENDING** — **Product Owner decision required.**
+  **Artifact:** [issue #26](https://github.com/tomerYannay/4UR4/issues/26). Raised
+  2026-07-26 at head `d22f434`.
+- **Decision required:** on RM-01, the approved **full-series** record and the ratified
+  **as-of-time** rule ([HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high) / §21)
+  disagree about whether a breakout occurred. **Both are arithmetically correct about
+  different objects.** Which is the product's answer, and what does RM-01 assert in the
+  Phase 2 exit gate?
+- **The facts, not in dispute.** The approved line (`B* = (25, 129.88)`, slope
+  `−0.0240143`) is never closed above — true. Under §21, the line judging bar 10 is built
+  only from bars 0–9, binds `B* = (9, 158.40)` after bar 9's wick-break re-selection, and
+  sits at **150.593**; the close of **164.19** clears it by **0.0864461** log units (≈9%).
+  Derived independently **four times** — Phase 2 planner, orchestrating session, and the
+  Strategic Product Reviewer twice — agreeing to six significant figures.
+- **It cannot be tuned away.** Suppression requires `ε_break ≥ 0.0864461`, **≈8.6×** the
+  documented `0.01`; `ε` is irrelevant; **delaying formation enlarges the margin**. HD-13
+  forbids resolving fixture outcomes by tolerance in any case.
+- **Why it is Product-Owner-gated rather than a documentation fix.** The causal line at
+  bar 10 sits **below the entire recent trading range** — a steep two-point fit over a
+  6-bar window after an IPO spike. §21.3's own derivation names that as precisely the
+  failure the formation gates exist to prevent. **On the only real data in the
+  repository, the gates did not prevent it; they moved it from bar 3 to bar 10.** So this
+  is first real-data evidence that the ratified rule, at ratified gate values, emits a
+  signal the Product Owner did not call a breakout when looking at the same chart.
+  Whether that is a true positive to ship or a false positive to suppress is a
+  product-definition question (GOV-013).
+- **Options:** (1) both, split — keep the §8 geometry assertion *and* gate on the
+  as-of-time expectation; (2) geometry only for now, as-of-time recorded but non-gating;
+  (3) call bar 10 a false positive and change the rule, re-deriving RM-01 and all 23
+  golden fixtures; (4) declare RM-01 out of scope for as-of-time evaluation. Costs for
+  each are stated on the artifact. The review chain **recommends option 1** — a
+  recommendation, not a decision.
+- **Scope of the ruling:** it must resolve **both** the roadmap's gate clause **and**
+  what RM-01's committed `annotation.json` carries. The suspension applied so far is
+  honest only because those are separable; the ruling should not be read as touching only
+  the roadmap.
+- **Applied pending the ruling — disclosure and suspension only, deciding nothing:**
+  [`fixtures/README.md`](fixtures/README.md) §6b, `fixtures/VERIFICATION.md`'s RM-01
+  header notice, `fixtures/real/RM-01/README.md`'s header notice, and the roadmap's RM-01
+  **numeric acceptance values** marked `UNDER REVIEW`. **RM-01 remains in the Phase 2 exit
+  gate**; the Product Owner's ruling placing it there is untouched.
+- **Cost of delaying:** Phase 2 implementation cannot start — its own plan blocks on this
+  at S0, correctly.
+- **Systemic finding recorded alongside it:** **no mechanical guard has ever covered
+  RM-01.** `check-evidence.mjs` only schema-validates its annotation and
+  `fixture-replay.mjs` never reads `real/`. That is why this survived the 2026-07-25
+  causal audit — a gap in the evidence system, not a one-off.
 
 ## Decision log — 2026-07-26 (Product Owner, second batch)
 

@@ -317,7 +317,13 @@ expectation** is *not* unaffected. This section replaces that sentence.
 - **SC-2**, resolved by the Product Owner on 2026-07-25 (HD-11) — unaffected.
 - The Product Owner's approval of the RM-01 *result* (2026-07-25) — unaffected and **not
   reopened here**; nothing below withdraws, amends or reinterprets it.
-- Every file under `real/RM-01/` is **immutable** and unchanged.
+- The **source evidence** under `real/RM-01/` is unchanged: `source-chart.png` and
+  `alphavantage-source.json` are the artifacts the schema marks `immutable: true`, and
+  `input.csv` is a mechanical re-encoding of the latter. `README.md` and
+  `annotation.json` in that directory are prose and a machine-validated record — **not**
+  source evidence, and editable. `annotation.json`'s values are nonetheless left
+  untouched here, because `confirmed_bar: null` is the subject of HD-20 and must not
+  move before the ruling.
 
 **What is now known to diverge.** Replayed **as-of-time** from the same committed
 `real/RM-01/input.csv`, each bar judged against `Λ_t` (the line built from bars strictly
@@ -326,8 +332,8 @@ earlier than it), with the documented `min_formation_bars = 8`, `min_ath_age_bar
 
 | bar | date | as-of-time line `Λ_t(t)` | close | as-of-time result |
 |----:|------|-------------------------:|------:|-------------------|
-| 8 | 2026-06-25 | 163.31 | 153.00 | formation completes; `A = (2, 225.64)`, `B* = (3, 213.7999)` |
-| 9 | 2026-06-26 | 154.74 | 153.23 | `WICK_BREAK` — the 158.40 high pierces; `B*` re-selects to `(9, 158.40)`, effective bar 10 (§21.6) |
+| 8 | 2026-06-25 | 163.2919 | 153.00 | formation completes; `A = (2, 225.64)`, `B* = (3, 213.7999)` |
+| 9 | 2026-06-26 | 154.7234 | 153.23 | `WICK_BREAK` — the 158.40 high pierces; `B*` re-selects to `(9, 158.40)`, effective bar 10 (§21.6) |
 | **10** | **2026-06-29** | **150.593** | **164.19** | **BREAKOUT — the close clears the line by `0.0864461` log units** |
 
 So RM-01 produces a **confirmed breakout at bar 10 (2026-06-29)** under as-of-time
@@ -345,9 +351,35 @@ calculation reports none."* Neither computation is an error; they answer differe
 questions, and only one of them is the question §2 of this file says every expected value
 must answer.
 
-**It cannot be tuned away — stated here so no one tries.** Suppressing the bar-10 breakout
-would require `eps_break >= 0.0864461`, roughly **8.6x** the documented illustrative
-`0.01` — and **HD-13 forbids resolving a fixture outcome by tolerance** in any case. The
+**Tolerance cannot suppress it — but one documented parameter can, and that is material
+to HD-20.** Suppressing the bar-10 breakout by tolerance would require
+`eps_break >= 0.0864461`, roughly **8.6x** the documented illustrative `0.01` — and
+**HD-13 forbids resolving a fixture outcome by tolerance** in any case.
+
+> **Correction, 2026-07-26.** An earlier revision of this section said *"delaying formation
+> makes the margin **larger**, not smaller"* and *"no parameter setting available under the
+> current specification removes this breakout."* **Both were wrong**, and the first
+> inverted the lemma it cited: §21.4 says the causal line only ever **shallows**, and
+> shallower means **higher**, so a later formation judges the close against a higher line
+> and the margin **shrinks**. Swept over `min_formation_bars` (a first-class, named,
+> versioned, backtestable parameter under D-TL-12 / HD-14, so squarely "available under
+> the current specification"):
+>
+> | `min_formation_bars` | first breakout | margin |
+> |---|---|---|
+> | 8 (default), 9, 10 | bar 10 | `0.0864461` |
+> | 11 | bar 11 | `0.0660743` — *smaller* |
+> | **12 – 20** | **none** | **—** |
+>
+> At 12, `B*` walks (11, 172.4) → (12, 171.74) → (14, 167.895) → (25, 129.88) and no close
+> ever clears the line. Caught by the Code Reviewer and by Verification independently.
+> **Disclosed rather than denied:** it makes HD-20's "change the rule" option a *parameter*
+> change rather than a new rule, which the Product Owner was told the opposite of and has
+> since been corrected on the artifact. It remains a setting fitted to a single 29-bar
+> sample, which is the argument against it — but that is the Product Owner's call, not a
+> reason to state the constraint too strongly here.
+
+The
 envelope tolerance `eps` is irrelevant to it: a breakout is a close-versus-line test, not
 an envelope test. And delaying formation makes the margin **larger**, not smaller, because
 within an episode the causal line only ever shallows (§21.4). No parameter setting

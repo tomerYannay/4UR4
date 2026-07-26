@@ -9,6 +9,29 @@
 > **Status: `verified` (geometry independently recomputed from licensed OHLCV) · Product
 > Owner approval: `approved` (2026-07-25).** SC-1 = MATCH; SC-2 resolved via HD-11.
 
+> ## ⚠ Everything below is a **full-series** result — an as-of-time divergence is open
+>
+> This record predates **HD-12** (as-of-time evaluation, ratified 2026-07-25) and was
+> never redone under it. Re-derived as-of-time from this directory's own `input.csv` —
+> independently five times — Phase 2 planner, orchestrating session, Strategic Product Reviewer, Verification and Code Review — agreeing to six significant figures — **RM-01 confirms a
+> breakout at bar 10 (2026-06-29)**: close `164.19` against a causal line at `150.593`,
+> margin **0.0864461** log units. Suppression would need `ε_break` at ≈8.6× its
+> documented value, which HD-13 forbids in any case.
+>
+> **Both results are arithmetically correct about different objects.** The full-series
+> line below (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
+> corollary predicts an as-of-time breakout may exist where a full-series calculation
+> reports none. **Nothing below is withdrawn**, and the Product Owner's approval is not
+> reopened.
+>
+> In particular, §2's *"none through 2026-07-24"*, §4's *"no qualifying close breakout"*
+> and §5's *"matches the PO's expectation"* are **full-series statements** and should be
+> read as such. The resolution is escalated as proposed **HD-20**
+> ([issue #26](https://github.com/tomerYannay/4UR4/issues/26),
+> [register](../../../human-decisions.md)) and is **Product-Owner-gated**. This notice
+> decides nothing and claims no authority. Detail:
+> [`../../README.md`](../../README.md) §6b.
+
 The machine-validated record is [`annotation.json`](annotation.json), conforming to
 [`../../schema/real-annotation.schema.json`](../../schema/real-annotation.schema.json). The
 verified daily OHLCV is [`input.csv`](input.csv), derived from the immutable
