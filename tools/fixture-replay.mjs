@@ -1250,7 +1250,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (has('--json')) console.log(JSON.stringify(report, null, 2));
   else {
     console.log(`\n${ids.length - failures}/${ids.length} fixtures reproduce exactly under as-of-time (§21/HD-12) replay.`);
-    if (realIds.length) {
+    if (realIds.length || realDirs.length) {
       // Count comparisons over fixtures that HAVE an expectation; report missing ones
       // separately. Mixing them printed "0/1" when RM-01 had in fact reproduced and a
       // second directory was merely unguarded.
