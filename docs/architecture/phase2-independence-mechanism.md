@@ -81,6 +81,7 @@ useless or blocks the work.
 | Q5 | the verifier's sealed probe set (§7) | the one signal with discriminating power | **QUARANTINE** — never committed before the gate |
 | R1 | `product/trendline-specification.md` | the algorithm, prescriptively | **PERMEABLE** — it is the source of truth the engine must be derived from |
 | R2 | `product/fixtures/golden/**` including every `causal_record` | the model's outputs and much of its intermediate state | **PERMEABLE by necessity** — this is the contract; the exit gate names these fields |
+| R2b | `product/fixtures/real/**` — RM-01's `input.csv`, `annotation.json`, `README.md`, `expected-causal.json`, and `schema/real-causal.schema.json` | Half A: real prices and human-approved geometry. Half B: the model's as-of-time output | **PERMEABLE by necessity** — [SPR-D-03](../../product/human-decisions.md), condition-10 CONFIRMED. The Product Owner placed RM-01 in the Phase 2 exit gate (HD-22 requirement 3); an author who may not read the target cannot satisfy it. **No-credit rider travels with this row:** reproducing `expected-causal.json` earns conformance credit only — no independence credit (HD-15 condition 1) and no non-circularity credit (SPR-D-01 limit 3, which attaches non-circularity to Half A alone) |
 | R3 | `product/fixtures/README.md`, `product/glossary.md`, `product/roadmap.md` | fixture-level detail, vocabulary, gate definitions | **PERMEABLE** — required context |
 | R4 | `.github/workflows/governance-validation.yml` | that the model is invoked, not how | **PERMEABLE** — one command line, no logic |
 
@@ -337,8 +338,10 @@ Minimum set that fails closed, ordered by the weight it carries.
 7. **Attestation** per §9, blocked on #21.
 
 **Author-facing brief** (the text the Phase-2 ticket carries; contains no
-model-derived content): *Author `engine/` from `product/trendline-specification.md`
-and `product/fixtures/golden/**` only. `tools/fixture-replay.mjs`, any successor
+model-derived content): *Author `engine/` from `product/trendline-specification.md`,
+`product/fixtures/golden/**` and `product/fixtures/real/**` only. (The `real/**`
+permission is SPR-D-03; this brief previously said `golden/**` **only**, which
+excluded the very fixture HD-22 requirement 3 puts in the exit gate.) `tools/fixture-replay.mjs`, any successor
 model under `tools/`, `product/fixtures/VERIFICATION.md` and
 `docs/architecture/phase2-independence-mechanism.md` are quarantined: you work in a
 checkout that does not contain them, you must not retrieve them from git history,

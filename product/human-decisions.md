@@ -1397,7 +1397,16 @@ structure.
 - **Decision ID:** SPR-D-03 · **Resolves:** M-09 (`maintenance-backlog.md`)
   · **Authority:** [HD-21](https://github.com/tomerYannay/4UR4/issues/27)
   · **Ruled at head:** `7ab8075` (PR [#33](https://github.com/tomerYannay/4UR4/pull/33) strategic review)
-  · **Status:** **RESOLVED — pending condition-10 audit.**
+  · **Status:** **RESOLVED — condition-10 CONFIRMED by the Project Auditor at `f0455f6`,
+  all ten HD-21 conditions met.** Propagated at `70362fa`+ (§3 table row R2b, §10 author
+  brief, schema `author_independence`, M-09, `project-state.md`, the `bash-guard.mjs`
+  comment).
+
+> **Correction, Project Auditor F-3.** When first written, clause 1 below said
+> `real/**` "**is** classified R2 … in §3". It was not — the §3 table had no `real/**`
+> row at all. A prescription written as a statement of fact, the same class as M-01/M-02.
+> It is now true because the propagation pass made it true, and it was not true when the
+> sentence was written. Recorded rather than quietly fixed by the passage of time.
 
 **Written here before it is cited anywhere else**, per the sequencing rule above. This is
 the first delegated decision to follow that rule from the start; SPR-D-01 did not, and
@@ -1464,6 +1473,22 @@ decisive.** Permeable is the only option under which the Product-Owner-ruled RM-
 assertable inside the engine's own suite, in CI, at every commit. Look-ahead bias (1) and
 causal correctness (2) are neutral — this is a read-permission question, not an
 evaluation-window one.
+
+### The argument the record under-claimed (Project Auditor F-1)
+
+**Half B's numbers were already permeable, so the "split" alternative was never a real
+control.** The §3 table classifies `product/roadmap.md` as **R3 PERMEABLE**, and the
+roadmap's own Phase-2 exit criteria already publish every Half B value: stop bar 10,
+`A = (2, 225.64)`, `B* = (9, 158.40)`, `m = −0.0505453`, `b = 5.52003`, line `150.593`,
+close `164.19`, margin `0.0864461`, `t_form = 8`, `(3, 213.7999)`, `m = −0.0539003` — and
+the margin-convention trap besides. A compliant author reading only permeable sources
+already had all of them.
+
+This is what actually makes the split option unavailable: it would have been a control over
+the **interface** and not over the **information**. It also converts "risks accepted" item 3
+(*"the §8.4 fitting risk grows by one artifact — unchanged in kind"*) from an assertion into
+a demonstration. The original record argued the split down on proportionality; that was the
+weaker version of a decisive argument.
 
 ### Rejected alternatives
 

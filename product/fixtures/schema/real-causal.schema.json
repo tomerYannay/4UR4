@@ -75,7 +75,7 @@
         },
         "author_independence": {
           "type": "string",
-          "description": "HD-15 condition 2 / E2-AUTHOR attestation: who authored this file, that the author READ tools/fixture-replay.mjs and is therefore DISQUALIFIED from authoring the Phase 2 engine, and that the Phase 2 engine author must be a different agent that has read neither this file nor the reference model."
+          "description": "HD-15 condition 2 / E2-AUTHOR attestation: who authored this file, that the author READ tools/fixture-replay.mjs and is therefore DISQUALIFIED from authoring the Phase 2 engine. SUPERSEDED IN PART BY SPR-D-03 (condition-10 CONFIRMED), NOT DELETED: this description formerly also required the Phase 2 engine author to have read 'neither this file nor the reference model'. The 'nor this file' clause was agent-authored and widened a Product-Owner-approved criterion — E2-AUTHOR-B as the Product Owner approved it names only tools/fixture-replay.mjs and successors under tools/. product/fixtures/real/** is classified R2b PERMEABLE. The disqualification of THIS file's own author stands and is unaffected. Reproducing this file earns conformance credit only: no independence credit (HD-15 condition 1), no non-circularity credit (SPR-D-01 limit 3)."
         },
         "note": { "type": "string" }
       }
