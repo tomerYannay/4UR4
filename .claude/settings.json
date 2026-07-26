@@ -1,9 +1,18 @@
 {
-  "$comment": "4UR4 project settings. The PreToolUse hook enforces role-scoped Bash safety (see .claude/hooks/README.md). It fails closed for clearly dangerous commands and applies per-agent mutation rules using the agent_type provided on the hook payload.",
+  "$comment": "4UR4 project settings. The PreToolUse hook enforces role-scoped Bash safety (see .claude/hooks/README.md). It fails closed for clearly dangerous commands and applies per-agent mutation rules using the agent_type provided on the hook payload. A second matcher gates file-reading tools for the Issue #20 E2-AUTHOR quarantine: the implementation-engineer role may not read tools/fixture-replay.mjs (the causal reference model) through any tool, including Bash.",
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/bash-guard.mjs\""
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Glob|Edit|Write|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",

@@ -2,7 +2,8 @@
 // Tests for the 4UR4 Bash safety hook. Dependency-free: `node bash-guard.test.mjs`.
 // Exits non-zero on any failure so it can gate CI.
 
-import { evaluate, resolveRole, KNOWN_ROLES } from './bash-guard.mjs';
+import { evaluate, resolveRole, KNOWN_ROLES,
+         evaluateFileAccess, quarantineBlock, QUARANTINE } from './bash-guard.mjs';
 
 let pass = 0;
 const failures = [];
@@ -107,6 +108,59 @@ eq(resolveRole({ argv: ['--role', 'release-ops'] }), 'release-ops', '--role flag
 eq(resolveRole({ env: { CLAUDE_AGENT_ROLE: 'project-auditor' } }), 'project-auditor', 'env');
 eq(resolveRole({}), 'default', 'fallback');
 eq(resolveRole({ payload: { agentType: 'code-reviewer' } }), 'code-reviewer', 'camelCase');
+
+
+// ---- E2-AUTHOR quarantine (Issue #20, HD-15 condition 2) ---------------------
+// A control that cannot be shown to FIRE certifies nothing; one that cannot be shown
+// NOT to over-block breaks every other role. Both directions are tested.
+const ENG = 'implementation-engineer';
+
+for (const input of [
+  { file_path: 'tools/fixture-replay.mjs' },
+  { file_path: './tools/fixture-replay.mjs' },
+  { file_path: '/Users/x/4UR4/tools/fixture-replay.mjs' },
+  { file_path: 'product/fixtures/VERIFICATION.md' },
+  { file_path: 'docs/architecture/phase2-independence-mechanism.md' },
+  { pattern: 'bStarAt', path: 'tools/fixture-replay.mjs' },
+  { command: 'cat tools/fixture-replay.mjs' },
+  { command: 'grep -n lambdaAt fixture-replay.mjs' },
+]) {
+  eq(evaluateFileAccess(ENG, input).decision, 'block',
+    `quarantine blocks engineer: ${JSON.stringify(input)}`);
+}
+
+for (const cmd of [
+  'cat tools/fixture-replay.mjs',
+  'sed -n 1,50p ./tools/fixture-replay.mjs',
+  'cp tools/fixture-replay.mjs /tmp/x.mjs',
+]) {
+  eq(quarantineBlock(ENG, cmd) !== null, true, `quarantine blocks bash: ${cmd}`);
+}
+
+for (const input of [
+  { file_path: 'product/trendline-specification.md' },
+  { file_path: 'product/human-decisions.md' },
+  { file_path: 'product/fixtures/golden/GX-01/expected.json' },
+  { file_path: 'product/fixtures/golden/GX-01/input.csv' },
+  { file_path: 'product/fixtures/real/RM-01/input.csv' },
+  { file_path: 'docs/architecture/phase2-implementation-plan.md' },
+  { file_path: 'tools/check-evidence.mjs' },
+  { file_path: 'tools/validate.mjs' },
+  { command: 'node tools/check-evidence.mjs' },
+]) {
+  eq(evaluateFileAccess(ENG, input).decision, 'allow',
+    `quarantine must NOT block engineer: ${JSON.stringify(input)}`);
+}
+
+for (const role of ['verification', 'code-reviewer', 'project-auditor', 'default',
+                    'orchestrator', 'release-ops', 'architect', 'product-steward']) {
+  eq(evaluateFileAccess(role, { file_path: 'tools/fixture-replay.mjs' }).decision, 'allow',
+    `quarantine does not apply to '${role}'`);
+  eq(quarantineBlock(role, 'cat tools/fixture-replay.mjs'), null,
+    `quarantine does not apply to '${role}' via bash`);
+}
+
+eq(QUARANTINE[ENG].length >= 3, true, 'quarantine list retains its entries');
 
 // ---- report -----------------------------------------------------------------
 if (failures.length === 0) {

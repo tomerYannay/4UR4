@@ -41,6 +41,75 @@ export const ROLE_POLICY = {
 export const KNOWN_ROLES = Object.keys(ROLE_POLICY);
 
 // ----------------------------------------------------------------------------
+// QUARANTINE — paths a role may not read (Issue #20, HD-15 condition 2, E2-AUTHOR).
+//
+// The Phase-2 engine must be authored independently of the causal reference model.
+// E2-AUTHOR-B (the read restriction) is the PREVENTIVE control; E2-AUTHOR-A (the
+// committed engine/ must not import, copy, execute or mechanically translate the
+// model) is what is assessed at the gate and GOVERNS where the two diverge. This
+// hook is the cheapest place to stop an A-violation from ever being written.
+//
+// Scoped to the ONE role that authors product code. Every other role must be able to
+// read these files: Verification and Code Review re-derive fixture values from the
+// model, and the Project Auditor reads everything.
+//
+// NOT quarantined, deliberately: the fixtures themselves. They are the conformance
+// CONTRACT the engine must satisfy, and phase2-independence-mechanism.md classifies
+// product/fixtures/golden/** — including every causal_record — as R2, "PERMEABLE by
+// necessity". Quarantining the contract would make the gate unreadable by the author
+// who has to pass it. (product/fixtures/real/** is unclassified — M-09, open.)
+// ----------------------------------------------------------------------------
+export const QUARANTINE = {
+  'implementation-engineer': [
+    'tools/fixture-replay.mjs',                            // the causal reference model
+    'product/fixtures/VERIFICATION.md',                    // quarantined by the mechanism doc
+    'docs/architecture/phase2-independence-mechanism.md',  // describes the controls themselves
+  ],
+};
+
+const QUARANTINE_NOTE =
+  'HD-15 condition 2 / E2-AUTHOR-B: the Phase-2 engine must be authored by an agent that has '
+  + 'not read the causal reference model. Derive behaviour from product/trendline-specification.md, '
+  + 'product/human-decisions.md and the fixture DATA instead. If you believe you need this file, '
+  + 'STOP and escalate — do not work around it.';
+
+// Match a quarantined path inside arbitrary text (a tool argument or a shell command).
+// Compares normalised POSIX tails, so an absolute path, a ./-relative path and a bare
+// repo-relative path all match. Also catches the bare basename, because `cat
+// fixture-replay.mjs` from inside tools/ is the same read.
+export function hitsQuarantine(role, text) {
+  const paths = QUARANTINE[role];
+  if (!paths || !text) return null;
+  const hay = String(text).replace(/\\/g, '/');
+  for (const p of paths) {
+    const base = p.split('/').pop();
+    const esc = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    if (hay.includes(p) || new RegExp(`(^|[^\\w./-])${esc}([^\\w-]|$)`).test(hay)) return p;
+  }
+  return null;
+}
+
+export function quarantineBlock(role, text) {
+  const hit = hitsQuarantine(role, text);
+  if (!hit) return null;
+  return {
+    decision: 'block', category: 'QUARANTINE', role, path: hit,
+    reason: `'${hit}' is QUARANTINED from '${role}' — ${QUARANTINE_NOTE}`,
+  };
+}
+
+// File-access decision for non-Bash tools (Read, Grep, Glob, Edit, Write, ...).
+// Every field a file-ish tool might carry a path in is checked as one blob, so a tool
+// with a differently-named path field fails CLOSED rather than open.
+export function evaluateFileAccess(role, toolInput = {}) {
+  const blob = [
+    toolInput.file_path, toolInput.filePath, toolInput.path, toolInput.notebook_path,
+    toolInput.pattern, toolInput.glob, toolInput.pathspec, toolInput.command,
+  ].filter(Boolean).join(' \n ');
+  return quarantineBlock(role, blob) || { decision: 'allow', role };
+}
+
+// ----------------------------------------------------------------------------
 // Helpers
 // ----------------------------------------------------------------------------
 const has = (cmd, re) => re.test(cmd);
@@ -189,9 +258,26 @@ if (isMain()) {
     let payload = {};
     try { payload = input ? JSON.parse(input) : {}; } catch { payload = {}; }
     const toolName = payload.tool_name || payload.toolName;
+    const role0 = resolveRole({ argv: process.argv.slice(2), env: process.env, payload });
+    // File-ish tools are gated for QUARANTINE only (Issue #20). Bash falls through to the
+    // full mutation policy below, which also applies the quarantine.
+    const FILE_TOOLS = new Set(['Read', 'Grep', 'Glob', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+    if (toolName && FILE_TOOLS.has(toolName)) {
+      const q = evaluateFileAccess(role0, payload.tool_input || {});
+      if (q.decision === 'block') {
+        process.stderr.write(`[4UR4 quarantine] ${q.reason}\n`);
+        process.exit(2);
+      }
+      process.exit(0);
+    }
     if (toolName && toolName !== 'Bash') process.exit(0);   // only gate Bash
     const command = (payload.tool_input && (payload.tool_input.command ?? payload.tool_input.cmd)) || payload.command || '';
     const role = resolveRole({ argv: process.argv.slice(2), env: process.env, payload });
+    const q = quarantineBlock(role, command);
+    if (q) {
+      process.stderr.write(`[4UR4 quarantine] ${q.reason}\n`);
+      process.exit(2);
+    }
     const result = evaluate(role, command);
     if (result.decision === 'block') {
       process.stderr.write(`[4UR4 bash-guard] ${result.reason}\n`);
