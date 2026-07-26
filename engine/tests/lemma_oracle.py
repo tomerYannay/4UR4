@@ -14,14 +14,35 @@ CORRECTION (Code Review, measured).  An earlier version of this docstring said
 overstated the strongest independence control in this suite.  §21.4's own last
 bullet MANDATES a fallback -- when the anchor changes, a candidate ties the ATH,
 or no previous ``B*`` exists, the closed form does not apply and the oracle must
-re-select, which it does by calling the engine's own :func:`anchor_of` and
-:func:`select_second_anchor`.  Measured over the corpus, the oracle decides
-**77 of 590 prefixes by calling the engine's own selector** and 513 by the closed
-form.  Those 77 are the formation-critical early prefixes and every post-reset
-prefix -- exactly the transitions where an independent check is worth most.  The
-DESIGN is correct and §21.4 requires it; only the claim about its independence
-was wrong.  Read this as a two-version check on the 513, and a self-consistency
-check on the 77.
+re-select, which it does by calling :func:`select_second_anchor`.
+
+A SECOND correction, same direction: that sentence scoped :func:`anchor_of` to
+the fallback too.  It is not.  :func:`anchor_of` is called **unconditionally, on
+every prefix**, above the branch, and the brute-force side calls the same
+function -- so the first anchor is **common-mode** and an ``anchor_of`` defect
+moves both sides identically.  Only :func:`select_second_anchor` is
+fallback-scoped.  See :class:`..test_units.LemmaEquivalence`.
+
+Measured over the corpus: the oracle decides **77 prefixes by calling the
+engine's own selector** and **513 by the closed form**.  Both denominators in
+circulation are correct and count different things -- **590** = 77 + 513, the
+prefixes where a ``B*`` decision was actually made; **611** adds the 21 empty
+prefixes (one per non-guard fixture) where ``anchor_of`` returns ``None`` on both
+sides and the two agree degenerately.
+
+A THIRD correction: the 77 were glossed as "the formation-critical early prefixes
+and every post-reset prefix".  Incomplete, and it omitted a class §21.4 names.
+Measured composition -- 42 are early (``t <= 2``); of the 35 later, **31** are
+``B* = ⊥`` cascades (GX-20 t=7..26 alone is 23), **2** are anchor changes, and
+**2** are ATH ties (GX-12 t=3, GX-20 t=6).  By trigger tag over all 77:
+``B*=⊥`` only 52, ``anchor_changed`` + ``B*=⊥`` 21, ``anchor_changed`` only 2,
+``ath_tie`` only 2.  The dominant later class is ``B* = ⊥`` cascades, which are
+not resets.
+
+The DESIGN is correct and §21.4 requires it; only the claims about it were wrong,
+three times, each time overstating independence.  Read this as a two-version
+check on the 513 -- **for B\* given an engine-supplied anchor**, not for the
+geometry as a whole -- and a self-consistency check on the 77.
 
 The lemma::
 

@@ -139,8 +139,11 @@ def _is_envelope_valid(prefix, t_anchor: int, slope: float, intercept: float, ep
     ``envelope_violations() > 0`` for the same candidate -- an internal contradiction
     RM-01's Half-A assertion depends on being impossible.
 
-    Code Review measured 0 disagreements over 13,043 candidate evaluations on the
-    committed corpus, so nothing moves today.  It is unified anyway, because "measured
+    Both gates measured the two forms against each other and neither found a
+    disagreement: Code Review 0 over **13,043** candidate evaluations, and
+    Verification -- which patched this predicate to compute both forms and ran the
+    whole suite -- 0 over **436,691**, a superset.  So nothing moves today.  It is
+    unified anyway, because "measured
     identical on this corpus" is precisely the argument that mutations M-1 and M-2
     defeated: a 6-significant-figure corpus cannot pin arithmetic form.
 
