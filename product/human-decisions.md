@@ -1091,6 +1091,22 @@ looked at the exact head that merges.* Today that residual is carried by the age
 chain, whose verdicts are same-account relays with no citable artifact. **That is genuinely
 weaker, and it is not described here as equivalent.** It is why #21 stays open.
 
+**Closing this deviation requires a second identity** — a GitHub App or machine account —
+after which `required_approving_review_count: 1` becomes **settable**. It does **not** thereby
+become *meaningful*: a machine account operated by the same principal restores the **artifact**,
+not the **independence**, and that is precisely the theatrical control this section refuses
+above for `enforce_admins`. An earlier draft said "settable and meaningful", which
+over-promised and, worse, set the bar for closing this deviation too low. **The honest closure
+condition is a second identity under separate control, or an equivalent that makes the approving
+party genuinely distinct from the authoring one.** Until then this row stands as the honest
+state.
+
+*(Placement note: this paragraph belongs to **HD-22 part 3** — "this row" is part 3's table
+row. An earlier edit inserted the GOV-005 heading immediately above it, which silently
+reparented it under GOV-005 and left both of its back-references dangling across a section
+boundary: part 3 lost its stated closure condition and GOV-005 acquired one that is not about
+it. Caught by the Verification gate. Restored here.)*
+
 ### Related deviation — GOV-005 "merged by Release & Ops only" (recorded 2026-07-26)
 
 Recorded **here** rather than only in [`project-state.md`](project-state.md), whose own header
@@ -1114,15 +1130,6 @@ a claim about a human, it is a human. **Provenance:** the API confirms
 `mergedBy.login = tomerYannay` for both, which is all it can confirm; that this was the Product
 Owner rather than an agent rests on the Product Owner's own statement.
 
-**Closing this deviation requires a second identity** — a GitHub App or machine account —
-after which `required_approving_review_count: 1` becomes **settable**. It does **not** thereby
-become *meaningful*: a machine account operated by the same principal restores the **artifact**,
-not the **independence**, and that is precisely the theatrical control this section refuses two
-paragraphs above for `enforce_admins`. An earlier draft said "settable and meaningful", which
-over-promised and, worse, set the bar for closing this deviation too low. **The honest closure
-condition is a second identity under separate control, or an equivalent that makes the approving
-party genuinely distinct from the authoring one.** Until then this row stands as the honest
-state.
 
 ## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
 

@@ -61,6 +61,10 @@
   alongside every other listed product-code directory and permits one **only** when the
   marker names it, so deleting the scope entry re-freezes `engine/` on the next CI run.
   **Full branch protection on `main` is required before any Phase 2 product code merges**
+  — *and 6 of its 7 parts are in force while part 3 (required exact-head reviews) is UNMET and
+  ruled a recorded deviation; Phase 2 product code merged at `ed92bbb` under that ruling. Read
+  with [`human-decisions.md`](human-decisions.md) → HD-22 part 3. The matching passage in the
+  register got this cross-reference; this one did not, in the same commit.*
   (same ruling).
 
 ## Product objective

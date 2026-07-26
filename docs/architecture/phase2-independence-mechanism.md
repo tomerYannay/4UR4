@@ -347,7 +347,7 @@ excluded the very fixture HD-22 requirement 3 puts in the exit gate.) **Reproduc
 non-circularity to Half A alone). It is replay-generated, and it is a regression guard against
 today's reference model, not independent verification.** SPR-D-03 clause 3 requires this rider
 to travel with the classification, and this brief is precisely where an author would otherwise
-form the opposite belief.) `tools/fixture-replay.mjs`, any successor
+form the opposite belief. `tools/fixture-replay.mjs`, any successor
 model under `tools/`, `product/fixtures/VERIFICATION.md` and
 `docs/architecture/phase2-independence-mechanism.md` are quarantined: you work in a
 checkout that does not contain them, you must not retrieve them from git history,

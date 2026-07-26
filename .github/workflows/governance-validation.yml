@@ -31,6 +31,19 @@ jobs:
         # always right." It was the only HD-22 binding condition with NO mechanical guard --
         # it rested on a human running `git diff` and transcribing the result into a review.
         #
+        # WHAT THIS GUARD DOES NOT DO, disclosed by the same standard this file applies to
+        # M-36 and M-38. **This step is removable by the pull request it judges.** For
+        # `pull_request` events GitHub runs the workflow from the PR's own ref, and the
+        # required status context is the JOB name -- unaffected by deleting a step. So a PR
+        # that edits a fixture to match a wrong engine AND deletes this step in the same
+        # commit produces a green required check under the correct context name, mergeable at
+        # `required_approving_review_count: 0`, with no repository artifact recording it.
+        # `tools/validate.mjs` now asserts this step's presence, which converts a silent
+        # one-hunk deletion into a deliberate two-file edit -- but that assertion lives in the
+        # same repository and the same PR can delete it too. It raises the cost; it does not
+        # close the hole. Real closure is a required reviewer or a second identity
+        # (#21, #34, HD-22 part 3), none of which exists yet. Found by the Verification gate.
+        #
         # The rule is NOT "fixtures never change": ADDING a fixture tightens the gate
         # automatically and is permitted. A change to engine/ may not travel with a
         # MODIFICATION, DELETION or TYPE-CHANGE of an existing committed fixture artifact.

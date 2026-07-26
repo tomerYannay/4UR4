@@ -308,6 +308,38 @@ if (existsSync(freezeFile)) {
 
 // ---- required infrastructure ------------------------------------------------
 if (!existsSync(join(ROOT, CI_WORKFLOW))) err(`missing CI workflow: ${CI_WORKFLOW}`);
+else {
+  // The workflow's PRESENCE was asserted; its CONTENT was not. That gap let a step be
+  // deleted silently: a commit rewriting the fixture-immutability guard spliced on the next
+  // step's header as its end boundary and swallowed `actions/setup-node@v4`, on which four
+  // of the five required checks run. CI stayed green, because the runner's default Node was
+  // adequate -- which is precisely the failure mode the pinning exists to prevent.
+  //
+  // HONEST LIMIT, stated because the alternative is a control that overstates itself:
+  // this check lives in the same repository as the workflow, so a single PR can delete the
+  // step AND this assertion together. It does not make the gate tamper-proof. What it does
+  // is convert a SILENT one-hunk deletion into a deliberate two-file edit that shows up in
+  // the diff as an assertion being removed. Real closure is a required reviewer or a second
+  // identity (#21, #34, HD-22 part 3), neither of which exists yet.
+  const wf = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8');
+  const required = [
+    ['actions/setup-node@', 'the Node toolchain four required checks run on'],
+    ['actions/setup-python@', 'the pinned Python the engine conformance suite runs on'],
+    ['Fixture immutability', 'the HD-22 fixture-immutability guard'],
+    // NOT the bare flag: `--no-renames` appears three times in that file, twice in COMMENTS.
+    // A substring check prose can satisfy is the same defect as the old whole-file freeze-marker
+    // scan, so this pins the actual command line.
+    ['git diff --no-renames --name-only --diff-filter=MDT',
+     'the guard\'s executable rename/typechange fix (without it a `git mv` of a fixture passes)'],
+    ['engine.tests.run_all', 'the Phase 2 engine conformance suite'],
+  ];
+  for (const [needle, why] of required) {
+    if (!wf.includes(needle)) err(`${CI_WORKFLOW} no longer contains \`${needle}\` — ${why}`);
+  }
+  for (const [tool, ver] of [['actions/setup-node@', /setup-node@v\d/], ['actions/setup-python@', /setup-python@v\d/]]) {
+    if (wf.includes(tool) && !ver.test(wf)) err(`${CI_WORKFLOW}: ${tool} is not pinned to a major version`);
+  }
+}
 if (!existsSync(join(ROOT, SPECIALIST_GOV))) err(`missing temporary-specialist governance: ${SPECIALIST_GOV}`);
 if (!govIds.has('GOV-016')) err('GOV-016 (temporary specialists) is not defined');
 
