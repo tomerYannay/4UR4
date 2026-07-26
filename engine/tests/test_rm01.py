@@ -1,10 +1,27 @@
-"""RM-01 — the only real-market, non-circular evidence in the corpus.
+"""RM-01 — the corpus's only real-market evidence.  Its two halves differ in kind.
 
 The synthetic set is spec-derived: it can prove the engine is self-consistent
 with the written specification, not that the specification describes the object
-the Product Owner drew.  RM-01 is 29 bars of real, undesigned prices with
-human-approved geometry, and an engine fitted to the synthetic fixtures has no
-route to its answer except by implementing §8 correctly.
+the Product Owner drew.  RM-01 is 29 bars of real, undesigned prices.
+
+**Non-circularity attaches to Half A ONLY, and this docstring used to claim it
+for both.**  That was false, and it is the same overstatement class corrected in
+:mod:`lemma_oracle` and :mod:`engine.causal` at this head -- found by the
+Strategic gate (MJ-1), one file over from where the others were fixed.
+
+* **Half A is the non-circular anchor**: real prices plus geometry a human
+  approved.  Of it, "an engine fitted to the synthetic fixtures has no route to
+  its answer except by implementing §8 correctly" is TRUE.
+* **Half B (`expected-causal.json`) is replay-generated** -- produced by the
+  quarantined causal reference model, the very artifact the engine must be
+  independent of.  (Named only by role here: architectural test A3 forbids this
+  package from spelling that path at all, and it caught the first draft of this
+  docstring doing exactly that.)  Reproducing it earns **conformance credit
+  only**: no
+  independence credit (HD-15 condition 1 -- agreement with the model earns none)
+  and no non-circularity credit (SPR-D-01 limit 3).  Half B is a regression guard
+  against today's reference model, not independent verification, and the
+  sentence above must not be read onto it.
 
 Both halves are asserted, neither superseding the other:
 

@@ -81,9 +81,26 @@ __all__ = ["Line", "SealedBar", "Reselection", "BarEvent", "StopRecord", "Causal
 #: alternative (emit ``NONE -> NONE``) is not merely unattractive but **breaks
 #: §21.3 on the committed corpus** -- it records events inside the head-of-series
 #: run that §21.3 says must "not be recorded as an event at all".  Demonstrated,
-#: not argued.  The two readings are also behaviourally identical across all 24
-#: committed fixtures, so nothing here is load-bearing for conformance; it is
-#: load-bearing for what the engine would do on a series the corpus lacks.
+#: not argued.
+#:
+#: The two readings are behaviourally identical on **23 of the 24** committed
+#: fixtures.  **RM-01 is the one that separates them** -- and it is the same
+#: fixture the §21.3 argument above rests on.  Measured independently by both the
+#: Verification and Code Review gates, which set
+#: ``_LINE_BEARING = (ACTIVE, NONE)`` and diffed the corpus: the alternative adds
+#: four ``NONE -> NONE`` transitions at bars 1-3 (``RESET_NEW_ATH`` at 1 and 2,
+#: ``INSUFFICIENT_BARS`` at 2 and 3) and gains both reason codes.
+#:
+#: An earlier draft of this comment said "behaviourally identical across all 24
+#: committed fixtures".  FALSE, and it contradicted the sentence immediately
+#: before it -- if the readings were identical everywhere, the alternative could
+#: not break §21.3 on the committed corpus.  Both gates caught it.
+#:
+#: What remains true, and is the useful claim: **no committed expectation
+#: distinguishes them.**  RM-01's ``expected-causal.json`` carries no ``events``
+#: or ``reason_codes`` key, so every conformance test passes under either
+#: reading.  Nothing here is load-bearing for conformance; it is load-bearing for
+#: what the engine would do on a series the corpus lacks.
 #: Phase 3 adds ``BROKEN_OUT`` and ``RETESTED`` to this tuple.
 _LINE_BEARING = (LineState.ACTIVE,)
 

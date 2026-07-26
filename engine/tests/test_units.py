@@ -495,13 +495,28 @@ class PivotsAreNonAuthoritative(unittest.TestCase):
 class LemmaEquivalence(unittest.TestCase):
     """§21.4 — the closed form agrees with the §8 brute force at EVERY prefix.
 
-    The oracle is written from §21.4, the engine from §8.  They share
-    ``logspace`` AND -- on §21.4's mandated fallback branch -- the engine's own
-    ``anchor_of`` and ``select_second_anchor``: measured, 77 of 590 prefixes are
-    decided by that fallback and 513 by the closed form.  So this is a genuine
-    two-version check on the 513 and a self-consistency check on the 77.  See
-    ``lemma_oracle`` for the correction; the earlier "share only logspace"
-    wording overstated it.
+    What this actually checks, stated at full strength -- TWO earlier drafts
+    understated the sharing, both in the same direction, and both were caught:
+
+    * draft 1: "they share only ``logspace``" -- false;
+    * draft 2: "``anchor_of`` and ``select_second_anchor`` -- on the mandated
+      fallback branch" -- the em-dash scoped BOTH to the fallback.  Also false.
+
+    :func:`anchor_of` is called **unconditionally, on 611 of 611 prefixes**, above
+    the branch, and the brute-force side calls the same function.  The first
+    anchor is therefore **common-mode**: an ``anchor_of`` defect moves both sides
+    identically and this test cannot see it.  Only
+    :func:`select_second_anchor` is fallback-scoped.
+
+    The 611 prefixes decompose as **21 + 77 + 513**: 21 where ``anchor_of``
+    returns ``None`` on both sides (the empty prefix of each non-guard fixture --
+    degenerate agreement), 77 decided by the engine's own selector on §21.4's
+    mandated fallback, and 513 by the closed form.
+
+    So: a two-version check on the 513, **for B\* given an engine-supplied
+    anchor** -- not for the geometry as a whole -- and a self-consistency check on
+    the 77.  See :mod:`lemma_oracle` for the composition of the 77 and the reason
+    §21.4 mandates the fallback.
     """
 
     def test_lemma_matches_brute_force_on_every_fixture_prefix(self) -> None:
