@@ -68,11 +68,13 @@
 //   node tools/fixture-replay.mjs --json          # machine-readable replay output
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const GOLDEN = join(ROOT, 'product/fixtures/golden');
+const REAL = join(ROOT, 'product/fixtures/real');
 
 const SPLIT_LOG_JUMP = Math.log(1.5); // §18 SUSPECTED_UNADJUSTED_SPLIT
 const FP = 1e-12;                     // float comparison guard
@@ -93,10 +95,17 @@ export function parseCsv(text) {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   };
-  return lines.slice(1).map((ln) => {
+  // Golden fixtures key rows by an ordinal `timestamp`; real-market fixtures key
+  // them by an ISO `date`. Accept both. `replay()` indexes bars positionally, so
+  // `t` is traceability rather than control flow — but leaving it null for a
+  // date-keyed input would silently drop that traceability, and `date` is what
+  // makes a real fixture's evidence legible against its source JSON.
+  const hasOrdinal = 'timestamp' in idx;
+  return lines.slice(1).map((ln, i) => {
     const c = ln.split(',');
     return {
-      t: num(c[idx.timestamp]),
+      t: hasOrdinal ? num(c[idx.timestamp]) : i,
+      date: 'date' in idx ? c[idx.date].trim() : null,
       open: num(c[idx.open]),
       high: num(c[idx.high]),
       low: num(c[idx.low]),
@@ -450,6 +459,190 @@ export function loadFixture(id) {
   const expected = JSON.parse(readFileSync(join(dir, 'expected.json'), 'utf8'));
   const bars = parseCsv(readFileSync(join(dir, 'input.csv'), 'utf8'));
   return { id, dir, expected, bars };
+}
+
+// ----------------------------------------------------- real-market fixtures --
+// SPR-D-01 Half B. GOV-015 note: this extends an EXISTING permitted evidence tool.
+// It adds no new executable file and no detection logic — every number below comes
+// from `replay()`, which already exists. Both are things SPR-D-01 limit 4 reserves
+// to the Product Owner.
+export function listRealFixtures() {
+  if (!existsSync(REAL)) return [];
+  return readdirSync(REAL)
+    .filter((d) => /^RM-\d\d$/.test(d) && existsSync(join(REAL, d, 'expected-causal.json')))
+    .sort();
+}
+
+export function loadRealFixture(id) {
+  const dir = join(REAL, id);
+  return {
+    id, dir,
+    expected: JSON.parse(readFileSync(join(dir, 'expected-causal.json'), 'utf8')),
+    bars: parseCsv(readFileSync(join(dir, 'input.csv'), 'utf8')),
+  };
+}
+
+// Emits ONLY the Phase-2-owned surface SPR-D-01 limit 1 permits: the formation
+// trace, the as-of-time selection strictly before the stop, and `line_at_stop`.
+// It does NOT emit Λ^F, the final state, or the breakout reason code.
+export function buildRealRecord(fx) {
+  const p = paramsOf(fx.expected);
+  const r = replay(fx.bars, p);
+  const y = fx.bars.map((b) => Math.log(b.high));
+
+  // Limit 1b: the stop index is READ OUT of the engine's own result. A harness that
+  // handed the stop index to the engine would make the whole clause assert nothing
+  // about the engine's own detection.
+  const stop = r.breakout_bar;
+  if (stop === null) return { stop_index: null, unreachable: 'no engine-derived stop' };
+  const surface = r.bars.filter((x) => x.t < stop);
+  // `replay()` permits formation and breakout on the same bar, which leaves no bar
+  // strictly before the stop carrying a line. Return an `unreachable` marker that
+  // `compareReal` turns into a reported diff, rather than dereferencing undefined.
+  const first = surface.find((x) => x.line);
+  if (!first) {
+    return {
+      stop_index: stop,
+      unreachable: `the line first forms at the stop bar (${stop}), so no bar strictly`
+        + ` before it carries one — this fixture has no assertable pre-stop surface`,
+    };
+  }
+  const rec = r.bars.find((x) => x.t === stop);
+  const L = rec.line;
+  const lnClose = Math.log(fx.bars[stop].close);
+
+  const gate = [];
+  for (let t = 0; t <= stop; t++) {
+    const g = lambdaAt(y, t, p);
+    gate.push({
+      t,
+      eligible: !!g.lambda,
+      reason: g.reason ?? null,
+      f1: `|S_t|=${g.gates.bars_available}>=${p.min_formation_bars}:${g.gates.F1 ? 'ok' : 'FAIL'}`,
+      f2: `tA=${g.gates.tA}<=(t-1)-${p.min_ath_age_bars}:${g.gates.F2 ? 'ok' : 'FAIL'}`,
+      f3: `B*_t exists:${g.gates.F3 ? 'ok' : 'FAIL'}`,
+    });
+  }
+
+  return {
+    stop_index: stop,
+    formation: {
+      t_form: r.t_form,
+      B_star_at_formation: { t: first.line.tB, H: fx.bars[first.line.tB].high },
+      log_slope_at_formation: sig6(first.line.m),
+      gate_trace: gate,
+    },
+    as_of_time_selection: surface.map((x) => ({
+      t: x.t,
+      date: fx.bars[x.t].date,
+      B_star_t: x.line ? x.line.tB : null,
+      B_star_H: x.line ? fx.bars[x.line.tB].high : null,
+      log_slope: x.line ? sig6(x.line.m) : null,
+      intercept: x.line ? sig6(x.line.b) : null,
+      y_hat: x.line ? sig6(x.line.y_hat) : null,
+      line: x.line ? sig6(x.line.line) : null,
+      no_line_reason: x.line ? null : x.no_line_reason,
+    })),
+    reselections: r.reselections.filter((s) => s.effective_bar <= stop).map((s) => ({
+      effective_bar: s.effective_bar, from: s.from, to: s.to,
+      log_slope: sig6(s.m), tie: !!s.tie,
+    })),
+    line_at_stop: {
+      stop_index: stop,
+      date: fx.bars[stop].date,
+      stop_index_is_engine_derived: true,
+      A: { t: r.line.A.t, H: fx.bars[r.line.A.t].high },
+      B: { t: L.tB, H: fx.bars[L.tB].high, date: fx.bars[L.tB].date },
+      log_slope: sig6(L.m),
+      intercept: sig6(L.b),
+      y_hat: sig6(L.y_hat),
+      line: sig6(L.line),
+      close: fx.bars[stop].close,
+      // Two readings of "margin", under names that cannot be confused. They differ
+      // by exactly eps_break, and an engine asserting the wrong one fails by that.
+      close_vs_line_log: sig6(lnClose - L.y_hat),
+      close_vs_line_plus_eps_break_log: sig6(lnClose - L.y_hat - p.eps_break),
+    },
+  };
+}
+
+// Asserts ONLY the narrowed surface — and asserts the EXCLUSIONS too. A gate that
+// only checks what it covers grows silently; this fails if the fixture starts
+// asserting Λ^F, the final state or the breakout reason code, which are Phase 3's.
+export function compareReal(fx) {
+  const e = fx.expected;
+  const got = buildRealRecord(fx);
+  const diffs = [];
+  const eq = (label, a, b) => {
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      diffs.push(`${label}: got ${JSON.stringify(a)} want ${JSON.stringify(b)}`);
+    }
+  };
+
+  // Covers BOTH unreachable shapes: no engine-derived stop at all, and a stop whose
+  // line first forms on the stop bar itself (non-null stop, no pre-stop surface). Keyed
+  // on `unreachable` rather than on `stop_index === null`, because the second shape
+  // carries a stop index and the narrower guard fell through into `got.formation`.
+  if (got.unreachable) return [`cannot assert a Half B surface — ${got.unreachable}`];
+
+  // Limit 3: the artifact must state its own provenance on its face.
+  const pv = e.provenance || {};
+  if (pv.derivation !== 'model-derived') diffs.push('provenance.derivation must be "model-derived"');
+  if (pv.is_independent_verification !== false) diffs.push('provenance.is_independent_verification must be false');
+
+  // Limit 1b, and the surface declaration must follow the ENGINE's stop, not the file's claim.
+  eq('line_at_stop.stop_index', got.stop_index, (e.line_at_stop || {}).stop_index);
+  eq('assertable_surface.bars_to', got.stop_index - 1, (e.assertable_surface || {}).bars_to);
+  if ((e.line_at_stop || {}).stop_index_is_engine_derived !== true) {
+    diffs.push('line_at_stop.stop_index_is_engine_derived must be true (SPR-D-01 limit 1b)');
+  }
+
+  // Limit 1: the exclusions are themselves asserted, in both directions.
+  const excluded = new Set(((e.not_asserted || {}).fields) || []);
+  for (const must of ['frozen_line', 'final_state', 'BROKEN_OUT', 'BREAKOUT_CONFIRMED']) {
+    if (!excluded.has(must)) diffs.push(`not_asserted.fields must list ${must} (SPR-D-01 limit 1)`);
+  }
+  for (const forbidden of ['frozen_line', 'expected_final_state', 'expected_state_transitions', 'expected_reason_codes']) {
+    if (forbidden in e) diffs.push(`${forbidden} present, but SPR-D-01 limit 1 forbids asserting it here`);
+  }
+
+  eq('formation.t_form', got.formation.t_form, (e.formation || {}).t_form);
+  eq('formation.B_star_at_formation', got.formation.B_star_at_formation, (e.formation || {}).B_star_at_formation);
+  eq('formation.log_slope_at_formation', got.formation.log_slope_at_formation, (e.formation || {}).log_slope_at_formation);
+  eq('formation.gate_trace', got.formation.gate_trace, (e.formation || {}).gate_trace);
+  eq('as_of_time_selection', got.as_of_time_selection, e.as_of_time_selection);
+  eq('reselections', got.reselections, e.reselections || []);
+  for (const k of Object.keys(got.line_at_stop)) {
+    eq(`line_at_stop.${k}`, got.line_at_stop[k], (e.line_at_stop || {})[k]);
+  }
+
+  // The expectation is void if the bytes it was derived from changed underneath it.
+  // REQUIRED, not optional: this is the only check covering bars AFTER the stop, which
+  // no asserted value touches. While it was optional, deleting the block made the whole
+  // comparison pass.
+  const ib = e.input_binding;
+  if (!ib || !ib.input_csv_sha256) {
+    diffs.push('input_binding.input_csv_sha256 is REQUIRED — without it there are edits to bars'
+      + ' after the stop index that change no asserted value at all (moving a post-stop close to'
+      + ' anywhere within its own [low, high] is invisible to every field this document asserts)'
+      + ' and would go undetected');
+  } else {
+    const actual = createHash('sha256')
+      .update(readFileSync(join(fx.dir, ib.input_csv || 'input.csv'))).digest('hex');
+    eq('input_binding.input_csv_sha256', actual, ib.input_csv_sha256);
+    eq('input_binding.bar_count', fx.bars.length, ib.bar_count);
+  }
+
+  // HD-13: a tolerance-fragile expectation is what the golden set was re-derived to
+  // eliminate. It must not re-enter through the real-market door.
+  const p = paramsOf(e);
+  for (const s of [0.5, 0.8, 1.0, 1.2, 2.0]) {
+    const rr = replay(fx.bars, { ...p, eps_break: p.eps_break * s });
+    if (rr.breakout_bar !== got.stop_index) {
+      diffs.push(`robustness: stop index moves to ${rr.breakout_bar} at ${s}x eps_break — FRAGILE (HD-13)`);
+    }
+  }
+  return diffs;
 }
 
 function paramsOf(expected) {
@@ -1021,7 +1214,52 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       }
     }
   }
+  // ---- real-market fixtures (SPR-D-01 Half B) --------------------------------
+  // Scoped to the narrowed Phase-2-owned surface. Runs under --all and --real, and
+  // is skipped for a single-fixture GX run so `--all GX-01` stays a scoped run.
+  let realFailures = 0;          // anything that fails the gate
+  let realCompareFailures = 0;   // comparison failures only, for the summary line
+  let realIds = [];
+  let realDirs = [];
+  if (!only && (has('--all') || has('--real'))) {
+    realIds = listRealFixtures();
+    // A real/ walk that finds no expectation must FAIL, never silently skip: a
+    // vacuous walk reports coverage it does not have, which is worse than a failing
+    // one. `real/` is not empty — RM-01 is committed — so zero discoveries here
+    // means the expectation is missing, not that there is nothing to check.
+    realDirs = existsSync(REAL) ? readdirSync(REAL).filter((d) => /^RM-\d\d$/.test(d)).sort() : [];
+    // Per-directory, not "only if ALL of them lack one" — that weaker form would let a
+    // second real fixture added without an expectation be silently skipped while RM-01
+    // kept the walk looking healthy.
+    for (const d of realDirs.filter((d) => !realIds.includes(d))) {
+      console.log(`✗ ${d}       no expected-causal.json — a real fixture with no causal`
+        + ` expectation is unguarded, and this walk must not pass over it silently`);
+      realFailures++;
+    }
+    for (const id of realIds) {
+      const fx = loadRealFixture(id);
+      const d = compareReal(fx);
+      if (d.length) { realFailures++; realCompareFailures++; }
+      console.log(`${d.length ? '✗' : '✓'} ${id}  causal Half B`
+        + `${fx.expected.line_at_stop ? ` stop@${fx.expected.line_at_stop.stop_index}`
+          + ` B*=(${fx.expected.line_at_stop.B.t},${fx.expected.line_at_stop.B.H})`
+          + ` m=${fx.expected.line_at_stop.log_slope}` : ''}`);
+      for (const s of d) console.log(`    ${s}`);
+    }
+  }
+
   if (has('--json')) console.log(JSON.stringify(report, null, 2));
-  else console.log(`\n${ids.length - failures}/${ids.length} fixtures reproduce exactly under as-of-time (§21/HD-12) replay.`);
-  process.exit(failures || setLevelFailures ? 1 : 0);
+  else {
+    console.log(`\n${ids.length - failures}/${ids.length} fixtures reproduce exactly under as-of-time (§21/HD-12) replay.`);
+    if (realIds.length || realDirs.length) {
+      // Count comparisons over fixtures that HAVE an expectation; report missing ones
+      // separately. Mixing them printed "0/1" when RM-01 had in fact reproduced and a
+      // second directory was merely unguarded.
+      const missing = realDirs.length - realIds.length;
+      console.log(`${realIds.length - realCompareFailures}/${realIds.length} real-market fixture(s)`
+        + ` reproduce their SPR-D-01 Half B surface (bars 0..stop-1 + engine-derived stop index)`
+        + `${missing ? `; ${missing} real fixture dir(s) carry NO expectation and are unguarded` : ''}.`);
+    }
+  }
+  process.exit(failures || setLevelFailures || realFailures ? 1 : 0);
 }

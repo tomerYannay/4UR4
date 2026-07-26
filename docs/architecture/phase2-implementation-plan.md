@@ -415,11 +415,11 @@ the roadmap's own design and it must not be re-broken by a hand-maintained list.
 > not have. **SPR-D-01 supplies the *decision*, not the artifact:** it rules that RM-01
 > **Half B** (§7.3) **shall be** carried in a separate `expected-causal.json` — the
 > annotation schema is `additionalProperties: false`, so it cannot be extended in place,
-> and `annotation.json`'s values are retained untouched. **That file does not exist yet.**
-> As of this document's head, `product/fixtures/real/RM-01/` holds `annotation.json`,
-> `input.csv`, `README.md`, `alphavantage-source.json` and `source-chart.png` and nothing
-> else; authoring `expected-causal.json`, its additive schema and the `real/`-reading tool
-> extension is **owed work**, not delivered work.
+> and `annotation.json`'s values are retained untouched. **That file now exists**, together
+> with `product/fixtures/schema/real-causal.schema.json` and the `real/`-reading extension
+> to both evidence tools. **RM-01 is under mechanical causal replay**, asserted by
+> `node tools/fixture-replay.mjs --all` in CI. *(This paragraph previously recorded the
+> artifact as owed; it was delivered on the `feat/rm01-causal-replay` branch.)*
 >
 > Four constraints on this walk. (1) The **stop index must be engine-derived, not
 > fixture-supplied**, or the clause asserts nothing about the engine's own detection.
