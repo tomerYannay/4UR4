@@ -32,13 +32,21 @@ jobs:
         # Exits non-zero on any failed assertion, failing the workflow.
         run: node .claude/hooks/bash-guard.test.mjs
 
-      - name: Re-derive and re-check every golden fixture (as-of-time, §21/HD-12)
+      - name: Re-derive and re-check every fixture, golden and real (as-of-time, §21/HD-12)
         # Replays all fixtures causally and asserts: exact 6-significant-figure
         # reproduction; the §21.4 hull lemma against the §8 brute force at every
         # evaluable prefix; prefix-truncation invariance (§21.8); the frozen-line
         # invariants (§21.5); and the formation-gate regressions (§21.3, D-TL-12).
         # Without this, the Phase-0 correctness contract is an author-run claim that
         # can silently drift — the exact failure Issue #16 exists to correct.
+        #
+        # Since 2026-07-26 this also covers the REAL-market layer: every
+        # product/fixtures/real/RM-*/ carrying an expected-causal.json is replayed and
+        # its SPR-D-01 Half B surface asserted — the formation trace, the as-of-time
+        # selection over the bars strictly before the stop, and line_at_stop at an
+        # ENGINE-DERIVED stop index. It asserts the exclusions too (no Λ^F, no final
+        # state, no BREAKOUT_CONFIRMED), and it FAILS rather than skips on a real
+        # fixture directory with no expectation, so the walk cannot pass vacuously.
         run: node tools/fixture-replay.mjs --all
 
       - name: Validate fixture JSON against the schema, and documentation links

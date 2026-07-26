@@ -111,10 +111,14 @@ values reproduce independently within 6-significant-figure tolerance.**
 > **RESOLVED — [SPR-D-01](../human-decisions.md), 2026-07-26** (HD-20 closed). *Approved
 > under bounded Product Owner delegation; not direct Product Owner authorship* — decided by
 > the Strategic Product Reviewer under HD-21 and confirmed by the Project Auditor at
-> `5b99ba6`. **RM-01 carries both layers**; Half B is to be carried in a separate
-> `expected-causal.json` — **an artifact that does not exist yet**, and whose authoring,
-> additive schema and `real/`-reading tool extension are **owed work, not delivered
-> work**.
+> `5b99ba6`. **RM-01 carries both layers**; Half B is carried in a separate
+> [`real/RM-01/expected-causal.json`](real/RM-01/expected-causal.json), **which now
+> exists**, together with `schema/real-causal.schema.json` and the `real/`-reading
+> extension to `tools/fixture-replay.mjs` and `tools/check-evidence.mjs`. **RM-01 is
+> under mechanical causal replay for the first time**, run by `--all` in CI.
+> *Its expectation is **replay-generated**, so it is a **regression guard against
+> today's reference model, not independent verification** — see the artifact's own
+> `provenance` block, which states this on its face.*
 >
 > **The scope limits, which travel with every use of SPR-D-01. Numbered 1, 1b, 2, 3, 4 to
 > match [`../human-decisions.md`](../human-decisions.md), which is authoritative:**
