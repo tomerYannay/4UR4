@@ -33,6 +33,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-19 | med  | Independence checker permitted as verification tooling | **APPROVED** |
 | HD-20 | high | RM-01: as-of-time result diverges from the approved full-series record | **RESOLVED — SPR-D-01 (delegated)** |
 | HD-21 | high | Bounded autonomous product-decision authority delegated to the Strategic Product Reviewer | **APPROVED** |
+| HD-22 | high | GOV-015 scope lift — Phase 2 `engine/` only | **APPROVED** |
 
 ---
 
@@ -963,6 +964,55 @@ confirmation remains mandatory before financial authorization.**
   `real-causal.schema.json` and the `real/`-reading extension to both evidence tools now
   place RM-01 under mechanical causal replay in CI. Marked rather than rewritten: this is
   the finding as it stood, and it is what the closure answers.)*
+
+## HD-22 — GOV-015 scope lift, Phase 2 `engine/` only · materiality: **high**
+
+- **Status:** **APPROVED** — Product Owner, 2026-07-26,
+  [#31](https://github.com/tomerYannay/4UR4/issues/31).
+- **Decision:** [GOV-015](../governance/build-freeze.md) is lifted **for Phase 2 work under
+  `engine/` and nothing else**. The freeze remains **ON** everywhere else.
+
+**Authorized:** the deterministic trendline-engine implementation · fixture and RM-01
+conformance tests · engine-local test infrastructure · minimal shared types strictly
+required by the engine.
+
+**Not authorized, and still frozen:** provider integration · live market-data ingestion ·
+API, database, scanner, worker, dashboard, alerts or SaaS work · spend, licensing, privacy,
+billing or external deployment.
+
+**Binding requirements on the engine**, as ruled: (1) **independently authored** from the
+fixture reference model; (2) **must not import, execute or mechanically translate** that
+model; (3) passes **all 23 golden fixtures and RM-01 causal replay**; (4) preserves
+**HD-11 through HD-20**; (5) **deterministic and free of look-ahead bias**.
+
+**The scope is machine-enforced, not declaratory.** `governance/build-freeze.md`'s marker
+carries `scope: ["engine/"]`, `tools/validate.mjs` guards `engine` alongside every other
+product-code directory, and a guarded directory passes **only** when the marker names it.
+Removing the scope entry re-freezes `engine/` on the next CI run. Verified in a sandbox
+across all three cases: `engine/` in scope passes; `src/` fails; `engine/` with the scope
+removed fails.
+
+**Requirements 1 and 2 are governed by E2-AUTHOR** ([#20](https://github.com/tomerYannay/4UR4/issues/20)).
+**E2-AUTHOR-A governs at the gate** — the committed `engine/` must not import, copy, execute
+or mechanically translate `tools/fixture-replay.mjs` or any successor model under `tools/`.
+**Agreement with the reference model earns no credit** (HD-15 condition 1): the engine is
+proven against the **fixtures**, never against the model.
+
+**What this does not do.** It does not touch **HD-06** — no provider is selected and no spend
+is authorized. It does not resolve **M-09** (the `real/**` quarantine classification), which
+remains open and must be ruled before the Phase 2 ticket meets its Definition of Ready. It
+grants no Phase-2 credit for existing evidence tooling.
+
+**Related condition, recorded because events overtook it.**
+[#21](https://github.com/tomerYannay/4UR4/issues/21) states that an out-of-band confirmation
+is *"required before HD-06 or any GOV-015 freeze lift"*. **This lift proceeded without that
+mechanism existing**, on a Product Owner ruling relayed under the same single-account channel
+#21 describes. That is disclosed rather than treated as satisfied: the condition stands for
+**HD-06**, which remains PENDING, and #21 remains open.
+
+**Also required by the same ruling:** full branch protection on `main` — PR-only merges,
+required CI, required exact-head reviews, no direct pushes, no force pushes, no branch
+deletion, no routine administrative bypass — **before Phase 2 product code merges**.
 
 ## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
 

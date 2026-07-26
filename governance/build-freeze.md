@@ -72,19 +72,52 @@ All four conditions are now directly ruled, and condition 2 was **sharpened** �
    executable product functionality under the freeze, and it is **not a freeze lift**:
    `build_freeze` stays `ON` and no product code is authorized.
 
+## Scoped lift — Phase 2 `engine/` only (Product Owner, 2026-07-26, [#31](https://github.com/tomerYannay/4UR4/issues/31))
+
+**The freeze remains ON.** One scope is lifted, and it is enumerated rather than described,
+because a scope stated only in prose is not a scope — it is an intention.
+
+**Authorized inside `engine/`:** the deterministic trendline-engine implementation · fixture
+and RM-01 conformance tests · engine-local test infrastructure · minimal shared types
+strictly required by the engine.
+
+**NOT authorized, and still frozen:** provider integration · live market-data ingestion ·
+API, database, scanner, worker, dashboard, alerts or SaaS work · spend, licensing, privacy,
+billing or external deployment. Every product-code directory other than `engine/` remains
+forbidden and is asserted as such by the validator.
+
+**Binding requirements on the engine**, quoted from the ruling:
+1. **independently authored** from the fixture reference model;
+2. **must not import, execute or mechanically translate** that model;
+3. passes **all 23 golden fixtures and RM-01 causal replay**;
+4. preserves **HD-11 through HD-20**;
+5. **deterministic and free of look-ahead bias**.
+
+Requirements 1 and 2 are governed by **E2-AUTHOR** ([#20](https://github.com/tomerYannay/4UR4/issues/20)):
+**E2-AUTHOR-A** — the committed `engine/` must not import, copy, execute or mechanically
+translate `tools/fixture-replay.mjs` or any successor model under `tools/` — is the property
+assessed at the gate, and it governs where it and the read-restriction diverge. **Agreement
+with the reference model earns no credit** (HD-15 condition 1): the engine is proven against
+the **fixtures**, never against the model.
+
+**This lift does not touch HD-06.** No provider is selected and no spend is authorized.
+
 ## Freeze marker (machine-readable)
 
 ```yaml
 build_freeze: ON
-autonomous_implementation: DISABLED
-lifted_by: null
-lifted_at: null
-scope: null
+autonomous_implementation: ENABLED_FOR_SCOPE
+lifted_by: "Product Owner — issue #31, 2026-07-26"
+lifted_at: "2026-07-26"
+scope: ["engine/"]
 ```
 
 ## Enforcement
-The validator asserts `build_freeze: ON` and fails if product-code directories
-appear while frozen. The Auditor cross-checks merges against freeze scope.
+The validator asserts `build_freeze: ON` and fails if a product-code directory appears that
+is **not** named in `scope`. `engine/` is guarded like every other product directory and is
+permitted **only** because the marker above names it — delete the `scope` entry and the
+validator fails on `engine/` immediately. That is what makes the lift's boundary mechanical
+rather than declaratory. The Auditor cross-checks merges against freeze scope.
 
 ## Escalation
 Any product code committed under freeze → validator/CI failure + Auditor violation

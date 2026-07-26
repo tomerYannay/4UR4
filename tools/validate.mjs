@@ -53,7 +53,7 @@ const AGENT_STATUSES = ['permanent', 'temporary'];
 const NO_WRITE_CLASSES = new Set(['deterministic']);       // + product-innovation by id
 const RESERVED_PERMANENT_AUTHORITIES = new Set(['merge-and-release', 'evidence-verdict']);
 const PSEUDO_AGENTS = new Set(['human']);
-const PRODUCT_CODE_DIRS = ['src', 'lib', 'app', 'server', 'client', 'packages'];
+const PRODUCT_CODE_DIRS = ['src', 'lib', 'app', 'server', 'client', 'packages', 'engine'];
 
 // ---- parsing helpers --------------------------------------------------------
 const unquote = (s) => s.replace(/^["']|["']$/g, '');
@@ -201,10 +201,25 @@ for (const a of agents) {
 // ---- build-freeze -----------------------------------------------------------
 const freezeFile = join(ROOT, 'governance/build-freeze.md');
 let freezeOn = false;
+let freezeScope = [];
 if (existsSync(freezeFile)) {
   const t = readFileSync(freezeFile, 'utf8');
   if (!/build_freeze:\s*ON/.test(t)) err('build-freeze.md: expected `build_freeze: ON`');
-  else { freezeOn = true; for (const d of PRODUCT_CODE_DIRS) if (existsSync(join(ROOT, d))) err(`build-freeze ON but product-code dir '${d}/' exists (GOV-015)`); }
+  else {
+    freezeOn = true;
+    // A scoped lift is only a scope if it is enumerated. `scope:` in the freeze marker
+    // names the product-code directories the Product Owner has authorized; every other
+    // guarded directory still fails. Deleting an entry re-freezes that directory on the
+    // next CI run, which is what makes the boundary mechanical rather than declaratory.
+    const scopeLine = (t.match(/^\s*scope:\s*(.+)$/m) || [])[1] || 'null';
+    freezeScope = [...scopeLine.matchAll(/["']([^"']+)["']/g)].map((m) => m[1].replace(/\/+$/, ''));
+    for (const d of PRODUCT_CODE_DIRS) {
+      if (!existsSync(join(ROOT, d))) continue;
+      if (freezeScope.includes(d)) continue;   // authorized by the recorded lift
+      err(`build-freeze ON but product-code dir '${d}/' exists and is not in the recorded`
+        + ` lift scope [${freezeScope.join(', ') || 'none'}] (GOV-015)`);
+    }
+  }
 } else err('missing governance/build-freeze.md');
 
 // ---- required infrastructure ------------------------------------------------
