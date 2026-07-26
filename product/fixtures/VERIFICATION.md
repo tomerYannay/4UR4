@@ -80,6 +80,27 @@ values reproduce independently within 6-significant-figure tolerance.**
 
 ## RM-01 — real-market verification (Alpha Vantage SPCX)
 
+> ### ⚠ Everything in this section is a **full-series** result — read `README.md` §6b first
+>
+> This verification predates **HD-12** (as-of-time evaluation, ratified 2026-07-25) and was
+> never redone under it. **RM-01 was not covered by the 2026-07-25 causal audit**, and no
+> mechanical guard has ever replayed it: `check-evidence.mjs` only schema-validates its
+> annotation, and `fixture-replay.mjs` derives its fixture list from `golden/` and never
+> reads `real/`.
+>
+> Re-derived as-of-time — independently, three times, agreeing to six significant figures —
+> **RM-01 confirms a breakout at bar 10 (2026-06-29)**: close `164.19` against a causal line
+> at `150.593`, margin **0.0864461** log units. Suppressing it would need `ε_break` at
+> **≈8.6×** its documented value, and HD-13 forbids resolving fixture outcomes by tolerance
+> in any case.
+>
+> **Both results are arithmetically correct about different objects** — this section's
+> full-series hull (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
+> corollary predicts an as-of-time breakout may exist where a full-series calculation
+> reports none. **Nothing below is withdrawn.** The resolution is escalated as proposed
+> **HD-20** and is **Product-Owner-gated**; it is not decided here, and this notice claims
+> no authority.
+
 Independent verification of the first real-market fixture, computed by the primary session
 (verifier) from `real/RM-01/input.csv` (derived from immutable `alphavantage-source.json`,
 sha256 `69a67469…50c377`) using **trading-bar ordinal indices**, not calendar-day gaps. The

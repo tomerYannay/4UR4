@@ -1121,7 +1121,7 @@ re-acquisition.
 | Default | Rule | Reversal cost |
 |---|---|---|
 | Form-type-primary operating-company test; dated exclusion register | `UR-OPCO` | Register edit + re-run |
-| REITs included | `UR-OPCO` | Version bump + re-run *(flagged for PO awareness)* |
+| REITs included *(the default; the question itself is escalated as **OQ-U3** — listed here only because a default had to be chosen to make the register runnable)* | `UR-OPCO` | Version bump + re-run |
 | Issuer-level aggregation of share classes | `UR-SEC` | Version bump + re-run |
 | One line per issuer (designated primary class) | `UR-SEC` | Version bump; secondary classes are already retained |
 | `MDDV_63 ≥ $25m`, 90% coverage, 63-day seasoning | `UR-LIQ` | Parameter bump + re-run |
@@ -1129,9 +1129,23 @@ re-acquisition.
 | Quarterly rebalance, 6-trading-day effective lag | `UR-REBAL` | Parameter bump + re-run |
 | Buffer 450/550 with reconciliation to exactly 500 | `UR-REBAL` | Parameter bump + re-run |
 | No intra-quarter additions; universe may run below 500 | `UR-REBAL` | Version bump + re-run |
-| Carry-forward step function; interpolation banned | `UR-PIT` | Not reversible in spirit — P1 forbids the alternative |
-| Stale share data is flagged, never filtered | `UR-PIT` | Not reversible in spirit — P3 forbids the alternative |
-| 4UR4-minted `security_uid` as the canonical key | `UR-ID` | Not reversible cheaply; chosen deliberately as the low-regret option |
+
+**Two rows below were mislabelled, and the correction matters more than it looks.**
+The `UR-PIT` entries are **not delegated choices at all** — they are *forced* by
+approved principles (P1's causality bar, P3's no-outcome-correlated-availability bar),
+and their alternatives are prohibited rather than merely unattractive. Listing them as
+"reversible defaults chosen by an agent" overstated the agent's discretion and
+understated the constraint. They are recorded below as **forced**, which is what they
+are.
+
+| Forced by an approved principle — not a delegated choice | Module | Why the alternative is unavailable |
+|---|---|---|
+| Carry-forward step function; interpolation banned | `UR-PIT` | **P1** — interpolating toward a future value is look-ahead by construction |
+| Stale share data is flagged, never filtered | `UR-PIT` | **P3** — delinquent filing correlates with distress, so filtering preferentially deletes losers |
+
+| Genuinely delegated, but **failing HD-17/HD-18 condition 6** — downgraded to provisional | Module | Status |
+|---|---|---|
+| 4UR4-minted `security_uid` as the canonical key | `UR-ID` | **PROVISIONAL.** Its own reversal cost is *"not reversible cheaply"*, and HD-17 permits a delegated call only where the decision **is** reversible. It therefore does not qualify as a settled default. Recorded as provisional and **escalated as OQ-U7** rather than relied upon. The choice may still be right — the objection is to its authority, not its merits |
 
 ### 11.2 Escalated to the Product Owner
 
@@ -1145,6 +1159,7 @@ reserves both.
 | **OQ-U3** | **Are REITs in?** [§2.1.2](#212-the-exclusion-register) | Excluding a sector is a segment change; including is the lower-surprise default | Included |
 | **OQ-U4** | **Is R9 (point-in-time shares outstanding) opened, and does any spend attach?** [§4.1](#41-the-dependency-chain-and-where-it-breaks) | HD-06 and HD-07 make provider selection and spend human-gated | R9 opened as **free-path-only** research; no vendor contact |
 | **OQ-U5** | **How far back must the backtest window reach?** [§4.3](#43-where-the-data-comes-from) | The free SEC/XBRL path has a hard historical bound; reaching further is a spend or a text-extraction project | Window starts where the free structured path starts, and the start date is disclosed |
+| **OQ-U7** | **Is the 4UR4-minted `security_uid` the canonical identity key?** [§11.1](#111-safe-reversible-research-defaults-taken-here) | Chosen as a delegated default, but its own reversal cost is "not reversible cheaply" — HD-17 delegation requires reversibility, so it does not qualify | Provisional; the design proceeds on it and flags it in every artifact |
 | **OQ-U6** | **Is a *first-class* universe-methodology disclosure required on user-facing surfaces at MVP, or only internally?** [§6.3](#63-backtest-results-are-not-comparable--and-where-that-must-be-disclosed) | It is a product and legal-posture question, not a technical one | All five surfaces, D-1…D-5 |
 
 **Nothing in this section is a decision on the Product Owner's behalf.** Where a default

@@ -350,19 +350,59 @@ style), and **Major risks**. Freeze status is marked per phase.
   Additionally: RM-01 (see below); every accept/reject emits a `reason_code` from
   the schema's closed set; the determinism guard passes.
 - **Exit criteria (RM-01, the non-circular ground truth) — ruled
-  [#23](https://github.com/tomerYannay/4UR4/issues/23), 2026-07-26.** Product Owner
-  ruling, verbatim: *"RM-01 is part of the Phase 2 exit gate as the committed
-  real-market, non-circular conformance fixture."* The engine therefore also
-  reproduces the **approved** RM-01 geometry from the committed
-  [`fixtures/real/RM-01/input.csv`](fixtures/real/RM-01/input.csv) — anchor, canonical
-  second anchor, slope and intercept to 6 significant figures, zero envelope
-  violations, and no breakout in range (`confirmed_bar == null`). This needs no
+  [#23](https://github.com/tomerYannay/4UR4/issues/23), 2026-07-26.**
+  ⚠ **Numeric acceptance values: `UNDER REVIEW — pending HD-20` (2026-07-26).**
+  Product Owner ruling, verbatim: *"RM-01 is part of the Phase 2 exit gate as the
+  committed real-market, non-circular conformance fixture."* **That ruling stands
+  and is untouched here: RM-01 remains part of the Phase 2 exit gate.** The engine
+  therefore also reproduces the RM-01 geometry from the committed
+  [`fixtures/real/RM-01/input.csv`](fixtures/real/RM-01/input.csv), which needs no
   data provider and so creates **no Phase 1 dependency**: the OHLCV is committed.
   The synthetic set proves the engine is self-consistent with the written spec;
   RM-01 is the only committed evidence that the spec captures the object the
   Product Owner actually drew — which is precisely the **non-circularity** the
   ruling names, since every synthetic fixture was derived from the same
   specification the engine is being tested against.
+
+  **`UNDER REVIEW — pending HD-20` — the acceptance values only.** The values this
+  gate has required — anchor, canonical second anchor, slope and intercept to 6
+  significant figures, zero envelope violations, and **no breakout in range
+  (`confirmed_bar == null`)** — are **suspended**, and are restated here only so the
+  pending review has a subject. **Why:** RM-01's approved record is a **full-series**
+  hull (`B* = (25, 129.88)`, slope `-0.0240143`) under which no close ever exceeds
+  the line, but replayed **as-of-time** — the evaluation that §21 / HD-12 / D-TL-11
+  and this gate's own first clause both require — the same committed OHLCV yields a
+  **confirmed breakout at bar 10 (2026-06-29) with a margin of `0.0864461` log
+  units**; so `confirmed_bar == null` is **provably unsatisfiable by a
+  spec-conforming engine**, and a gate demanding it would fail a *correct*
+  implementation. Both records are arithmetically correct about different objects,
+  exactly as §21.4's non-normative corollary predicts. Full disclosure, including the
+  bar-by-bar derivation and the robustness argument (suppression would need
+  `eps_break` ≈ 8.6× the documented value, which HD-13 forbids in any case):
+  [`fixtures/README.md`](fixtures/README.md) §6b.
+
+  **Until HD-20 is ruled, the RM-01 acceptance values are pending and this gate is
+  not assessable on them.** Nothing is unblocked by that: Phase 2 is
+  **Blocked: build-freeze** ([GOV-015](../governance/build-freeze.md)) and its entry
+  additionally awaits [#20](https://github.com/tomerYannay/4UR4/issues/20) and
+  [#21](https://github.com/tomerYannay/4UR4/issues/21). **This roadmap decides
+  nothing here.** The suspension reaches only the acceptance values, which are
+  **Steward drafting**; the ruled text — RM-01's membership in the gate — is not
+  Steward-suspendable and has not been suspended.
+
+  **What a split would cost — recorded because it bears on HD-20 (Strategic Product
+  Reviewer finding under its [HD-17](human-decisions.md) bounded delegation).** One
+  resolution under consideration would replace the end-to-end RM-01 check with a §8
+  **unit-level** assertion on the full-series hull (the *"Half A"* proposal). That
+  assertion is **weaker than this gate's current wording implies**: a §21-conforming
+  detector **never computes `(25, 129.88)` at all**, because the bar-10 breakout
+  **freezes** the line (§21.5) long before bar 25 is reached — so the unit check
+  would test a quantity the engine does not produce in normal operation. And because
+  §8 is the **most fixture-covered rule in the corpus**, a unit test on it **bites
+  less** than the end-to-end real-data check that the synthetic-vs-real independence
+  design ([`fixtures/README.md`](fixtures/README.md) §6) relies on RM-01 to provide.
+  Recording this **decides nothing**; it exists so the cost is in front of whoever
+  rules HD-20 rather than lost.
 - **Why this gate is stated as a derived set, not an enumeration.** The previous
   form named seven fixture IDs here and five under Phase 3 — a hand-maintained
   restatement of a fact the repository already holds on disk, stored apart from
@@ -655,3 +695,4 @@ style), and **Major risks**. Freeze status is marked per phase.
 | 2026-07-26 | **E2-AUTHOR restated around HD-15 condition 2 as sharpened** ([#23](https://github.com/tomerYannay/4UR4/issues/23); [#20](https://github.com/tomerYannay/4UR4/issues/20)). The testable criterion is now **E2-AUTHOR-A**, a property of the **artifact** — `engine/` must not *import, copy, execute or mechanically translate* the reference model, checkable against the code that exists. The read-restriction becomes **E2-AUTHOR-B**, retained as the **preventive control** rather than the evidence, since a session's read-history is unverifiable after the fact; **where they diverge, A governs**. The mechanism grows from four parts to five, with **#20 named as an explicit precondition for Phase 2 implementation beginning**. No freeze lift; GOV-015 unchanged and still ON. | APPROVED ([#23](https://github.com/tomerYannay/4UR4/issues/23), 2026-07-26) |
 | 2026-07-26 | **Universe redefined as the self-computed 4UR4 US Large-Cap 500** ([#24](https://github.com/tomerYannay/4UR4/issues/24), HD-18). Every use of "S&P 500" as 4UR4's universe is replaced (Phase 1 goal, Phase 4 goal, Phase 9 goal); the name survives only where the index is deliberately *not* used or is an external reference, with the reason stated in place. Two new named gates: **UNIV-METH** (Phase 1 exit — versioned eligibility/ranking rules, point-in-time membership, delisted names preserved, adds/removes with effective dates and evidence, bias absence demonstrated, rule set independently versioned and backtestable; design in `docs/architecture/universe-methodology.md`, which is design, not implementation) and **UNIV-DISC** (Phase 4 exit, binding Phases 4–8 — every reported backtest number carries, in the artifact, the 4UR4 methodology + rule-set version, the non-endorsement statement, and the fact that **results are not comparable to published S&P 500 strategy results**, enforced by a failing harness rather than by prose). Rationale: index membership is licensed separately and more restrictively than prices (separate MSA, separate fees; SPDJI withdrew constituents from Compustat in 2020), and the two best survivorship-free datasets (Norgate, CRSP) are licence-barred from commercial use. **No freeze lift; GOV-015 remains ON; HD-06 remains PENDING; no provider selected and no spend or licensing authorized.** | Product Owner ([#24](https://github.com/tomerYannay/4UR4/issues/24), 2026-07-26) |
 | 2026-07-26 | **Phase 2 / Phase 3 boundary stated as a behavioural rule** ([#23](https://github.com/tomerYannay/4UR4/issues/23)). Phase 2 owns behaviour evaluated while the structure remains `ACTIVE` that performs no `ACTIVE → BROKEN_OUT` transition; Phase 3 owns confirmed breakout, retest, failure and expiry. The `confirmed_bar == null` partition is **demoted to corroboration** and retained only as the mechanical selector over fixture data. Rationale: the partition is contingent on tolerances the spec declines to fix — GX-12 (one of the five `WICK_BREAK` fixtures) leaves the `confirmed_bar == null` partition at the 0.5× sweep point, and GX-15 gains both a wick-break and a breakout below its documented boundaries — whereas the behavioural rule does not. | APPROVED ([#23](https://github.com/tomerYannay/4UR4/issues/23), 2026-07-26) |
+| 2026-07-26 | **RM-01's Phase 2 numeric acceptance values marked `UNDER REVIEW — pending HD-20`. Suspension and disclosure only — nothing is resolved.** Replayed **as-of-time** (§21 / HD-12 / D-TL-11) from the committed OHLCV, RM-01 yields a **confirmed breakout at bar 10 (2026-06-29)**, margin `0.0864461` log units, while its approved record — a **full-series** hull, `B* = (25, 129.88)`, slope `-0.0240143` — reports none. Both are arithmetically correct about different objects, exactly as §21.4's non-normative corollary predicts, so the gate's `confirmed_bar == null` target is **provably unsatisfiable by a spec-conforming engine**. Derived independently three times to 6 significant figures; not suppressible by tolerance (`eps_break` would need ≈ 8.6× the documented value, and HD-13 forbids resolving fixture outcomes by tolerance regardless). Structural cause, recorded as a gap rather than an incident: **no mechanical guard has ever covered RM-01** — `check-evidence.mjs` only schema-validates its annotation and `fixture-replay.mjs` does not replay it at all. **The Product Owner ruling that RM-01 is part of the Phase 2 exit gate stands and is untouched**; only the Steward-drafted acceptance values are suspended. Disclosure: [`fixtures/README.md`](fixtures/README.md) §6b. | **NOT APPROVED — pending Product Owner ruling (proposed HD-20).** Recorded by the Product Steward at the direction of the Strategic Product Reviewer under its [HD-17](human-decisions.md) bounded delegation; disclosure and suspension only, no decision taken |

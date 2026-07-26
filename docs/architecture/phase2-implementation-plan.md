@@ -560,6 +560,13 @@ real data. Every breakout, retest, failure and expiry expectation in this reposi
 is synthetic. That is a real limit on what the Phase-2 and Phase-3 gates can claim,
 and it should be stated in the evidence log rather than discovered later.
 
+> **Read §7.3 before relying on this paragraph.** It holds only of RM-01's *approved
+> full-series record*. Under the ratified as-of-time rule, RM-01 **does** break out at
+> bar 10 — so whether §13–§17 have met real data is precisely the question escalated as
+> proposed **HD-20**, not a settled fact. If HD-20 resolves toward the as-of-time
+> expectation, this limit is lifted and the repository gains its first real-data
+> breakout.
+
 ### 7.3 **Finding — RM-01's approved record is full-series; as-of-time it appears to break out at `t = 10`**
 
 The RM-01 record was produced before HD-12, and the as-of-time audit of 2026-07-25
@@ -582,11 +589,23 @@ illustrative `ε_break = 0.01`):
 | — | — | anchor | `A = (2, 225.64)`, `yA ≈ 5.418942` |
 | 8 | 2026-06-25 | `t_form = 8` (F1 binds; F2 satisfied from `t = 6`) | `B*_8 = (3, 213.7999)`, `m ≈ −0.053893`, envelope-valid over `S_8` |
 | 9 | 2026-06-26 | pierce beyond `ε` → `INVALID_PIERCE` + `WICK_BREAK`; re-selects | `y(158.40) ≈ 5.065119 > ŷ_9(9) + 0.02 ≈ 5.061691`; close `153.23` does not confirm |
-| 10 | 2026-06-29 | **breakout predicate fires** | `Λ_10`: `B* = (9, 158.40)`, `m ≈ −0.050546`, `ŷ_10(10) ≈ 5.014574`; `ln(164.19) ≈ 5.101020 > 5.024574`, **margin ≈ 0.0764 log units (≈ 7.9%)** |
+| 10 | 2026-06-29 | **breakout predicate fires** | `Λ_10`: `B* = (9, 158.40)`, `m ≈ −0.050546`, `ŷ_10(10) ≈ 5.014574`; `ln(164.19) ≈ 5.101024 > 5.014578`, **margin ≈ 0.086446 log units (≈ 9.0%) over the line** |
 
 The margin is roughly thirty times any plausible hand-arithmetic error, and it
-survives every sweep point HD-13 contemplates (suppressing it would need
-`ε_break ≈ 0.076`, about `7.6×` the documented value). If the re-selection at bar 9
+survives every sweep point HD-13 contemplates.
+
+> **Corrected 2026-07-26.** An earlier revision of this section, and the commit message
+> that landed it, said suppression would need `ε_break ≈ 0.076`, about `7.6×`. **That is
+> wrong**, and the error is instructive: `0.0764` is the margin over `line + ε_break`,
+> not over the line. Setting `ε_break = 0.076` therefore does **not** suppress the
+> breakout — the predicate still fires, since `5.101024 > 5.014578 + 0.076`. Suppression
+> requires `ε_break ≥ 0.086446`, i.e. **≈8.6× the documented `0.01`**. Caught by the
+> Strategic Product Reviewer and confirmed by direct evaluation of the predicate at
+> `0.076`, `0.0864` and `0.0865`. The figure is load-bearing — it is what forecloses
+> "just tune the tolerance" as an answer — and HD-13 forbids resolving fixture outcomes
+> by tolerance regardless.
+
+If the re-selection at bar 9
 were somehow wrong, the line judging bar 10 would be *steeper*, and the breakout would
 be larger still. The same rally re-fires at bar 11 under a later formation.
 
