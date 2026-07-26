@@ -17,9 +17,13 @@
 >
 > **This approval does NOT:**
 >
-> 1. **lift [GOV-015](../governance/build-freeze.md).** The build-freeze remains
->    **ON**, with `autonomous_implementation: DISABLED`. Nothing about the freeze
->    moved on 2026-07-26.
+> 1. **lift [GOV-015](../governance/build-freeze.md).** *(Scoped to the #23 baseline
+>    ruling, which lifted nothing.)* **Superseded in part on the same date:** the
+>    later [#31](https://github.com/tomerYannay/4UR4/issues/31) ruling (**HD-22**) lifted
+>    GOV-015 for **`engine/` only**; the marker now reads
+>    `autonomous_implementation: ENABLED_FOR_SCOPE` with `scope: ["engine/"]`, and the
+>    freeze stays **ON** everywhere else. The original sentence — *"Nothing about the
+>    freeze moved on 2026-07-26"* — was true of the #23 ruling and **false of the day**.
 > 2. **authorize product implementation.** Phases 1–9 remain **Blocked:
 >    build-freeze**. Implementation begins only when a human lifts the freeze
 >    **per-scope**, tied to a specific approved, Ready ticket — never as a blanket
@@ -86,8 +90,9 @@
 > the same time, and **both halves must travel with every number 4UR4 reports.**
 >
 > **What this ruling did *not* change.** [GOV-015](../governance/build-freeze.md)
-> remains **ON**, with `autonomous_implementation: DISABLED`. **HD-06 remains
-> PENDING.** *(Corrected 2026-07-26: this previously said HD-06 was "the only open
+> remained **ON**, with `autonomous_implementation: DISABLED`, *as of this ruling* —
+> later lifted for **`engine/` only** by **HD-22** ([#31](https://github.com/tomerYannay/4UR4/issues/31)),
+> which this ruling did not anticipate. **HD-06 remains PENDING.** *(Corrected 2026-07-26: this previously said HD-06 was "the only open
 > Product Owner decision". **HD-20** — RM-01's as-of-time divergence
 > ([#26](https://github.com/tomerYannay/4UR4/issues/26)) — was open too; it is
 > **resolved** as of 2026-07-26 by

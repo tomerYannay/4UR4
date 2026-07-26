@@ -741,7 +741,9 @@ confirmation remains mandatory before financial authorization.**
   Owner, and until now `roadmap.md` opened with *"PROPOSED, pending human approval"*,
   which made every Phase 1 ticket un-Ready by its own Definition of Ready.
 - **Standing risk:** an approved roadmap invites the reading that building may begin.
-  It may not. `build_freeze: ON`, `autonomous_implementation: DISABLED`, and Phase 2
+  It may not. `build_freeze: ON`, `autonomous_implementation: DISABLED` *(as of HD-16; the
+  marker now reads `ENABLED_FOR_SCOPE` with `scope: ["engine/"]` under HD-22 — the freeze
+  stays ON everywhere else)*, and Phase 2
   entry additionally requires [#19](https://github.com/tomerYannay/4UR4/issues/19),
   [#20](https://github.com/tomerYannay/4UR4/issues/20) and a per-scope freeze lift.
 
@@ -998,8 +1000,14 @@ or mechanically translate `tools/fixture-replay.mjs` or any successor model unde
 **Agreement with the reference model earns no credit** (HD-15 condition 1): the engine is
 proven against the **fixtures**, never against the model.
 
-**Binding condition 6 — offered by the requesting session and accepted as part of the
-scope.** **No fixture, `expected.json`, `annotation.json`, or parameter may be edited to make
+**Fixture-immutability condition — provenance stated precisely, on the HD-15 pattern.** The
+Product Owner's ruling enumerates **five** binding requirements and this is **not** among
+them. It was **proposed by the requesting session** in the #31 request as a self-binding
+condition, and the ruling granted the request that contained it — so it is adopted as **detail
+of the permission**, not as separately quoted Product Owner words. It **narrows** agent
+authority rather than expanding it. **If a bare five-condition permission was intended, strike
+this and say so.** Until then it binds:
+**No fixture, `expected.json`, `annotation.json`, or parameter may be edited to make
 the engine pass.** If the engine and a committed fixture disagree, that is **escalated, never
 reconciled**. This is the strongest single control on the Phase 2 work: fitting the object to
 the gate is precisely the failure the whole fixture corpus exists to catch, and it is the one

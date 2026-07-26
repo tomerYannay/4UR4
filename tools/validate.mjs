@@ -59,7 +59,12 @@ const PSEUDO_AGENTS = new Set(['human']);
 const PRODUCT_CODE_DIRS = [
   'src', 'lib', 'app', 'server', 'client', 'packages', 'engine',
   'api', 'services', 'scanner', 'worker', 'dashboard', 'web', 'backend', 'frontend', 'db',
+  'alerts', 'billing', 'providers',
 ];
+// INVARIANT: this list and the enumeration in governance/build-freeze.md's scoped-lift
+// section must agree. They drifted once already - the prose named three directories the
+// code did not guard, in the same commit that added a paragraph about prose over-claiming
+// the gate. The parity check below makes that drift a build failure, not a discovery.
 
 // ---- parsing helpers --------------------------------------------------------
 const unquote = (s) => s.replace(/^["']|["']$/g, '');
@@ -216,10 +221,20 @@ if (existsSync(freezeFile)) {
   // therefore never actually enforced. Anchoring to the fenced block fixes that, and fixes
   // the same class of hole in the `scope:` parse below, which previously took the first
   // line-initial `scope:` anywhere in the file.
-  const marker = (t.match(/##\s*Freeze marker[^\n]*\n+```ya?ml\n([\s\S]*?)```/) || [])[1] || '';
-  if (!marker) err('build-freeze.md: no machine-readable freeze marker block found');
-  if (!/^build_freeze:\s*ON\s*$/m.test(marker)) err('build-freeze.md: expected `build_freeze: ON` in the freeze marker block');
-  else {
+  const markers = [...t.matchAll(/##[ \t]*Freeze marker[^\r\n]*(?:\r?\n)+```ya?ml\r?\n([\s\S]*?)```/g)];
+  // Exactly one marker, or none of this means anything. First-wins would let an
+  // illustrative block placed ABOVE the real one shadow it, which fails OPEN.
+  let marker = null;
+  if (markers.length === 0) {
+    err('build-freeze.md: no machine-readable freeze marker block found'
+      + ' (expected a ```yaml fence under a `## Freeze marker` heading)');
+  } else if (markers.length > 1) {
+    err(`build-freeze.md: ${markers.length} freeze marker blocks found, expected exactly 1 —`
+      + ` a duplicate block would shadow the real marker`);
+  } else if (!/^build_freeze:\s*ON\s*$/m.test(markers[0][1])) {
+    err('build-freeze.md: expected `build_freeze: ON` in the freeze marker block');
+  } else {
+    marker = markers[0][1];
     freezeOn = true;
     // A scoped lift is only a scope if it is enumerated. `scope:` in the freeze marker
     // names the product-code directories the Product Owner has authorized; every other
@@ -235,6 +250,26 @@ if (existsSync(freezeFile)) {
     }
   }
 } else err('missing governance/build-freeze.md');
+
+// ---- freeze-list parity -----------------------------------------------------
+// The prose list in build-freeze.md and PRODUCT_CODE_DIRS are two statements of one fact,
+// and two statements of one fact drift. This makes the drift a build failure rather than
+// something a reviewer has to notice.
+if (existsSync(freezeFile)) {
+  const ft = readFileSync(freezeFile, 'utf8');
+  const sec = (ft.match(/How far the machine check actually reaches[\s\S]*?\n\n/) || [''])[0];
+  if (sec) {
+    const named = [...sec.matchAll(/`([a-z]+)`/g)].map((m) => m[1])
+      .filter((d) => d !== 'engine' || true);
+    const codeOnly = PRODUCT_CODE_DIRS.filter((d) => !named.includes(d));
+    const proseOnly = named.filter((d) => !PRODUCT_CODE_DIRS.includes(d) && d !== 'yaml');
+    if (codeOnly.length || proseOnly.length) {
+      err('build-freeze.md prose and PRODUCT_CODE_DIRS disagree on guarded directories —'
+        + (proseOnly.length ? ` prose names but code does not guard: ${proseOnly.join(', ')}.` : '')
+        + (codeOnly.length ? ` code guards but prose does not name: ${codeOnly.join(', ')}.` : ''));
+    }
+  }
+}
 
 // ---- required infrastructure ------------------------------------------------
 if (!existsSync(join(ROOT, CI_WORKFLOW))) err(`missing CI workflow: ${CI_WORKFLOW}`);

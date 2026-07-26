@@ -88,11 +88,14 @@ billing or external deployment.
 **How far the machine check actually reaches, stated precisely.** `tools/validate.mjs` guards
 a **named list** of product-code directories, not a heuristic: `src`, `lib`, `app`, `server`,
 `client`, `packages`, `engine`, `api`, `services`, `scanner`, `worker`, `dashboard`, `web`,
-`backend`, `frontend`, `db`. A directory outside that list is **unguarded no matter what this
-section says** — the prose forbids it, the validator does not. The list was extended to cover
-the surfaces the NOT-authorized list above names, because it previously stopped at six and
-`engine/` itself was not on it at all. **Add the name here and to `PRODUCT_CODE_DIRS`
-together, or the ban is decorative.**
+`backend`, `frontend`, `db`, `alerts`, `billing`, `providers`. A directory outside that list is
+**unguarded no matter what this section says** — the prose forbids it, the validator does not.
+
+**Still unguarded, named here so the gap is not rediscovered as a surprise:** any directory
+this list does not name. Before the 2026-07-26 lift the list held **six** names and did not
+include `engine/` — the directory the lift was about — so the scope would have been prose
+over an already-open door. **Add the name here and to `PRODUCT_CODE_DIRS` together, or the
+ban is decorative.**
 
 **Binding requirements on the engine**, quoted from the ruling:
 1. **independently authored** from the fixture reference model;
@@ -108,7 +111,21 @@ assessed at the gate, and it governs where it and the read-restriction diverge. 
 with the reference model earns no credit** (HD-15 condition 1): the engine is proven against
 the **fixtures**, never against the model.
 
+**Fixture immutability — adopted as detail of the permission, not a sixth ruled requirement.**
+**No fixture, `expected.json`, `annotation.json` or parameter may be edited to make the engine
+pass.** A disagreement between the engine and a committed fixture is **escalated, never
+reconciled**. This was proposed by the requesting session rather than ruled, on the same
+footing as HD-15 conditions 1–3 — see [`../product/human-decisions.md`](../product/human-decisions.md)
+HD-22 — and it may be struck by the Product Owner. It is the one control that cannot be
+recovered after the fact: a fixture edited to accommodate an engine looks identical to a
+fixture that was always right.
+
 **This lift does not touch HD-06.** No provider is selected and no spend is authorized.
+
+<!-- DO NOT RENAME the heading below, relabel its fence, or insert anything between them:
+     tools/validate.mjs parses the `## Freeze marker` heading plus the ```yaml fence
+     immediately following it, and errors if it cannot find EXACTLY ONE such block.
+     Any of those edits fails the build closed rather than silently. -->
 
 ## Freeze marker (machine-readable)
 
