@@ -1019,7 +1019,7 @@ criterion**, not advice.
 is authorized. It does not resolve **M-09** (the `real/**` quarantine classification), which
 *(as recorded on 2026-07-26, and since closed)* remained open and had to be ruled before the
 Phase 2 ticket met its Definition of Ready — **M-09 is now CLOSED by
-[SPR-D-03](#spr-d-03--productfixturesreal-is-r2b-permeable-by-necessity--delegatedproductdecisionapproved),
+[SPR-D-03](#spr-d-03--productfixturesreal-is-r2b-permeable-by-necessity--delegated_product_decision_approved),
 condition-10 CONFIRMED.** Marked rather than rewritten, per this register's convention. It
 grants no Phase-2 credit for existing evidence tooling.
 
@@ -1045,7 +1045,7 @@ UNMET, and it is unmet by structural impossibility rather than by omission.**
 
 | # | Part | State | Evidence |
 |---|------|-------|----------|
-| 1 | PR-only merges | **MET** | proven by the **empirical push rejection** in part 4. *(This row previously cited the `required_pull_request_reviews` block, which at count 0 enforces nothing — mis-attributed evidence in a column labelled Evidence.)* |
+| 1 | PR-only merges | **MET** | proven directly by the **empirical push rejection** in part 4. *(This row previously cited the `required_pull_request_reviews` block alone. That block IS "require a pull request before merging" and does enforce part 1's subject; what it does not enforce at count 0 is any **review**, so it is not evidence about reviews. An earlier correction here overshot and called it evidence that "enforces nothing" — false in the direction that matters for this row.)* |
 | 2 | required CI | **MET** | context `Validate agent OS & governance`, `strict: true` — the single job that runs the validator, the hook suite, the fixture re-derivation, the evidence checker and the 136-test engine conformance suite |
 | 3 | **required exact-head reviews** | **UNMET** | `required_approving_review_count: 0` |
 | 4 | no direct pushes | **MET** | proven empirically: a direct push was rejected, `protected branch hook declined` |

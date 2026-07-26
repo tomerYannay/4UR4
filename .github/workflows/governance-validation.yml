@@ -103,6 +103,18 @@ jobs:
           fi
           echo "PASS — engine/ changed; no committed fixture artifact was modified, deleted or retyped."
 
+      - name: Set up Node.js
+        # RESTORED. This step was silently deleted by the commit that rewrote the
+        # fixture-immutability guard: the rewrite spliced on the NEXT step's header as its
+        # end boundary, and this step sat in between. It has been here since the bootstrap
+        # commit 2949a8f, and four of the five required checks run on it. Caught by Code
+        # Review. The same file pins Python "so a runner image change is a DECISION rather
+        # than an event" -- leaving Node unpinned in the same job contradicted that, and it
+        # would have landed as a side effect of a guard fix rather than as a decision.
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Run governance validator
         # Exits non-zero on any validation error, failing the workflow.
         run: node tools/validate.mjs
