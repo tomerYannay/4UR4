@@ -118,6 +118,18 @@ export function canonPath(raw) {
   return out.join('/').toLowerCase();
 }
 
+// Compare at a SEGMENT boundary, so an absolute path converges with its relative twin.
+// This is the fix for the defect that defeated two revisions of this control: Claude
+// Code's Read contract REQUIRES an absolute file_path and subagents are instructed to
+// use absolute paths, so `/Users/.../4UR4/tools` is the NORMAL form — and the earlier
+// exact-compare returned false for it while blocking the relative `tools`. The control
+// fired on the form nobody uses and failed on the form everybody uses.
+// Suffix matching deliberately also catches another checkout of this repo; over-blocking
+// a second copy of the reference model is the harmless direction.
+function isOrUnder(candidate, target) {
+  return candidate === target || candidate.endsWith('/' + target);
+}
+
 // A structured path argument hits if it IS a quarantined file, or if it is a directory
 // that CONTAINS one — `Grep {path: "tools"}` returns the model's source while the payload
 // contains no quarantined string at all.
@@ -129,14 +141,14 @@ export function pathHitsQuarantine(role, raw) {
   const bare = c.replace(/[*?[\]].*$/, '').replace(/\/+$/, '');   // glob prefix
   for (const p of paths) {
     const q = canonPath(p);
-    if (c === q) return p;                                   // exact
+    if (isOrUnder(c, q)) return p;                           // exact, at a segment boundary
     if (c.startsWith(q + '/')) return p;                     // arg is inside a quarantined path
     // A directory argument hits only when the quarantined file sits DIRECTLY in it.
     // Prefix-matching the whole path was far too broad: `product/fixtures/VERIFICATION.md`
     // made every path under `product/` a hit, which blocks the specification, the rulings
     // and the fixtures — i.e. the entire input the engine author is supposed to work from.
     const dir = q.slice(0, q.lastIndexOf('/'));
-    if (bare && dir && bare === dir && WHOLLY_QUARANTINED_DIRS.has(dir)) return p;
+    if (bare && dir && isOrUnder(bare, dir) && WHOLLY_QUARANTINED_DIRS.has(dir)) return p;
   }
   return null;
 }
@@ -146,13 +158,17 @@ export function pathHitsQuarantine(role, raw) {
 // them, so blocking it wholesale is cheap and closes `Grep {path:"tools"}` and
 // `cat tools/*.mjs` at the argument level rather than by text matching.
 //
-// DISCLOSED RESIDUAL: directories that mix quarantined and required content — notably
-// `product/fixtures/`, which holds VERIFICATION.md alongside the fixtures the engine MUST
-// read — are deliberately NOT wholly quarantined. A recursive search over `product/` can
-// therefore still surface VERIFICATION.md. That is a real gap, accepted because the
-// alternative blocks the specification and the conformance contract, and because
-// VERIFICATION.md is a prose evidence log rather than the model itself. E2-AUTHOR-A
-// remains the criterion assessed at the gate.
+// DISCLOSED RESIDUAL — two directories, both named, because naming only one was itself a
+// finding. Directories that MIX quarantined and required content are deliberately not
+// wholly quarantined:
+//   product/fixtures/    holds VERIFICATION.md alongside the fixtures the engine MUST read
+//   docs/architecture/   holds phase2-independence-mechanism.md alongside
+//                        phase2-implementation-plan.md, which the engine MUST read
+// A recursive search over either can still surface the quarantined file. Accepted, because
+// the alternative removes the specification, the conformance contract and the clean-room
+// plan from the author's reach — an over-block that breaks the ticket outright, as an
+// earlier revision of this file demonstrated. Both are prose documents rather than the
+// model. E2-AUTHOR-A remains the criterion assessed at the gate.
 const WHOLLY_QUARANTINED_DIRS = new Set(['tools']);
 
 // Bash text matcher. Quote-strips, case-folds, and looks for the quarantined STEM rather
@@ -168,10 +184,32 @@ export function hitsQuarantine(role, text) {
   for (const p of paths) {
     const q = p.toLowerCase();
     const base = q.slice(q.lastIndexOf('/') + 1);
-    const stem = base.replace(/\.[^.]+$/, '');                // fixture-replay, verification, ...
-    if (hay.includes(q) || hay.includes(base) || hay.includes(stem)) return p;
+    const stem = base.replace(/\.[^.]+$/, '');
+    // Stem matching ONLY for distinctive stems. `verification` is the stem of
+    // VERIFICATION.md and appears 223 times across 50 files -- matching it blocked
+    // `Grep {pattern:"verification"}` on human-decisions.md, which QUARANTINE_NOTE
+    // explicitly tells the engine author to read INSTEAD. A hyphen is the cheap test for
+    // distinctiveness: `fixture-replay` and `phase2-independence-mechanism` qualify,
+    // ordinary English words do not.
+    const stemIsDistinctive = stem.includes('-');
+    if (hay.includes(q) || hay.includes(base) || (stemIsDistinctive && hay.includes(stem))) return p;
   }
   // A glob or expansion that reaches a directory holding a quarantined file.
+  // A WHOLLY quarantined directory named anywhere in a command, with or without a glob.
+  // This closes the whole "bare directory argument to a recursive-by-default tool" class
+  // in one rule -- `grep -r ... tools`, `tar cf x tools`, `git log -p -- tools/`,
+  // `cp -r tools`, `rsync -a tools/`, `diff -r engine tools` -- which no glob or
+  // expansion test can see. Cheap because the engine author needs NOTHING under tools/:
+  // it holds the reference model and the two evidence tools, and running those is
+  // Verification's job, not the author's.
+  for (const d of WHOLLY_QUARANTINED_DIRS) {
+    // NOTE the character class: `/` must NOT be excluded. Excluding it is the exact
+    // defect that defeated revision 1 of this control -- `[^\w./-]` never matches a
+    // directory-prefixed path, so `/abs/path/tools` slipped through while `tools` blocked.
+    // It was reintroduced here in the fix for itself; hence this comment.
+    if (new RegExp(`(^|[^\\w.-])${d}(/|$|[^\\w-])`).test(hay)) return `${d}/**`;
+  }
+
   // Only WHOLLY quarantined directories, or the expansion blocks legitimate work:
   // `product/fixtures/golden/*/expected.json` is the conformance contract and must glob.
   const expansive = /[*?]|\$\(|\$\{|`|\bxargs\b|-exec\b|\bfind\b/.test(hay);
@@ -200,10 +238,13 @@ export function quarantineBlock(role, text) {
 export function evaluateFileAccess(role, toolInput = {}) {
   // Structured path fields are decided EXACTLY, by canonicalised comparison — this is the
   // layer that must hold. Free-text fields fall back to the fuzzy text matcher.
-  const pathFields = [
-    toolInput.file_path, toolInput.filePath, toolInput.path, toolInput.notebook_path,
-    toolInput.glob, toolInput.pathspec, toolInput.pattern,
-  ].filter(Boolean);
+  // EVERY string value in the payload is treated as a candidate path, not a hand-listed
+  // set of field names. The earlier version enumerated seven names and its comment claimed
+  // an unknown field "fails CLOSED" -- measured, `Read {target: ...}` was ALLOWED, i.e. it
+  // failed open. Scanning all values makes the claim true rather than restating it.
+  const pathFields = Object.values(toolInput)
+    .filter((v) => typeof v === 'string' && v.length)
+    .concat([toolInput.file_path, toolInput.filePath, toolInput.path].filter(Boolean));
   for (const f of pathFields) {
     const hit = pathHitsQuarantine(role, f);
     if (hit) {

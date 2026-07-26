@@ -145,9 +145,6 @@ for (const input of [
   { file_path: 'product/fixtures/golden/GX-01/input.csv' },
   { file_path: 'product/fixtures/real/RM-01/input.csv' },
   { file_path: 'docs/architecture/phase2-implementation-plan.md' },
-  { file_path: 'tools/check-evidence.mjs' },
-  { file_path: 'tools/validate.mjs' },
-  { command: 'node tools/check-evidence.mjs' },
 ]) {
   eq(evaluateFileAccess(ENG, input).decision, 'allow',
     `quarantine must NOT block engineer: ${JSON.stringify(input)}`);
@@ -224,6 +221,88 @@ eq(policyFor('brand-new-agent').includes('GIT'), true, 'AC-4: unknown role block
 eq(evaluateFileAccess('brand-new-agent', { file_path: 'tools/fixture-replay.mjs' }).decision,
   'block', 'AC-4: unknown role inherits the quarantine');
 eq(policyFor('verification').includes('FILE'), true, 'known role policy unchanged');
+
+
+// ---- ABSOLUTE-PATH coverage -------------------------------------------------
+// This defect survived two revisions because the suite tested only the form nobody uses.
+// Revision 1 tested exact literal paths; revision 2 tested only RELATIVE paths. Claude
+// Code's Read contract REQUIRES an absolute file_path and subagents are instructed to use
+// absolute paths, so the untested form was the normal one. Every relative case above now
+// has an absolute twin.
+const ABS = '/Users/tomeryannay/Projects/4UR4';
+for (const [rel, note] of [
+  ['tools/fixture-replay.mjs', 'the model'],
+  ['tools', 'Grep over the model dir — the case that defeated revision 2'],
+  ['tools/', 'trailing slash'],
+  ['tools/./fixture-replay.mjs', 'dot segment'],
+  ['tools/Fixture-Replay.mjs', 'case variant'],
+  ['product/fixtures/VERIFICATION.md', 'the evidence log'],
+  ['docs/architecture/phase2-independence-mechanism.md', 'the mechanism doc'],
+]) {
+  eq(evaluateFileAccess(ENG, { file_path: `${ABS}/${rel}` }).decision, 'block',
+    `absolute path blocked: ${note}`);
+  eq(evaluateFileAccess(ENG, { path: `${ABS}/${rel}` }).decision, 'block',
+    `absolute path arg blocked: ${note}`);
+}
+// A different checkout of the same repo is caught too — over-blocking a second copy of
+// the model is the harmless direction.
+eq(evaluateFileAccess(ENG, { file_path: '/private/tmp/other/tools/fixture-replay.mjs' }).decision,
+  'block', 'absolute path in another checkout blocked');
+
+// Absolute forms of the permitted set must STILL work.
+for (const [rel, note] of [
+  ['product/trendline-specification.md', 'the specification'],
+  ['product/human-decisions.md', 'the rulings'],
+  ['product/fixtures/golden/GX-01/expected.json', 'a golden fixture'],
+  ['product/fixtures/real/RM-01/expected-causal.json', 'the RM-01 expectation'],
+  ['docs/architecture/phase2-implementation-plan.md', 'the clean-room plan'],
+  ['engine/detector.mjs', 'the engine itself'],
+]) {
+  eq(evaluateFileAccess(ENG, { file_path: `${ABS}/${rel}` }).decision, 'allow',
+    `absolute path must NOT block: ${note}`);
+}
+eq(evaluateFileAccess(ENG, { path: `${ABS}/product` }).decision, 'allow',
+  'absolute Grep over product/ must not block');
+
+// The `verification` stem must not over-block: it appears 223 times across 50 files, and
+// human-decisions.md is a file QUARANTINE_NOTE tells the author to read INSTEAD.
+for (const [input, note] of [
+  [{ pattern: 'verification', path: 'product/human-decisions.md' }, 'Grep the rulings'],
+  [{ pattern: 'verification' }, 'bare pattern'],
+  [{ pattern: 'self-verification of the window' }, 'phrase'],
+]) {
+  eq(evaluateFileAccess(ENG, input).decision, 'allow', `stem must not over-block: ${note}`);
+}
+eq(quarantineBlock(ENG, 'git commit -m "engine: add verification of window boundaries"'), null,
+  'commit message mentioning verification must not block');
+
+// Unknown field names must fail CLOSED — the earlier comment claimed this while the code
+// enumerated seven field names and let anything else through.
+eq(evaluateFileAccess(ENG, { target: 'tools/fixture-replay.mjs' }).decision, 'block',
+  'unknown field name fails closed');
+eq(evaluateFileAccess(ENG, { source: `${ABS}/tools/fixture-replay.mjs` }).decision, 'block',
+  'unknown field name, absolute, fails closed');
+
+
+// DELIBERATE trade-off, recorded as a test so it is a decision rather than an accident:
+// `tools/` is wholly quarantined, so the engine author may NOT run the evidence tools
+// either. Running them is Verification's job. The cost is small — the author proves the
+// engine against the fixtures, not against tooling — and the benefit is that the whole
+// "bare directory argument to a recursive tool" class dies in one rule.
+eq(quarantineBlock(ENG, 'node tools/check-evidence.mjs') !== null, true,
+  'engineer may not run the evidence tools (tools/ is wholly quarantined)');
+eq(evaluateFileAccess(ENG, { file_path: 'tools/check-evidence.mjs' }).decision, 'block',
+  'engineer may not read the evidence tools either — tools/ is wholly quarantined');
+eq(evaluateFileAccess(ENG, { file_path: 'tools/validate.mjs' }).decision, 'block',
+  'engineer may not read the validator either');
+eq(evaluateFileAccess('verification', { file_path: 'tools/check-evidence.mjs' }).decision, 'allow',
+  'verification reads the evidence tools normally');
+eq(quarantineBlock('verification', 'node tools/check-evidence.mjs'), null,
+  'verification may run the evidence tools');
+eq(quarantineBlock(ENG, 'echo mytools done'), null,
+  'a word merely containing "tools" must not block');
+eq(quarantineBlock(ENG, 'node --test engine/'), null,
+  'running the engine tests must not block');
 
 // ---- report -----------------------------------------------------------------
 if (failures.length === 0) {
