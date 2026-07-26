@@ -484,7 +484,7 @@ in different files:
    provenance.** The Half B artifact must state its own provenance on its face; HD-15
    conditions 1 and 2 remain the only controls on it.
 4. **No [GOV-015](../../governance/build-freeze.md) clearance is granted.** The
-   build-freeze remains **ON** and `autonomous_implementation: DISABLED`.
+   build-freeze remains **ON** and `autonomous_implementation: DISABLED` *(as of that decision; the marker now reads `ENABLED_FOR_SCOPE` with `scope: ["engine/"]` under HD-22 — the freeze stays ON everywhere else)*.
 
 **Non-endorsement, required by SPR-D-01 to appear on the artifacts and not only in the
 register.** The as-of-time record is an **evidentiary conformance expectation, not an

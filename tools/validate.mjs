@@ -53,7 +53,22 @@ const AGENT_STATUSES = ['permanent', 'temporary'];
 const NO_WRITE_CLASSES = new Set(['deterministic']);       // + product-innovation by id
 const RESERVED_PERMANENT_AUTHORITIES = new Set(['merge-and-release', 'evidence-verdict']);
 const PSEUDO_AGENTS = new Set(['human']);
-const PRODUCT_CODE_DIRS = ['src', 'lib', 'app', 'server', 'client', 'packages'];
+// Every directory the freeze is meant to forbid must be NAMED here — the check is a name
+// list, not a heuristic, so an unlisted directory is unguarded no matter what the prose says.
+// The second row is drawn from the surfaces build-freeze.md's own NOT-authorized list names.
+const PRODUCT_CODE_DIRS = [
+  'src', 'lib', 'app', 'server', 'client', 'packages', 'engine',
+  'api', 'services', 'scanner', 'worker', 'dashboard', 'web', 'backend', 'frontend', 'db',
+  'alerts', 'billing', 'providers',
+];
+// INVARIANT: this list and the enumeration in governance/build-freeze.md's scoped-lift
+// section must agree. The reason is a real over-claim, stated accurately: 685b65a's prose
+// said the list "was extended to cover the surfaces the NOT-authorized list above names"
+// while `alerts`, `billing` and provider integration were named as forbidden and left
+// unguarded. (An earlier version of this comment said the two LISTS had drifted in that
+// commit. They had not — both held the same 16 names; the divergence existed only in an
+// uncommitted working tree. The over-claim was real, the drift framing was not.)
+// The parity check below makes any future divergence a build failure, not a discovery.
 
 // ---- parsing helpers --------------------------------------------------------
 const unquote = (s) => s.replace(/^["']|["']$/g, '');
@@ -201,11 +216,71 @@ for (const a of agents) {
 // ---- build-freeze -----------------------------------------------------------
 const freezeFile = join(ROOT, 'governance/build-freeze.md');
 let freezeOn = false;
+let freezeScope = [];
 if (existsSync(freezeFile)) {
   const t = readFileSync(freezeFile, 'utf8');
-  if (!/build_freeze:\s*ON/.test(t)) err('build-freeze.md: expected `build_freeze: ON`');
-  else { freezeOn = true; for (const d of PRODUCT_CODE_DIRS) if (existsSync(join(ROOT, d))) err(`build-freeze ON but product-code dir '${d}/' exists (GOV-015)`); }
+  // Parse the MACHINE-READABLE MARKER ONLY. Scanning the whole file let PROSE satisfy the
+  // gate: the Enforcement paragraph contains the literal string "build_freeze: ON", so
+  // flipping the marker to OFF still passed. The most-cited control in the repository was
+  // therefore never actually enforced. Anchoring to the fenced block fixes that, and fixes
+  // the same class of hole in the `scope:` parse below, which previously took the first
+  // line-initial `scope:` anywhere in the file.
+  const markers = [...t.matchAll(/##[ \t]*Freeze marker[^\r\n]*(?:\r?\n)+```ya?ml\r?\n([\s\S]*?)```/g)];
+  // Exactly one marker, or none of this means anything. First-wins would let an
+  // illustrative block placed ABOVE the real one shadow it, which fails OPEN.
+  let marker = null;   // assigned only on the single-valid-marker path below
+  if (markers.length === 0) {
+    err('build-freeze.md: no machine-readable freeze marker block found'
+      + ' (expected a ```yaml fence under a `## Freeze marker` heading)');
+  } else if (markers.length > 1) {
+    err(`build-freeze.md: ${markers.length} freeze marker blocks found, expected exactly 1 —`
+      + ` a duplicate block would shadow the real marker`);
+  } else if (!/^build_freeze:\s*ON\s*$/m.test(markers[0][1])) {
+    err('build-freeze.md: expected `build_freeze: ON` in the freeze marker block');
+  } else {
+    marker = markers[0][1];
+    freezeOn = true;
+    // A scoped lift is only a scope if it is enumerated. `scope:` in the freeze marker
+    // names the product-code directories the Product Owner has authorized; every other
+    // guarded directory still fails. Deleting an entry re-freezes that directory on the
+    // next CI run, which is what makes the boundary mechanical rather than declaratory.
+    const scopeLine = (marker.match(/^\s*scope:\s*(.+)$/m) || [])[1] || 'null';
+    freezeScope = [...scopeLine.matchAll(/["']([^"']+)["']/g)].map((m) => m[1].replace(/\/+$/, ''));
+    for (const d of PRODUCT_CODE_DIRS) {
+      if (!existsSync(join(ROOT, d))) continue;
+      if (freezeScope.includes(d)) continue;   // authorized by the recorded lift
+      err(`build-freeze ON but product-code dir '${d}/' exists and is not in the recorded`
+        + ` lift scope [${freezeScope.join(', ') || 'none'}] (GOV-015)`);
+    }
+  }
 } else err('missing governance/build-freeze.md');
+
+// ---- freeze-list parity -----------------------------------------------------
+// The prose list in build-freeze.md and PRODUCT_CODE_DIRS are two statements of one fact,
+// and two statements of one fact drift. This makes the drift a build failure rather than
+// something a reviewer has to notice.
+if (existsSync(freezeFile)) {
+  const ft = readFileSync(freezeFile, 'utf8');
+  // Anchored on an explicit marker comment, not on prose wording, and CRLF-tolerant.
+  // The first version keyed on a sentence and was gated behind `if (sec)`, so renaming
+  // the paragraph — or checking out with CRLF — made the check SILENTLY DISAPPEAR. A
+  // drift detector that vanishes when its anchor moves is the failure it exists to catch,
+  // so a missing anchor is now an error rather than a skip.
+  const sec = (ft.match(/<!-- GUARDED-DIRS-LIST[\s\S]*?-->([\s\S]*?)<!--\s*\/GUARDED-DIRS-LIST\s*-->/) || [])[1];
+  if (sec === undefined) {
+    err('build-freeze.md: GUARDED-DIRS-LIST markers not found — the prose/code parity check'
+      + ' cannot run, so the guarded-directory list is unverified');
+  } else {
+    const named = [...sec.matchAll(/`([a-z]+)`/g)].map((m) => m[1]);
+    const codeOnly = PRODUCT_CODE_DIRS.filter((d) => !named.includes(d));
+    const proseOnly = named.filter((d) => !PRODUCT_CODE_DIRS.includes(d));
+    if (codeOnly.length || proseOnly.length) {
+      err('build-freeze.md prose and PRODUCT_CODE_DIRS disagree on guarded directories —'
+        + (proseOnly.length ? ` prose names but code does not guard: ${proseOnly.join(', ')}.` : '')
+        + (codeOnly.length ? ` code guards but prose does not name: ${codeOnly.join(', ')}.` : ''));
+    }
+  }
+}
 
 // ---- required infrastructure ------------------------------------------------
 if (!existsSync(join(ROOT, CI_WORKFLOW))) err(`missing CI workflow: ${CI_WORKFLOW}`);
@@ -236,7 +311,11 @@ console.log(`Canonical dir: ${AGENTS_DIR}/`);
 console.log(`Agents:        ${permanent.length} permanent (/${MAX_PERMANENT_AGENTS}), ${temporary.length} temporary`);
 console.log(`Classes:       ${classCounts}`);
 console.log(`Gov rules:     ${govIds.size} defined, ${registryIds.size} in registry`);
-console.log(`Build-freeze:  ${freezeOn ? 'ON (autonomous implementation disabled)' : 'UNKNOWN'}`);
+console.log(`Build-freeze:  ${freezeOn
+  ? (freezeScope.length
+    ? `ON — lifted scope: ${freezeScope.map((d) => `${d}/`).join(', ')} (all other product dirs frozen)`
+    : 'ON (autonomous implementation disabled)')
+  : 'UNKNOWN'}`);
 console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present' : 'MISSING'}`);
 console.log(`Bash hook:     ${hookOk ? 'configured (PreToolUse → bash-guard.mjs)' : 'MISSING/INVALID'}`);
 console.log('─'.repeat(58));
