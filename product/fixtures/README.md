@@ -308,7 +308,10 @@ GX-21/GX-22/GX-23: **23 fixtures, 20 geometry + 3 null-anchor**.
 > **HD-21** delegation ([#27](https://github.com/tomerYannay/4UR4/issues/27)) on the
 > evidence of [#26](https://github.com/tomerYannay/4UR4/issues/26), marked
 > `DELEGATED_PRODUCT_DECISION_APPROVED`, and **CONFIRMED against all ten delegation
-> conditions by the Project Auditor at `5b99ba6`**. It is **not** a Product Owner ruling
+> conditions by the Project Auditor at `5b99ba6`** *(Relayed, not
+> independently authored — see the provenance note in
+> [`../human-decisions.md`](../human-decisions.md) → SPR-D-01: role-level independence,
+> not organizational, pending [#21](https://github.com/tomerYannay/4UR4/issues/21).)*. It is **not** a Product Owner ruling
 > and must not be read as one, and the Product Owner may overturn it at any time without
 > cause.
 >
@@ -441,7 +444,7 @@ requirements — an **A-clause** asserting the full-series geometry above (`B* =
 exported pure §8 selector and **explicitly not** on pipeline output, since a §21-conforming
 detector never reaches bar 25; and a **B-clause** asserting the causal record above
 (`line_at_stop` with `B* = (9, 158.40)`, `m = -0.0505453`, `b = 5.52003`, line `150.593`,
-close `164.19`, margin `0.0864461`). RM-01 **remains part of that gate** under the Product
+close `164.19`, margin `0.0864461` *(raw clearance `ln(close) − ŷ`; the reference model's `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`)*). RM-01 **remains part of that gate** under the Product
 Owner ruling of 2026-07-26, which is untouched.
 
 Four limits travel with that answer, and this file states them because it is where the

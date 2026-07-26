@@ -620,8 +620,11 @@ and it should be stated in the evidence log rather than discovered later.
 > [register](../../product/human-decisions.md) → *Delegated product decisions (HD-21)*
 > for *what was decided*.
 >
-> **What changed.** The divergence is **confirmed, not tentative** ("appears to" in the
-> heading is stale). HD-20 is **RESOLVED** — by **SPR-D-01**, a **delegated** decision of
+> **What changed.** The divergence is **confirmed, not tentative** — "appears to" in the
+> heading above is stale, and the heading is **retained unedited on purpose**, because
+> section headings are cited by anchor elsewhere and rewriting one silently breaks those
+> links. Read the heading as the question that was asked, not as the answer. HD-20 is
+> **RESOLVED** — by **SPR-D-01**, a **delegated** decision of
 > the Strategic Product Reviewer under HD-21, **not** a Product Owner ruling, and
 > overturnable by the Product Owner at any time without cause. RM-01 carries **both**
 > layers, neither superseding the other.
@@ -781,7 +784,7 @@ this plan proposes no change to any of them.
 
 | ID | Question | Proposed default | Product-definition change? |
 |---|---|---|---|
-| **OQ-A** | RM-01's as-of-time expectation vs its approved full-series record (§7.3) | **escalate; do not choose.** Keep Half A in the gate; have Half B re-derived by a non-author and ruled | **Yes — Product Owner.** RM-01's approval and its gate placement are both rulings |
+| **OQ-A** — ~~open~~ **CLOSED 2026-07-26** | RM-01's as-of-time expectation vs its approved full-series record (§7.3) | ~~escalate; do not choose~~ → **ANSWERED by SPR-D-01**: both halves are carried, neither superseding the other; Half A gated at unit level on an exported pure §8 selector, Half B within Phase-2-owned behaviour only. Its `expected-causal.json` artifact is **still owed** | **Resolved by DELEGATION, not by the Product Owner** — decided by the Strategic Product Reviewer under HD-21, Auditor-confirmed at `5b99ba6`, and **overturnable by the Product Owner at any time without cause** |
 | **OQ-B** | 6-significant-figure rounding mode at an exact tie | `ROUND_HALF_EVEN` on the exact binary value; **plus** the C-4 audit asserting no fixture value is within 1 ulp of a tie. If C-4 ever hits, escalate rather than pick | No, unless C-4 hits |
 | **OQ-C** | GX-14's tie depends on `log()` rounding, which IEEE 754 does not fix | gating preflight assertion that **fails loudly** on a platform where the identity does not hold; pin the CI platform and record it in the evidence log. **Never skip** | No |
 | **OQ-D** | §18 guards reject the whole bar-set, which is not causal | keep as specified and as the fixtures record; confine to a pre-pass that can only produce a whole-series rejection; document it as the one non-causal element; carry P-2's positive control so the exemption cannot hide a defect | No |
@@ -817,7 +820,10 @@ It does not build, scaffold, or configure anything; it does not lift or narrow
 [`trendline-specification.md`](../../product/trendline-specification.md) or any
 governance file; it takes no Product Owner decision and marks no ticket Done. Four
 items in §9.2 (OQ-A, OQ-E, OQ-F, OQ-J) are flagged to the Orchestrator for
-escalation rather than absorbed (GOV-007), and **OQ-A blocks S0**.
+escalation rather than absorbed (GOV-007). **OQ-A no longer blocks S0** — it was closed on
+2026-07-26 by SPR-D-01 under the HD-21 delegation (§9.2). *(This sentence read "**OQ-A
+blocks S0**" while the S0 row already recorded it as satisfied; one side had been updated
+and not the other.)* **OQ-E, OQ-F and OQ-J remain open and still gate S0.**
 
 ---
 

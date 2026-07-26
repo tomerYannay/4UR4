@@ -5,7 +5,8 @@
 // and tools/fixture-replay.mjs). Not product code: it reads repository artifacts
 // and asserts they are internally consistent.
 //
-//   1. Every product/fixtures/golden/GX-*/expected.json validates against
+//   1. The golden fixture set is exactly GX-01..GX-23 (exact ID list, not just a count),
+//      every product/fixtures/golden/GX-*/expected.json validates against
 //      product/fixtures/schema/fixture.schema.json, and the RM-01 annotation
 //      against real-annotation.schema.json.
 //   2. Every relative CROSS-FILE markdown link resolves — target file AND #anchor.
@@ -58,14 +59,27 @@ const ids = readdirSync(join(ROOT, 'product/fixtures/golden')).filter((d) => /^G
 // The census must be ASSERTED, not merely printed — the same argument the TABLE_FLOOR
 // below carries, applied to the gate it gates. Renaming GX-01 to GX-01.bak would
 // otherwise print "PASS — 22 golden fixtures" and exit 0, and emptying the directory
-// would print "PASS — 0". The count is exact rather than a floor because it is asserted
-// verbatim in five documents; a deliberate change to the fixture set must update them
-// together, which is exactly the coupling this line exists to force.
-const EXPECTED_FIXTURES = 23;
-if (ids.length !== EXPECTED_FIXTURES) {
-  errs.push(`FIXTURE CENSUS FAILED — found ${ids.length} golden fixtures, expected exactly`
-    + ` ${EXPECTED_FIXTURES} (GX-01…GX-23). Either fixtures were added/removed/renamed without`
-    + ` updating this count and the five documents that state it, or the directory scan broke.`);
+// would print "PASS — 0".
+//
+// The assertion is on the exact ID LIST, not merely the count: asserting the count alone
+// would accept renaming GX-07 to GX-24, which changes the set every document names while
+// leaving the total intact.
+//
+// Why exact rather than a floor: the set is named across the documentation — some sites
+// spell it "23 golden fixtures", others "GX-01..GX-23" or "23 / 23" — so a deliberate
+// change must update them together, and that coupling is what this line exists to force.
+// No count of those sites is hard-coded here on purpose: a hand-typed tally inside a
+// check that exists to replace hand-typed tallies is the same defect one level up.
+const EXPECTED_FIXTURE_IDS = Array.from({ length: 23 }, (_, i) => `GX-${String(i + 1).padStart(2, '0')}`);
+if (JSON.stringify(ids) !== JSON.stringify(EXPECTED_FIXTURE_IDS)) {
+  const missing = EXPECTED_FIXTURE_IDS.filter((x) => !ids.includes(x));
+  const extra = ids.filter((x) => !EXPECTED_FIXTURE_IDS.includes(x));
+  errs.push(`FIXTURE CENSUS FAILED — golden set is ${ids.length} dir(s), expected exactly`
+    + ` ${EXPECTED_FIXTURE_IDS.length} (GX-01…GX-23).`
+    + (missing.length ? ` Missing: ${missing.join(', ')}.` : '')
+    + (extra.length ? ` Unexpected: ${extra.join(', ')}.` : '')
+    + ` Either the fixture set changed without updating this list and the documents that`
+    + ` name it, or the directory scan broke.`);
 }
 for (const id of ids) chk(JSON.parse(readFileSync(join(ROOT, `product/fixtures/golden/${id}/expected.json`), 'utf8')), schema, '', id);
 

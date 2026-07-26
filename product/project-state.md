@@ -233,13 +233,16 @@ provider, or authorizes spend or licensing.**
   **Approved under bounded Product Owner delegation; not direct Product Owner authorship.**
   Decided by the Strategic Product Reviewer under HD-21 on the evidence of
   [#26](https://github.com/tomerYannay/4UR4/issues/26), and **CONFIRMED against all ten
-  conditions by the Project Auditor at `5b99ba6`** (the first audit returned **NOT
+  conditions by the Project Auditor at `5b99ba6`** *(Relayed, not independently
+  authored — see the provenance note in [`human-decisions.md`](human-decisions.md) →
+  SPR-D-01: role-level independence, not organizational, pending
+  [#21](https://github.com/tomerYannay/4UR4/issues/21).)* (the first audit returned **NOT
   CONFIRMED** at `0b23f91`, because the decision existed only in a session transcript while
   the register still read `PENDING`). RM-01 now carries **two records, neither superseding
   the other**: **Half A**, the full-series geometry, retained **verbatim** and gated at
   **unit level** on an exported pure §8 function — explicitly **not** on pipeline output;
   and **Half B**, the as-of-time record (engine-derived stop at **bar 10**, `line_at_stop`
-  `B* = (9, 158.40)`, `m = -0.0505453`, line `150.593`, close `164.19`, margin `0.0864461`),
+  `B* = (9, 158.40)`, `m = -0.0505453`, line `150.593`, close `164.19`, margin `0.0864461` *(raw clearance `ln(close) − ŷ`; the reference model's `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`)*),
   gated **within Phase-2-owned behaviour only** — asserting `line_at_stop`, **not** `Λ^F`,
   and **no** `BROKEN_OUT` state and **no** `BREAKOUT_CONFIRMED` reason code, which remain
   Phase 3's. **Half B narrows RM-01's Phase-2 assertable surface** to bars **0–9** plus the

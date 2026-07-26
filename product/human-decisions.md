@@ -903,9 +903,12 @@ confirmation remains mandatory before financial authorization.**
   sits at **150.593**; the close of **164.19** clears it by **0.0864461** log units (≈9%).
   Re-derived by **five separate agent sessions** — Phase 2 planner, orchestrating session,
   Strategic Product Reviewer, Verification and Code Review — agreeing to six significant
-  figures. *Stated precisely, because the stronger verb would be false: these are
+  figures. *Stated precisely, because the stronger verb would be false: these are largely
   **correlated re-runs of the same arithmetic over the same committed CSV**, not five
-  independent instruments, and the second through fifth add little over the first.*
+  independent instruments. **One is not a re-run:** the Code Review derivation of
+  2026-07-26 came from a **separate implementation written from the specification text
+  alone**, and it is that check — not the count — that establishes the numbers are not an
+  artifact of one model.*
   *(`0.0864461` is the raw clearance `ln(close) − ŷ`. The reference model's own
   `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`; both
   are correct about different things, and an unqualified "margin" has two readings.)*
@@ -1082,12 +1085,16 @@ conditions (condition 10) before it stands.
 
   > **Provenance of the condition-10 confirmation — disclosed to the same standard this
   > register applies to HD-12/13/14.** The confirmation reached this register as a
-  > **session relay**. **No citable artifact exists** — it is not on
-  > [#27](https://github.com/tomerYannay/4UR4/issues/27), not on
-  > [#26](https://github.com/tomerYannay/4UR4/issues/26), not on
-  > [PR #25](https://github.com/tomerYannay/4UR4/pull/25), and no audit report is
-  > committed — **because [#21](https://github.com/tomerYannay/4UR4/issues/21) is
-  > unresolved**; that is precisely the defect #21 records. The auditor ran **inside the
+  > **session relay**. **No artifact authored by the auditor exists.** The verdict *is*
+  > posted — on [#26](https://github.com/tomerYannay/4UR4/issues/26)
+  > (2026-07-26) and on [PR #25](https://github.com/tomerYannay/4UR4/pull/25) — but every
+  > one of those postings is a **same-account relay written by the deciding session**, not
+  > by the auditor, and no audit report is committed. That gap is **because
+  > [#21](https://github.com/tomerYannay/4UR4/issues/21) is unresolved**; it is precisely
+  > the defect #21 records. *(An earlier revision of this note said the confirmation was
+  > "not on #26" and "not on PR #25". That was **false** — it is on both. The true claim
+  > is narrower and is the one that matters: relayed, not independently authored.)* The
+  > auditor ran **inside the
   > same autonomous session and under the same single GitHub account** as the decision it
   > audited, so its independence is **role-level (a different, read-only agent that did
   > not produce the work), not organizational**. The verdict is not weakened by saying
@@ -1107,7 +1114,12 @@ unreopened**.
 **Half B — as-of-time / causal, newly recorded, gated within Phase-2-owned behaviour.**
 Stop at bar 10 (2026-06-29). Line at stop: `A = (2, 225.64)`, `B* = (9, 2026-06-26,
 158.40)`, `m = −0.0505453`, `b = 5.52003`; line value `150.593`; close `164.19`; margin
-`0.0864461` log units. Pre-stop trace: `t_form = 8` with `B* = (3, 213.7999)`,
+`0.0864461` log units — **the raw clearance `ln(close) − ŷ`**. *Naming the convention is
+load-bearing for the gate: `tools/fixture-replay.mjs` assigns its own `events[].margin`
+field the value `0.0764461`, the same quantity **net of `ε_break`**. An engine asserting
+`margin == 0.0864461` against that field fails by exactly `0.01`. The §6.2 `causal_record`
+field-list agreement is still owed, so this ambiguity is live, not historical.*
+Pre-stop trace: `t_form = 8` with `B* = (3, 213.7999)`,
 `m = −0.0539003`; bar 9 `INVALID_PIERCE` + `WICK_BREAK` re-selecting `B* → (9, 158.40)`
 effective bar 10 (§21.6).
 
@@ -1208,9 +1220,14 @@ rather than tested.
 
 ### Evidence
 
-Independently re-derived from `product/fixtures/real/RM-01/input.csv` by the decider, and
-by **five** parties agreeing to six significant figures: Phase 2 planner, orchestrating
-session, Strategic Product Reviewer, Verification and Code Review. *(The **Project
+Re-derived from `product/fixtures/real/RM-01/input.csv` by the decider, and by **five**
+parties agreeing to six significant figures: Phase 2 planner, orchestrating session,
+Strategic Product Reviewer, Verification and Code Review. *Stated precisely, because the
+stronger verb would be false: those five are **correlated re-runs of the same arithmetic
+over the same committed CSV, not five independent instruments**. The exception is worth
+naming — the **Code Review** derivation of 2026-07-26 was produced from a **separate
+implementation written from the specification text alone**, which is the one genuinely
+independent check in the set and is what the corroboration actually rests on.* *(The **Project
 Auditor** also re-derived it, at `5b99ba6`, as **post-hoc verification of this record** —
 deliberately **not** counted among the corroborating derivations. An auditor named as
 evidence for the decision it audits is an auditor with something to defend.)*
@@ -1250,8 +1267,14 @@ party other than the prospective Phase 2 engine author) · `fixtures/schema/real
 `fixtures/real/RM-01/README.md` · `fixtures/README.md` §6b · `roadmap.md` Phase 2 exit gate
 (`UNDER REVIEW` lifted; A-clause and B-clause stated) ·
 `docs/architecture/phase2-implementation-plan.md` §6.1, §7.2, §7.3, §8 S0 ·
-`tools/check-evidence.mjs` and `tools/fixture-replay.mjs` extended to cover `real/` ·
-**the 23 golden fixtures unchanged** · `project-state.md` (Product Steward).
+`tools/check-evidence.mjs` and `tools/fixture-replay.mjs` extended to cover `real/`
+(**OWED — not yet done**; as of this entry `fixture-replay.mjs` still derives its fixture
+list from `golden/` alone and `check-evidence.mjs` only schema-validates RM-01's
+annotation) · **the 23 golden fixtures unchanged** · `project-state.md` (Product Steward).
+
+*This list is a **change surface**, mixing delivered and owed items. The two owed ones are
+marked **(new)** and **(OWED)** above so that nothing here has to be read against a
+neighbouring document to tell which is which.*
 
 **Four records are RETAINED, not deleted** — HD-21 permits adding to or superseding a
 record, never removing one, and each of these is the kind a well-meaning tidy-up would
