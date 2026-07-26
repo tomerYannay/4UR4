@@ -623,8 +623,9 @@ export function compareReal(fx) {
   const ib = e.input_binding;
   if (!ib || !ib.input_csv_sha256) {
     diffs.push('input_binding.input_csv_sha256 is REQUIRED — without it there are edits to bars'
-      + ' after the stop index that change no asserted value at all (halving a post-stop close is'
-      + ' invisible to every field this document asserts) and would go undetected');
+      + ' after the stop index that change no asserted value at all (moving a post-stop close to'
+      + ' anywhere within its own [low, high] is invisible to every field this document asserts)'
+      + ' and would go undetected');
   } else {
     const actual = createHash('sha256')
       .update(readFileSync(join(fx.dir, ib.input_csv || 'input.csv'))).digest('hex');
