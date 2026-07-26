@@ -269,7 +269,7 @@ acquired now** (build-freeze + human-gated provider selection, HD-06/HD-07).
 | Layer | Count | Status | Location |
 |-------|-------|--------|----------|
 | **Synthetic golden fixtures** | **23** (20 geometry + 3 null-anchor) | complete; the **entire set re-derived as-of-time (HD-12) and re-verified** by `tools/fixture-replay.mjs` — 23/23 reproduce exactly, with the §21.4 hull lemma checked against the §8 brute force at every evaluable prefix, prefix-truncation invariance, frozen-line invariants, formation-gate regressions and an `eps_break` robustness sweep (see `VERIFICATION.md`) | `golden/GX-01 … GX-23` |
-| **Real-market fixtures** | **1 (RM-01)** | **verified from licensed OHLCV; SC-1 = MATCH; Product Owner approval `approved` (2026-07-25)** (`status: verified`) | `real/RM-01/` |
+| **Real-market fixtures** | **1 (RM-01)** | **verified from licensed OHLCV; SC-1 = MATCH; Product Owner approval `approved` (2026-07-25)** (`status: verified`) — the as-of-time divergence in its breakout expectation, escalated as HD-20, is **RESOLVED** by **SPR-D-01** (§6b): RM-01 carries **both** analytical layers, full-series and as-of-time, neither superseding the other | `real/RM-01/` |
 
 The two layers are complementary and must not be conflated: the **synthetic** set pins the
 deterministic arithmetic (spec-derived expected values), while the **real-market** set is the
@@ -277,7 +277,10 @@ independent, non-circular ground truth (real charts + licensed OHLCV). **RM-01**
 Product Owner's original SPCX chart — immutable chart image + immutable Alpha Vantage OHLCV
 source, with geometry **independently recomputed** from real data: **SC-1 resolves as MATCH**
 (2026-07-21 is the upper-log-hull canonical anchor; 0 envelope violations; no breakout through
-2026-07-24). **SC-2** (the anchor is not a `k=3` pivot) is now **RESOLVED by the Product
+2026-07-24). **Those three results are `full-series` statements**, and they are retained
+verbatim; the breakout one diverges under as-of-time evaluation — see **§6b**, which
+discloses the divergence and records its resolution (**SPR-D-01**: both layers are carried,
+each explicitly scoped). **SC-2** (the anchor is not a `k=3` pivot) is now **RESOLVED by the Product
 Owner decision 2026-07-25**: the upper-log-hull over **all** highs is canonical and the pivot
 prefilter is non-authoritative (spec §5/§6/§8, D-TL-05); the synthetic proofs are **GX-19**
 (a non-pivot bar is the canonical anchor) and **GX-08** (a series with **no** pivots at all
@@ -293,8 +296,202 @@ The process is in [`real-market-plan.md`](real-market-plan.md). The synthetic ca
 was last changed on 2026-07-25 by the Issue #16 as-of-time (HD-12) audit, which re-derived
 every fixture causally, redesigned the tolerance-fragile constructions per HD-13, replaced
 the defective GX-20 construction and added the D-TL-12 / HD-14 formation-gate regressions
-GX-21/GX-22/GX-23: **23 fixtures, 20 geometry + 3 null-anchor**. RM-01 itself is untouched
-by that audit — its approved anchor and its SC-1 = MATCH result are unaffected.
+GX-21/GX-22/GX-23: **23 fixtures, 20 geometry + 3 null-anchor**.
+
+## 6b. RM-01 under as-of-time evaluation — RESOLVED by SPR-D-01 (HD-20 closed)
+
+> **Status: RESOLVED, 2026-07-26.** The divergence disclosed in this section was escalated
+> as **HD-20** and is closed by
+> [**SPR-D-01**](../human-decisions.md) — *Delegated product decisions (HD-21)*, the
+> authoritative record. **Approved under bounded Product Owner delegation; not direct
+> Product Owner authorship**: decided by the **Strategic Product Reviewer** under the
+> **HD-21** delegation ([#27](https://github.com/tomerYannay/4UR4/issues/27)) on the
+> evidence of [#26](https://github.com/tomerYannay/4UR4/issues/26), marked
+> `DELEGATED_PRODUCT_DECISION_APPROVED`, and **CONFIRMED against all ten delegation
+> conditions by the Project Auditor at `5b99ba6`** *(Relayed, not
+> independently authored — see the provenance note in
+> [`../human-decisions.md`](../human-decisions.md) → SPR-D-01: role-level independence,
+> not organizational, pending [#21](https://github.com/tomerYannay/4UR4/issues/21).)*. It is **not** a Product Owner ruling
+> and must not be read as one, and the Product Owner may overturn it at any time without
+> cause.
+>
+> **The resolution: RM-01 carries two records, explicitly scoped, neither superseding the
+> other.** **Half A** — the full-series geometry below — is retained **verbatim** and is
+> asserted at **unit level** on an exported, pure §8 selector, **not** on pipeline output.
+> **Half B** — the as-of-time record below — is newly gated, **within Phase-2-owned
+> behaviour only**. The evidence, the derivation, the sweep table and the 2026-07-26
+> correction block in this section are **unchanged by the resolution** and are retained
+> below exactly as they stood; what changes is only that the question they raised now has
+> an answer. The gate wording is in [`../roadmap.md`](../roadmap.md), Phase 2 exit criteria.
+
+**RM-01 was never replayed causally.** The 2026-07-25 as-of-time (HD-12) audit re-derived
+the whole **synthetic** set; it did not re-derive RM-01. An earlier revision of §6a
+recorded that RM-01 *"itself is untouched by that audit — its approved anchor and its
+SC-1 = MATCH result are unaffected."* That is true of the anchor and of SC-1 **as
+full-series statements**, and misleading as a whole in a file whose §2 declares as-of-time
+evaluation **binding on every expected value** (§21 / HD-12 / D-TL-11): RM-01's **breakout
+expectation** is *not* unaffected. This section replaces that sentence.
+
+**What remains true, and is not disturbed by this section:**
+
+- The approved ATH anchor `A = (t=2, 2026-06-16, 225.64)` — unaffected.
+- **SC-1 = MATCH** — unaffected *as the full-series statement it is*: over the complete
+  29-bar series the upper-log-hull second anchor is `B* = (t=25, 2026-07-21, 129.88)`,
+  slope `-0.0240143`, intercept `5.46697`, 0 envelope violations, and **no close ever
+  exceeds that line**.
+- **SC-2**, resolved by the Product Owner on 2026-07-25 (HD-11) — unaffected.
+- The Product Owner's approval of the RM-01 *result* (2026-07-25) — unaffected and **not
+  reopened here**; nothing below withdraws, amends or reinterprets it.
+- The **source evidence** under `real/RM-01/` is unchanged: `source-chart.png` and
+  `alphavantage-source.json` are the artifacts the schema marks `immutable: true`, and
+  `input.csv` is a mechanical re-encoding of the latter. `README.md` and
+  `annotation.json` in that directory are prose and a machine-validated record — **not**
+  source evidence, and editable. `annotation.json`'s **values are nonetheless unchanged**
+  — before the ruling because `confirmed_bar: null` was the subject of HD-20, and after it
+  because **SPR-D-01 leaves them unchanged by decision**: `confirmed_bar: null` is retained
+  as the **full-series** statement it always was, and the as-of-time record is carried in a
+  separate artifact rather than by overwriting this one.
+- **Four records are RETAINED, not deleted or rewritten**, because HD-21 permits adding to
+  or superseding a record and never removing one, and each is what a well-meaning tidy-up
+  would take: (1) `annotation.json`'s `expected_regions.breakout.note` — *"No confirmed
+  breakout through 2026-07-24"*, which is qualified additively elsewhere and not rewritten;
+  (2) the visual-checklist item *"Breakout bar classification matches the PO's expectation
+  → pass"* in [`real/RM-01/README.md`](real/RM-01/README.md) §5, which is the Product
+  Owner's own reading; (3) `product_owner_approval: "approved"`; and (4) the **Product
+  Steward's contrary assessment** in [`../roadmap.md`](../roadmap.md), the record of the
+  strongest argument against the structure that was adopted.
+
+**What is now known to diverge.** Replayed **as-of-time** from the same committed
+`real/RM-01/input.csv`, each bar judged against `Λ_t` (the line built from bars strictly
+earlier than it), with the documented `min_formation_bars = 8`, `min_ath_age_bars = 3`,
+`eps = 0.02`, illustrative `eps_break = 0.01`:
+
+| bar | date | as-of-time line `Λ_t(t)` | close | as-of-time result |
+|----:|------|-------------------------:|------:|-------------------|
+| 8 | 2026-06-25 | 163.2919 | 153.00 | formation completes; `A = (2, 225.64)`, `B* = (3, 213.7999)` |
+| 9 | 2026-06-26 | 154.7234 | 153.23 | `WICK_BREAK` — the 158.40 high pierces; `B*` re-selects to `(9, 158.40)`, effective bar 10 (§21.6) |
+| **10** | **2026-06-29** | **150.593** | **164.19** | **BREAKOUT — the close clears the line by `0.0864461` log units** |
+
+So RM-01 produces a **confirmed breakout at bar 10 (2026-06-29)** under as-of-time
+evaluation, where its approved record states `confirmed_bar: null`. This was derived
+by **five separate agent sessions** — Phase-2 planning, an orchestrating session, the
+Strategic Product Reviewer, Verification and Code Review — agreeing to **six significant
+figures**. *Stated precisely: three of the five — the Phase 2 planner, the
+orchestrating session and the Strategic Product Reviewer — are **correlated re-runs of
+the same arithmetic over the same committed CSV**, not independent instruments. **Two
+are not:** **Verification** and **Code Review** each wrote their **own replay from the
+specification text, with no reference to the repository's harness**, and agreed to six
+significant figures. It is those two, not the count of five, that establish the numbers
+are not an artifact of a single model.*
+
+**Both records are arithmetically correct, about different objects.** The approved record
+is the **full-series** hull, computed once over all 29 bars. The as-of-time record is the
+**causal** line `Λ_t`, which at bar 10 is bound at `(9, 158.40)` — bar 9's wick-break
+re-selected it (§21.6) and bar 25 does not yet exist. **§21.4's non-normative corollary
+predicts exactly this case:** with the same anchor in force the causal line lies at or
+below the full-series line, so an as-of-time breakout *"may exist where the full-series
+calculation reports none."* Neither computation is an error; they answer different
+questions, and only one of them is the question §2 of this file says every expected value
+must answer.
+
+**Tolerance cannot suppress it — but one documented parameter can, and that is material
+to HD-20.** Suppressing the bar-10 breakout by tolerance would require
+`eps_break >= 0.0864461`, roughly **8.6x** the documented illustrative `0.01` — and
+**HD-13 forbids resolving a fixture outcome by tolerance** in any case.
+
+> **Correction, 2026-07-26.** An earlier revision of this section said *"delaying formation
+> makes the margin **larger**, not smaller"* and *"no parameter setting available under the
+> current specification removes this breakout."* **Both were wrong**, and the first
+> inverted the lemma it cited: §21.4 says the causal line only ever **shallows**, and
+> shallower means **higher**, so a later formation judges the close against a higher line
+> and the margin **shrinks**. Swept over `min_formation_bars` (a first-class, named,
+> versioned, backtestable parameter under D-TL-12 / HD-14, so squarely "available under
+> the current specification"):
+>
+> | `min_formation_bars` | first breakout | margin |
+> |---|---|---|
+> | 8 (default), 9, 10 | bar 10 | `0.0864461` |
+> | 11 | bar 11 | `0.0660743` — *smaller* |
+> | **12 – 20** | **none** | **—** |
+>
+> At 12, `B*` walks (11, 172.4) → (12, 171.74) → (14, 167.895) → (25, 129.88) and no close
+> ever clears the line. Caught by the Code Reviewer and by Verification independently.
+> **Disclosed rather than denied:** it makes HD-20's "change the rule" option a *parameter*
+> change rather than a new rule, which the Product Owner was told the opposite of and has
+> since been corrected on the artifact. It remains a setting fitted to a single 29-bar
+> sample, which is the argument against it — but that is the Product Owner's call, not a
+> reason to state the constraint too strongly here.
+
+The envelope tolerance `eps` is irrelevant to it: a breakout is a close-versus-line test,
+not an envelope test.
+
+**The structural cause — a gap in the evidence system, not a one-off incident.** **No
+mechanical guard has ever covered RM-01.** `tools/check-evidence.mjs` only
+**schema-validates** `real/RM-01/annotation.json` against
+[`schema/real-annotation.schema.json`](schema/real-annotation.schema.json); it checks no
+geometry. `tools/fixture-replay.mjs` **does not replay RM-01 at all** — it derives its
+fixture list from `golden/` and never reads `real/`. The real-market layer, which §6 names
+as the **only** non-circular evidence in the corpus, has therefore always been checked
+*less* than the synthetic layer it exists to keep honest. That is why this survived the
+2026-07-25 audit, and it is recorded here so the next audit does not inherit the same
+blind spot.
+
+**Status: RESOLVED — the answer, and the four limits on it.** The underlying question —
+which record RM-01 should carry, and what the Phase 2 gate should require of it — was
+escalated as **HD-20** and is answered by **SPR-D-01** (record:
+[`../human-decisions.md`](../human-decisions.md), *Delegated product decisions (HD-21)*;
+**approved under bounded Product Owner delegation, not direct Product Owner authorship**).
+**Both layers are carried.** In the Phase 2 exit gate of [`../roadmap.md`](../roadmap.md)
+the `UNDER REVIEW — pending HD-20` marking is **lifted** and replaced by two **conjunctive**
+requirements — an **A-clause** asserting the full-series geometry above (`B* = (25, 129.88)`,
+`m = -0.0240143`, `b = 5.46697`, 0 envelope violations, 6 s.f.) at **unit level** on an
+exported pure §8 selector and **explicitly not** on pipeline output, since a §21-conforming
+detector never reaches bar 25; and a **B-clause** asserting the causal record above
+(`line_at_stop` with `B* = (9, 158.40)`, `m = -0.0505453`, `b = 5.52003`, line `150.593`,
+close `164.19`, margin `0.0864461` *(raw clearance `ln(close) − ŷ`; the reference model's `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`)*). RM-01 **remains part of that gate** under the Product
+Owner ruling of 2026-07-26, which is untouched.
+
+The scope limits travel with that answer, and this file states them because it is where
+the evidence lives. **They are numbered 1, 1b, 2, 3, 4 to match
+[`../human-decisions.md`](../human-decisions.md), which is authoritative** — this list
+previously renumbered them 1–4, which made "limit 3" and "limit 4" name different things
+in different files:
+
+1. **"Gated end-to-end" means within Phase-2-owned behaviour only.** Phase 3 owns confirmed
+   breakout, retest, failure and expiry, by Product Owner ruling. The B-clause therefore
+   asserts **`line_at_stop`, not `Λ^F`**, and asserts **no `BROKEN_OUT` state and no
+   `BREAKOUT_CONFIRMED` reason code**.
+- **1b. The stop index must be engine-derived, not fixture-supplied.** If the harness may
+  hand the engine the bar-10 stop, the B-clause asserts nothing about the engine's own
+  detection — which is the whole point of gating it.
+2. **Half B *narrows* RM-01's Phase-2 assertable surface.** Under Half A alone
+   (`confirmed_bar == null`) RM-01's complete final state and full reason-code set were
+   Phase-2 assertable; under Half B, transitions are assertable only at **bars 0–9** plus
+   correct identification of the stop index. **"The gate is strengthened" is true of the
+   gate as a whole — RM-01 goes from no mechanical guard at all to a comparison contract —
+   and false of RM-01's own Phase-2 assertable surface.** Both sentences are required.
+3. **Circularity limit.** If the Half B expectation is generated by
+   `../../tools/fixture-replay.mjs` it is **model-derived**, and is then a **regression
+   guard against today's model, not an independent correctness check**: it closes the
+   *absence* of a guard identified in the paragraph above, not the absence of independent
+   verification. **RM-01's non-circularity — the property §6 relies on it for — attaches to
+   Half A's human-approved geometry and to the real, undesigned prices, not to Half B's
+   provenance.** The Half B artifact must state its own provenance on its face; HD-15
+   conditions 1 and 2 remain the only controls on it.
+4. **No [GOV-015](../../governance/build-freeze.md) clearance is granted.** The
+   build-freeze remains **ON** and `autonomous_implementation: DISABLED`.
+
+**Non-endorsement, required by SPR-D-01 to appear on the artifacts and not only in the
+register.** The as-of-time record is an **evidentiary conformance expectation, not an
+economic endorsement**. 4UR4 does **not** assert that the bar-10 signal is a good trade. It
+exemplifies a **short-history / post-IPO candidate false-positive class**, and whether that
+class should be suppressed is an **open Phase 4 backtest question**, deliberately left
+unanswered. The `min_formation_bars → 12` option in the correction block above was rejected
+for that reason: it is a threshold fitted to a single 29-bar series, and the 8-vs-12
+question is left decidable later on population evidence.
+
+**Nothing here lifts [GOV-015](../../governance/build-freeze.md)**, which remains **ON**,
+and the golden fixtures are unchanged — no re-derivation follows from this resolution.
 
 ## 7. Files
 

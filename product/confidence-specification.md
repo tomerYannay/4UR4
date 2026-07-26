@@ -331,8 +331,11 @@ prediction under v1.
 
 ## 11. Evidence plan (what Verification will check post-freeze)
 
-Deterministic fixtures a later, build-lifted ticket MUST produce (paralleling the
-trendline golden examples GX-01…GX-12):
+Deterministic fixtures a later, build-lifted ticket MUST produce, paralleling the
+trendline golden examples in
+[`fixtures/golden/`](fixtures/golden/) — currently **GX-01…GX-23** plus the
+real-market **RM-01**, enumerated by directory rather than by a typed list so that
+adding a fixture tightens this reference instead of silently leaving it behind:
 
 - **CF-EV-01:** the §2.2 worked example reproduced exactly → `score = 77`
   (revised HD-03/HD-05 component set C1–C8), with each component contribution

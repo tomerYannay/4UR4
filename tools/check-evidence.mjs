@@ -5,10 +5,16 @@
 // and tools/fixture-replay.mjs). Not product code: it reads repository artifacts
 // and asserts they are internally consistent.
 //
-//   1. Every product/fixtures/golden/GX-*/expected.json validates against
+//   1. The golden fixture set is exactly GX-01..GX-23 (exact ID list, not just a count),
+//      every product/fixtures/golden/GX-*/expected.json validates against
 //      product/fixtures/schema/fixture.schema.json, and the RM-01 annotation
 //      against real-annotation.schema.json.
-//   2. Every relative markdown link in the repository resolves — file AND #anchor.
+//   2. Every relative CROSS-FILE markdown link resolves — target file AND #anchor.
+//      LIMIT, stated because the header used to overclaim it: links beginning with `#`
+//      (same-file anchors) are SKIPPED and have never been checked. A broken same-file
+//      anchor shipped through this gap while the header still promised "file AND
+//      #anchor", so the claim is narrowed here to what the code does. Closing the gap —
+//      and the six pre-existing same-file anchors it would surface — is Issue #22.
 //   3. Every markdown table row is a single physical line with a consistent column
 //      count, so a wrapped row cannot silently render as empty cells.
 //
@@ -50,6 +56,37 @@ function chk(inst, sch, path, id, sink = errs) {
 }
 const schema = JSON.parse(readFileSync(join(ROOT, 'product/fixtures/schema/fixture.schema.json'), 'utf8'));
 const ids = readdirSync(join(ROOT, 'product/fixtures/golden')).filter((d) => /^GX-\d\d$/.test(d)).sort();
+// The census must be ASSERTED, not merely printed — the same argument the TABLE_FLOOR
+// below carries, applied to the gate it gates. Renaming GX-01 to GX-01.bak would
+// otherwise print "PASS — 22 golden fixtures" and exit 0, and emptying the directory
+// would print "PASS — 0".
+//
+// The assertion is on the exact ID LIST, not merely the count: asserting the count alone
+// would accept renaming GX-07 to GX-24, which changes the set every document names while
+// leaving the total intact.
+//
+// Why exact rather than a floor: the set is named across the documentation — some sites
+// spell it "23 golden fixtures", others "GX-01..GX-23" or "23 / 23" — so a deliberate
+// change must update them together, and that coupling is what this line exists to force.
+// No count of those sites is hard-coded here on purpose: a hand-typed tally inside a
+// check that exists to replace hand-typed tallies is the same defect one level up.
+const EXPECTED_FIXTURE_IDS = Array.from({ length: 23 }, (_, i) => `GX-${String(i + 1).padStart(2, '0')}`);
+if (JSON.stringify(ids) !== JSON.stringify(EXPECTED_FIXTURE_IDS)) {
+  const missing = EXPECTED_FIXTURE_IDS.filter((x) => !ids.includes(x));
+  const extra = ids.filter((x) => !EXPECTED_FIXTURE_IDS.includes(x));
+  // `ids` is sorted at the readdir above, so a set-equal-but-order-different result is
+  // unreachable today. Name it anyway: without this branch that case would print
+  // "expected exactly 23" with neither Missing nor Unexpected, which reads as a bug in
+  // the checker rather than a finding.
+  const detail = (missing.length || extra.length)
+    ? (missing.length ? ` Missing: ${missing.join(', ')}.` : '')
+      + (extra.length ? ` Unexpected: ${extra.join(', ')}.` : '')
+    : ` Same set, unexpected order — the directory listing is no longer sorted.`;
+  errs.push(`FIXTURE CENSUS FAILED — golden set is ${ids.length} dir(s), expected exactly`
+    + ` ${EXPECTED_FIXTURE_IDS.length} (GX-01…GX-23).${detail}`
+    + ` Either the fixture set changed without updating this list and the documents that`
+    + ` name it, or the directory scan broke.`);
+}
 for (const id of ids) chk(JSON.parse(readFileSync(join(ROOT, `product/fixtures/golden/${id}/expected.json`), 'utf8')), schema, '', id);
 
 // RM-01 annotation against its own schema
@@ -118,7 +155,8 @@ for (const f of md) {
   }
 }
 console.log(broken.length ? `DOC LINKS: ${broken.length} broken\n  ` + broken.join('\n  ')
-  : `doc links: PASS — ${md.length} markdown files, 0 broken links`);
+  : `doc links: PASS — ${md.length} markdown files, 0 broken CROSS-FILE links`
+    + ` (same-file #anchors are NOT checked — see the header limit and Issue #22)`);
 
 // ------------------------------------------------- markdown table structure --
 // A table row wrapped across physical lines, or one that loses a column
@@ -194,6 +232,17 @@ for (const f of md) {
   const r = scanTables(readFileSync(f, 'utf8'), f.replace(ROOT + '/', ''));
   tableErrs.push(...r.errs);
   nTables += r.tables; nRows += r.rows;
+}
+// The census is only a signal if it is ASSERTED. Printing it and exiting 0 on
+// "0 rows in 0 tables" is exactly the silent no-op this gate exists to catch —
+// a scanner that stopped recognising input would report a clean sweep of nothing.
+// The floor is deliberately loose: it asserts the scanner still works, not how
+// much prose the repository happens to contain.
+const TABLE_FLOOR = 100;
+if (nTables < TABLE_FLOOR) {
+  tableErrs.push(`TABLE CENSUS FAILED — found only ${nTables} tables (${nRows} rows) across`
+    + ` ${md.length} files; expected at least ${TABLE_FLOOR}. Either the scanner stopped`
+    + ` recognising tables, or the repository shrank drastically. Both need a human.`);
 }
 console.log(tableErrs.length ? `MARKDOWN TABLES: ${tableErrs.length} malformed row(s)\n  ` + tableErrs.join('\n  ')
   : `markdown tables: PASS — ${nRows} body rows in ${nTables} tables, every row single-line with a matching column count`);

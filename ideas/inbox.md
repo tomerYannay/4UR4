@@ -40,7 +40,7 @@ See [`workflows/ideas-inbox.md`](../workflows/ideas-inbox.md) for the process an
 - **Risk:** Volume normalization across tickers/liquidity regimes; threshold overfitting; must stay explainable (one legible term, not a black box).
 - **Confidence:** Medium
 - **Success measure (if promoted):** On a labeled historical set, high-volume-term breakouts show a measurably higher confirmed-continuation rate than low-volume ones, with the term contributing legibly to the score decomposition.
-- **Minimum experiment:** Offline backtest — take past confirmed trendline breakouts on S&P 500 names, split by relative-volume-at-breakout, measure follow-through vs. failure. No product code; an analysis producing an evidence table.
+- **Minimum experiment:** Offline backtest — take past confirmed trendline breakouts on 4UR4 US Large-Cap 500 names, split by relative-volume-at-breakout, measure follow-through vs. failure. No product code; an analysis producing an evidence table.
 - **Context only?** No
 - **Not roadmap-ready because:** unvalidated scoring hypothesis; needs backtest evidence + Product Steward/human triage before any scoring change is committed.
 

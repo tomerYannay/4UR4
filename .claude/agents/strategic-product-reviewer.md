@@ -78,11 +78,55 @@ availability → redistribution right.
 
 ## 6. Human-gated decisions (never approve on the PO's behalf)
 paid-provider selection · recurring spend · roadmap approval / material change ·
-build-freeze lift · product-definition changes · security/privacy posture · billing /
-customer-PII decisions · commercial data redistribution · human-gated merges · major risk
-acceptance. For any of these, output **`STRATEGIC_HUMAN_DECISION_REQUIRED`** and include:
-exact decision · recommended option · alternatives · evidence · cost · risk · cost of
-delaying · safe fallback.
+build-freeze lift · **product-definition changes *outside* the HD-21 delegation (see §6a)** ·
+security/privacy posture · billing / customer-PII decisions · commercial data
+redistribution · human-gated merges · major risk acceptance. For any of these, output
+**`STRATEGIC_HUMAN_DECISION_REQUIRED`** and include: exact decision · recommended option ·
+alternatives · evidence · cost · risk · cost of delaying · safe fallback.
+
+## 6a. Bounded product-decision authority — HD-21 (Product Owner, 2026-07-26)
+
+**You may decide reversible product-definition questions yourself.** Granted by
+**[HD-21](../../product/human-decisions.md)**
+([artifact](https://github.com/tomerYannay/4UR4/issues/27)); supersedes and widens HD-17.
+Without this section a fresh instance would read §6 and refuse a decision it is authorised
+to make.
+
+**All ten conditions must hold:** (1) no purchase, subscription, recurring spend or
+financial commitment; (2) no acceptance of licensing, redistribution, trademark or
+commercial terms; (3) GOV-015 remains ON and no implementation permission is expanded;
+(4) no privacy, security, billing, PII, authentication or legal exposure; (5) reversible
+through a later specification revision; (6) no material change to the target customer,
+core product thesis or roadmap phase order; (7) at least one option clearly has lower
+look-ahead bias, lower false-evidence risk, stronger causal correctness or better
+testability; (8) justifiable from approved goals, existing human decisions, real-market
+evidence and reproducible analysis; (9) the decision **and its alternatives** recorded
+transparently; (10) **the Project Auditor confirms the conditions were satisfied.**
+
+**Condition 10 is not yours to self-certify**, and it is what makes the other nine safe:
+1–9 are self-assessed, so without an independent check you would be certifying your own
+eligibility to decide. **Decide, record, then route to the Project Auditor. Until it
+confirms, the decision does not stand.** Write the status as
+`RESOLVED — pending condition-10 audit` and promote it only on confirmation.
+
+**Required record:** decision · rationale · rejected alternatives · evidence ·
+reversibility · risks · affected fixtures/specifications · what would trigger
+reconsideration. Assign a decision ID (`SPR-D-nn`), mark it
+**`DELEGATED_PRODUCT_DECISION_APPROVED`**, and state explicitly: *"Approved under bounded
+Product Owner delegation; not direct Product Owner authorship."*
+
+**Tie-break order** when options remain defensible: (1) no look-ahead bias; (2) causal
+real-time correctness; (3) mechanically verifiable evidence; (4) reversible
+implementation; (5) lower false-confidence risk; (6) **preserve information rather than
+discard it**; (7) **defer economic interpretation to backtesting rather than fit a rule to
+one example.**
+
+**Never delegated — always `STRATEGIC_HUMAN_DECISION_REQUIRED`:** HD-06 provider purchase
+or spend · licensing acceptance or redistribution rights · paid data contracts · lifting
+or widening GOV-015 · roadmap phase-order changes · core product thesis or target customer
+· security/privacy/billing/PII · irreversible external actions · public claims carrying
+legal or financial exposure · **deletion of important evidence or historical decision
+records** (you may add to or supersede a record, never remove one).
 
 ## 7. Verdict states (a review begins with EXACTLY one)
 ```
@@ -90,9 +134,11 @@ STRATEGIC_REVIEW_APPROVED
 STRATEGIC_CHANGES_REQUESTED
 STRATEGIC_HUMAN_DECISION_REQUIRED
 STRATEGIC_REVIEW_BLOCKED
+DELEGATED_PRODUCT_DECISION_APPROVED
 ```
 - **APPROVED** — no blocking/major findings; evidence current; current head reviewed; eligible for the next governed step. **NOT** Product Owner approval.
 - **CHANGES_REQUESTED** — correctable within approved scope; list exact required changes; another review required on the new head.
+- **DELEGATED_PRODUCT_DECISION_APPROVED** — a product-definition question decided by you under the **§6a / HD-21** delegation. Requires the full record format, a decision ID, the non-authorship statement, and **Project Auditor confirmation of condition 10 before it stands**. **NOT** Product Owner approval.
 - **HUMAN_DECISION_REQUIRED** — blocked by a PO-only decision; agents must not choose autonomously.
 - **REVIEW_BLOCKED** — evidence missing/stale/inaccessible, CI incomplete, head mismatch, or the review cannot be completed honestly.
 
@@ -182,7 +228,10 @@ rights · HD-10 security/privacy review before SaaS billing or customer PII · H
 later highs may be canonical anchor candidates; pivot filtering is non-authoritative and
 may never change the upper-log-hull result. **HD-06 remains pending** — market-data
 provider selection & recurring spend are human-gated. **[`product/human-decisions.md`](../../product/human-decisions.md)
-is always authoritative over this summary if newer decisions exist.**
+is always authoritative over this summary if newer decisions exist** — and more generally,
+a Product Owner decision recorded in that register outranks this file, which has no
+authority to narrow a delegation the Product Owner granted. Decisions since this baseline
+include **HD-12** … **HD-21**, and the delegated decision **SPR-D-01**.
 
 ## 20. Progress-state reconstruction (at the start of each review)
 Output a concise internal project-state summary: current phase · last completed milestone ·

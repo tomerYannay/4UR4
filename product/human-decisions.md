@@ -27,6 +27,12 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-13 | high | `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust | **APPROVED — RATIFIED** |
 | HD-14 | high | Formation gates are first-class `k`-independent parameters | **APPROVED — RATIFIED** |
 | HD-15 | high | GOV-015 scope: a committed causal reference model is permitted evidence tooling | **APPROVED** |
+| HD-16 | high | Roadmap baseline approved under GOV-013 | **APPROVED** |
+| HD-17 | high | Bounded delegation to the Strategic Product Reviewer for reversible ambiguity | **APPROVED** |
+| HD-18 | high | 4UR4 computes its own point-in-time universe (4UR4 US Large-Cap 500) | **APPROVED** |
+| HD-19 | med  | Independence checker permitted as verification tooling | **APPROVED** |
+| HD-20 | high | RM-01: as-of-time result diverges from the approved full-series record | **RESOLVED — SPR-D-01 (delegated)** |
+| HD-21 | high | Bounded autonomous product-decision authority delegated to the Strategic Product Reviewer | **APPROVED** |
 
 ---
 
@@ -166,6 +172,73 @@ scenarios; implementation planning; acceptance criteria.
 
 **Agents may recommend one provider clearly** — but must not purchase, subscribe,
 accept terms, or record HD-06 as approved.
+
+### Leading candidate and evidence prerequisites — Product Owner, 2026-07-26
+
+Ruled in the second batch of 2026-07-26
+([artifact](https://github.com/tomerYannay/4UR4/issues/24)):
+
+> **Intrinio Startup may be recorded as the current evidence-based leading candidate at
+> approximately \$5,994 for year 1, but it is not selected or approved for purchase.**
+
+**Recorded as a candidate, not a selection.** Research: [`data-provider-findings.md`](data-provider-findings.md)
+§13. It is the only surveyed candidate clearing both hard filters — 50+ years of history
+*and* a published display licence. Runner-up **Massive Stocks Business**; §13.5 states
+what flips the ranking.
+
+**Eight prerequisites must be obtained or prepared before the final HD-06 decision:**
+
+| # | Prerequisite | Status at 2026-07-26 |
+|---|---|---|
+| 1 | Written confirmation that daily high/low are **consolidated-tape** | **BLOCKING (C-1)** — the one condition the Product Owner has already accepted; now a one-sentence question, see below |
+| 2 | Exact historical-depth coverage | **BLOCKING — C-2 \[proposed\]** — the leading candidate's claim is contradicted by its own upstream |
+| 3 | **Split-only** adjustment availability (HD-01) | raw OHLC + `split_ratio` exposed; `adj_*` bundles dividends and must be banned |
+| 4 | Delisted-history coverage | partial — capped at 2007 for the leading candidate; see proposed **C-3** |
+| 5 | Redistribution / display rights | published display licence; terms to be confirmed |
+| 6 | **Point-in-time universe implications** | **new work** — created by HD-18; not evaluated by the original research |
+| 7 | Complete first-year and recurring cost | ≈\$5,994 year 1; recurring to confirm |
+| 8 | **Cancellation and data-retention constraints** | **new work** — Norgate and EODHD require deleting *derived* data on lapse, making an archive a rental; must now be asked of every candidate |
+
+Prerequisites 6 and 8 are work the original research **did not do**: 6 exists only
+because of [HD-18](#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high),
+and 8 was surfaced by a finding about other vendors that must now be put to the leading
+one. Preparation: [`hd06-due-diligence.md`](hd06-due-diligence.md).
+
+> **C-2, C-3 and C-5 are agent-*proposed*, not established.** Only **C-1** pre-existed.
+> An agent may recommend a blocking condition; it may not impose one. The Product Owner
+> may accept, modify or reject each. Recorded here so this register cannot be read as
+> asserting gates nobody ruled.
+
+**The due-diligence pass materially weakened the leading candidate.** Four findings from
+[`hd06-due-diligence.md`](hd06-due-diligence.md), all from vendor documentation read
+directly:
+
+1. **The depth claim is contradicted by its own upstream.** Intrinio states history
+   *"back to the 1960s"*; its documentation also states that raw historical EOD prices
+   are **sourced from its data partner EDI**, and **EDI's own FAQ says its EOD prices
+   begin 1 January 2007.** **Depth is the *only* ground on which Intrinio outranks
+   Massive.** If EDI's date governs, the ranking does not merely narrow — it inverts.
+   Proposed blocking condition **C-2** (agent-proposed; the Product Owner may accept, modify or reject it); one question (first-bar dates for ten named symbols)
+   settles it.
+2. **Delisted history likewise starts 2007**, which caps the survivorship-bias-free
+   backtest window regardless of the ATH question. Proposed blocking condition **C-3** (agent-proposed).
+3. **The consolidated-tape question (C-1) was aimed at the wrong party.** EDI sells both
+   a per-exchange file and a **US Composite (CTA)** file. C-1 collapses to: *which file
+   does Intrinio buy?*
+4. **Retention: the runner-up requires deletion; the leader is silent.** Massive's ToS
+   §11.4 requires deleting all information on termination. Both Intrinio terms pages
+   were read in full and contain **no post-termination data clause at all** — and
+   **silence is weaker than a written grant**, not stronger. Proposed blocking condition
+   **C-5** (agent-proposed; express Order Form term).
+
+Also recorded: on **point-in-time shares outstanding** — the input HD-18 newly requires —
+Intrinio serves the SEC cover-page count with **no filing-date field or as-of parameter
+documented**, and Massive keys on **period-of-report rather than acceptance date**, which
+reads as a **look-ahead leak** of exactly the kind FR-22 forbids.
+
+**Standing prohibition, restated:** do not purchase, subscribe, accept licensing terms,
+or commit spend. **[#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band
+confirmation remains mandatory before financial authorization.**
 
 > **Boundary 5 binds the relay channel itself.** Every artifact in this repository —
 > including the rulings that authorize agent work — is authored by a single account,
@@ -734,9 +807,512 @@ accept terms, or record HD-06 as approved.
   and redistribution do not. Agents may **recommend one provider clearly** and must not
   purchase, subscribe, accept terms, or record HD-06 as approved.
 
+## HD-18 — 4UR4 computes its own point-in-time universe · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/24), against head `83b0fcc`).
+- **Decision:** 4UR4 uses a **self-computed, point-in-time universe of the 500 largest
+  eligible US-listed operating companies** rather than licensed S&P 500 constituent
+  membership. Working product name: **4UR4 US Large-Cap 500**.
+- **Binding requirements:**
+  1. **Do not call it the S&P 500**, and **do not imply endorsement by or equivalence
+     to S&P Dow Jones Indices.**
+  2. Transparent, **versioned** eligibility and ranking rules.
+  3. **Point-in-time membership history preserved**; **delisted securities preserved**;
+     survivorship bias avoided.
+  4. Additions and removals recorded with **effective dates and evidence**.
+  5. Inclusion, liquidity, security-type, domicile and rebalance rules **independently
+     versioned and backtestable**.
+- **Delegation:** the Strategic Product Reviewer may choose the safest reversible
+  **initial research defaults**; **material changes to the intended market segment
+  remain Product Owner-gated** (see [HD-17](#hd-17--bounded-delegation-for-reversible-ambiguity--materiality-high)).
+- **Reason:** licensed index membership was an **unpriced, unbounded exposure**.
+  [`survivorship-bias-findings.md`](survivorship-bias-findings.md) established that
+  membership is licensed **separately from prices and far more restrictively** — an
+  executed S&P Master Index License Agreement on SEC EDGAR contracts constituent data
+  under a separate MSA with separate fees — and that SPDJI **withdrew constituent names
+  from Compustat in 2020** to license directly. The two best survivorship-free datasets,
+  Norgate and CRSP, are both **licence-barred** from commercial use. A self-computed
+  universe converts a dependency that could be withdrawn or repriced unilaterally into a
+  methodology the project owns.
+- **Cost of the decision, stated rather than discovered later.** A mechanical rule
+  **cannot reproduce S&P 500 membership**: the index committee applies discretion —
+  profitability screens, float, sector balance, judgement. Three consequences follow:
+  1. **Backtest results will not be comparable to published S&P 500 strategy results.**
+     A licensing feature and an interpretation liability at once; it must be disclosed
+     wherever results are reported.
+  2. **Eligibility rules become product surface.** "Operating company" (excluding ETFs,
+     closed-end funds, SPACs, trusts, shells), the domicile-vs-listing question, and
+     **share-class handling for dual-class names** each materially change a top-500
+     ranking. Each is a rule someone must own, version and re-derive.
+  3. **Reconstruction is the hard part.** Point-in-time membership needs point-in-time
+     market cap, which needs point-in-time **shares outstanding** — a harder dataset to
+     source than prices, and one the provider research **did not evaluate, because the
+     question did not exist when it ran**.
+- **Design:** [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md).
+- **What this did NOT do:** it did not lift GOV-015, select a provider, or authorize
+  spend.
+
+## HD-19 — Independence checker permitted as verification tooling · materiality: **med**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/24)).
+- **Decision:** the independence checker proposed under
+  [#20](https://github.com/tomerYannay/4UR4/issues/20) is **permitted under GOV-015 as
+  verification/governance tooling**, on the same footing as
+  [HD-15](#hd-15--gov-015-scope-is-toolsfixture-replaymjs-permitted-under-the-build-freeze--materiality-high),
+  subject to six boundaries:
+  1. **not product implementation**;
+  2. **not imported or executed by production/runtime code**;
+  3. **no provider or market-data acquisition**;
+  4. **deterministic and auditable**;
+  5. it **validates process independence rather than pretending to prove what an agent
+     privately read**;
+  6. it **must fail honestly when independence cannot be established.**
+- **Why 5 and 6 are the substantive ones.** Boundary 5 ratifies the design's own
+  conclusion in [`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md):
+  what an agent read is not provable after the fact, and a checker claiming otherwise
+  would be theatre. Boundary 6 forbids this repository's most persistent failure mode —
+  a gate that cannot fail and therefore certifies nothing. Both were reached
+  independently by the design and the ruling.
+- **Delegation:** for the **remaining #20 escalations**, the Strategic Product Reviewer
+  may choose the safest reversible option where it does **not** change product
+  behaviour, lift GOV-015, incur spend, accept licensing, or weaken separation of
+  duties.
+- **Not a freeze lift.** `build_freeze` stays `ON`. Like HD-15, this covers specific
+  tooling for a specific purpose and is **not a precedent** for committing executable
+  product functionality under the freeze.
+
+## HD-20 — RM-01: as-of-time result diverges from the approved full-series record · materiality: **high**
+
+- **Status:** **RESOLVED — by delegated decision [SPR-D-01](#spr-d-01--rm-01-carries-both-analytical-layers--delegated_product_decision_approved)**, not by
+  direct Product Owner authorship. Decided by the **Strategic Product Reviewer** under the
+  [HD-21](#hd-21--bounded-autonomous-product-decision-authority--materiality-high)
+  delegation, 2026-07-26.
+  **Artifacts:** [issue #26](https://github.com/tomerYannay/4UR4/issues/26) (evidence and
+  options), [issue #27](https://github.com/tomerYannay/4UR4/issues/27) (the delegation).
+  Raised 2026-07-26 at head `d22f434`.
+- **Decision required:** on RM-01, the approved **full-series** record and the ratified
+  **as-of-time** rule ([HD-12](#hd-12--anchor-selection-is-rolling-and-causal-as-of-time-frozen-at-confirmed-breakout--materiality-high) / §21)
+  disagree about whether a breakout occurred. **Both are arithmetically correct about
+  different objects.** Which is the product's answer, and what does RM-01 assert in the
+  Phase 2 exit gate?
+- **The facts, not in dispute.** The approved line (`B* = (25, 129.88)`, slope
+  `−0.0240143`) is never closed above — true. Under §21, the line judging bar 10 is built
+  only from bars 0–9, binds `B* = (9, 158.40)` after bar 9's wick-break re-selection, and
+  sits at **150.593**; the close of **164.19** clears it by **0.0864461** log units (≈9%).
+  Re-derived by **five separate agent sessions** — Phase 2 planner, orchestrating session,
+  Strategic Product Reviewer, Verification and Code Review — agreeing to six significant
+  figures. *Stated precisely, because the stronger verb would be false: three of the
+  five — the Phase 2 planner, the orchestrating session and the Strategic Product
+  Reviewer — are **correlated re-runs of the same arithmetic over the same committed
+  CSV**, not independent instruments. **Two are not:** **Verification** and **Code
+  Review** each wrote their **own replay from the specification text, with no reference
+  to the repository's harness**, and agreed to six significant figures. It is those
+  two, not the count of five, that establish the numbers are not an artifact of a
+  single model.*
+  *(`0.0864461` is the raw clearance `ln(close) − ŷ`. The reference model's own
+  `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`; both
+  are correct about different things, and an unqualified "margin" has two readings.)*
+- **Tolerance cannot suppress it — but one documented parameter can.** Suppression by
+  tolerance would require `ε_break ≥ 0.0864461`, **≈8.6×** the documented `0.01`, and
+  HD-13 forbids resolving fixture outcomes by tolerance in any case. `ε` is irrelevant.
+  **However — `min_formation_bars ≥ 12` removes the breakout entirely** (8–10 → bar 10,
+  margin `0.0864461`; 11 → bar 11, margin `0.0660743`; **12–20 → none**). That parameter
+  is already first-class, named, versioned and backtestable under D-TL-12 / HD-14, so
+  **option (3) below is a *parameter* change, not a new rule** — materially cheaper than
+  first presented. It remains a setting fitted to a single 29-bar sample, which is the
+  argument against it. *(An earlier revision of this entry said "delaying formation
+  enlarges the margin" — false; it inverted §21.4, since shallower means higher and the
+  margin therefore shrinks. The Product Owner was corrected on the artifact.)*
+- **Why it was escalated rather than treated as a documentation fix.** *(Historical — the
+  framing as it stood while HD-20 was open. It was resolved under **delegation** by
+  SPR-D-01, not by direct Product Owner ruling; the underlying product question this
+  bullet identifies remains genuinely Product-Owner-owned and is deliberately left open
+  as a Phase 4 backtest question.)* The causal line at
+  bar 10 sits **below the entire recent trading range** — a steep two-point fit over a
+  6-bar window after an IPO spike. §21.3's own derivation names that as precisely the
+  failure the formation gates exist to prevent. **On the only real data in the
+  repository, the gates did not prevent it; they moved it from bar 3 to bar 10.** So this
+  is first real-data evidence that the ratified rule, at ratified gate values, emits a
+  signal the Product Owner did not call a breakout when looking at the same chart.
+  Whether that is a true positive to ship or a false positive to suppress is a
+  product-definition question (GOV-013).
+- **Options:** (1) both, split — keep the §8 geometry assertion *and* gate on the
+  as-of-time expectation; (2) geometry only for now, as-of-time recorded but non-gating;
+  (3) call bar 10 a false positive and change the rule, re-deriving RM-01 and all 23
+  golden fixtures; (4) declare RM-01 out of scope for as-of-time evaluation. Costs for
+  each are stated on the artifact. The review chain **recommends option 1** — a
+  recommendation, not a decision.
+- **Scope of the ruling:** it must resolve **both** the roadmap's gate clause **and**
+  what RM-01's committed `annotation.json` carries. The suspension applied so far is
+  honest only because those are separable; the ruling should not be read as touching only
+  the roadmap.
+- **Applied pending the ruling — disclosure and suspension only, deciding nothing:**
+  [`fixtures/README.md`](fixtures/README.md) §6b, `fixtures/VERIFICATION.md`'s RM-01
+  header notice, `fixtures/real/RM-01/README.md`'s header notice, and the roadmap's RM-01
+  **numeric acceptance values** marked `UNDER REVIEW`. **RM-01 remains in the Phase 2 exit
+  gate**; the Product Owner's ruling placing it there is untouched.
+- **Cost of delaying:** Phase 2 implementation cannot start — its own plan blocks on this
+  at S0, correctly.
+- **Systemic finding recorded alongside it:** **no mechanical guard has ever covered
+  RM-01.** `check-evidence.mjs` only schema-validates its annotation and
+  `fixture-replay.mjs` never reads `real/`. That is why this survived the 2026-07-25
+  causal audit — a gap in the evidence system, not a one-off.
+
+## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/27), against head `6af5261`).
+- **Decision:** the permanent **Strategic Product Reviewer** may decide **reversible
+  product-definition questions** autonomously, so the project is not blocked on the
+  Product Owner for ambiguities that cost nothing to get wrong and can be undone.
+- **Supersedes and widens [HD-17](#hd-17--bounded-delegation-for-reversible-ambiguity--materiality-high).**
+  HD-17 permitted the safest reversible option on a *new ambiguity* under six conditions.
+  This grants authority to **decide product-definition questions** under ten, with a
+  mandatory record format and an independent audit. Where the two differ, **this governs**.
+- **All ten conditions must hold:** (1) no purchase, subscription, recurring spend or
+  financial commitment; (2) no acceptance of licensing, redistribution, trademark or
+  commercial terms; (3) **GOV-015 remains ON** and no implementation permission is
+  expanded; (4) no privacy, security, billing, PII, authentication or legal exposure;
+  (5) reversible through a later specification revision; (6) no material change to the
+  target customer, core product thesis or roadmap phase order; (7) at least one option
+  clearly has lower look-ahead bias, lower false-evidence risk, stronger causal
+  correctness or better testability; (8) justifiable from approved product goals,
+  existing human decisions, real-market evidence and reproducible analysis; (9) the
+  decision **and its alternatives** recorded transparently; (10) **the Project Auditor
+  confirms the delegation conditions were satisfied.**
+- **Condition 10 is what makes the other nine safe, and it differs in kind.** Conditions
+  1–9 are self-assessed by the deciding agent. Condition 10 requires the **Project
+  Auditor** — read-only, and not the producer of the work — to confirm the decision was
+  the decider's to make. Without it an agent would certify its own eligibility to decide,
+  which is the failure mode this repository has spent its whole history removing. Every
+  delegated decision therefore carries **two** records: the decision, and an independent
+  confirmation of authority.
+- **Required record:** decision · rationale · rejected alternatives · evidence ·
+  reversibility · risks · affected fixtures/specifications · what would trigger
+  reconsideration. Assigned a decision ID, marked
+  `DELEGATED_PRODUCT_DECISION_APPROVED`, and stating explicitly *"Approved under bounded
+  Product Owner delegation; not direct Product Owner authorship."*
+- **Tie-break order** when options remain defensible: (1) no look-ahead bias; (2) causal
+  real-time correctness; (3) mechanically verifiable evidence; (4) reversible
+  implementation; (5) lower false-confidence risk; (6) **preserve information rather than
+  discard it**; (7) **defer economic interpretation to backtesting rather than fit a rule
+  to one example.**
+  > **Tie-breaks 6 and 7 are the substantive ones**, and they were written knowing what
+  > they would bite. 7 forbids the cheapest wrong answer to HD-20 — raising
+  > `min_formation_bars` to 12 so one 29-bar sample behaves, which the corrected evidence
+  > shows would work. 6 forbids resolving an ambiguity by dropping a valid analytical
+  > layer. Tie-break 1 outranks all of them, and matters because the HD-20 options are
+  > not symmetric: the as-of-time result is the causal one and the full-series record is,
+  > by construction, look-ahead.
+- **Never delegated — Product-Owner-only:** HD-06 provider purchase or spend; licensing
+  acceptance or redistribution rights; paid data contracts; lifting or widening GOV-015;
+  roadmap phase-order changes; changing the core product thesis or target customer;
+  security/privacy/billing/PII; irreversible external actions; public claims carrying
+  legal or financial exposure; and **deletion of important evidence or historical
+  decision records** — nothing delegated permits removing a record, only adding to or
+  superseding one.
+- **HD-20 specifically** is delegated, to be decided from the evidence on
+  [#26](https://github.com/tomerYannay/4UR4/issues/26), and returns to the Product Owner
+  only if the chosen resolution would introduce a new commercial threshold, change the
+  core product thesis, require spend or licensing, or lift GOV-015.
+- **What this does not do:** it does not lift GOV-015 (condition 3 restates it), authorize
+  spend, or make **HD-06** decidable. HD-06 remains **PENDING** and Product-Owner-only,
+  with [#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band confirmation
+  still mandatory before any financial authorization.
+
+## Decision log — 2026-07-26 (Product Owner, second batch)
+
+- **2026-07-26 — [HD-18](#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high)
+  approved** ([artifact](https://github.com/tomerYannay/4UR4/issues/24)): 4UR4 computes
+  its own point-in-time **4UR4 US Large-Cap 500** universe instead of licensing S&P 500
+  membership. This is a **product-definition change** and the largest single decision on
+  this branch — it removes an unbounded licensing exposure at the cost of comparability
+  with published S&P 500 results, and it makes the eligibility rules product surface.
+  Requirements, roadmap, glossary, research documents, acceptance criteria and issue
+  wording updated consistently.
+
+- **2026-07-26 — HD-06 unchanged in status, advanced in evidence.** **Intrinio Startup
+  is recorded as the current evidence-based leading candidate at approximately \$5,994
+  for year 1** — *"but it is not selected or approved for purchase."* Eight
+  prerequisites must be obtained or prepared before the final decision; see the
+  [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high) entry.
+  **[#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band confirmation
+  remains mandatory before financial authorization** — this ruling names a number and
+  simultaneously refuses to be the authority for spending it, which is the correct
+  posture on a single-account relay channel.
+
+- **2026-07-26 — [HD-19](#hd-19--independence-checker-permitted-as-verification-tooling--materiality-med)
+  approved:** the #20 independence checker is permitted as verification/governance
+  tooling under six boundaries, and the remaining #20 escalations fall to the Strategic
+  Product Reviewer's bounded delegation.
+
 *This register records the Product Owner's rulings of 2026-07-24, 2026-07-25 and
-2026-07-26. Ruled items are governing; **HD-06 remains a proposal pending human
-decision** ([GOV-013](../governance/approval-gate.md)), now with an explicit authority
-boundary and with [#21](https://github.com/tomerYannay/4UR4/issues/21) as a
-precondition. The build-freeze ([GOV-015](../governance/build-freeze.md)) **remains
-ON**; the roadmap baseline being approved (HD-16) does not change that.*
+2026-07-26 (two batches). Ruled items are governing; **HD-06 remains a proposal pending
+human decision** ([GOV-013](../governance/approval-gate.md)), now with an explicit
+authority boundary, eight evidence prerequisites, and
+[#21](https://github.com/tomerYannay/4UR4/issues/21) as a precondition. The build-freeze
+([GOV-015](../governance/build-freeze.md)) **remains ON**; neither the roadmap baseline
+approval (HD-16), the universe decision (HD-18), nor the tooling permission (HD-19)
+changes that.*
+
+---
+
+# Delegated product decisions (HD-21)
+
+> **Sequencing rule, learned from SPR-D-01:** a delegated decision's status line is written
+> **`RESOLVED — pending condition-10 audit`** and promoted only once the Project Auditor
+> confirms. SPR-D-01 asserted `RESOLVED` while the audit was outstanding; it was disclosed
+> rather than concealed, and is true as of `5b99ba6` — but SPR-D-02 onward must not repeat
+> the ordering.
+
+Decisions taken by the **Strategic Product Reviewer** under the bounded delegation of
+[HD-21](#hd-21--bounded-autonomous-product-decision-authority--materiality-high). Each is
+**approved under bounded Product Owner delegation; not direct Product Owner authorship**,
+and each requires an independent **Project Auditor** confirmation of the ten delegation
+conditions (condition 10) before it stands.
+
+## SPR-D-01 — RM-01 carries both analytical layers · `DELEGATED_PRODUCT_DECISION_APPROVED`
+
+> **Approved under bounded Product Owner delegation; not direct Product Owner authorship.**
+
+- **Decision ID:** SPR-D-01 · **Resolves:** [HD-20](#hd-20--rm-01-as-of-time-result-diverges-from-the-approved-full-series-record--materiality-high)
+  · **Authority:** [HD-21](https://github.com/tomerYannay/4UR4/issues/27)
+  · **Evidence:** [issue #26](https://github.com/tomerYannay/4UR4/issues/26)
+  · **Condition-10 audit: CONFIRMED by the Project Auditor at `5b99ba6`.** First audit
+  returned **NOT CONFIRMED** at `0b23f91` — correctly: the decision existed only in a
+  session transcript while this register still read `PENDING`, which is the substitution
+  condition 10 exists to prevent. The decision stands from `5b99ba6`.
+
+  > **Provenance of the condition-10 confirmation — disclosed to the same standard this
+  > register applies to HD-12/13/14.** The confirmation reached this register as a
+  > **session relay**. **No artifact authored by the auditor exists.** The verdict text is
+  > posted in exactly **one** place — [#26](https://github.com/tomerYannay/4UR4/issues/26)
+  > (2026-07-26), which states *"CONFIRMED by the Project Auditor at `5b99ba6`"* — and that
+  > posting is a **same-account relay written by the deciding session**, not by the auditor.
+  > It is **not** on [#27](https://github.com/tomerYannay/4UR4/issues/27), which has no
+  > comments, and **not** on [PR #25](https://github.com/tomerYannay/4UR4/pull/25), which
+  > describes *that* a disclosure was made but states neither the verdict nor the SHA — a
+  > reader of PR #25 alone cannot learn what was confirmed. No audit report is committed.
+  > That gap is **because [#21](https://github.com/tomerYannay/4UR4/issues/21) is
+  > unresolved**; it is precisely the defect #21 records.
+  > *(This note has now been wrong in both directions and the corrections are kept rather
+  > than overwritten. It first said the confirmation was "not on #26" — **understating**
+  > disclosure. It was then corrected to "it is on both" — **overstating** it, in the one
+  > note whose whole subject is provenance honesty. The statement above is the checked one:
+  > #26 only, relayed, not independently authored.)* The
+  > auditor ran **inside the
+  > same autonomous session and under the same single GitHub account** as the decision it
+  > audited, so its independence is **role-level (a different, read-only agent that did
+  > not produce the work), not organizational**. The verdict is not weakened by saying
+  > so — but a register that penalised a transcript-only *decision* must not quietly rest
+  > on a transcript-only *confirmation*. Closing #21 is what upgrades this record.
+
+### Decision
+
+RM-01 carries **two records, explicitly scoped, neither superseding the other.**
+
+**Half A — full-series geometry, retained verbatim, gated at unit level.**
+`A = (2, 2026-06-16, 225.64)`, `B* = (25, 2026-07-21, 129.88)`, `m = −0.0240143`,
+`b = 5.46697`, 0 envelope violations. The Product Owner's 2026-07-25 approval, SC-1 =
+`MATCH`, SC-2 / HD-11 and the six visual-acceptance items stand **untouched and
+unreopened**.
+
+**Half B — as-of-time / causal, newly recorded, gated within Phase-2-owned behaviour.**
+Stop at bar 10 (2026-06-29). Line at stop: `A = (2, 225.64)`, `B* = (9, 2026-06-26,
+158.40)`, `m = −0.0505453`, `b = 5.52003`; line value `150.593`; close `164.19`; margin
+`0.0864461` log units — **the raw clearance `ln(close) − ŷ`**. *Naming the convention is
+load-bearing for the gate: `tools/fixture-replay.mjs` assigns its own `events[].margin`
+field the value `0.0764461`, the same quantity **net of `ε_break`**. An engine asserting
+`margin == 0.0864461` against that field fails by exactly `0.01`. The §6.2 `causal_record`
+field-list agreement is still owed, so this ambiguity is live, not historical.*
+Pre-stop trace: `t_form = 8` with `B* = (3, 213.7999)`,
+`m = −0.0539003`; bar 9 `INVALID_PIERCE` + `WICK_BREAK` re-selecting `B* → (9, 158.40)`
+effective bar 10 (§21.6).
+
+**Mandatory non-endorsement clause — must appear on the artifacts, not only here.**
+Half B is an **evidentiary conformance expectation, not an economic endorsement**. 4UR4
+does **not** assert the bar-10 signal is a good trade. It exemplifies a **short-history /
+post-IPO candidate false-positive class**, and whether that class should be suppressed is
+an **open Phase 4 backtest question**, deliberately not answered here.
+
+**Parameters unchanged:** `min_formation_bars = 8`, `min_ath_age_bars = 3`, `ε = 0.02` stay
+at their ratified HD-14 / D-TL-12 values; `ε_break` stays unlocked per HD-13. **The 23
+golden fixtures are unchanged** — no re-derivation, a direct consequence of rejecting
+option 3.
+
+### Scope limits, recorded because each is easy to over-claim
+
+1. **"Gated end-to-end" means within Phase-2-owned behaviour only.** The Product Owner
+   ruled on 2026-07-26 that *"Phase 3 remains responsible for confirmed breakout, retest,
+   failure and expiry."* The Phase 2 clause therefore asserts **`line_at_stop`, not
+   `Λ^F`**, and asserts no `BROKEN_OUT` state and no `BREAKOUT_CONFIRMED` reason code.
+1b. **The stop index must be engine-derived, not fixture-supplied.** Identifying it
+   requires computing the first close above the line — the *trigger* of a Phase-3-owned
+   transition, though not the transition itself. If the harness were allowed to hand the
+   engine the stop index, the B-clause would assert nothing about the engine's own
+   detection. The Phase 2 plan clause must say so explicitly; left ambiguous, this is
+   where "gated end-to-end" would quietly re-expand.
+2. **Half B *narrows* what RM-01 asserts at the Phase 2 exit.** Under Half A
+   (`confirmed_bar == null`) the complete final state and reason-code set were
+   Phase-2-assertable. Under Half B, transitions are assertable only at **bars 0–9**, plus
+   correct identification of the stop index. "The gate is strengthened" is true of the
+   gate as a whole and **false** of RM-01's Phase-2 assertable surface.
+3. **Circularity limit.** If Half B's expectation is generated by `fixture-replay.mjs`, it
+   is **model-derived**. RM-01's non-circularity then attaches to **Half A's
+   human-approved geometry and to the real, undesigned prices — not to Half B's
+   provenance**. HD-15 conditions 1 and 2 remain the only controls on that.
+4. **No GOV-015 clearance is granted by this decision.** Extending `check-evidence.mjs`
+   and `fixture-replay.mjs` to read `real/` rests on narrow grounds — `check-evidence.mjs`
+   **already reads** `real/RM-01/annotation.json`, and pointing the existing permitted
+   model at `real/RM-01/input.csv` is *the same file, for the same purpose*, needing no
+   specification section it does not already implement; its scope constant is a **path,
+   not a capability**. *(An earlier draft justified this by "the HD-15/HD-19 precedent".
+   That reasoning is **struck**: both instruments expressly say they are **not** a
+   precedent, so it relied on the one thing they refuse to be. The Project Auditor caught
+   it.)* **A new executable tool file, detection logic beyond what the model already
+   implements, or a product-code directory is a fresh GOV-015 question and
+   Product-Owner-only.**
+
+### Rationale
+
+Applied in the HD-21 tie-break order; all seven point the same way. **(1) No look-ahead
+bias** — the full-series record is by construction look-ahead, since it uses bar 25 to
+describe the line judging bar 10; only this option puts the causal expectation in the gate.
+**(2) Causal correctness** — §21.4's corollary predicts this direction and §21.8 rule 4
+commands the re-derivation. **(3) Mechanically verifiable evidence** — the sole option
+supplying `real/*` a comparison contract, and the only one that puts RM-01 under any
+mechanical guard at all. **Stated precisely, because the stronger verb would be false:** if
+`expected-causal.json` is replay-generated it is a **regression guard against today's
+model**, not an independent correctness check — so it closes the *absence* of a guard, not
+the absence of independent verification. `expected-causal.json` **must state its own
+provenance on its face.** **(4) Reversibility** — all four reversible; option 3 the most
+expensive. **(5) Lower false-confidence risk** — this option's risk is visible; option 3's
+is worse in kind, a corpus that agrees with the human because it was tuned to.
+**(6) Preserve information** — both analytical layers retained. **(7) Defer economics to
+backtesting** — with the non-endorsement clause.
+
+The status quo is not merely weaker but **broken**: `confirmed_bar == null` is
+unsatisfiable by a spec-conforming engine at the documented gate values, so the gate as
+written would fail a *correct* implementation.
+
+### Rejected alternatives
+
+**Option 2 — geometry only, as-of-time non-gating.** The only real contender. Rejected on
+tie-breaks 1 and 3: its gate asserts only the look-ahead-derived quantity, and it leaves
+`real/*` without a comparison contract, so the Layer 0 walk stays vacuous or absent —
+reporting coverage the corpus does not have.
+
+**Option 3 — `min_formation_bars → 12`.** Rejected. Cheap, and **it works**: the causal
+walk at `mfb = 12` is `(11, 172.4) → (12, 171.74) → (14, 167.895) → (25, 129.88)`,
+converging on **exactly the approved full-series anchor**, slope `−0.0240143`, with no
+close ever clearing. *Recorded precisely because that makes it seductive, not because it
+recommends it:* at `mfb = 12` the causal record and the human's chart reading agree
+exactly, so it **reads as validation**. It is not. `12` has no principle behind it — it is
+the threshold at which *this one 29-bar series'* causal line shallows enough to reach *its
+own* full-series answer, a fact about an IPO spike followed by a bounce. **HD-21 tie-break
+7 forecloses it**, naming this exact move. *(Reproduction detail: the final step
+`(14) → (25)` is **not** a wick-break — bar 25's high is above the line but inside `ε`
+(`4.866611 < 4.872370`), so it re-selects under the §21.4 running-max rule with **no
+`INVALID_PIERCE`**. Anyone tracking pierces alone will fail to reproduce the walk.)*
+The substantive argument for rejecting it: option 1 **keeps the 8-vs-12 question decidable
+later on population evidence**, since `min_formation_bars` remains first-class, named,
+versioned and backtestable under HD-14 / D-TL-12 — option 3 decides it **now, on n = 1**.
+
+**Option 4 — declare RM-01 out of scope; minimum-history-to-serve.** Rejected on
+tie-breaks 6 and 3: it leaves **zero** non-circular real-market end-to-end evidence. Also
+fitted to n = 1, and a minimum-history-to-serve rule defines *which names the product will
+serve*, which brushes the never-delegated "new commercial threshold" line — declined
+rather than tested.
+
+### Evidence
+
+Re-derived from `product/fixtures/real/RM-01/input.csv` by the decider, and by **five**
+parties agreeing to six significant figures: Phase 2 planner, orchestrating session,
+Strategic Product Reviewer, Verification and Code Review. *Stated precisely, because
+the stronger verb would be false: three of the five — the Phase 2 planner, the
+orchestrating session and the Strategic Product Reviewer — are **correlated re-runs of
+the same arithmetic over the same committed CSV**, not independent instruments. **Two
+are not:** **Verification** and **Code Review** each wrote their **own replay from the
+specification text, with no reference to the repository's harness**, and agreed to six
+significant figures. It is those two, not the count of five, that establish the numbers
+are not an artifact of a single model.* *(The **Project
+Auditor** also re-derived it, at `5b99ba6`, as **post-hoc verification of this record** —
+deliberately **not** counted among the corroborating derivations. An auditor named as
+evidence for the decision it audits is an auditor with something to defend.)*
+Repository evidence: §21.3, §21.4 (lemma + corollary), §21.5, §21.6, §21.8 rule 4, D-TL-12;
+HD-11, HD-12, HD-13, HD-14; `fixtures/real/RM-01/{input.csv, annotation.json}`;
+`fixtures/schema/real-annotation.schema.json`; `docs/architecture/phase2-implementation-plan.md`
+§6.1, §7.1–§7.3, §8; `roadmap.md` Phase 2 exit criteria.
+
+### Reversibility
+
+Fully reversible by later specification revision. Half B is a **fixture expectation, not
+shipped behaviour** — no code exists and none may be written under GOV-015. Reversal means
+re-deriving one artifact and one gate clause. Half A is untouched throughout, so the
+Product Owner's approved record survives any reversal of Half B. Reversal is by
+**superseding** the record, never deleting it.
+
+### Risks accepted
+
+1. **The gate asserts a signal the Product Owner did not see on their own chart.** The
+   substantive cost, accepted knowingly, mitigated by the non-endorsement clause.
+2. **Phases 3, 5 and 6 inherit RM-01's stop** as their first real-data input. One sample;
+   not a validated pattern.
+3. **The short-history false-positive class remains open.** If Phase 4 shows it is
+   systematic, the fix is a *principled* minimum-history rule derived from many names —
+   not `12` chosen from this one.
+4. `ε_break` is illustrative at `0.01`; the margin is `8.6×` it, so the result is robust
+   across HD-13's sweep, but the value is not yet ratified for production.
+5. **RM-01's lifetime-ATH assumption is still unconfirmed** (HD-07, listing history). It
+   affects both halves equally, so it does not discriminate between options.
+
+### Affected fixtures and specifications
+
+`fixtures/real/RM-01/expected-causal.json` (**new**, `causal_record`-bearing, authored by a
+party other than the prospective Phase 2 engine author) · `fixtures/schema/real-annotation.schema.json`
+(**OWED — not yet done**; additive only — a `description` scoping `confirmed_bar` as
+full-series, and an optional `causal_artifact` pointer. Neither exists: the schema is
+untouched by this branch and `confirmed_bar`'s description still reads *"HD-03: equals
+breakout_bar. NULL until data."*) · `fixtures/real/RM-01/annotation.json`
+(**values unchanged**) ·
+`fixtures/real/RM-01/README.md` · `fixtures/README.md` §6b · `roadmap.md` Phase 2 exit gate
+(`UNDER REVIEW` lifted; A-clause and B-clause stated) ·
+`docs/architecture/phase2-implementation-plan.md` §6.1, §7.2, §7.3, §8 S0 ·
+`tools/check-evidence.mjs` and `tools/fixture-replay.mjs` extended to cover `real/`
+(**OWED — not yet done**; as of this entry `fixture-replay.mjs` still derives its fixture
+list from `golden/` alone and `check-evidence.mjs` only schema-validates RM-01's
+annotation) · **the 23 golden fixtures unchanged** · `project-state.md` (Product Steward).
+
+*This list is a **change surface**, mixing delivered and owed items. **Three** are owed and
+each is marked **(new)** or **(OWED)** above — `expected-causal.json`, its additive
+`real-annotation.schema.json` change, and the `real/`-reading tool extension — so that
+nothing here has to be read against a neighbouring document to tell which is which.
+(An earlier revision of this sentence said "two", leaving the schema entry unmarked; it
+re-created the exact defect it claims to remove.)*
+
+**Four records are RETAINED, not deleted** — HD-21 permits adding to or superseding a
+record, never removing one, and each of these is the kind a well-meaning tidy-up would
+take: (1) `annotation.json`'s `expected_regions.breakout.note` — *"No confirmed breakout
+through 2026-07-24"* — qualify additively elsewhere, do not rewrite; (2) the visual
+checklist item *"Breakout bar classification matches the PO's expectation → pass"*, which
+is the Product Owner's own reading; (3) `product_owner_approval: "approved"`; and (4)
+**`roadmap.md`'s Steward contrary assessment** — the most deletable artifact in the tree
+once the question is settled, and the record of the strongest argument against the adopted
+structure.
+
+### What would trigger reconsideration
+
+1. **Phase 4 backtesting shows short-history / post-IPO signals are a *systematic* false
+   positive class across many names** — then a principled minimum-history rule derived
+   from the population supersedes this. **This is the intended route for option 3's
+   substance**, and it is why the 8-vs-12 question is left open rather than closed.
+2. A second or third real-market fixture reproduces the pattern — that is the evidence base
+   `min_formation_bars` should be tuned on, not RM-01.
+3. RM-01's lifetime-ATH assumption is falsified by listing history (HD-07).
+4. `ε_break` is ratified at a production value materially different from `0.01`.
+5. **Any Product Owner instruction** — this is a delegated decision and may be overturned
+   at any time without cause.
+6. **The Project Auditor finds any HD-21 condition unmet** — then this decision does not
+   stand.

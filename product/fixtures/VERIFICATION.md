@@ -80,6 +80,61 @@ values reproduce independently within 6-significant-figure tolerance.**
 
 ## RM-01 — real-market verification (Alpha Vantage SPCX)
 
+> ### ⚠ Everything in this section is a **full-series** result — read `README.md` §6b first
+>
+> This verification predates **HD-12** (as-of-time evaluation, ratified 2026-07-25) and was
+> never redone under it. **RM-01 was not covered by the 2026-07-25 causal audit**, and no
+> mechanical guard has ever replayed it: `check-evidence.mjs` only schema-validates its
+> annotation, and `fixture-replay.mjs` derives its fixture list from `golden/` and never
+> reads `real/`.
+>
+> Re-derived as-of-time by **five separate agent sessions**, agreeing to six significant
+> figures — **RM-01 confirms a breakout at bar 10 (2026-06-29)**: close `164.19` against a
+> causal line at `150.593`, margin **0.0864461** log units *(the raw clearance
+> `ln(close) − ŷ`; the reference model's own `events[].margin` field reports `0.0764461`,
+> the same quantity net of `ε_break`)*. Suppressing it would need `ε_break` at **≈8.6×**
+> its documented value, and HD-13 forbids resolving fixture outcomes by tolerance in any
+> case. *Stated precisely: three of the five — the Phase 2 planner, the orchestrating
+> session and the Strategic Product Reviewer — are **correlated re-runs of the same
+> arithmetic over the same committed CSV**, not independent instruments. **Two are
+> not:** **Verification** and **Code Review** each wrote their **own replay from the
+> specification text, with no reference to the repository's harness**, and agreed to
+> six significant figures. It is those two, not the count of five, that establish the
+> numbers are not an artifact of a single model.*
+>
+> **Both results are arithmetically correct about different objects** — this section's
+> full-series hull (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
+> corollary predicts an as-of-time breakout may exist where a full-series calculation
+> reports none. **Nothing below is withdrawn** — everything in this section is **Half A**,
+> the full-series layer, retained verbatim.
+>
+> **RESOLVED — [SPR-D-01](../human-decisions.md), 2026-07-26** (HD-20 closed). *Approved
+> under bounded Product Owner delegation; not direct Product Owner authorship* — decided by
+> the Strategic Product Reviewer under HD-21 and confirmed by the Project Auditor at
+> `5b99ba6`. **RM-01 carries both layers**; Half B is to be carried in a separate
+> `expected-causal.json` — **an artifact that does not exist yet**, and whose authoring,
+> additive schema and `real/`-reading tool extension are **owed work, not delivered
+> work**.
+>
+> **The scope limits, which travel with every use of SPR-D-01. Numbered 1, 1b, 2, 3, 4 to
+> match [`../human-decisions.md`](../human-decisions.md), which is authoritative:**
+> (1) Phase-2-only —
+> Half B asserts `line_at_stop`, **not** `Λ^F`, and asserts **no** `BROKEN_OUT` state and
+> **no** `BREAKOUT_CONFIRMED` reason code, which stay Phase 3's; (1b) the **stop index
+> must be engine-derived**, never fixture-supplied; (2) Half B **narrows** RM-01's
+> Phase-2 assertable surface to bars 0–9 plus the stop index, so *"the gate is
+> strengthened"* is **true of the gate as a whole and FALSE of RM-01** — neither sentence
+> may travel without the other; (3) **circularity** — a replay-generated Half B is
+> **model-derived**, and therefore a **regression guard against today's model, not an
+> independent correctness check**, leaving RM-01's non-circularity attached to Half A's
+> human-approved geometry and the real prices; and (4) **no GOV-015 clearance is
+> granted** — the build-freeze remains **ON** and `autonomous_implementation: DISABLED`.
+>
+> Half B is an **evidentiary conformance expectation, not an economic endorsement**: 4UR4
+> does not assert the bar-10 signal is a good trade, and whether the short-history /
+> post-IPO false-positive class it exemplifies should be suppressed is an open Phase 4
+> backtest question.
+
 Independent verification of the first real-market fixture, computed by the primary session
 (verifier) from `real/RM-01/input.csv` (derived from immutable `alphavantage-source.json`,
 sha256 `69a67469…50c377`) using **trading-bar ordinal indices**, not calendar-day gaps. The

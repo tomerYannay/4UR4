@@ -1,5 +1,25 @@
 # 4UR4 — Data-Provider Findings (R1, R2, R3, R6, R7, R8)
 
+> ## ⚠ Superseded in part by HD-18 (2026-07-26)
+>
+> This research was written while 4UR4 intended to **license S&P 500 constituent
+> membership**. On 2026-07-26 the Product Owner ruled ([HD-18](human-decisions.md),
+> [artifact](https://github.com/tomerYannay/4UR4/issues/24)) that 4UR4 computes its own
+> point-in-time universe — the **4UR4 US Large-Cap 500** — instead. **4UR4's universe is
+> not the S&P 500, and nothing here implies endorsement by or equivalence to S&P Dow Jones
+> Indices.**
+>
+> References to the S&P 500 below are retained **only** where the index is an external
+> market reference or the thing deliberately not used. Two lines that called 4UR4's *own*
+> universe "the S&P 500" were corrected on 2026-07-26 — caught in review, not by the
+> original sweep.
+>
+> **One consequence this document could not have evaluated:** a self-computed universe
+> needs point-in-time **shares outstanding**, and **no provider here was assessed for it**
+> because the question did not exist when this ran. See
+> [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md)
+> §4 and [`hd06-due-diligence.md`](hd06-due-diligence.md) A.6.
+
 > **Status: RESEARCH FINDINGS under [GOV-015](../governance/build-freeze.md) (build-freeze ON)
 > and [GOV-013](../governance/approval-gate.md).**
 > This document answers the research questions defined in
@@ -96,7 +116,7 @@ in [§6](#6-r6--fear--greed--equivalent-sentiment-sources) and §10 respectively
 
 ## 2. R1 — Historical daily OHLCV
 
-**Question:** accurate, split/dividend-handled daily OHLCV for all S&P 500 constituents,
+**Question:** accurate, split/dividend-handled daily OHLCV for all members of 4UR4's universe (see the HD-18 note above),
 with enough history to reach **each name's all-time high** — the trendline anchor.
 
 ### 2.1 The finding that dominates R1: history depth is a *correctness* constraint, not a nice-to-have
@@ -468,7 +488,7 @@ redistribution-clear**, and the research shows that is not automatic:
 | Input | Candidate source | Licence posture | Tag |
 |---|---|---|---|
 | Market momentum (index vs 125-day MA) | Computable from 4UR4's own licensed equity bars | Clean, if the OHLCV licence permits derived display (see R7) | Derived from §7 |
-| Breadth (advance/decline, % above MA) | **Computable from 4UR4's own S&P 500 universe bars** | Clean — no new vendor needed | Analysis |
+| Breadth (advance/decline, % above MA) | **Computable from 4UR4's own 4UR4 US Large-Cap 500 universe bars** | Clean — no new vendor needed | Analysis |
 | Volatility (VIX) | Cboe | Cboe's terms bar display and derivative-index creation without prior written consent — see quote below | **VERIFIED** |
 | Put/call ratio | Cboe free CSVs (`cdn.cboe.com/resources/options/volume_and_call_put_ratios/…`) | Free to download, "provided for informational purposes only", explicitly "subject to the Terms and Conditions of Cboe Websites" — i.e. the same restriction | **VERIFIED** |
 | Junk-bond demand (credit spreads) | FRED (e.g. ICE BofA HY OAS) | FRED disclaims authority over third-party-owned series — see quote below | **VERIFIED** |
@@ -526,7 +546,7 @@ reconstruction is only licence-clean if it is built from inputs 4UR4 *already li
 Two of the seven CNN sub-indicators (**volatility/VIX** and **put/call ratio**) come from
 Cboe and are **not** free for commercial display despite being free to download. Two more
 (momentum, breadth) and arguably a third (safe-haven demand, given a Treasury series) are
-computable **entirely from 4UR4's own S&P 500 universe bars**, with no new vendor and no new
+computable **entirely from 4UR4's own 4UR4 US Large-Cap 500 universe bars**, with no new vendor and no new
 licence.
 
 **Recommended R6 posture:** build the v1 sentiment context from the **breadth / momentum /

@@ -48,7 +48,7 @@ something 4UR4 computes authoritatively at MVP.
 
 ### 2.3 Cadence
 - **Design assumption (safest default):** ingest **once per day**, aligned to the
-  daily S&P 500 batch scan, storing a timestamped snapshot. Rationale: the MVP
+  daily universe batch scan, storing a timestamped snapshot. Rationale: the MVP
   scanner is daily and end-of-day; sub-daily sentiment adds cost and complexity
   with no demonstrated confidence benefit yet (anti-gold-plating, GOV-007).
 - **Recorded alternative:** intraday/hourly cadence — deferred until a backtest
@@ -108,7 +108,7 @@ F&G index, 4UR4 owns this computation end-to-end, which improves both
 redistribution constraints if built from licensed inputs).
 
 ### 5.2 Candidate inputs (design only — not selected/weighted here)
-- **Breadth** — proportion of S&P 500 names above key moving averages / making
+- **Breadth** — proportion of **4UR4 US Large-Cap 500** names above key moving averages / making
   new highs vs. new lows.
 - **Trend** — index-level position relative to long-term moving averages, slope.
 - **Volatility** — realized/implied volatility level and its own percentile.
@@ -129,7 +129,7 @@ Two inputs are especially valuable because 4UR4 can compute them from data it
 already needs for its core detector — no extra external dependency:
 
 - **Breakout breadth.** The count/rate of confirmed breakouts occurring
-  concurrently across the S&P 500. Many simultaneous breakouts may indicate a
+  concurrently across the universe. Many simultaneous breakouts may indicate a
   broad risk-on impulse (each individual signal potentially more reliable); an
   isolated breakout in a quiet tape is a different context. This is a
   **self-referential regime feature** — cheap, licensing-clean, and directly
