@@ -621,9 +621,13 @@ and it should be stated in the evidence log rather than discovered later.
 > for *what was decided*.
 >
 > **What changed.** The divergence is **confirmed, not tentative** — "appears to" in the
-> heading above is stale, and the heading is **retained unedited on purpose**, because
-> section headings are cited by anchor elsewhere and rewriting one silently breaks those
-> links. Read the heading as the question that was asked, not as the answer. HD-20 is
+> heading above is stale, and the heading is **retained unedited on purpose**: **SPR-D-01
+> and HD-21 permit adding to or superseding a record, never rewriting one**, and the
+> heading is part of the finding as it was made. *(An earlier revision justified the
+> retention by saying headings are cited by anchor elsewhere. That is true of the
+> repository generally but **not of this file** — nothing links to a `#7…` anchor here.
+> The no-deletion rule is the real and sufficient reason.)* Read the heading as the
+> question that was asked, not as the answer. HD-20 is
 > **RESOLVED** — by **SPR-D-01**, a **delegated** decision of
 > the Strategic Product Reviewer under HD-21, **not** a Product Owner ruling, and
 > overturnable by the Product Owner at any time without cause. RM-01 carries **both**
@@ -641,11 +645,12 @@ and it should be stated in the evidence log rather than discovered later.
 >   longer "unrecorded" as a decision — though the *artifact* (`expected-causal.json`)
 >   is still owed; see §6.1.
 >
-> The **four scope limits** (Phase-2-only; engine-derived stop index; Half B **narrows**
-> RM-01's assertable surface to bars 0–9 plus the stop index; and the circularity limit
-> under which a replay-generated Half B is a **regression guard against today's model,
-> not independent verification**) travel with every use of SPR-D-01 and are stated in
-> full in the roadmap and the register. **No GOV-015 clearance is granted.**
+> The scope limits — numbered **1, 1b, 2, 3, 4** in the register, which is authoritative —
+> travel with every use of SPR-D-01: **1** Phase-2-only; **1b** engine-derived stop index;
+> **2** Half B **narrows** RM-01's assertable surface to bars 0–9 plus the stop index;
+> **3** the circularity limit, under which a replay-generated Half B is a **regression
+> guard against today's model, not independent verification**; and **4** that **no
+> GOV-015 clearance is granted**. They are stated in full in the roadmap and the register.
 
 The RM-01 record was produced before HD-12, and the as-of-time audit of 2026-07-25
 explicitly did **not** cover it (`fixtures/README.md` §6a: *"RM-01 itself is untouched
@@ -818,12 +823,22 @@ It does not build, scaffold, or configure anything; it does not lift or narrow
 [`roadmap.md`](../../product/roadmap.md),
 [`human-decisions.md`](../../product/human-decisions.md),
 [`trendline-specification.md`](../../product/trendline-specification.md) or any
-governance file; it takes no Product Owner decision and marks no ticket Done. Four
-items in §9.2 (OQ-A, OQ-E, OQ-F, OQ-J) are flagged to the Orchestrator for
-escalation rather than absorbed (GOV-007). **OQ-A no longer blocks S0** — it was closed on
-2026-07-26 by SPR-D-01 under the HD-21 delegation (§9.2). *(This sentence read "**OQ-A
-blocks S0**" while the S0 row already recorded it as satisfied; one side had been updated
-and not the other.)* **OQ-E, OQ-F and OQ-J remain open and still gate S0.**
+governance file; it takes no Product Owner decision and marks no ticket Done. **Three**
+items in §9.2 — **OQ-E**, **OQ-F** and **OQ-J** — are flagged to the Orchestrator for
+escalation rather than absorbed (GOV-007). **OQ-A is no longer among them and no longer
+blocks S0**: it was closed on 2026-07-26 by SPR-D-01 under the HD-21 delegation (§9.2).
+
+**Which open questions gate S0, stated exactly** — escalation and S0-gating are different
+properties and conflating them is how this paragraph went wrong twice:
+- **Gate S0:** **OQ-J** (`spec_version`, S0 item 6) and **OQ-H** (the `causal_record` field
+  list agreed with Verification, S0 item 5). OQ-H is *not* an escalation item — it is
+  settled with Verification, not the Product Owner — but it **does** gate S0.
+- **Escalated but NOT gating S0:** **OQ-E** and **OQ-F**, which concern engine reject
+  behaviour and belong to S1's guards.
+
+*(This paragraph first read "**OQ-A blocks S0**" after the S0 row already recorded OQ-A as
+satisfied; the correction then over-generalised to "OQ-E, OQ-F and OQ-J … still gate S0",
+which added two items that do not gate S0 and dropped one that does.)*
 
 ---
 

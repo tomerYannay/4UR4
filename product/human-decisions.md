@@ -903,12 +903,14 @@ confirmation remains mandatory before financial authorization.**
   sits at **150.593**; the close of **164.19** clears it by **0.0864461** log units (≈9%).
   Re-derived by **five separate agent sessions** — Phase 2 planner, orchestrating session,
   Strategic Product Reviewer, Verification and Code Review — agreeing to six significant
-  figures. *Stated precisely, because the stronger verb would be false: these are largely
-  **correlated re-runs of the same arithmetic over the same committed CSV**, not five
-  independent instruments. **One is not a re-run:** the Code Review derivation of
-  2026-07-26 came from a **separate implementation written from the specification text
-  alone**, and it is that check — not the count — that establishes the numbers are not an
-  artifact of one model.*
+  figures. *Stated precisely, because the stronger verb would be false: three of the
+  five — the Phase 2 planner, the orchestrating session and the Strategic Product
+  Reviewer — are **correlated re-runs of the same arithmetic over the same committed
+  CSV**, not independent instruments. **Two are not:** **Verification** and **Code
+  Review** each wrote their **own replay from the specification text, with no reference
+  to the repository's harness**, and agreed to six significant figures. It is those
+  two, not the count of five, that establish the numbers are not an artifact of a
+  single model.*
   *(`0.0864461` is the raw clearance `ln(close) − ŷ`. The reference model's own
   `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`; both
   are correct about different things, and an unqualified "margin" has two readings.)*
@@ -1085,15 +1087,21 @@ conditions (condition 10) before it stands.
 
   > **Provenance of the condition-10 confirmation — disclosed to the same standard this
   > register applies to HD-12/13/14.** The confirmation reached this register as a
-  > **session relay**. **No artifact authored by the auditor exists.** The verdict *is*
-  > posted — on [#26](https://github.com/tomerYannay/4UR4/issues/26)
-  > (2026-07-26) and on [PR #25](https://github.com/tomerYannay/4UR4/pull/25) — but every
-  > one of those postings is a **same-account relay written by the deciding session**, not
-  > by the auditor, and no audit report is committed. That gap is **because
-  > [#21](https://github.com/tomerYannay/4UR4/issues/21) is unresolved**; it is precisely
-  > the defect #21 records. *(An earlier revision of this note said the confirmation was
-  > "not on #26" and "not on PR #25". That was **false** — it is on both. The true claim
-  > is narrower and is the one that matters: relayed, not independently authored.)* The
+  > **session relay**. **No artifact authored by the auditor exists.** The verdict text is
+  > posted in exactly **one** place — [#26](https://github.com/tomerYannay/4UR4/issues/26)
+  > (2026-07-26), which states *"CONFIRMED by the Project Auditor at `5b99ba6`"* — and that
+  > posting is a **same-account relay written by the deciding session**, not by the auditor.
+  > It is **not** on [#27](https://github.com/tomerYannay/4UR4/issues/27), which has no
+  > comments, and **not** on [PR #25](https://github.com/tomerYannay/4UR4/pull/25), which
+  > describes *that* a disclosure was made but states neither the verdict nor the SHA — a
+  > reader of PR #25 alone cannot learn what was confirmed. No audit report is committed.
+  > That gap is **because [#21](https://github.com/tomerYannay/4UR4/issues/21) is
+  > unresolved**; it is precisely the defect #21 records.
+  > *(This note has now been wrong in both directions and the corrections are kept rather
+  > than overwritten. It first said the confirmation was "not on #26" — **understating**
+  > disclosure. It was then corrected to "it is on both" — **overstating** it, in the one
+  > note whose whole subject is provenance honesty. The statement above is the checked one:
+  > #26 only, relayed, not independently authored.)* The
   > auditor ran **inside the
   > same autonomous session and under the same single GitHub account** as the decision it
   > audited, so its independence is **role-level (a different, read-only agent that did
@@ -1222,12 +1230,14 @@ rather than tested.
 
 Re-derived from `product/fixtures/real/RM-01/input.csv` by the decider, and by **five**
 parties agreeing to six significant figures: Phase 2 planner, orchestrating session,
-Strategic Product Reviewer, Verification and Code Review. *Stated precisely, because the
-stronger verb would be false: those five are **correlated re-runs of the same arithmetic
-over the same committed CSV, not five independent instruments**. The exception is worth
-naming — the **Code Review** derivation of 2026-07-26 was produced from a **separate
-implementation written from the specification text alone**, which is the one genuinely
-independent check in the set and is what the corroboration actually rests on.* *(The **Project
+Strategic Product Reviewer, Verification and Code Review. *Stated precisely, because
+the stronger verb would be false: three of the five — the Phase 2 planner, the
+orchestrating session and the Strategic Product Reviewer — are **correlated re-runs of
+the same arithmetic over the same committed CSV**, not independent instruments. **Two
+are not:** **Verification** and **Code Review** each wrote their **own replay from the
+specification text, with no reference to the repository's harness**, and agreed to six
+significant figures. It is those two, not the count of five, that establish the numbers
+are not an artifact of a single model.* *(The **Project
 Auditor** also re-derived it, at `5b99ba6`, as **post-hoc verification of this record** —
 deliberately **not** counted among the corroborating derivations. An auditor named as
 evidence for the decision it audits is an auditor with something to defend.)*
@@ -1262,8 +1272,11 @@ Product Owner's approved record survives any reversal of Half B. Reversal is by
 
 `fixtures/real/RM-01/expected-causal.json` (**new**, `causal_record`-bearing, authored by a
 party other than the prospective Phase 2 engine author) · `fixtures/schema/real-annotation.schema.json`
-(**additive only** — a `description` scoping `confirmed_bar` as full-series, and an optional
-`causal_artifact` pointer) · `fixtures/real/RM-01/annotation.json` (**values unchanged**) ·
+(**OWED — not yet done**; additive only — a `description` scoping `confirmed_bar` as
+full-series, and an optional `causal_artifact` pointer. Neither exists: the schema is
+untouched by this branch and `confirmed_bar`'s description still reads *"HD-03: equals
+breakout_bar. NULL until data."*) · `fixtures/real/RM-01/annotation.json`
+(**values unchanged**) ·
 `fixtures/real/RM-01/README.md` · `fixtures/README.md` §6b · `roadmap.md` Phase 2 exit gate
 (`UNDER REVIEW` lifted; A-clause and B-clause stated) ·
 `docs/architecture/phase2-implementation-plan.md` §6.1, §7.2, §7.3, §8 S0 ·
@@ -1272,9 +1285,12 @@ party other than the prospective Phase 2 engine author) · `fixtures/schema/real
 list from `golden/` alone and `check-evidence.mjs` only schema-validates RM-01's
 annotation) · **the 23 golden fixtures unchanged** · `project-state.md` (Product Steward).
 
-*This list is a **change surface**, mixing delivered and owed items. The two owed ones are
-marked **(new)** and **(OWED)** above so that nothing here has to be read against a
-neighbouring document to tell which is which.*
+*This list is a **change surface**, mixing delivered and owed items. **Three** are owed and
+each is marked **(new)** or **(OWED)** above — `expected-causal.json`, its additive
+`real-annotation.schema.json` change, and the `real/`-reading tool extension — so that
+nothing here has to be read against a neighbouring document to tell which is which.
+(An earlier revision of this sentence said "two", leaving the schema entry unmarked; it
+re-created the exact defect it claims to remove.)*
 
 **Four records are RETAINED, not deleted** — HD-21 permits adding to or superseding a
 record, never removing one, and each of these is the kind a well-meaning tidy-up would

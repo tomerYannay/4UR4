@@ -74,10 +74,16 @@ const EXPECTED_FIXTURE_IDS = Array.from({ length: 23 }, (_, i) => `GX-${String(i
 if (JSON.stringify(ids) !== JSON.stringify(EXPECTED_FIXTURE_IDS)) {
   const missing = EXPECTED_FIXTURE_IDS.filter((x) => !ids.includes(x));
   const extra = ids.filter((x) => !EXPECTED_FIXTURE_IDS.includes(x));
+  // `ids` is sorted at the readdir above, so a set-equal-but-order-different result is
+  // unreachable today. Name it anyway: without this branch that case would print
+  // "expected exactly 23" with neither Missing nor Unexpected, which reads as a bug in
+  // the checker rather than a finding.
+  const detail = (missing.length || extra.length)
+    ? (missing.length ? ` Missing: ${missing.join(', ')}.` : '')
+      + (extra.length ? ` Unexpected: ${extra.join(', ')}.` : '')
+    : ` Same set, unexpected order — the directory listing is no longer sorted.`;
   errs.push(`FIXTURE CENSUS FAILED — golden set is ${ids.length} dir(s), expected exactly`
-    + ` ${EXPECTED_FIXTURE_IDS.length} (GX-01…GX-23).`
-    + (missing.length ? ` Missing: ${missing.join(', ')}.` : '')
-    + (extra.length ? ` Unexpected: ${extra.join(', ')}.` : '')
+    + ` ${EXPECTED_FIXTURE_IDS.length} (GX-01…GX-23).${detail}`
     + ` Either the fixture set changed without updating this list and the documents that`
     + ` name it, or the directory scan broke.`);
 }

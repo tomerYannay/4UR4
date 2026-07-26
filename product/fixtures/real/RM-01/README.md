@@ -19,9 +19,14 @@
 > line at `150.593`, margin **0.0864461** log units (the raw clearance `ln(close) − ŷ`;
 > the reference model's own `events[].margin` field reports `0.0764461`, the same
 > quantity net of `ε_break`). Suppression would need `ε_break` at ≈8.6× its documented
-> value, which HD-13 forbids in any case. *Five sessions re-running the same arithmetic
-> on the same committed CSV are **correlated re-runs, not five independent instruments**;
-> the count is recorded for traceability, and it is not evidence of independence.*
+> value, which HD-13 forbids in any case. *Stated precisely: three of the five — the
+> Phase 2 planner, the orchestrating session and the Strategic Product Reviewer — are
+> **correlated re-runs of the same arithmetic over the same committed CSV**, not
+> independent instruments. **Two are not:** **Verification** and **Code Review** each
+> wrote their **own replay from the specification text, with no reference to the
+> repository's harness**, and agreed to six significant figures. It is those two, not
+> the count of five, that establish the numbers are not an artifact of a single
+> model.*
 >
 > **Both results are arithmetically correct about different objects.** The full-series
 > line below (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
@@ -56,9 +61,10 @@
 > the as-of-time record above — is gated **within Phase-2-owned behaviour only**.
 >
 > **The scope limits, which travel with every use of this decision.** *Numbered 1, 1b, 2,
-> 3, 4 to match the [register](../../../human-decisions.md), which is authoritative — the
-> artifacts previously renumbered them 1–4, so "limit 3" and "limit 4" named different
-> things in different files.*
+> 3, 4 to match the [register](../../../human-decisions.md), which is authoritative. The
+> artifacts had renumbered them 1–4, which made "limit 3" and "limit 4" name different
+> things in different files; all artifact copies —* `../../README.md`, `../../VERIFICATION.md`
+> *and this one — now use the register's numbering.*
 > 1. **Phase-2-only scope.** Half B asserts `line_at_stop`, **not** `Λ^F`, and asserts
 >    **no** `BROKEN_OUT` state and **no** `BREAKOUT_CONFIRMED` reason code — those stay
 >    Phase 3's.

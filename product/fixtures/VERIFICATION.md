@@ -94,8 +94,13 @@ values reproduce independently within 6-significant-figure tolerance.**
 > `ln(close) − ŷ`; the reference model's own `events[].margin` field reports `0.0764461`,
 > the same quantity net of `ε_break`)*. Suppressing it would need `ε_break` at **≈8.6×**
 > its documented value, and HD-13 forbids resolving fixture outcomes by tolerance in any
-> case. *Those five are **correlated re-runs of the same arithmetic over the same
-> committed CSV, not five independent instruments**.*
+> case. *Stated precisely: three of the five — the Phase 2 planner, the orchestrating
+> session and the Strategic Product Reviewer — are **correlated re-runs of the same
+> arithmetic over the same committed CSV**, not independent instruments. **Two are
+> not:** **Verification** and **Code Review** each wrote their **own replay from the
+> specification text, with no reference to the repository's harness**, and agreed to
+> six significant figures. It is those two, not the count of five, that establish the
+> numbers are not an artifact of a single model.*
 >
 > **Both results are arithmetically correct about different objects** — this section's
 > full-series hull (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
@@ -111,16 +116,19 @@ values reproduce independently within 6-significant-figure tolerance.**
 > additive schema and `real/`-reading tool extension are **owed work, not delivered
 > work**.
 >
-> **The four scope limits, which travel with every use of SPR-D-01:** (1) Phase-2-only —
+> **The scope limits, which travel with every use of SPR-D-01. Numbered 1, 1b, 2, 3, 4 to
+> match [`../human-decisions.md`](../human-decisions.md), which is authoritative:**
+> (1) Phase-2-only —
 > Half B asserts `line_at_stop`, **not** `Λ^F`, and asserts **no** `BROKEN_OUT` state and
-> **no** `BREAKOUT_CONFIRMED` reason code, which stay Phase 3's; (2) the **stop index
-> must be engine-derived**, never fixture-supplied; (3) Half B **narrows** RM-01's
+> **no** `BREAKOUT_CONFIRMED` reason code, which stay Phase 3's; (1b) the **stop index
+> must be engine-derived**, never fixture-supplied; (2) Half B **narrows** RM-01's
 > Phase-2 assertable surface to bars 0–9 plus the stop index, so *"the gate is
 > strengthened"* is **true of the gate as a whole and FALSE of RM-01** — neither sentence
-> may travel without the other; (4) **circularity** — a replay-generated Half B is
+> may travel without the other; (3) **circularity** — a replay-generated Half B is
 > **model-derived**, and therefore a **regression guard against today's model, not an
 > independent correctness check**, leaving RM-01's non-circularity attached to Half A's
-> human-approved geometry and the real prices. **No GOV-015 clearance is granted.**
+> human-approved geometry and the real prices; and (4) **no GOV-015 clearance is
+> granted** — the build-freeze remains **ON** and `autonomous_implementation: DISABLED`.
 >
 > Half B is an **evidentiary conformance expectation, not an economic endorsement**: 4UR4
 > does not assert the bar-10 signal is a good trade, and whether the short-history /
