@@ -9,16 +9,27 @@
 > [`human-decisions.md`](human-decisions.md) → [`requirements.md`](requirements.md) + specs →
 > [`roadmap.md`](roadmap.md) → merged fixture evidence → open PR proposals → agent summaries.
 
-- **Last updated:** 2026-07-26
-- **Last reviewed commit SHA (main):** `54b16ee34d0af3863290df6b51a545ea724e4d70` — the merge
-  commit of [PR #30](https://github.com/tomerYannay/4UR4/pull/30), a true merge of branch head
-  `b3fc658` into `d1a1c41`. `main` and `origin/main` sit at that SHA. **Every artifact this
-  file describes as delivered is on `main`, except this branch's own contents** — the #31
-  ruling record (HD-22), the scoped freeze marker and this refresh land together with it.
-  CI is green
-  at this SHA across the four governance-validation gates (`tools/validate.mjs`,
-  `.claude/hooks/bash-guard.test.mjs`, `tools/fixture-replay.mjs --all`,
-  `tools/check-evidence.mjs`).
+- **Last updated:** 2026-07-27
+- **Last reviewed commit SHA (main):** `ed92bbb` — the merge commit of
+  [PR #33](https://github.com/tomerYannay/4UR4/pull/33). [PR #32](https://github.com/tomerYannay/4UR4/pull/32)
+  merged immediately before it at `758c0a0`, in that order deliberately: #32's commits are
+  ancestors of #33's, so merging #33 first would have landed the quarantine control on `main`
+  under the engine PR's number. CI is **green on `main` at `ed92bbb`**.
+
+  **Both were merged by the Product Owner personally, through the GitHub UI**, and that is
+  the substance of the authorization rather than a procedural detail — see
+  [#34](https://github.com/tomerYannay/4UR4/issues/34). No agent can produce an approval
+  artifact distinguishable from one it wrote itself, so **the act of merging is the approval**.
+  **Deviation to record for the Auditor:** [GOV-005](../governance/definition-of-done.md) says
+  "merged by Release & Ops only". That clause scopes *agents*; the Release & Ops gate refused
+  both merges precisely because no authorization channel existed, and its refusals were correct
+  each time.
+
+  **The gate now runs five checks**, not four: `tools/validate.mjs` ·
+  `.claude/hooks/bash-guard.test.mjs` (329 assertions) · `tools/fixture-replay.mjs --all` ·
+  `tools/check-evidence.mjs` · **`python3 -m engine.tests.run_all` (136 tests)** — plus a
+  **fixture-immutability guard** that fails any PR touching `engine/` that also modifies or
+  deletes committed fixture data.
 - **Build-freeze status:** **ON everywhere except Phase 2 `engine/` work**
   ([GOV-015](../governance/build-freeze.md)). A **Product Owner ruling on
   [#31](https://github.com/tomerYannay/4UR4/issues/31) (2026-07-26)** **LIFTS the freeze for
@@ -60,15 +71,43 @@
 ## Current phase
 **Phase 0 → Phase 1 boundary.** Phase 0 (specification & golden examples) is substantially
 complete and Phase 1 (market-data foundation) is in its **research** stage; Phase 1
-implementation remains **freeze-blocked**. Phase 2 `engine/` work is no longer
-freeze-blocked (see Build-freeze status), but its **entry criteria are unmet**.
+implementation remains **freeze-blocked**.
 
-**Phase 2 entry is separately blocked**, independently of the freeze, by
-[#20](https://github.com/tomerYannay/4UR4/issues/20) — **still open on GitHub**, named as a
-Phase 2 criterion in [`roadmap.md`](roadmap.md), with
-[#21](https://github.com/tomerYannay/4UR4/issues/21) beneath it. **M-09 must also be ruled**
-before a Phase 2 ticket can meet its Definition of Ready (see Delegated product decisions).
+**Phase 2 — the engine is BUILT and on `main`; the exit determination is OWED.** These are
+two different statements and this file keeps them apart deliberately.
+
+*What is delivered and mechanically enforced* (`engine/`, 27 files, merged at `ed92bbb`):
+the deterministic pre-breakout engine reproduces **all 23 golden fixtures and RM-01** —
+anchors, `sig6` slope/intercept, line values at every recorded index, formation traces with
+F1/F2/F3 evaluated independently, §18 input guards, every pre-breakout re-selection, and
+both RM-01 clauses with the stop index **derived by the engine, never read from the fixture**.
+136 tests, 2,525 field comparisons, inside the **required** CI check. Determinism is asserted
+across varied `PYTHONHASHSEED` in a child process. Look-ahead is structurally prevented: the
+`Prefix` value object is exactly `t` bars long and geometry never receives the series.
+
+*What is NOT thereby true.* **No agent has declared Phase 2 exit met, and none may** — that
+is a [GOV-002](../governance/roadmap-authority.md) roadmap determination owned by the Product
+Steward, on a gate assessment, not an inference from a green suite. Two Phase 2 **entry**
+criteria remain formally unmet and are recorded as disclosed rather than satisfied:
+E2-AUTHOR criterion 1 (#20's closure) and criterion 5 (the independence attestation, which
+the roadmap states is unsatisfiable while #21 is open). The Product Owner ruled that
+E2-AUTHOR-A governs and must not block Phase 2 indefinitely; **that unblocked the work, it
+did not retroactively satisfy the criteria.**
+
+*Also true, and it limits what the 23 prove:* seven of the twenty geometry fixtures share
+bars 0–15 byte-identically and five share `B* = (6,93)`. **Twenty fixtures are not twenty
+independent samples.** Two mutations (M-1, M-2) were found to **survive the committed
+corpus** and were recorded as findings with constructed adversarial cases rather than
+absorbed — no fixture was added, edited or reinterpreted to accommodate them. RM-01 is the
+only committed evidence that the specification captures the object the Product Owner actually
+drew, and **only its Half A is non-circular**; Half B is replay-generated and earns
+conformance credit only (SPR-D-03's mandatory rider).
+
+**M-09 is CLOSED** by [SPR-D-03](human-decisions.md), condition-10 CONFIRMED.
 [#19](https://github.com/tomerYannay/4UR4/issues/19) is **CLOSED** and no longer blocks.
+[#20](https://github.com/tomerYannay/4UR4/issues/20)'s configuration half is on `main`;
+[#21](https://github.com/tomerYannay/4UR4/issues/21) and
+[#34](https://github.com/tomerYannay/4UR4/issues/34) remain open and are the same root cause.
 
 **Phase 0 exit is clean.** The defect that once qualified it — **GX-08 as committed**
 encoding a precondition **HD-11 forbids** — was corrected by PR #18: GX-08 expects the
@@ -152,9 +191,25 @@ entry enumerates as going beyond the escalated options:
   carries **E2-AUTHOR** (A/B form, five conditions) as a Phase 2 *entry* criterion, with the
   design in
   [`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md).
-  **The *configuration* half — a real tool-deny on the authoring agent — is still owed**, is
-  an **Orchestrator** action and **not** a Product Steward one. **The issue is still open and
-  still blocks Phase 2 entry until closed.**
+  **The configuration half is now ON `main`** ([PR #32](https://github.com/tomerYannay/4UR4/pull/32),
+  merged at `758c0a0`): `.claude/hooks/bash-guard.mjs` denies the `implementation-engineer`
+  role the reference model, `product/fixtures/VERIFICATION.md` and the mechanism document, at
+  tool level rather than by instruction, with 329 assertions covering it.
+
+  **It no longer blocks Phase 2, and the reason is a Product Owner ruling, not the hook
+  landing:** *"E2-AUTHOR-A is the authoritative Phase 2 independence criterion… The read-deny
+  hook is preventive defense-in-depth only. It is not the proof of clean-room authorship and
+  must not block Phase 2 indefinitely."* **E2-AUTHOR-A was assessed on the committed artifact
+  by the Project Auditor at `f0455f6` and found SATISFIED** — no import, no execution, and
+  structure, control flow, naming and constant derivation that diverge from the reference model
+  at every point where they could have converged.
+
+  **What is still owed, stated honestly:** criterion 5's independence *attestation* does not
+  exist as a file, and the roadmap says in its own words that it is unsatisfiable while #21 is
+  open. It is **disclosed, not treated as satisfied** — see M-35. And the E2-AUTHOR-B record
+  for commit `7ab8075` is **ABSENT, not weak**: the orchestrating session authored 6 executable
+  lines in `engine/` having read the reference model. The Auditor examined exactly those lines
+  and found they move *further* from the model than the code they replaced.
 - **Issue [#21](https://github.com/tomerYannay/4UR4/issues/21)** — review verdicts cannot
   become citable artifacts, and review attribution collapses to a single account. **Required
   before HD-06**, and a stated dependency of E2-AUTHOR criterion 4 (the clean-room

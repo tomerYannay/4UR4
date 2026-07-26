@@ -1031,6 +1031,53 @@ mechanism existing**, on a Product Owner ruling relayed under the same single-ac
 required CI, required exact-head reviews, no direct pushes, no force pushes, no branch
 deletion, no routine administrative bypass — **before Phase 2 product code merges**.
 
+### HD-22 part 3 — DEVIATION RECORDED, ruled by the Product Owner 2026-07-26
+
+**Six of the seven parts are in force. The seventh — "required exact-head reviews" — is
+UNMET, and it is unmet by structural impossibility rather than by omission.**
+
+*"Full branch protection is in place" is not an available statement about this repository.*
+
+| # | Part | State | Evidence |
+|---|------|-------|----------|
+| 1 | PR-only merges | **MET** | `required_pull_request_reviews` block present |
+| 2 | required CI | **MET** | context `Validate agent OS & governance`, `strict: true` — the single job that runs the validator, the hook suite, the fixture re-derivation, the evidence checker and the 136-test engine conformance suite |
+| 3 | **required exact-head reviews** | **UNMET** | `required_approving_review_count: 0` |
+| 4 | no direct pushes | **MET** | proven empirically: a direct push was rejected, `protected branch hook declined` |
+| 5 | no force pushes | **MET** | `allow_force_pushes: false` |
+| 6 | no branch deletion | **MET** | `allow_deletions: false` |
+| 7 | no routine admin bypass | **MET** | `enforce_admins: true` |
+
+**Why part 3 cannot be satisfied by raising the number.** GitHub forbids a pull-request
+author from approving their own pull request. This repository has **one identity** — the
+Product Owner and every agent share `tomerYannay` — so every PR is authored by that identity
+and **no approving review can ever exist**. Setting the count to `1` would not tighten the
+gate; it would make `main` **permanently unmergeable**, and the predictable response is to
+switch `enforce_admins` off, trading a real protection for a theatrical one. **The constraint
+is [#21](https://github.com/tomerYannay/4UR4/issues/21) and
+[#34](https://github.com/tomerYannay/4UR4/issues/34), not the setting.** At count `0`,
+`dismiss_stale_reviews: true` is **inert** — there is no review to dismiss — so part 3 is
+**unimplemented, not partially met**. Do not read the two settings together as partial
+compliance.
+
+**The two gates split on this, and both were right about what they were looking at.** The
+Project Auditor ruled it non-blocking: the load-bearing protections for engine code are in
+place, and the defect is already ticketed. The Strategic Product Reviewer ruled it blocking:
+HD-22 states it as a precondition on Phase 2 product code merging, and a precondition that
+is quietly reinterpreted is not a precondition. **The Product Owner resolved it on
+2026-07-26: NOT BLOCKING, deviation to be recorded rather than closed.**
+
+**What the compensating controls do and do not cover.** Parts 1, 2, 4–7 mean no change
+reaches `main` without a PR whose required check ran the full gate at that head. What they
+do **not** cover is the residual part 3 exists for: *that a party independent of the author
+looked at the exact head that merges.* Today that residual is carried by the agent review
+chain, whose verdicts are same-account relays with no citable artifact. **That is genuinely
+weaker, and it is not described here as equivalent.** It is why #21 stays open.
+
+**Closing this deviation requires a second identity** — a GitHub App or machine account —
+after which `required_approving_review_count: 1` becomes both settable and meaningful. Until
+then this row stands as the honest state.
+
 ## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
 
 - **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**

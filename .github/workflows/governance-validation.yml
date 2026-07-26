@@ -41,8 +41,15 @@ jobs:
         run: |
           set -euo pipefail
           base="origin/${{ github.base_ref }}"
-          git fetch --no-tags --depth=0 origin "${{ github.base_ref }}" >/dev/null 2>&1 || true
+          # `--depth=0` here was a no-op suppressed by `|| true` -- not a meaningful depth
+          # argument, so the fallback that exists to make this guard robust did nothing.
+          # Caught by Code Review. It was harmless only because `fetch-depth: 0` on the
+          # checkout already supplies full history; `--unshallow` is the intended form, and
+          # it is a no-op on an already-complete clone rather than an error.
+          git fetch --no-tags --unshallow origin "${{ github.base_ref }}" >/dev/null 2>&1 \
+            || git fetch --no-tags origin "${{ github.base_ref }}" >/dev/null 2>&1 || true
           merge_base="$(git merge-base "$base" HEAD)"
+          echo "merge base with ${{ github.base_ref }}: $merge_base"
 
           engine_changed="$(git diff --name-only "$merge_base" HEAD -- engine/ | head -1)"
           if [ -z "$engine_changed" ]; then
