@@ -54,6 +54,22 @@ The rest:
 | M-19 | `line_at_stop.stop_index` is asserted explicitly and again inside the `Object.keys` loop — the identical diff prints twice on failure | cosmetic | — |
 | M-20 | That loop iterates the *derived* keys, so a key present only in the expectation is invisible to the harness | none — caught by the schema's `additionalProperties: false` | Worth a one-line comment saying so |
 
+## From the PR #32 review (E2-AUTHOR tool-deny)
+
+The tool-deny took four revisions. Three of its findings were fixed before merge because
+they were ordinary-use bypasses or a functional regression; the rest are **disclosed
+limitations**, recorded here because the Product Owner ruled the hook is
+**defence-in-depth, not a security proof** ([#31](https://github.com/tomerYannay/4UR4/issues/31)),
+and **E2-AUTHOR-A is the authoritative independence criterion**.
+
+| # | Item | Class | Why it can wait |
+|---|------|-------|-----------------|
+| M-22 | **The parity check does not cover TEMPORARY specialists** (GOV-016). It filters `status === 'permanent'`. There are none today, but an unregistered temporary agent would be silently quarantined by AC-4 — the exact failure the check exists to prevent, one category over | tooling gap | Stated in the code rather than implied. No temporary specialists exist; promote the moment one is created |
+| M-23 | **Repo-root recursive content search** — `grep -rn <pattern> .` or `Grep {pattern, output_mode:"content"}` with no `path` — returns matching *lines* from the reference model | disclosed residual | Incidental, not targeted. Closing it means blocking repo-root search, an over-block that breaks the ticket. P1 clean-room checkout removes the blobs entirely and is the primary control |
+| M-24 | The bare word `tools` in an engineer Bash command blocks, so `node engine/tools.mjs` and a commit message containing "tools" are denied | over-block, bounded | Friction the author can reword around; blocks no file the ticket requires |
+| M-25 | `Object.values()` path scanning treats `content`/`new_string` as candidate paths, so writing prose containing `tools/` or a quarantined filename blocks | over-block, bounded | Code Review ruled it does not break the ticket: the attestation is recorded by a party other than the author (GOV-011 rule 2), so the engineer never needs to type the model's path |
+| M-26 | Pre-existing, outside this diff: `fileMutation`'s `/>>?/` fires on `=>`, blocking read-only roles from `node -e` with arrow functions | pre-existing | Tripped several review harnesses this session; unrelated to the quarantine |
+
 ## Promoted out (was here, turned out to block)
 
 *None yet.*

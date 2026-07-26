@@ -74,8 +74,13 @@ export function isKnownRole(role) { return Object.hasOwn(ROLE_POLICY, role); }
 // "Registered" is load-bearing, and was not always true. AC-4 makes an UNKNOWN role
 // inherit this quarantine, so any permanent agent missing from ROLE_POLICY is silently
 // denied. That happened to strategic-product-reviewer. The parity check in
-// tools/validate.mjs now asserts ROLE_POLICY covers every agent on disk, so the omission
-// fails the build instead of quietly removing a gate's access.
+// tools/validate.mjs now asserts ROLE_POLICY covers every PERMANENT agent on disk, so the
+// omission
+// fails the build instead of quietly removing a gate's access. KNOWN GAP, stated rather
+// than implied: the check does NOT cover TEMPORARY specialists (GOV-016). There are none
+// today, but one would be unregistered and therefore silently quarantined by AC-4 — the
+// exact failure this check exists to prevent, one category over. Logged in the
+// maintenance backlog.
 //
 // NOT quarantined, deliberately: the fixtures themselves. They are the conformance
 // CONTRACT the engine must satisfy, and phase2-independence-mechanism.md classifies
