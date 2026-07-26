@@ -309,7 +309,8 @@ eq(quarantineBlock(ENG, 'node --test engine/'), null,
 // strategic-product-reviewer was MISSING from ROLE_POLICY. Once AC-4 made unknown roles
 // inherit the engineer quarantine, that omission silently DENIED a permanent gating agent
 // the very document it is asked to rule on. tools/validate.mjs now asserts ROLE_POLICY
-// covers every agent on disk; these assert the consequence at the hook level.
+// covers every PERMANENT agent on disk (not temporary specialists — see M-22); these
+// assert the consequence at the hook level.
 for (const role of ['orchestrator', 'implementation-engineer', 'verification', 'code-reviewer',
                     'product-innovation', 'project-auditor', 'release-ops', 'product-steward',
                     'architect', 'strategic-product-reviewer']) {
