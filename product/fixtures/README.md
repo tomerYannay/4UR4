@@ -371,8 +371,11 @@ earlier than it), with the documented `min_formation_bars = 8`, `min_ath_age_bar
 
 So RM-01 produces a **confirmed breakout at bar 10 (2026-06-29)** under as-of-time
 evaluation, where its approved record states `confirmed_bar: null`. This was derived
-**independently five times** — Phase-2 planning, an orchestrating session, and the
-Strategic Product Reviewer — agreeing to **six significant figures**.
+by **five separate agent sessions** — Phase-2 planning, an orchestrating session, the
+Strategic Product Reviewer, Verification and Code Review — agreeing to **six significant
+figures**. *Those five are **correlated re-runs of the same arithmetic over the same
+committed CSV, not five independent instruments**; the count is traceability, not
+evidence of independence.*
 
 **Both records are arithmetically correct, about different objects.** The approved record
 is the **full-series** hull, computed once over all 29 bars. The as-of-time record is the

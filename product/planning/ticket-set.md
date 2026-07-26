@@ -187,7 +187,8 @@ select one, commit spend, or accept licensing terms.
 - **Epic:** `epic: market-data-foundation`
 - **Phase:** 1 — Market-data foundation
 - **Context:** Implements the provider-agnostic `data/` layer (architecture §3.2):
-  adjusted daily OHLCV + point-in-time constituents behind an internal contract,
+  adjusted daily OHLCV + point-in-time 4UR4 US Large-Cap 500 membership behind an
+  internal contract,
   owning adjustment policy and provenance tagging. **Product code — cannot start
   until a human selects a provider (HD-06/HD-07) and lifts the freeze per-scope
   ([GOV-015](../../governance/build-freeze.md)).**
@@ -197,7 +198,8 @@ select one, commit spend, or accept licensing terms.
 - **Non-goals (out-of-scope):** Choosing a provider; multi-provider failover;
   intraday/real-time feeds; the engine (ticket f); sentiment ingestion.
 - **Acceptance criteria (testable):**
-  - [ ] `data/` interface returns adjusted daily OHLCV and point-in-time constituents.
+  - [ ] `data/` interface returns adjusted daily OHLCV and point-in-time 4UR4 US
+        Large-Cap 500 membership.
   - [ ] One adapter implements the interface for the approved provider.
   - [ ] Adjustment policy matches HD-01; provenance/snapshot stored per bar.
   - [ ] Data-quality checks flag (not silently pass) gaps/split anomalies/duplicates.

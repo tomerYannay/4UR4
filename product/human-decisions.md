@@ -885,7 +885,7 @@ confirmation remains mandatory before financial authorization.**
 
 ## HD-20 — RM-01: as-of-time result diverges from the approved full-series record · materiality: **high**
 
-- **Status:** **RESOLVED — by delegated decision [SPR-D-01](#spr-d-01--rm-01-carries-both-analytical-layers--delegated-product-decision-approved)**, not by
+- **Status:** **RESOLVED — by delegated decision [SPR-D-01](#spr-d-01--rm-01-carries-both-analytical-layers--delegated_product_decision_approved)**, not by
   direct Product Owner authorship. Decided by the **Strategic Product Reviewer** under the
   [HD-21](#hd-21--bounded-autonomous-product-decision-authority--materiality-high)
   delegation, 2026-07-26.
@@ -901,8 +901,14 @@ confirmation remains mandatory before financial authorization.**
   `−0.0240143`) is never closed above — true. Under §21, the line judging bar 10 is built
   only from bars 0–9, binds `B* = (9, 158.40)` after bar 9's wick-break re-selection, and
   sits at **150.593**; the close of **164.19** clears it by **0.0864461** log units (≈9%).
-  Derived independently **five times** — Phase 2 planner, orchestrating session, Strategic
-  Product Reviewer, Verification and Code Review — agreeing to six significant figures.
+  Re-derived by **five separate agent sessions** — Phase 2 planner, orchestrating session,
+  Strategic Product Reviewer, Verification and Code Review — agreeing to six significant
+  figures. *Stated precisely, because the stronger verb would be false: these are
+  **correlated re-runs of the same arithmetic over the same committed CSV**, not five
+  independent instruments, and the second through fifth add little over the first.*
+  *(`0.0864461` is the raw clearance `ln(close) − ŷ`. The reference model's own
+  `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`; both
+  are correct about different things, and an unqualified "margin" has two readings.)*
 - **Tolerance cannot suppress it — but one documented parameter can.** Suppression by
   tolerance would require `ε_break ≥ 0.0864461`, **≈8.6×** the documented `0.01`, and
   HD-13 forbids resolving fixture outcomes by tolerance in any case. `ε` is irrelevant.
@@ -914,7 +920,11 @@ confirmation remains mandatory before financial authorization.**
   argument against it. *(An earlier revision of this entry said "delaying formation
   enlarges the margin" — false; it inverted §21.4, since shallower means higher and the
   margin therefore shrinks. The Product Owner was corrected on the artifact.)*
-- **Why it is Product-Owner-gated rather than a documentation fix.** The causal line at
+- **Why it was escalated rather than treated as a documentation fix.** *(Historical — the
+  framing as it stood while HD-20 was open. It was resolved under **delegation** by
+  SPR-D-01, not by direct Product Owner ruling; the underlying product question this
+  bullet identifies remains genuinely Product-Owner-owned and is deliberately left open
+  as a Phase 4 backtest question.)* The causal line at
   bar 10 sits **below the entire recent trading range** — a steep two-point fit over a
   6-bar window after an IPO spike. §21.3's own derivation names that as precisely the
   failure the formation gates exist to prevent. **On the only real data in the
@@ -1069,6 +1079,20 @@ conditions (condition 10) before it stands.
   returned **NOT CONFIRMED** at `0b23f91` — correctly: the decision existed only in a
   session transcript while this register still read `PENDING`, which is the substitution
   condition 10 exists to prevent. The decision stands from `5b99ba6`.
+
+  > **Provenance of the condition-10 confirmation — disclosed to the same standard this
+  > register applies to HD-12/13/14.** The confirmation reached this register as a
+  > **session relay**. **No citable artifact exists** — it is not on
+  > [#27](https://github.com/tomerYannay/4UR4/issues/27), not on
+  > [#26](https://github.com/tomerYannay/4UR4/issues/26), not on
+  > [PR #25](https://github.com/tomerYannay/4UR4/pull/25), and no audit report is
+  > committed — **because [#21](https://github.com/tomerYannay/4UR4/issues/21) is
+  > unresolved**; that is precisely the defect #21 records. The auditor ran **inside the
+  > same autonomous session and under the same single GitHub account** as the decision it
+  > audited, so its independence is **role-level (a different, read-only agent that did
+  > not produce the work), not organizational**. The verdict is not weakened by saying
+  > so — but a register that penalised a transcript-only *decision* must not quietly rest
+  > on a transcript-only *confirmation*. Closing #21 is what upgrades this record.
 
 ### Decision
 

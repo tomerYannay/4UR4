@@ -15,10 +15,14 @@
 - **Last reviewed commit SHA (main):** `e56ed8eec79a800d759e17bd7b2dba81d449904b` — the merge
   commit of [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
 - **Unmerged work this file already reflects:** branch
-  `feat/universe-definition-and-phase2-planning` at `25274a9` — the HD-18 universe
-  definition, the Phase 2 implementation plan, and the HD-20 → **SPR-D-01** resolution
-  propagated here. **None of it is on `main` yet**, so where this file and `main` disagree,
-  the branch is the newer statement and the merge is still owed.
+  `feat/universe-definition-and-phase2-planning` at its **current head** — the HD-18
+  universe definition, the Phase 2 implementation plan, the HD-20 → **SPR-D-01**
+  resolution propagated here, and the 2026-07-26 review-round corrections. **None of it is
+  on `main` yet**, so where this file and `main` disagree, the branch is the newer
+  statement and the merge is still owed. *(This line named a specific commit and fell one
+  commit behind itself — a file whose job is to say what is and is not on `main` must not
+  do that. It now names the branch head rather than a SHA that goes stale on every
+  commit.)*
 - **Build-freeze status:** **ON** ([GOV-015](../governance/build-freeze.md)) — no product
   implementation until a human lifts it per-scope. `build_freeze: ON`,
   `autonomous_implementation: DISABLED`. **Nothing has been lifted**; the HD-15 ruling is a
@@ -142,12 +146,13 @@ one file and lifts nothing.
   before HD-06 or any freeze lift**, and now also a stated dependency of E2-AUTHOR criterion 4
   (the clean-room attestation has nowhere to live until #21 is fixed).
 - **Issue [#22](https://github.com/tomerYannay/4UR4/issues/22)** — evidence-tooling follow-ups.
-- **Issue [#16](https://github.com/tomerYannay/4UR4/issues/16)** — Phase 0 evidence
-  correction. **Delivered by PR #18, now merged** (see Completed milestones). One piece of
-  ticket hygiene survives the merge: #16 was never re-scoped to cover what PR #18 actually
-  delivered (HD-12/13/14, spec §21, D-TL-11/12, three new fixtures, the reference model), so
-  the ticket→PR traceability link remains incomplete (Project Auditor, GOV-007). That is an
-  Orchestrator ticket edit, not a Product Owner decision.
+- **Traceability debt from [#16](https://github.com/tomerYannay/4UR4/issues/16)
+  (the issue itself is CLOSED).** Phase 0 evidence correction, **delivered by PR #18, now
+  merged** (see Completed milestones). #16 was closed without ever being re-scoped to cover
+  what PR #18 actually delivered (HD-12/13/14, spec §21, D-TL-11/12, three new fixtures, the
+  reference model), so the ticket→PR traceability link remains incomplete (Project Auditor,
+  GOV-007). **This survives as a documentation debt, not as an open ticket** — reopening #16
+  to record it is an Orchestrator decision, not a Product Owner one.
 
 ## Next milestone
 Two tracks. (1) **Unblock Phase 2 entry:** close **#19** (addressed on the current unmerged
@@ -251,7 +256,8 @@ provider, or authorizes spend or licensing.**
   Auditor confirms it, and only then is promoted.
 
 ## Open issues / PRs (governed index)
-- Issues: **#4**, **#5** (Phase 1 research, open) · **#6**, **#7** (impl, `blocked: freeze`) · **#10** (Agent Coordination Queue, permanent index) · **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (Phase 0 evidence correction — delivered by the merged PR #18; open only for the re-scoping owed to its traceability link) · **[#19](https://github.com/tomerYannay/4UR4/issues/19)** (roadmap exit-criteria gap — **blocks Phase 2 entry**; addressed by this commit, pending review) · **[#20](https://github.com/tomerYannay/4UR4/issues/20)** (HD-15 condition 2 has no enforcement mechanism — **blocks Phase 2 entry**; document half addressed by this commit, agent deny-configuration still owed) · **[#21](https://github.com/tomerYannay/4UR4/issues/21)** (review verdicts cannot become artifacts + single-account attribution — **required before HD-06 or any freeze lift**) · **[#22](https://github.com/tomerYannay/4UR4/issues/22)** (evidence-tooling follow-ups) · **[#23](https://github.com/tomerYannay/4UR4/issues/23)** (roadmap baseline approval, HD-16 — ruling artifact) · **[#24](https://github.com/tomerYannay/4UR4/issues/24)** (universe decision, HD-18 — ruling artifact) · **[#26](https://github.com/tomerYannay/4UR4/issues/26)** (RM-01 as-of-time divergence — the HD-20 evidence and options; **resolved by SPR-D-01**) · **[#27](https://github.com/tomerYannay/4UR4/issues/27)** (HD-21 bounded delegation — the authority under which SPR-D-01 was taken).
+- **OPEN issues:** **#4**, **#5** (Phase 1 research) · **#6**, **#7** (impl, `blocked: freeze`) · **#10** (Agent Coordination Queue, permanent index) · **[#19](https://github.com/tomerYannay/4UR4/issues/19)** (roadmap exit-criteria gap — **blocks Phase 2 entry**; addressed on the current unmerged branch, pending review) · **[#20](https://github.com/tomerYannay/4UR4/issues/20)** (HD-15 condition 2 has no enforcement mechanism — **blocks Phase 2 entry**; document half addressed on the current unmerged branch, agent deny-configuration still owed) · **[#21](https://github.com/tomerYannay/4UR4/issues/21)** (review verdicts cannot become artifacts + single-account attribution — **required before HD-06 or any freeze lift**) · **[#22](https://github.com/tomerYannay/4UR4/issues/22)** (evidence-tooling follow-ups) · **[#23](https://github.com/tomerYannay/4UR4/issues/23)** (roadmap baseline approval, HD-16 — ruling artifact) · **[#24](https://github.com/tomerYannay/4UR4/issues/24)** (universe decision, HD-18 — ruling artifact) · **[#27](https://github.com/tomerYannay/4UR4/issues/27)** (HD-21 bounded delegation — the authority under which SPR-D-01 was taken).
+- **CLOSED, retained here only because they are cited above:** **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (Phase 0 evidence correction — delivered by the merged PR #18; **closed**, leaving the traceability debt recorded under Active work, not an open ticket) · **[#26](https://github.com/tomerYannay/4UR4/issues/26)** (RM-01 as-of-time divergence — the HD-20 evidence and options; **closed, resolved by SPR-D-01**). *(Both were previously listed as open in this index. The canonical current-state document must not assert open tickets that are closed.)*
 - Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
 - Recently merged: **[#18](https://github.com/tomerYannay/4UR4/pull/18)** — **MERGED as `e56ed8e`** (Phase 0 evidence correction + as-of-time fixture audit; the full review chain was re-run against every head, findings recorded in [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md); HD-12/13/14 ratified and HD-15 approved 2026-07-25). Issues **#19**–**#22** were opened after this merge.
 

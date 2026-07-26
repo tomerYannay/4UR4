@@ -202,7 +202,7 @@ Traceability: each FR cites the governing spec.
 - **FR-15** The **data layer** MUST expose a provider-agnostic interface for daily
   OHLCV on a **split-adjusted, dividend-UNadjusted ("as-traded") basis** (HD-01),
   applied consistently across ATH selection, pivots, line fitting, and breakout
-  tests, plus **point-in-time 4UR4 US Large-Cap 500 membership** (FR-19); it MUST own
+  tests, plus **point-in-time 4UR4 US Large-Cap 500 membership** (FR-21, FR-22); it MUST own
   the split/dividend
   **adjustment policy** and **provenance tagging** (architecture §3.2; data research
   R1, R3, R4).

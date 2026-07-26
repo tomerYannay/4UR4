@@ -488,7 +488,7 @@ redistribution-clear**, and the research shows that is not automatic:
 | Input | Candidate source | Licence posture | Tag |
 |---|---|---|---|
 | Market momentum (index vs 125-day MA) | Computable from 4UR4's own licensed equity bars | Clean, if the OHLCV licence permits derived display (see R7) | Derived from §7 |
-| Breadth (advance/decline, % above MA) | **Computable from 4UR4's own **4UR4 US Large-Cap 500** universe bars** | Clean — no new vendor needed | Analysis |
+| Breadth (advance/decline, % above MA) | **Computable from 4UR4's own 4UR4 US Large-Cap 500 universe bars** | Clean — no new vendor needed | Analysis |
 | Volatility (VIX) | Cboe | Cboe's terms bar display and derivative-index creation without prior written consent — see quote below | **VERIFIED** |
 | Put/call ratio | Cboe free CSVs (`cdn.cboe.com/resources/options/volume_and_call_put_ratios/…`) | Free to download, "provided for informational purposes only", explicitly "subject to the Terms and Conditions of Cboe Websites" — i.e. the same restriction | **VERIFIED** |
 | Junk-bond demand (credit spreads) | FRED (e.g. ICE BofA HY OAS) | FRED disclaims authority over third-party-owned series — see quote below | **VERIFIED** |
@@ -546,7 +546,7 @@ reconstruction is only licence-clean if it is built from inputs 4UR4 *already li
 Two of the seven CNN sub-indicators (**volatility/VIX** and **put/call ratio**) come from
 Cboe and are **not** free for commercial display despite being free to download. Two more
 (momentum, breadth) and arguably a third (safe-haven demand, given a Treasury series) are
-computable **entirely from 4UR4's own **4UR4 US Large-Cap 500** universe bars**, with no new vendor and no new
+computable **entirely from 4UR4's own 4UR4 US Large-Cap 500 universe bars**, with no new vendor and no new
 licence.
 
 **Recommended R6 posture:** build the v1 sentiment context from the **breadth / momentum /

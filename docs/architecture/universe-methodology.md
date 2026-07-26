@@ -727,8 +727,9 @@ external identifier — ticker, CIK, CUSIP, FIGI, exchange symbol — is an *att
 validity interval*, never a key.**
 
 > **Why provisional.** This was taken as a delegated default, but its own reversal cost is
-> *"not reversible cheaply"* — and HD-17 permits a delegated call only where the decision
-> **is** reversible. It therefore does not qualify as settled. The design proceeds on it
+> *"not reversible cheaply"* — and the governing delegation (**HD-21**, which supersedes
+> and widens HD-17) permits a delegated call only where the decision **is** reversible.
+> It therefore does not qualify as settled. The design proceeds on it
 > and flags it here at the point of use. **The objection is to its authority, not its
 > merits.**
 
@@ -1157,9 +1158,9 @@ are.
 | Carry-forward step function; interpolation banned | `UR-PIT` | **P1** — interpolating toward a future value is look-ahead by construction |
 | Stale share data is flagged, never filtered | `UR-PIT` | **P3** — delinquent filing correlates with distress, so filtering preferentially deletes losers |
 
-| Genuinely delegated, but **failing HD-17/HD-18 condition 6** — downgraded to provisional | Module | Status |
+| Genuinely delegated, but **failing the delegation's reversibility condition** (HD-21 condition 5, formerly HD-17 condition 6) — downgraded to provisional | Module | Status |
 |---|---|---|
-| 4UR4-minted `security_uid` as the canonical key | `UR-ID` | **PROVISIONAL.** Its own reversal cost is *"not reversible cheaply"*, and HD-17 permits a delegated call only where the decision **is** reversible. It therefore does not qualify as a settled default. Recorded as provisional and **escalated as OQ-U7** rather than relied upon. The choice may still be right — the objection is to its authority, not its merits |
+| 4UR4-minted `security_uid` as the canonical key | `UR-ID` | **PROVISIONAL.** Its own reversal cost is *"not reversible cheaply"*, and the governing delegation (**HD-21**, superseding HD-17) permits a delegated call only where the decision **is** reversible. It therefore does not qualify as a settled default. Recorded as provisional and **escalated as OQ-U7** rather than relied upon. The choice may still be right — the objection is to its authority, not its merits |
 
 ### 11.2 Escalated to the Product Owner
 
@@ -1173,7 +1174,7 @@ reserves both.
 | **OQ-U3** | **Are REITs in?** [§2.1.2](#212-the-exclusion-register) | Excluding a sector is a segment change; including is the lower-surprise default | Included |
 | **OQ-U4** | **Is R9 (point-in-time shares outstanding) opened, and does any spend attach?** [§4.1](#41-the-dependency-chain-and-where-it-breaks) | HD-06 and HD-07 make provider selection and spend human-gated | R9 opened as **free-path-only** research; no vendor contact |
 | **OQ-U5** | **How far back must the backtest window reach?** [§4.3](#43-where-the-data-comes-from) | The free SEC/XBRL path has a hard historical bound; reaching further is a spend or a text-extraction project | Window starts where the free structured path starts, and the start date is disclosed |
-| **OQ-U7** | **Is the 4UR4-minted `security_uid` the canonical identity key?** [§11.1](#111-proposed-as-safe-reversible-research-defaults--architect-proposals-pending-adoption-by-the-delegated-role) | Chosen as a delegated default, but its own reversal cost is "not reversible cheaply" — HD-17 delegation requires reversibility, so it does not qualify | Provisional; the design proceeds on it and flags it in every artifact |
+| **OQ-U7** | **Is the 4UR4-minted `security_uid` the canonical identity key?** [§11.1](#111-proposed-as-safe-reversible-research-defaults--architect-proposals-pending-adoption-by-the-delegated-role) | Chosen as a delegated default, but its own reversal cost is "not reversible cheaply" — the governing delegation (**HD-21**, superseding HD-17) requires reversibility, so it does not qualify | Provisional; the design proceeds on it and flags it in every artifact |
 | **OQ-U6** | **Is a *first-class* universe-methodology disclosure required on user-facing surfaces at MVP, or only internally?** [§6.3](#63-backtest-results-are-not-comparable--and-where-that-must-be-disclosed) | It is a product and legal-posture question, not a technical one | All five surfaces, D-1…D-5 |
 
 **Nothing in this section is a decision on the Product Owner's behalf.** Where a default

@@ -8,7 +8,12 @@
 //   1. Every product/fixtures/golden/GX-*/expected.json validates against
 //      product/fixtures/schema/fixture.schema.json, and the RM-01 annotation
 //      against real-annotation.schema.json.
-//   2. Every relative markdown link in the repository resolves — file AND #anchor.
+//   2. Every relative CROSS-FILE markdown link resolves — target file AND #anchor.
+//      LIMIT, stated because the header used to overclaim it: links beginning with `#`
+//      (same-file anchors) are SKIPPED and have never been checked. A broken same-file
+//      anchor shipped through this gap while the header still promised "file AND
+//      #anchor", so the claim is narrowed here to what the code does. Closing the gap —
+//      and the six pre-existing same-file anchors it would surface — is Issue #22.
 //   3. Every markdown table row is a single physical line with a consistent column
 //      count, so a wrapped row cannot silently render as empty cells.
 //
@@ -50,6 +55,18 @@ function chk(inst, sch, path, id, sink = errs) {
 }
 const schema = JSON.parse(readFileSync(join(ROOT, 'product/fixtures/schema/fixture.schema.json'), 'utf8'));
 const ids = readdirSync(join(ROOT, 'product/fixtures/golden')).filter((d) => /^GX-\d\d$/.test(d)).sort();
+// The census must be ASSERTED, not merely printed — the same argument the TABLE_FLOOR
+// below carries, applied to the gate it gates. Renaming GX-01 to GX-01.bak would
+// otherwise print "PASS — 22 golden fixtures" and exit 0, and emptying the directory
+// would print "PASS — 0". The count is exact rather than a floor because it is asserted
+// verbatim in five documents; a deliberate change to the fixture set must update them
+// together, which is exactly the coupling this line exists to force.
+const EXPECTED_FIXTURES = 23;
+if (ids.length !== EXPECTED_FIXTURES) {
+  errs.push(`FIXTURE CENSUS FAILED — found ${ids.length} golden fixtures, expected exactly`
+    + ` ${EXPECTED_FIXTURES} (GX-01…GX-23). Either fixtures were added/removed/renamed without`
+    + ` updating this count and the five documents that state it, or the directory scan broke.`);
+}
 for (const id of ids) chk(JSON.parse(readFileSync(join(ROOT, `product/fixtures/golden/${id}/expected.json`), 'utf8')), schema, '', id);
 
 // RM-01 annotation against its own schema
@@ -118,7 +135,8 @@ for (const f of md) {
   }
 }
 console.log(broken.length ? `DOC LINKS: ${broken.length} broken\n  ` + broken.join('\n  ')
-  : `doc links: PASS — ${md.length} markdown files, 0 broken links`);
+  : `doc links: PASS — ${md.length} markdown files, 0 broken CROSS-FILE links`
+    + ` (same-file #anchors are NOT checked — see the header limit and Issue #22)`);
 
 // ------------------------------------------------- markdown table structure --
 // A table row wrapped across physical lines, or one that loses a column

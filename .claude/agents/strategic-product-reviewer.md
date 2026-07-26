@@ -78,7 +78,7 @@ availability → redistribution right.
 
 ## 6. Human-gated decisions (never approve on the PO's behalf)
 paid-provider selection · recurring spend · roadmap approval / material change ·
-build-freeze lift · **product-definition changes *outside* the HD-21 delegation (see §6a)* ·
+build-freeze lift · **product-definition changes *outside* the HD-21 delegation (see §6a)** ·
 security/privacy posture · billing / customer-PII decisions · commercial data
 redistribution · human-gated merges · major risk acceptance. For any of these, output
 **`STRATEGIC_HUMAN_DECISION_REQUIRED`** and include: exact decision · recommended option ·

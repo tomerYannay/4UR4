@@ -11,8 +11,23 @@
 > here marks any ticket Done.
 
 > **Author restriction observed — and this document inherits the quarantine.**
-> `tools/fixture-replay.mjs` was **not opened at all** while writing this — not its
-> body, not its header. `product/fixtures/VERIFICATION.md` was likewise not opened.
+> **Scope of this attestation: the drafting of this document.** While it was written,
+> `tools/fixture-replay.mjs` was **not opened at all** — not its body, not its header —
+> and `product/fixtures/VERIFICATION.md` was likewise not opened.
+>
+> **Disclosure — later editing sessions did not inherit that quarantine.** This file has
+> since been edited by commits that edited `product/fixtures/VERIFICATION.md` in the same
+> atomic commit (`6af5261`, `9ef30b7`), and editing a file entails reading it. The
+> attestation above is therefore **true of the drafting session and false as an
+> open-ended claim about every session that has touched this file**; it is scoped rather
+> than withdrawn. This matters because
+> [#20](https://github.com/tomerYannay/4UR4/issues/20) is open precisely for the reason
+> that HD-15 condition 2 has **no mechanical enforcement** — this attestation is
+> currently the entire control, and a control that overstates itself is worse than one
+> that states its limits. `tools/fixture-replay.mjs` remains unopened by every session
+> that has edited this file; **that** is the claim that carries the quarantine, and it is
+> the one E2-AUTHOR must eventually enforce mechanically rather than accept on trust.
+>
 > Every rule below is derived from
 > [`trendline-specification.md`](../../product/trendline-specification.md),
 > [`human-decisions.md`](../../product/human-decisions.md),
@@ -397,14 +412,23 @@ the roadmap's own design and it must not be re-broken by a hand-maintained list.
 > `annotation.json` on a different schema, with **no `expected.json` and no
 > `causal_record`**. As written, a `real/*` walk would therefore either fail permanently
 > or pass vacuously — and a vacuous walk is worse, because it reports coverage it does
-> not have. **SPR-D-01 supplies the missing artifact:** RM-01 **Half B** (§7.3), carried in
-> a separate `expected-causal.json` — the annotation schema is `additionalProperties:
-> false`, so it cannot be extended in place, and `annotation.json`'s values are retained
-> untouched. Three constraints on this walk: the **stop
-> index must be engine-derived, not fixture-supplied**, or the clause asserts nothing
-> about the engine's own detection; the comparison is scoped to **Phase-2-owned
-> behaviour**; and **do not quietly narrow the walk to `golden/*` to make it pass** — a
-> vacuous walk is worse than a failing one, because it reports coverage it does not have.
+> not have. **SPR-D-01 supplies the *decision*, not the artifact:** it rules that RM-01
+> **Half B** (§7.3) **shall be** carried in a separate `expected-causal.json` — the
+> annotation schema is `additionalProperties: false`, so it cannot be extended in place,
+> and `annotation.json`'s values are retained untouched. **That file does not exist yet.**
+> As of this document's head, `product/fixtures/real/RM-01/` holds `annotation.json`,
+> `input.csv`, `README.md`, `alphavantage-source.json` and `source-chart.png` and nothing
+> else; authoring `expected-causal.json`, its additive schema and the `real/`-reading tool
+> extension is **owed work**, not delivered work.
+>
+> Four constraints on this walk. (1) The **stop index must be engine-derived, not
+> fixture-supplied**, or the clause asserts nothing about the engine's own detection.
+> (2) The comparison is scoped to **Phase-2-owned behaviour**. (3) **Do not quietly narrow
+> the walk to `golden/*` to make it pass** — a vacuous walk is worse than a failing one,
+> because it reports coverage it does not have. (4) **The artifact must exist first:** a
+> `real/*` walk that finds no `expected-causal.json` must **fail**, never skip. Absent
+> this fourth constraint the first three are satisfiable by a walk that checks nothing —
+> exactly the vacuity the paragraph above warns against.
 
 Per golden fixture, the engine must reproduce:
 
@@ -587,6 +611,39 @@ and it should be stated in the evidence log rather than discovered later.
 
 ### 7.3 **Finding — RM-01's approved record is full-series; as-of-time it appears to break out at `t = 10`**
 
+> ## ⚠ SUPERSEDED BY **SPR-D-01** (2026-07-26) — retained as the finding, not as the position
+>
+> **Everything below states the question as it stood while HD-20 was open. It is retained
+> verbatim because SPR-D-01 forbids deleting evidence, and it must not be read as the
+> current position.** Read it as *how the divergence was found and proved*; read
+> [`../../product/roadmap.md`](../../product/roadmap.md) Phase 2 exit criteria and the
+> [register](../../product/human-decisions.md) → *Delegated product decisions (HD-21)*
+> for *what was decided*.
+>
+> **What changed.** The divergence is **confirmed, not tentative** ("appears to" in the
+> heading is stale). HD-20 is **RESOLVED** — by **SPR-D-01**, a **delegated** decision of
+> the Strategic Product Reviewer under HD-21, **not** a Product Owner ruling, and
+> overturnable by the Product Owner at any time without cause. RM-01 carries **both**
+> layers, neither superseding the other.
+>
+> **Two statements below are now positively wrong and are corrected here rather than in
+> place:**
+> - **Consequence 1 says a conforming engine "would report `Λ^F` … and
+>   `confirmed_bar = 10`".** Under SPR-D-01 **Limit 1** the Phase-2 gate asserts
+>   **`line_at_stop`, NOT `Λ^F`**, and asserts **no `BROKEN_OUT` state and no
+>   `BREAKOUT_CONFIRMED` reason code** — those are Phase 3's. Consequence 1 describes a
+>   gate shape that was rejected.
+> - **"Half B (escalate)" and "the Product Owner asked to rule"** describe an escalation
+>   that has since happened and been answered by delegation. Half B's expectation is no
+>   longer "unrecorded" as a decision — though the *artifact* (`expected-causal.json`)
+>   is still owed; see §6.1.
+>
+> The **four scope limits** (Phase-2-only; engine-derived stop index; Half B **narrows**
+> RM-01's assertable surface to bars 0–9 plus the stop index; and the circularity limit
+> under which a replay-generated Half B is a **regression guard against today's model,
+> not independent verification**) travel with every use of SPR-D-01 and are stated in
+> full in the roadmap and the register. **No GOV-015 clearance is granted.**
+
 The RM-01 record was produced before HD-12, and the as-of-time audit of 2026-07-25
 explicitly did **not** cover it (`fixtures/README.md` §6a: *"RM-01 itself is untouched
 by that audit"*). Its approved values — `B* = (25, 2026-07-21, 129.88)`,
@@ -627,12 +684,17 @@ If the re-selection at bar 9
 were somehow wrong, the line judging bar 10 would be *steeper*, and the breakout would
 be larger still. The same rally re-fires at bar 11 under a later formation.
 
-**Consequences, if this stands after mechanical confirmation:**
+**Consequences, if this stands after mechanical confirmation:** *(historical — stated
+while HD-20 was open; consequence 1 was **not** the disposition adopted, see the banner)*
 
 1. A **spec-conforming** engine cannot satisfy the Phase-2 RM-01 exit clause as
    written. It would report `Λ^F` — anchor `(2, 225.64)`, `B* = (9, 158.40)`,
    `m ≈ −0.0505`, `b ≈ 5.5200` — and `confirmed_bar = 10`, not `(25, 129.88)` /
    `−0.0240143` / `5.46697` / `confirmed_bar == null`.
+   *(**Superseded by SPR-D-01 Limit 1.** The adopted gate asserts **`line_at_stop`, not
+   `Λ^F`**, and asserts **no `confirmed_bar` and no `BREAKOUT_CONFIRMED`** — those are
+   Phase 3's. The premise — that the clause **as then written** was unsatisfiable — was
+   correct, and is what the A/B split resolves.)*
 2. RM-01 would acquire the repository's **first real-data breakout**, changing the
    standing limit in §7.2 — and making §13's policy testable against real data for
    the first time.
@@ -672,7 +734,7 @@ is "the next step passes".
 
 | Step | Lands | Independently verifiable by | Gate to proceed |
 |---|---|---|---|
-| **S0** | *nothing built* — prerequisites | #20 closed; #21 resolved or the §9 stopgap ruled; per-scope freeze lift; RM-01 Half B ruled (§7.3); the `causal_record` field list agreed with Verification (§6.2); `spec_version` defined (§9 OQ-J) | all five recorded |
+| **S0** | *nothing built* — prerequisites | #20 closed; #21 resolved or the §9 stopgap ruled; per-scope freeze lift; RM-01 Half B ruled (§7.3) — **SATISFIED by SPR-D-01, 2026-07-26**, though its `expected-causal.json` artifact is still owed (§6.1); the `causal_record` field list agreed with Verification (§6.2); `spec_version` defined (§9 OQ-J) | **all six** recorded |
 | **S1** | `params`, `bars`, `guards`, `logspace` (incl. `sig6`) | GX-10 and GX-18 **complete**; the arithmetic-form pinning tests (§4.3); the C-4 tie-proximity audit; the GX-14 libm preflight; A-2 | M-1, M-9 caught |
 | **S2** | `anchor`, `envelope` | RM-01 **Half A** exactly; GX-08, GX-19, GX-23 (pivot-independence); GX-02's discrimination at its final prefix; GX-14's tie; GX-12/GX-20 candidacy-vs-domination; P-4 | M-6, M-7, M-8, M-14 caught |
 | **S3** | `formation` | GX-21, GX-23 gate traces; every fixture's `t_form`; A-1 | M-10 caught |

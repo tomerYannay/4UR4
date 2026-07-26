@@ -88,11 +88,14 @@ values reproduce independently within 6-significant-figure tolerance.**
 > annotation, and `fixture-replay.mjs` derives its fixture list from `golden/` and never
 > reads `real/`.
 >
-> Re-derived as-of-time — independently, five times, agreeing to six significant figures —
-> **RM-01 confirms a breakout at bar 10 (2026-06-29)**: close `164.19` against a causal line
-> at `150.593`, margin **0.0864461** log units. Suppressing it would need `ε_break` at
-> **≈8.6×** its documented value, and HD-13 forbids resolving fixture outcomes by tolerance
-> in any case.
+> Re-derived as-of-time by **five separate agent sessions**, agreeing to six significant
+> figures — **RM-01 confirms a breakout at bar 10 (2026-06-29)**: close `164.19` against a
+> causal line at `150.593`, margin **0.0864461** log units *(the raw clearance
+> `ln(close) − ŷ`; the reference model's own `events[].margin` field reports `0.0764461`,
+> the same quantity net of `ε_break`)*. Suppressing it would need `ε_break` at **≈8.6×**
+> its documented value, and HD-13 forbids resolving fixture outcomes by tolerance in any
+> case. *Those five are **correlated re-runs of the same arithmetic over the same
+> committed CSV, not five independent instruments**.*
 >
 > **Both results are arithmetically correct about different objects** — this section's
 > full-series hull (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
@@ -103,11 +106,26 @@ values reproduce independently within 6-significant-figure tolerance.**
 > **RESOLVED — [SPR-D-01](../human-decisions.md), 2026-07-26** (HD-20 closed). *Approved
 > under bounded Product Owner delegation; not direct Product Owner authorship* — decided by
 > the Strategic Product Reviewer under HD-21 and confirmed by the Project Auditor at
-> `5b99ba6`. **RM-01 carries both layers**; Half B lives in a separate
-> `expected-causal.json`. Half B is an **evidentiary conformance expectation, not an
-> economic endorsement**: 4UR4 does not assert the bar-10 signal is a good trade, and
-> whether the short-history / post-IPO false-positive class it exemplifies should be
-> suppressed is an open Phase 4 backtest question.
+> `5b99ba6`. **RM-01 carries both layers**; Half B is to be carried in a separate
+> `expected-causal.json` — **an artifact that does not exist yet**, and whose authoring,
+> additive schema and `real/`-reading tool extension are **owed work, not delivered
+> work**.
+>
+> **The four scope limits, which travel with every use of SPR-D-01:** (1) Phase-2-only —
+> Half B asserts `line_at_stop`, **not** `Λ^F`, and asserts **no** `BROKEN_OUT` state and
+> **no** `BREAKOUT_CONFIRMED` reason code, which stay Phase 3's; (2) the **stop index
+> must be engine-derived**, never fixture-supplied; (3) Half B **narrows** RM-01's
+> Phase-2 assertable surface to bars 0–9 plus the stop index, so *"the gate is
+> strengthened"* is **true of the gate as a whole and FALSE of RM-01** — neither sentence
+> may travel without the other; (4) **circularity** — a replay-generated Half B is
+> **model-derived**, and therefore a **regression guard against today's model, not an
+> independent correctness check**, leaving RM-01's non-circularity attached to Half A's
+> human-approved geometry and the real prices. **No GOV-015 clearance is granted.**
+>
+> Half B is an **evidentiary conformance expectation, not an economic endorsement**: 4UR4
+> does not assert the bar-10 signal is a good trade, and whether the short-history /
+> post-IPO false-positive class it exemplifies should be suppressed is an open Phase 4
+> backtest question.
 
 Independent verification of the first real-market fixture, computed by the primary session
 (verifier) from `real/RM-01/input.csv` (derived from immutable `alphavantage-source.json`,
