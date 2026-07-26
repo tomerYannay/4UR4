@@ -341,7 +341,13 @@ Minimum set that fails closed, ordered by the weight it carries.
 model-derived content): *Author `engine/` from `product/trendline-specification.md`,
 `product/fixtures/golden/**` and `product/fixtures/real/**` only. (The `real/**`
 permission is SPR-D-03; this brief previously said `golden/**` **only**, which
-excluded the very fixture HD-22 requirement 3 puts in the exit gate.) `tools/fixture-replay.mjs`, any successor
+excluded the very fixture HD-22 requirement 3 puts in the exit gate.) **Reproducing
+`real/RM-01/expected-causal.json` earns CONFORMANCE CREDIT ONLY — no independence credit
+(HD-15 condition 1) and no non-circularity credit (SPR-D-01 limit 3, which attaches
+non-circularity to Half A alone). It is replay-generated, and it is a regression guard against
+today's reference model, not independent verification.** SPR-D-03 clause 3 requires this rider
+to travel with the classification, and this brief is precisely where an author would otherwise
+form the opposite belief.) `tools/fixture-replay.mjs`, any successor
 model under `tools/`, `product/fixtures/VERIFICATION.md` and
 `docs/architecture/phase2-independence-mechanism.md` are quarantined: you work in a
 checkout that does not contain them, you must not retrieve them from git history,
