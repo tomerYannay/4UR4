@@ -184,8 +184,8 @@ what flips the ranking.
 
 | # | Prerequisite | Status at 2026-07-26 |
 |---|---|---|
-| 1 | Written confirmation that daily high/low are **consolidated-tape** | **BLOCKING** — vendor docs silent; this is C-1 |
-| 2 | Exact historical-depth coverage | partial — published claim, not sample-verified |
+| 1 | Written confirmation that daily high/low are **consolidated-tape** | **BLOCKING (C-1)** — but now a one-sentence question; see below |
+| 2 | Exact historical-depth coverage | **BLOCKING (C-2) — the leading candidate's claim is contradicted by its own upstream** |
 | 3 | **Split-only** adjustment availability (HD-01) | raw OHLC + `split_ratio` exposed; `adj_*` bundles dividends and must be banned |
 | 4 | Delisted-history coverage | partial |
 | 5 | Redistribution / display rights | published display licence; terms to be confirmed |
@@ -197,6 +197,33 @@ Prerequisites 6 and 8 are work the original research **did not do**: 6 exists on
 because of [HD-18](#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high),
 and 8 was surfaced by a finding about other vendors that must now be put to the leading
 one. Preparation: [`hd06-due-diligence.md`](hd06-due-diligence.md).
+
+**The due-diligence pass materially weakened the leading candidate.** Four findings from
+[`hd06-due-diligence.md`](hd06-due-diligence.md), all from vendor documentation read
+directly:
+
+1. **The depth claim is contradicted by its own upstream.** Intrinio states history
+   *"back to the 1960s"*; its documentation also states that raw historical EOD prices
+   are **sourced from its data partner EDI**, and **EDI's own FAQ says its EOD prices
+   begin 1 January 2007.** **Depth is the *only* ground on which Intrinio outranks
+   Massive.** If EDI's date governs, the ranking does not merely narrow — it inverts.
+   New blocking condition **C-2**; one question (first-bar dates for ten named symbols)
+   settles it.
+2. **Delisted history likewise starts 2007**, which caps the survivorship-bias-free
+   backtest window regardless of the ATH question. New blocking condition **C-3**.
+3. **The consolidated-tape question (C-1) was aimed at the wrong party.** EDI sells both
+   a per-exchange file and a **US Composite (CTA)** file. C-1 collapses to: *which file
+   does Intrinio buy?*
+4. **Retention: the runner-up requires deletion; the leader is silent.** Massive's ToS
+   §11.4 requires deleting all information on termination. Both Intrinio terms pages
+   were read in full and contain **no post-termination data clause at all** — and
+   **silence is weaker than a written grant**, not stronger. New blocking condition
+   **C-5** (express Order Form term).
+
+Also recorded: on **point-in-time shares outstanding** — the input HD-18 newly requires —
+Intrinio serves the SEC cover-page count with **no filing-date field or as-of parameter
+documented**, and Massive keys on **period-of-report rather than acceptance date**, which
+reads as a **look-ahead leak** of exactly the kind FR-22 forbids.
 
 **Standing prohibition, restated:** do not purchase, subscribe, accept licensing terms,
 or commit spend. **[#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band
