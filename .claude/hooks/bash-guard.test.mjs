@@ -3,7 +3,8 @@
 // Exits non-zero on any failure so it can gate CI.
 
 import { evaluate, resolveRole, KNOWN_ROLES,
-         evaluateFileAccess, quarantineBlock, QUARANTINE } from './bash-guard.mjs';
+         evaluateFileAccess, quarantineBlock, QUARANTINE,
+         pathHitsQuarantine, canonPath, policyFor } from './bash-guard.mjs';
 
 let pass = 0;
 const failures = [];
@@ -161,6 +162,68 @@ for (const role of ['verification', 'code-reviewer', 'project-auditor', 'default
 }
 
 eq(QUARANTINE[ENG].length >= 3, true, 'quarantine list retains its entries');
+
+
+// ---- E2-AUTHOR quarantine: EVASION cases -----------------------------------
+// The first version of this suite fed only exact literal paths, so it proved the control
+// fired on the cases the author had already thought of. Review found 22 of 27 evasions
+// succeeded, including `cat tools/*.mjs`. Every one of them is now a test.
+for (const [input, note] of [
+  [{ file_path: 'tools/./fixture-replay.mjs' }, 'dot segment'],
+  [{ file_path: 'tools//fixture-replay.mjs' }, 'double slash'],
+  [{ file_path: 'tools/../tools/fixture-replay.mjs' }, 'dotdot round trip'],
+  [{ file_path: 'tools/Fixture-Replay.mjs' }, 'case variant (case-insensitive FS)'],
+  [{ file_path: 'TOOLS/FIXTURE-REPLAY.MJS' }, 'all caps'],
+  [{ path: 'tools' }, 'Grep path = quarantined dir'],
+  [{ path: 'tools/' }, 'Grep path = quarantined dir, trailing slash'],
+  [{ glob: 'tools/*.mjs' }, 'Glob over quarantined dir'],
+  [{ pattern: 'tools/fixture-*.mjs' }, 'glob pattern'],
+]) {
+  eq(evaluateFileAccess(ENG, input).decision, 'block', `evasion blocked: ${note}`);
+}
+
+for (const [cmd, note] of [
+  ['cat tools/*.mjs', 'bare glob over tools/ — the decisive evasion'],
+  ['cat tools/fixture-repl*.mjs', 'partial glob'],
+  ["cat tools/fixture'-'replay.mjs", 'quote splitting'],
+  ['F=tools/fixture-repl; cat ${F}ay.mjs', 'variable splitting'],
+  ['cat $(ls tools/*.mjs | head -1)', 'command substitution'],
+  ['cat `ls tools/*.mjs`', 'backtick substitution'],
+  ["find tools -name '*replay*' -exec cat {} +", 'find -exec'],
+  ['ls tools | xargs -I{} cat tools/{}', 'xargs'],
+  ['base64 tools/fixture-replay.mjs', 'base64 indirection'],
+  ['head -300 tools/fixture-r*.mjs', 'head + glob'],
+  ['git show HEAD:tools/fixture-replay.mjs', 'git object read'],
+]) {
+  eq(quarantineBlock(ENG, cmd) !== null, true, `bash evasion blocked: ${note}`);
+}
+
+// The engine author must still be able to do the ticket. Over-blocking here is as bad as
+// under-blocking: an earlier revision blocked all of product/ because VERIFICATION.md
+// lives under it, which removes the specification and the fixtures from reach.
+for (const [input, note] of [
+  [{ path: 'product' }, 'Grep across product/'],
+  [{ glob: 'product/fixtures/golden/*/expected.json' }, 'Glob the conformance contract'],
+  [{ file_path: 'product/fixtures/golden/GX-23/expected.json' }, 'a golden fixture'],
+  [{ file_path: 'product/fixtures/real/RM-01/expected-causal.json' }, 'the RM-01 expectation'],
+  [{ file_path: 'engine/detector.mjs' }, 'writing the engine itself'],
+]) {
+  eq(evaluateFileAccess(ENG, input).decision, 'allow', `must not over-block: ${note}`);
+}
+eq(quarantineBlock(ENG, 'ls product/fixtures/golden/*/input.csv'), null,
+  'must not over-block: globbing fixture inputs');
+
+// canonPath is the load-bearing normaliser; assert it directly.
+eq(canonPath('tools/./fixture-replay.mjs'), 'tools/fixture-replay.mjs', 'canon: dot');
+eq(canonPath('a/b/../c'), 'a/c', 'canon: dotdot');
+eq(canonPath('./TOOLS//X.MJS'), 'tools/x.mjs', 'canon: case + slashes');
+
+// AC-4: an unknown role gets the most restrictive policy AND the quarantine.
+eq(policyFor('brand-new-agent').includes('FILE'), true, 'AC-4: unknown role blocks FILE');
+eq(policyFor('brand-new-agent').includes('GIT'), true, 'AC-4: unknown role blocks GIT');
+eq(evaluateFileAccess('brand-new-agent', { file_path: 'tools/fixture-replay.mjs' }).decision,
+  'block', 'AC-4: unknown role inherits the quarantine');
+eq(policyFor('verification').includes('FILE'), true, 'known role policy unchanged');
 
 // ---- report -----------------------------------------------------------------
 if (failures.length === 0) {

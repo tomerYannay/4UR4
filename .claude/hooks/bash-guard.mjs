@@ -40,6 +40,17 @@ export const ROLE_POLICY = {
 };
 export const KNOWN_ROLES = Object.keys(ROLE_POLICY);
 
+// AC-4 (phase2-independence-mechanism.md): an UNKNOWN role must fail to the most
+// restrictive policy, not to `default`. A typo'd or newly-added agent name previously
+// inherited `default` — DANGER only — which is the wrong direction for a control whose
+// whole job is to deny. Unknown roles get every mutation category blocked AND the
+// quarantine applied.
+export const MOST_RESTRICTIVE = ['DANGER', 'FILE', 'GIT', 'GH'];
+export function policyFor(role) {
+  return ROLE_POLICY[role] || MOST_RESTRICTIVE;
+}
+export function isKnownRole(role) { return Object.hasOwn(ROLE_POLICY, role); }
+
 // ----------------------------------------------------------------------------
 // QUARANTINE — paths a role may not read (Issue #20, HD-15 condition 2, E2-AUTHOR).
 //
@@ -73,18 +84,103 @@ const QUARANTINE_NOTE =
   + 'product/human-decisions.md and the fixture DATA instead. If you believe you need this file, '
   + 'STOP and escalate — do not work around it.';
 
-// Match a quarantined path inside arbitrary text (a tool argument or a shell command).
-// Compares normalised POSIX tails, so an absolute path, a ./-relative path and a bare
-// repo-relative path all match. Also catches the bare basename, because `cat
-// fixture-replay.mjs` from inside tools/ is the same read.
-export function hitsQuarantine(role, text) {
-  const paths = QUARANTINE[role];
-  if (!paths || !text) return null;
-  const hay = String(text).replace(/\\/g, '/');
+// Two matchers, because the two surfaces have genuinely different reachability.
+//
+// FILE TOOLS are structured: the path arrives as a field, so it can be canonicalised
+// and decided exactly. That layer is meant to hold.
+//
+// BASH is unexpanded text. `cat tools/*.mjs`, `F=tools/fix; cat ${F}ture-replay.mjs`,
+// `$(ls tools)`, quote-splitting and base64 all defeat literal matching, and
+// docs/architecture/phase2-independence-mechanism.md already records the shell
+// denylist as "defence in depth only" for exactly this reason. We raise the bar a long
+// way — quote-stripping, case folding, stem matching, and treating any glob or
+// expansion that reaches a quarantine-bearing directory as a hit — WITHOUT claiming it
+// is airtight. E2-AUTHOR-A (the committed engine/ must not import, copy, execute or
+// mechanically translate the model) is what is assessed at the gate, and it governs.
+
+// Directories that contain a quarantined file. Reading one of these wholesale — by glob,
+// by `Grep path:`, by `find -exec cat` — reaches the model without ever naming it.
+function quarantineDirs(paths) {
+  return [...new Set(paths.map((p) => p.slice(0, p.lastIndexOf('/'))).filter(Boolean))];
+}
+
+// Canonicalise a path for comparison: strip a leading ./, collapse //, resolve . and ..
+// segments textually, drop a leading /, and case-fold (this filesystem is
+// case-insensitive, so `tools/Fixture-Replay.mjs` IS the model).
+export function canonPath(raw) {
+  const parts = String(raw).replace(/\\/g, '/').split('/');
+  const out = [];
+  for (const seg of parts) {
+    if (seg === '' || seg === '.') continue;
+    if (seg === '..') { out.pop(); continue; }
+    out.push(seg);
+  }
+  return out.join('/').toLowerCase();
+}
+
+// A structured path argument hits if it IS a quarantined file, or if it is a directory
+// that CONTAINS one — `Grep {path: "tools"}` returns the model's source while the payload
+// contains no quarantined string at all.
+export function pathHitsQuarantine(role, raw) {
+  const paths = QUARANTINE[role] || (isKnownRole(role) ? null : QUARANTINE['implementation-engineer']);
+  if (!paths || !raw) return null;
+  const c = canonPath(raw);
+  if (!c) return null;
+  const bare = c.replace(/[*?[\]].*$/, '').replace(/\/+$/, '');   // glob prefix
   for (const p of paths) {
-    const base = p.split('/').pop();
-    const esc = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    if (hay.includes(p) || new RegExp(`(^|[^\\w./-])${esc}([^\\w-]|$)`).test(hay)) return p;
+    const q = canonPath(p);
+    if (c === q) return p;                                   // exact
+    if (c.startsWith(q + '/')) return p;                     // arg is inside a quarantined path
+    // A directory argument hits only when the quarantined file sits DIRECTLY in it.
+    // Prefix-matching the whole path was far too broad: `product/fixtures/VERIFICATION.md`
+    // made every path under `product/` a hit, which blocks the specification, the rulings
+    // and the fixtures — i.e. the entire input the engine author is supposed to work from.
+    const dir = q.slice(0, q.lastIndexOf('/'));
+    if (bare && dir && bare === dir && WHOLLY_QUARANTINED_DIRS.has(dir)) return p;
+  }
+  return null;
+}
+
+// Directories every file of which is off-limits to the quarantined role. `tools/` holds
+// exactly the reference model and the two evidence tools; the engine author needs none of
+// them, so blocking it wholesale is cheap and closes `Grep {path:"tools"}` and
+// `cat tools/*.mjs` at the argument level rather than by text matching.
+//
+// DISCLOSED RESIDUAL: directories that mix quarantined and required content — notably
+// `product/fixtures/`, which holds VERIFICATION.md alongside the fixtures the engine MUST
+// read — are deliberately NOT wholly quarantined. A recursive search over `product/` can
+// therefore still surface VERIFICATION.md. That is a real gap, accepted because the
+// alternative blocks the specification and the conformance contract, and because
+// VERIFICATION.md is a prose evidence log rather than the model itself. E2-AUTHOR-A
+// remains the criterion assessed at the gate.
+const WHOLLY_QUARANTINED_DIRS = new Set(['tools']);
+
+// Bash text matcher. Quote-strips, case-folds, and looks for the quarantined STEM rather
+// than the exact filename, so `fixture'-'replay.mjs` and `fixture-repl*.mjs` both hit.
+// Additionally treats any glob/expansion touching a quarantine-bearing directory as a hit.
+export function hitsQuarantine(role, text) {
+  // AC-4: an unknown role inherits the quarantine of the most restricted role that has
+  // one, so a typo'd agent name cannot read what the engineer may not.
+  const paths = QUARANTINE[role] || (isKnownRole(role) ? null : QUARANTINE['implementation-engineer']);
+  if (!paths || !text) return null;
+  const raw = String(text).replace(/\\/g, '/');
+  const hay = raw.replace(/['"`]/g, '').toLowerCase();       // defeat quote-splitting
+  for (const p of paths) {
+    const q = p.toLowerCase();
+    const base = q.slice(q.lastIndexOf('/') + 1);
+    const stem = base.replace(/\.[^.]+$/, '');                // fixture-replay, verification, ...
+    if (hay.includes(q) || hay.includes(base) || hay.includes(stem)) return p;
+  }
+  // A glob or expansion that reaches a directory holding a quarantined file.
+  // Only WHOLLY quarantined directories, or the expansion blocks legitimate work:
+  // `product/fixtures/golden/*/expected.json` is the conformance contract and must glob.
+  const expansive = /[*?]|\$\(|\$\{|`|\bxargs\b|-exec\b|\bfind\b/.test(hay);
+  if (expansive) {
+    for (const d of quarantineDirs(paths.map((x) => x.toLowerCase()))) {
+      if (WHOLLY_QUARANTINED_DIRS.has(d) && hay.includes(d)) {
+        return `${d}/** (via glob or expansion)`;
+      }
+    }
   }
   return null;
 }
@@ -102,10 +198,22 @@ export function quarantineBlock(role, text) {
 // Every field a file-ish tool might carry a path in is checked as one blob, so a tool
 // with a differently-named path field fails CLOSED rather than open.
 export function evaluateFileAccess(role, toolInput = {}) {
-  const blob = [
+  // Structured path fields are decided EXACTLY, by canonicalised comparison — this is the
+  // layer that must hold. Free-text fields fall back to the fuzzy text matcher.
+  const pathFields = [
     toolInput.file_path, toolInput.filePath, toolInput.path, toolInput.notebook_path,
-    toolInput.pattern, toolInput.glob, toolInput.pathspec, toolInput.command,
-  ].filter(Boolean).join(' \n ');
+    toolInput.glob, toolInput.pathspec, toolInput.pattern,
+  ].filter(Boolean);
+  for (const f of pathFields) {
+    const hit = pathHitsQuarantine(role, f);
+    if (hit) {
+      return {
+        decision: 'block', category: 'QUARANTINE', role, path: hit,
+        reason: `'${hit}' is QUARANTINED from '${role}' — ${QUARANTINE_NOTE}`,
+      };
+    }
+  }
+  const blob = [...pathFields, toolInput.command].filter(Boolean).join(' \n ');
   return quarantineBlock(role, blob) || { decision: 'allow', role };
 }
 
@@ -215,7 +323,7 @@ function dangerReason(cmd) {
 export function evaluate(role, command) {
   const cmd = String(command || '').trim();
   if (!cmd) return { decision: 'allow', role };
-  const blocked = ROLE_POLICY[role] || ROLE_POLICY.default;
+  const blocked = policyFor(role);   // AC-4: unknown roles get MOST_RESTRICTIVE
 
   const danger = dangerReason(cmd);
   if (danger) return { decision: 'block', category: 'DANGER', role, reason: `blocked (danger): ${danger}` };
@@ -270,7 +378,17 @@ if (isMain()) {
       }
       process.exit(0);
     }
-    if (toolName && toolName !== 'Bash') process.exit(0);   // only gate Bash
+    // An unknown tool carrying a path-ish field is gated too: FILE_TOOLS and the
+    // settings.json matcher are hand-maintained, and a new file-reading tool must not be
+    // unguarded merely because nobody remembered to add it here.
+    if (toolName && toolName !== 'Bash') {
+      const q = evaluateFileAccess(role0, payload.tool_input || {});
+      if (q.decision === 'block') {
+        process.stderr.write(`[4UR4 quarantine] ${q.reason}\n`);
+        process.exit(2);
+      }
+      process.exit(0);
+    }
     const command = (payload.tool_input && (payload.tool_input.command ?? payload.tool_input.cmd)) || payload.command || '';
     const role = resolveRole({ argv: process.argv.slice(2), env: process.env, payload });
     const q = quarantineBlock(role, command);
