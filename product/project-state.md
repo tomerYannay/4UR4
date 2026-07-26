@@ -1,8 +1,6 @@
 # 4UR4 — Project State (canonical, current-state only)
 
-> **Current state only — not a history log.** *The post-merge refresh deferred until PR #18
-> merged, and the roadmap fixture-coverage reconciliation it queued, are **both done** — see
-> the 2026-07-26 entries in [`roadmap.md`](roadmap.md).* **Content owner: Product Steward.** The
+> **Current state only — not a history log.** **Content owner: Product Steward.** The
 > **Orchestrator** ensures this file is updated after: a phase completes · a Product Owner
 > decision is recorded · a roadmap phase changes · a major PR merges · a build-freeze scope
 > changes. The **Strategic Product Reviewer** reads and validates this file but **may not
@@ -12,21 +10,20 @@
 > [`roadmap.md`](roadmap.md) → merged fixture evidence → open PR proposals → agent summaries.
 
 - **Last updated:** 2026-07-26
-- **Last reviewed commit SHA (main):** `e56ed8eec79a800d759e17bd7b2dba81d449904b` — the merge
-  commit of [PR #18](https://github.com/tomerYannay/4UR4/pull/18).
-- **Unmerged work this file already reflects:** branch
-  `feat/universe-definition-and-phase2-planning` at its **current head** — the HD-18
-  universe definition, the Phase 2 implementation plan, the HD-20 → **SPR-D-01**
-  resolution propagated here, and the 2026-07-26 review-round corrections. **None of it is
-  on `main` yet**, so where this file and `main` disagree, the branch is the newer
-  statement and the merge is still owed. *(This line named a specific commit and fell one
-  commit behind itself — a file whose job is to say what is and is not on `main` must not
-  do that. It now names the branch head rather than a SHA that goes stale on every
-  commit.)*
+- **Last reviewed commit SHA (main):** `d1a1c41506850fac60c0913ba934be1dac172e7d` — the merge
+  commit of [PR #25](https://github.com/tomerYannay/4UR4/pull/25) (2026-07-26T10:36:17Z), a
+  true merge of branch head `34df259` into `83b0fcc`. `main`, `origin/main` and the current
+  branch all sit at that SHA; the feature branch
+  `feat/universe-definition-and-phase2-planning` is **deleted**. **Everything this file
+  describes is on `main`** — there is no unmerged work it is reporting ahead of. CI is green
+  at this SHA across the four governance-validation gates (`tools/validate.mjs`,
+  `.claude/hooks/bash-guard.test.mjs`, `tools/fixture-replay.mjs --all`,
+  `tools/check-evidence.mjs`).
 - **Build-freeze status:** **ON** ([GOV-015](../governance/build-freeze.md)) — no product
   implementation until a human lifts it per-scope. `build_freeze: ON`,
-  `autonomous_implementation: DISABLED`. **Nothing has been lifted**; the HD-15 ruling is a
-  scope clarification covering one Phase-0 evidence-tooling file, not a partial lift.
+  `autonomous_implementation: DISABLED`. **Nothing has been lifted**, and nothing in the
+  PR #25 merge lifted it. The HD-15 ruling is a scope clarification covering one Phase-0
+  evidence-tooling file, not a partial lift.
 
 ## Product objective
 - **Final:** a reliable commercial SaaS that detects ATH-anchored logarithmic descending
@@ -52,38 +49,29 @@ implementation and beyond remain **freeze-blocked**.
 
 **Phase 2 entry is separately blocked**, independently of the freeze, by
 [#19](https://github.com/tomerYannay/4UR4/issues/19) and
-[#20](https://github.com/tomerYannay/4UR4/issues/20) — see Active work. Both are now named as
-Phase 2 criteria in [`roadmap.md`](roadmap.md).
+[#20](https://github.com/tomerYannay/4UR4/issues/20) — **both still open on GitHub**, both
+named as Phase 2 criteria in [`roadmap.md`](roadmap.md). See Active work for what remains
+owed on each.
 
-**Phase 0 completeness qualifier — RETIRED (2026-07-25), and the correction is now MERGED.**
-The qualifier recorded here (that Phase 0 exit was not clean because **GX-08 as committed**
-encoded a precondition **HD-11 forbids**) is **removed by the
-[#16](https://github.com/tomerYannay/4UR4/issues/16) evidence
-correction, merged as `e56ed8e`**: GX-08 now expects the all-highs upper-log-hull result
-`B* = (1, 98)`, GX-20
-covers the still-reachable `NO_VALID_SECOND_ANCHOR` case, and the stale pivot-conditioned text
-has been swept. The narrower question that sweep raised — whether §8 selection is evaluated
-over the **full history** or freezes at line formation — has since been **decided by the
-Product Owner as HD-12** (originally a *relayed* ruling; since ratified — see below):
-selection is **rolling, causal, as-of-time**, frozen at a confirmed
-breakout. Two consequential decisions followed on 2026-07-25: **HD-13** (`eps_break` stays
-unlocked; ordinary fixtures must be tolerance-robust, with GX-15 alone retained as the
-boundary fixture) and **HD-14** (formation gates restated as first-class, `k`-independent
-parameters `min_formation_bars = 8` / `min_ath_age_bars = 3`). The entire fixture set has been
-re-derived as-of-time and re-verified mechanically; the in-place
-`geometry_check.open_issue_2026_07_25` flags are resolved and removed.
-
-**HD-12, HD-13 and HD-14 are APPROVED — RATIFIED; HD-15 is APPROVED.** The first three
-originally reached the repository as Product Owner instructions with no posted artifact; that
-gap is closed by the
-[ratification of 2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012)
-(Product Owner, given against head `2651cd0`), with HD-13 ratified *as recorded* — including
-the four clauses
-its entry enumerates as going beyond the escalated options. **HD-15** was approved in the same
-ruling: the causal reference model is permitted under GOV-015 as Phase-0 evidence tooling,
-**conferring no Phase-2 credit**, and requiring that the Phase-2 engine be authored by an agent
-that has not read it. **GOV-015 itself remains ON** — the HD-15 ruling clarifies the scope of
-one file and lifts nothing.
+**Phase 0 exit is clean.** The defect that once qualified it — **GX-08 as committed**
+encoding a precondition **HD-11 forbids** — was corrected by PR #18: GX-08 expects the
+all-highs upper-log-hull result `B* = (1, 98)`, GX-20 covers the still-reachable
+`NO_VALID_SECOND_ANCHOR` case, and the pivot-conditioned text was swept. **HD-12, HD-13 and
+HD-14 are APPROVED — RATIFIED; HD-15 is APPROVED**, in one ruling recorded as a citable
+artifact
+([2026-07-25](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012), given
+against head `2651cd0`), with HD-13 ratified *as recorded* including the four clauses its
+entry enumerates as going beyond the escalated options:
+- **HD-12** — anchor selection is **rolling, causal, as-of-time**, frozen at a confirmed
+  breakout. The whole fixture set was re-derived as-of-time and re-verified mechanically.
+- **HD-13** — `eps_break` stays unlocked; ordinary fixtures must be tolerance-robust, with
+  GX-15 alone retained as the boundary fixture.
+- **HD-14** — formation gates are first-class, `k`-independent parameters
+  `min_formation_bars = 8` / `min_ath_age_bars = 3`.
+- **HD-15** — the causal reference model is permitted under GOV-015 as **Phase-0 evidence
+  tooling**, conferring **no Phase-2 credit**, and requiring that the Phase-2 engine be
+  authored by an agent that has not read it. **GOV-015 itself remains ON** — HD-15 clarifies
+  the scope of one file and lifts nothing.
 
 ## Completed milestones
 - Agent Operating System bootstrapped + executable in Claude Code (PR #1).
@@ -96,20 +84,27 @@ one file and lifts nothing.
   directories, `GX-01`…`GX-23`, each with `input.csv` + `expected.json`, plus `real/RM-01/`.*
 - **[PR #18](https://github.com/tomerYannay/4UR4/pull/18) MERGED** as `e56ed8e` — the Phase 0
   evidence correction and the HD-12 as-of-time fixture audit. The **23 golden fixtures
-  (GX-01…GX-23)** reproduce **exactly** under as-of-time replay in CI. *(Corrected
-  2026-07-26: this previously read "23 golden + RM-01". **RM-01 is not replayed** —
-  `fixture-replay.mjs` reads only `golden/`, and `check-evidence.mjs` only schema-validates
-  RM-01's annotation. No mechanical guard has ever covered RM-01's geometry, which is why
-  the divergence escalated as HD-20 — since resolved by **SPR-D-01** — survived that audit.
-  SPR-D-01's B-clause is the first mechanical guard proposed over RM-01, and if its
-  expectation is replay-generated it is a **regression guard against today's model**, not
-  independent verification.)* Landed with
-  it: spec §21, D-TL-11, D-TL-12, GX-20, the HD-14 formation-gate regressions
-  GX-21/GX-22/GX-23, and `tools/fixture-replay.mjs` (permitted under HD-15).
-- **Roadmap fixture-coverage reconciliation** (Refs #19, #20): Phase 2/3 exit gates now cover
-  the **whole** committed fixture set via a derived partition instead of a typed fixture list,
-  and HD-15 condition 2 has a Phase-2 **entry** mechanism (E2-AUTHOR). See
-  [`roadmap.md`](roadmap.md).
+  (GX-01…GX-23)** reproduce **exactly** under as-of-time replay in CI; **RM-01 is not
+  replayed** (see Owed work). Landed with it: spec §21, D-TL-11, D-TL-12, GX-20, the HD-14
+  formation-gate regressions GX-21/GX-22/GX-23, and `tools/fixture-replay.mjs` (permitted
+  under HD-15).
+- **Roadmap fixture-coverage reconciliation** (Refs #19, #20), on `main` at `83b0fcc`: Phase
+  2/3 exit gates cover the **whole** committed fixture set via a derived partition instead of
+  a typed fixture list, and HD-15 condition 2 has a Phase-2 **entry** mechanism (E2-AUTHOR).
+  See [`roadmap.md`](roadmap.md). Roadmap **APPROVED as a baseline** under GOV-013
+  ([#23](https://github.com/tomerYannay/4UR4/issues/23)) — a baseline only: it lifts no
+  freeze, authorizes no implementation, selects no provider and approves no spend.
+- **[PR #25](https://github.com/tomerYannay/4UR4/pull/25) MERGED** as `d1a1c41` — the **HD-18
+  universe definition** and
+  [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md),
+  the **Phase 2 implementation plan**, the **HD-06 due-diligence pack**, the **HD-21**
+  delegation record and the **SPR-D-01** propagation into
+  [`roadmap.md`](roadmap.md), [`fixtures/README.md`](fixtures/README.md) §6b and the RM-01
+  artifacts. **Documents only; no product code, no freeze lift.** Landed after **four
+  correction rounds** (`9ef30b7` → `c5606e6` → `5522694` → `34df259`), each closing a full
+  Verification / Code Review / Strategic Product Review pass. *(The #19 derived
+  fixture-coverage gate and the #20 E2-AUTHOR entry criterion reached `main` earlier, at
+  `83b0fcc` — the merge's first parent — not via this PR. Both are on `main` either way.)*
 - ChatGPT↔Claude **handoff protocol** + PR template + Agent Coordination Queue (#10) (PR #11).
 - **Strategic Product Reviewer** added as the 10th permanent agent (PR #13).
 - **Six-record documentation reconciliation** to merged evidence, docs-only (Refs #14); also
@@ -118,58 +113,77 @@ one file and lifts nothing.
   lacked (PR #15).
 
 ## Active work
-- **Branch `feat/universe-definition-and-phase2-planning` (unmerged).** Carries the HD-18
-  universe definition and
-  [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md)
-  (design only — §11.2 escalates **OQ-U1…OQ-U7** to the Product Owner and they are still
-  open), the Phase 2 implementation plan, and the **SPR-D-01** propagation into
-  [`roadmap.md`](roadmap.md), [`fixtures/README.md`](fixtures/README.md) §6b and this file.
-  **Documents only; no product code, and no freeze lift.**
 - **PR #12** — Phase 1 market-data research (Issues **#4**, **#5**): provider comparison +
   survivorship/delisted research. **Draft; CI green; 0 reviews; awaiting ChatGPT/strategic
-  review** (round 1 of 2). This is the path to **HD-06**.
+  review** (round 1 of 2). The only open PR. This is the path to **HD-06**.
 - **Issue [#19](https://github.com/tomerYannay/4UR4/issues/19)** — roadmap exit-criteria gap.
-  **Addressed in [`roadmap.md`](roadmap.md) on the current unmerged branch** (not on `main`,
-  which was last reviewed at `e56ed8e`, before #19 existed) and awaiting review: the Phase
-  2/3 gates named 12 of the 23
-  golden fixtures, so an engine could have satisfied the Phase 2 exit gate while contradicting
-  the ratified HD-11/SC-2, HD-13 and HD-14 rulings. **Blocks Phase 2 entry until closed.**
+  **The roadmap gate is now on `main`**: the Phase 2/3 gates no longer name 12 of the 23
+  golden fixtures but derive the whole committed set, closing the hole through which an
+  engine could have satisfied the Phase 2 exit gate while contradicting the ratified
+  HD-11/SC-2, HD-13 and HD-14 rulings. **The issue is still open and still blocks Phase 2
+  entry until closed.**
 - **Issue [#20](https://github.com/tomerYannay/4UR4/issues/20)** — HD-15 condition 2 had no
-  enforcement mechanism. **Partly addressed on the same unmerged branch:**
-  [`roadmap.md`](roadmap.md) now
-  carries **E2-AUTHOR**, a four-part Phase 2 *entry* criterion requiring clean-room authorship
-  of the engine w.r.t. `tools/fixture-replay.mjs`. The *document* half is done; the
-  *configuration* half (a real tool-deny on the authoring agent) is owed by the Orchestrator
-  and is **not** a Product Steward action. **Blocks Phase 2 entry until closed.**
+  enforcement mechanism. **The document half is on `main`**: [`roadmap.md`](roadmap.md)
+  carries **E2-AUTHOR** (A/B form, five conditions) as a Phase 2 *entry* criterion, with the
+  design in
+  [`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md).
+  **The *configuration* half — a real tool-deny on the authoring agent — is still owed**, is
+  an **Orchestrator** action and **not** a Product Steward one. **The issue is still open and
+  still blocks Phase 2 entry until closed.**
 - **Issue [#21](https://github.com/tomerYannay/4UR4/issues/21)** — review verdicts cannot
   become citable artifacts, and review attribution collapses to a single account. **Required
-  before HD-06 or any freeze lift**, and now also a stated dependency of E2-AUTHOR criterion 4
-  (the clean-room attestation has nowhere to live until #21 is fixed).
+  before HD-06 or any freeze lift**, and a stated dependency of E2-AUTHOR criterion 4 (the
+  clean-room attestation has nowhere to live until #21 is fixed).
 - **Issue [#22](https://github.com/tomerYannay/4UR4/issues/22)** — evidence-tooling follow-ups.
 - **Traceability debt from [#16](https://github.com/tomerYannay/4UR4/issues/16)
-  (the issue itself is CLOSED).** Phase 0 evidence correction, **delivered by PR #18, now
-  merged** (see Completed milestones). #16 was closed without ever being re-scoped to cover
-  what PR #18 actually delivered (HD-12/13/14, spec §21, D-TL-11/12, three new fixtures, the
+  (the issue itself is CLOSED).** #16 was closed without ever being re-scoped to cover what
+  PR #18 actually delivered (HD-12/13/14, spec §21, D-TL-11/12, three new fixtures, the
   reference model), so the ticket→PR traceability link remains incomplete (Project Auditor,
   GOV-007). **This survives as a documentation debt, not as an open ticket** — reopening #16
-  to record it is an Orchestrator decision, not a Product Owner one.
+  is an Orchestrator decision, not a Product Owner one.
 
 ## Next milestone
-Two tracks. (1) **Unblock Phase 2 entry:** close **#19** (addressed on the current unmerged
-branch, pending review) and **#20** (document half likewise; the authoring-agent deny
-configuration still owed), both of which gate Phase 2 entry, with **#21** required beneath
-them. **HD-20 is no longer on this list** — SPR-D-01 resolved it, and the RM-01 gate values
-are now stated rather than suspended. (2) **Complete the
-PR #12 Phase 1 research review**, the path to the **Product Owner decision on HD-06**
-(data-provider selection + recurring spend) — which **#21** also gates. Phase 1 and Phase 2
-*implementation* cannot start until a human lifts the freeze per-scope; nothing here lifts it.
+Two tracks. (1) **Author the RM-01 causal guard** — `expected-causal.json`, its additive
+schema change and the `real/`-reading tool extension (see Owed work). This is the next work
+item. (2) **Unblock Phase 2 entry:** close **#19** and **#20**, with **#21** required beneath
+them, and **complete the PR #12 Phase 1 research review**, the path to the **Product Owner
+decision on HD-06** — which **#21** also gates. Phase 1 and Phase 2 *implementation* cannot
+start until a human lifts the freeze per-scope; nothing here lifts it.
+
+## Owed work — debts carried forward
+Stated as **owed**, not done.
+
+- **RM-01 is under no mechanical causal guard.**
+  `fixtures/real/RM-01/expected-causal.json` **does not exist**; nor does its additive
+  `fixtures/schema/real-annotation.schema.json` change (a `description` scoping
+  `confirmed_bar` as full-series, plus an optional `causal_artifact` pointer); nor the
+  `real/`-reading extension to `tools/fixture-replay.mjs` and `tools/check-evidence.mjs`.
+  *Verified on disk: `fixture-replay.mjs` derives its fixture list from `golden/` alone and
+  never reads `real/`; `check-evidence.mjs` only schema-validates RM-01's annotation and
+  checks no geometry.* **This is the next work item.**
+- **Deferred provenance-tense correction.** The circularity limit is stated
+  **conditionally** — *"if the Half B expectation is replay-generated…"* — across ~8 sites.
+  The bar-10 record **as it exists today is model-derived**, so the conditional is already
+  false of it. Deferred to the follow-on PR **by explicit reviewer instruction**.
+- **Five low-severity prose-precision findings recorded rather than fixed at merge.** Among
+  them: a stale *"four limits"* count in [`fixtures/README.md`](fixtures/README.md) §6b (the
+  list it introduces has five entries — 1, 1b, 2, 3, 4); a dated [`roadmap.md`](roadmap.md)
+  ledger row left marked rather than rewritten; and a paraphrase of *"never removing"* a
+  record as *"never rewriting"* one.
+- **`main` is not branch-protected.** `mergeStateStatus: CLEAN` on PR #25 reflected the
+  **absence of required checks, not their satisfaction** — agent discipline was the entire
+  merge gate. Worth a human decision before any product code can merge. Related to
+  [#21](https://github.com/tomerYannay/4UR4/issues/21).
+- **[#21](https://github.com/tomerYannay/4UR4/issues/21) remains required before HD-06 or any
+  freeze lift.** Every gate on PR #25 — **including the GOV-013 merge authorization** — was a
+  single-account relay.
 
 ## Blocked work
 - **#6** Market-data ingestion service (Phase 1 impl) — `blocked: freeze`.
 - **#7** Trendline detection engine (Phase 2 impl) — `blocked: freeze`, **and additionally
-  blocked on #19 + #20** (Phase 2 entry criteria), with **#21** beneath them. *(The RM-01
-  gate-value block is **cleared** by SPR-D-01; the Phase 2 plan's S0 dependency on HD-20 is
-  satisfied. Nothing else about #7 moved — the freeze and the entry criteria stand.)*
+  blocked on #19 + #20** (Phase 2 entry criteria), with **#21** beneath them. The RM-01
+  gate-value block is cleared by SPR-D-01 and the Phase 2 plan's S0 dependency on HD-20 is
+  satisfied; nothing else about #7 moved.
 - All of Phases 2–9 — behind the build-freeze and their entry criteria.
 
 ## Pending Product Owner decisions
@@ -177,30 +191,25 @@ PR #12 Phase 1 research review**, the path to the **Product Owner decision on HD
   delivered ([`data-provider-findings.md`](data-provider-findings.md),
   [`hd06-due-diligence.md`](hd06-due-diligence.md)); **Intrinio Startup is recorded as the
   leading candidate at ≈\$5,994 year 1 and is explicitly not selected.** Eight evidence
-  prerequisites remain, two of them blocking — most sharply that the candidate's
+  prerequisites remain, **two marked blocking** — **C-1**, the only condition the Product
+  Owner has accepted, and **C-2**, agent-*proposed* (as are C-3, C-4 and C-5; an agent may
+  recommend a blocking condition, not impose one). C-2 is the sharpest: the candidate's
   history-depth claim is contradicted by its own upstream, and depth is the only ground on
   which it leads. [#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band
   confirmation is required before any financial authorization.
 
 **HD-06 is the only pending *HD-numbered* Product Owner decision — and that is not the same
-as the only open question.** [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md)
-§11.2 still escalates **OQ-U1…OQ-U7** to the Product Owner (ADRs/non-US listings; exactly
-500 vs a buffer band; REITs; whether R9 point-in-time shares outstanding is opened and
-whether spend attaches; backtest window depth; first-class universe disclosure on
-user-facing surfaces; and the provisional 4UR4-minted `security_uid`). Those are open
-Product Owner questions with stated defaults, not HD entries.
-
-*(Correction history, kept because this exact sentence has been wrong twice on this branch:
-the section once asserted HD-06 was "the only pending Product Owner decision" while HD-20
-was open; it was then corrected to name HD-20 as pending. HD-20 is now **resolved** (below),
-so HD-06 is again the only pending HD-numbered decision — but the OQ-U1…OQ-U7 escalations
-above mean "only pending HD" and "only open question" are different claims, and only the
-first is true. HD-16/17/18/19 and HD-21 were ruled on 2026-07-26 — see
-[`human-decisions.md`](human-decisions.md).)*
+as the only open question.**
+[`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md)
+§11.2 still escalates **OQ-U1…OQ-U7** to the Product Owner **with stated defaults**
+(ADRs/non-US listings; exactly 500 vs a buffer band; REITs; whether R9 point-in-time shares
+outstanding is opened and whether spend attaches; backtest window depth; first-class universe
+disclosure on user-facing surfaces; and the provisional 4UR4-minted `security_uid`). Those
+are open Product Owner questions, not HD entries. Both claims must travel together; only the
+first is true on its own.
 
 *Resolved 2026-07-25 and no longer pending:* **HD-12**, **HD-13** and **HD-14** ratified, and
-**HD-15** approved (the causal reference model is permitted under GOV-015 as Phase-0 evidence
-tooling, conferring no Phase-2 credit) — one ruling, recorded as a citable artifact
+**HD-15** approved — one ruling, recorded as a citable artifact
 [on #16](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012) against head
 `2651cd0`. **GOV-015 itself remains ON.**
 
@@ -208,10 +217,9 @@ tooling, conferring no Phase-2 credit) — one ruling, recorded as a citable art
 **HD-17** (bounded delegation for reversible ambiguity — **superseded and widened by
 HD-21**), **HD-18** (the self-computed **4UR4 US Large-Cap 500** universe), **HD-19**
 (independence checker permitted as verification tooling), **HD-21** (bounded delegation —
-below), and
-**HD-20**, which was **not** resolved by the Product Owner but by the delegated decision
-**SPR-D-01** under HD-21 — see the next section. **None of these lifts GOV-015, selects a
-provider, or authorizes spend or licensing.**
+below), and **HD-20**, which was **not** resolved by the Product Owner but by the delegated
+decision **SPR-D-01** under HD-21 — see the next section. **None of these lifts GOV-015,
+selects a provider, or authorizes spend or licensing.**
 
 ## Delegated product decisions (HD-21) — a second decision channel
 
@@ -230,44 +238,69 @@ provider, or authorizes spend or licensing.**
   record, only adding to or superseding one. **HD-21 lifts nothing and makes HD-06 no more
   decidable than before.**
 - **SPR-D-01 — RM-01 carries both analytical layers · resolves HD-20.**
-  **Approved under bounded Product Owner delegation; not direct Product Owner authorship.**
-  Decided by the Strategic Product Reviewer under HD-21 on the evidence of
+  **Approved under bounded Product Owner delegation; not direct Product Owner authorship** —
+  **not** a Product Owner ruling, and **overturnable by the Product Owner at any time without
+  cause.** Decided by the Strategic Product Reviewer under HD-21 on the evidence of
   [#26](https://github.com/tomerYannay/4UR4/issues/26), and **CONFIRMED against all ten
-  conditions by the Project Auditor at `5b99ba6`** *(Relayed, not independently
-  authored — see the provenance note in [`human-decisions.md`](human-decisions.md) →
-  SPR-D-01: role-level independence, not organizational, pending
-  [#21](https://github.com/tomerYannay/4UR4/issues/21).)* (the first audit returned **NOT
-  CONFIRMED** at `0b23f91`, because the decision existed only in a session transcript while
-  the register still read `PENDING`). RM-01 now carries **two records, neither superseding
-  the other**: **Half A**, the full-series geometry, retained **verbatim** and gated at
-  **unit level** on an exported pure §8 function — explicitly **not** on pipeline output;
-  and **Half B**, the as-of-time record (engine-derived stop at **bar 10**, `line_at_stop`
-  `B* = (9, 158.40)`, `m = -0.0505453`, line `150.593`, close `164.19`, margin `0.0864461` *(raw clearance `ln(close) − ŷ`; the reference model's `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`)*),
-  gated **within Phase-2-owned behaviour only** — asserting `line_at_stop`, **not** `Λ^F`,
-  and **no** `BROKEN_OUT` state and **no** `BREAKOUT_CONFIRMED` reason code, which remain
+  conditions by the Project Auditor at `5b99ba6`** *(Relayed, not independently authored —
+  see the provenance note in [`human-decisions.md`](human-decisions.md) → SPR-D-01:
+  role-level independence, not organizational, pending
+  [#21](https://github.com/tomerYannay/4UR4/issues/21).)* RM-01 now carries **two records,
+  neither superseding the other**: **Half A**, the full-series geometry, retained
+  **verbatim** and gated at **unit level** on an exported pure §8 function — explicitly
+  **not** on pipeline output; and **Half B**, the as-of-time record (engine-derived stop at
+  **bar 10**, `line_at_stop` `B* = (9, 158.40)`, `m = -0.0505453`, line `150.593`, close
+  `164.19`, margin `0.0864461` *(raw clearance `ln(close) − ŷ`; the reference model's
+  `events[].margin` field carries `0.0764461`, the same quantity net of `ε_break`)*), gated
+  **within Phase-2-owned behaviour only** — asserting `line_at_stop`, **not** `Λ^F`, and
+  **no** `BROKEN_OUT` state and **no** `BREAKOUT_CONFIRMED` reason code, which remain
   Phase 3's. **Half B narrows RM-01's Phase-2 assertable surface** to bars **0–9** plus the
   stop index, so *"the gate is strengthened"* is true of the gate as a whole and **false of
-  RM-01**. If Half B is replay-generated it is **model-derived**, so RM-01's non-circularity
-  attaches to **Half A's human-approved geometry and the real prices**, not to Half B's
-  provenance. The 2026-07-25 Product Owner approval, SC-1, SC-2/HD-11, `annotation.json`'s
+  RM-01**. RM-01's non-circularity attaches to **Half A's human-approved geometry and the
+  real prices**, not to Half B's provenance — and the Half B artifact is still owed (see
+  Owed work). The 2026-07-25 Product Owner approval, SC-1, SC-2/HD-11, `annotation.json`'s
   values and the **golden fixtures** are all unchanged; parameters stay at their ratified
   HD-14/D-TL-12 values. **No GOV-015 clearance is granted by it.** Gate wording:
   [`roadmap.md`](roadmap.md) Phase 2 exit criteria; evidence:
   [`fixtures/README.md`](fixtures/README.md) §6b.
-- **Sequencing rule learned from SPR-D-01, binding on SPR-D-02 onward:** a delegated
-  decision's status line reads `RESOLVED — pending condition-10 audit` until the Project
-  Auditor confirms it, and only then is promoted.
+- **Sequencing rule, binding on SPR-D-02 onward:** a delegated decision's status line reads
+  `RESOLVED — pending condition-10 audit` until the Project Auditor confirms it, and only
+  then is promoted.
 
 ## Open issues / PRs (governed index)
-- **OPEN issues:** **#4**, **#5** (Phase 1 research) · **#6**, **#7** (impl, `blocked: freeze`) · **#10** (Agent Coordination Queue, permanent index) · **[#19](https://github.com/tomerYannay/4UR4/issues/19)** (roadmap exit-criteria gap — **blocks Phase 2 entry**; addressed on the current unmerged branch, pending review) · **[#20](https://github.com/tomerYannay/4UR4/issues/20)** (HD-15 condition 2 has no enforcement mechanism — **blocks Phase 2 entry**; document half addressed on the current unmerged branch, agent deny-configuration still owed) · **[#21](https://github.com/tomerYannay/4UR4/issues/21)** (review verdicts cannot become artifacts + single-account attribution — **required before HD-06 or any freeze lift**) · **[#22](https://github.com/tomerYannay/4UR4/issues/22)** (evidence-tooling follow-ups) · **[#23](https://github.com/tomerYannay/4UR4/issues/23)** (roadmap baseline approval, HD-16 — ruling artifact) · **[#24](https://github.com/tomerYannay/4UR4/issues/24)** (universe decision, HD-18 — ruling artifact) · **[#27](https://github.com/tomerYannay/4UR4/issues/27)** (HD-21 bounded delegation — the authority under which SPR-D-01 was taken).
-- **CLOSED, retained here only because they are cited above:** **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (Phase 0 evidence correction — delivered by the merged PR #18; **closed**, leaving the traceability debt recorded under Active work, not an open ticket) · **[#26](https://github.com/tomerYannay/4UR4/issues/26)** (RM-01 as-of-time divergence — the HD-20 evidence and options; **closed, resolved by SPR-D-01**). *(Both were previously listed as open in this index. The canonical current-state document must not assert open tickets that are closed.)*
-- Open PRs: **#12** (Phase 1 research, draft, CI green, 0 reviews, awaiting strategic review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
-- Recently merged: **[#18](https://github.com/tomerYannay/4UR4/pull/18)** — **MERGED as `e56ed8e`** (Phase 0 evidence correction + as-of-time fixture audit; the full review chain was re-run against every head, findings recorded in [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md); HD-12/13/14 ratified and HD-15 approved 2026-07-25). Issues **#19**–**#22** were opened after this merge.
+- **OPEN issues (12):** **#4**, **#5** (Phase 1 research) · **#6**, **#7** (impl,
+  `blocked: freeze`) · **#10** (Agent Coordination Queue, permanent index) ·
+  **[#19](https://github.com/tomerYannay/4UR4/issues/19)** (roadmap exit-criteria gap —
+  roadmap gate on `main`; **blocks Phase 2 entry**) ·
+  **[#20](https://github.com/tomerYannay/4UR4/issues/20)** (HD-15 condition 2 enforcement —
+  document half on `main`, agent deny-configuration still owed; **blocks Phase 2 entry**) ·
+  **[#21](https://github.com/tomerYannay/4UR4/issues/21)** (review verdicts cannot become
+  artifacts + single-account attribution — **required before HD-06 or any freeze lift**) ·
+  **[#22](https://github.com/tomerYannay/4UR4/issues/22)** (evidence-tooling follow-ups) ·
+  **[#23](https://github.com/tomerYannay/4UR4/issues/23)** (roadmap baseline approval, HD-16
+  — ruling artifact) · **[#24](https://github.com/tomerYannay/4UR4/issues/24)** (universe
+  decision, HD-18 — ruling artifact) · **[#27](https://github.com/tomerYannay/4UR4/issues/27)**
+  (HD-21 bounded delegation — the authority under which SPR-D-01 was taken).
+- **CLOSED, retained here only because they are cited above:**
+  **[#16](https://github.com/tomerYannay/4UR4/issues/16)** (Phase 0 evidence correction —
+  delivered by the merged PR #18; the traceability debt it leaves is recorded under Active
+  work, not as an open ticket) · **[#26](https://github.com/tomerYannay/4UR4/issues/26)**
+  (RM-01 as-of-time divergence — the HD-20 evidence and options; **resolved by SPR-D-01**).
+- **Open PRs:** **#12** only (Phase 1 research, draft, CI green, 0 reviews, awaiting
+  strategic review). Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- **Recently merged:** **[#25](https://github.com/tomerYannay/4UR4/pull/25)** as `d1a1c41`
+  (universe definition, Phase 2 plan, HD-06 due diligence, HD-21, SPR-D-01 propagation) ·
+  **[#18](https://github.com/tomerYannay/4UR4/pull/18)** as `e56ed8e` (Phase 0 evidence
+  correction + as-of-time fixture audit; review-chain findings in
+  [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md)).
 
 ## Sources
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·
 [`trendline-specification.md`](trendline-specification.md) · [`confidence-specification.md`](confidence-specification.md) ·
 [`fixtures/README.md`](fixtures/README.md) · [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md) ·
 [`../docs/architecture/mvp-architecture.md`](../docs/architecture/mvp-architecture.md) ·
+[`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md) ·
+[`../docs/architecture/phase2-implementation-plan.md`](../docs/architecture/phase2-implementation-plan.md) ·
+[`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md) ·
 [`../docs/operations/agent-handoff-protocol.md`](../docs/operations/agent-handoff-protocol.md) ·
 [`../GOVERNANCE.md`](../GOVERNANCE.md)
