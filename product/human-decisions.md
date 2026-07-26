@@ -1046,6 +1046,12 @@ changes that.*
 
 # Delegated product decisions (HD-21)
 
+> **Sequencing rule, learned from SPR-D-01:** a delegated decision's status line is written
+> **`RESOLVED — pending condition-10 audit`** and promoted only once the Project Auditor
+> confirms. SPR-D-01 asserted `RESOLVED` while the audit was outstanding; it was disclosed
+> rather than concealed, and is true as of `5b99ba6` — but SPR-D-02 onward must not repeat
+> the ordering.
+
 Decisions taken by the **Strategic Product Reviewer** under the bounded delegation of
 [HD-21](#hd-21--bounded-autonomous-product-decision-authority--materiality-high). Each is
 **approved under bounded Product Owner delegation; not direct Product Owner authorship**,
@@ -1059,8 +1065,10 @@ conditions (condition 10) before it stands.
 - **Decision ID:** SPR-D-01 · **Resolves:** [HD-20](#hd-20--rm-01-as-of-time-result-diverges-from-the-approved-full-series-record--materiality-high)
   · **Authority:** [HD-21](https://github.com/tomerYannay/4UR4/issues/27)
   · **Evidence:** [issue #26](https://github.com/tomerYannay/4UR4/issues/26)
-  · **Condition-10 audit:** NOT CONFIRMED at `0b23f91` (the record did not yet exist);
-  re-audit required at the head carrying this record.
+  · **Condition-10 audit: CONFIRMED by the Project Auditor at `5b99ba6`.** First audit
+  returned **NOT CONFIRMED** at `0b23f91` — correctly: the decision existed only in a
+  session transcript while this register still read `PENDING`, which is the substitution
+  condition 10 exists to prevent. The decision stands from `5b99ba6`.
 
 ### Decision
 
@@ -1096,6 +1104,12 @@ option 3.
    ruled on 2026-07-26 that *"Phase 3 remains responsible for confirmed breakout, retest,
    failure and expiry."* The Phase 2 clause therefore asserts **`line_at_stop`, not
    `Λ^F`**, and asserts no `BROKEN_OUT` state and no `BREAKOUT_CONFIRMED` reason code.
+1b. **The stop index must be engine-derived, not fixture-supplied.** Identifying it
+   requires computing the first close above the line — the *trigger* of a Phase-3-owned
+   transition, though not the transition itself. If the harness were allowed to hand the
+   engine the stop index, the B-clause would assert nothing about the engine's own
+   detection. The Phase 2 plan clause must say so explicitly; left ambiguous, this is
+   where "gated end-to-end" would quietly re-expand.
 2. **Half B *narrows* what RM-01 asserts at the Phase 2 exit.** Under Half A
    (`confirmed_bar == null`) the complete final state and reason-code set were
    Phase-2-assertable. Under Half B, transitions are assertable only at **bars 0–9**, plus
@@ -1124,8 +1138,12 @@ bias** — the full-series record is by construction look-ahead, since it uses b
 describe the line judging bar 10; only this option puts the causal expectation in the gate.
 **(2) Causal correctness** — §21.4's corollary predicts this direction and §21.8 rule 4
 commands the re-derivation. **(3) Mechanically verifiable evidence** — the sole option
-supplying `real/*` a comparison contract and closing the finding that *no mechanical guard
-has ever covered RM-01*. **(4) Reversibility** — all four reversible; option 3 the most
+supplying `real/*` a comparison contract, and the only one that puts RM-01 under any
+mechanical guard at all. **Stated precisely, because the stronger verb would be false:** if
+`expected-causal.json` is replay-generated it is a **regression guard against today's
+model**, not an independent correctness check — so it closes the *absence* of a guard, not
+the absence of independent verification. `expected-causal.json` **must state its own
+provenance on its face.** **(4) Reversibility** — all four reversible; option 3 the most
 expensive. **(5) Lower false-confidence risk** — this option's risk is visible; option 3's
 is worse in kind, a corpus that agrees with the human because it was tuned to.
 **(6) Preserve information** — both analytical layers retained. **(7) Defer economics to
@@ -1167,8 +1185,11 @@ rather than tested.
 ### Evidence
 
 Independently re-derived from `product/fixtures/real/RM-01/input.csv` by the decider, and
-now by **six** parties agreeing to six significant figures: Phase 2 planner, orchestrating
-session, Strategic Product Reviewer, Verification, Code Review, Project Auditor.
+by **five** parties agreeing to six significant figures: Phase 2 planner, orchestrating
+session, Strategic Product Reviewer, Verification and Code Review. *(The **Project
+Auditor** also re-derived it, at `5b99ba6`, as **post-hoc verification of this record** —
+deliberately **not** counted among the corroborating derivations. An auditor named as
+evidence for the decision it audits is an auditor with something to defend.)*
 Repository evidence: §21.3, §21.4 (lemma + corollary), §21.5, §21.6, §21.8 rule 4, D-TL-12;
 HD-11, HD-12, HD-13, HD-14; `fixtures/real/RM-01/{input.csv, annotation.json}`;
 `fixtures/schema/real-annotation.schema.json`; `docs/architecture/phase2-implementation-plan.md`
