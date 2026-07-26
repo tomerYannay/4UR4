@@ -391,15 +391,20 @@ The gate is **derived, not enumerated**: the harness walks
 directory it did not check. Adding a fixture tightens the gate automatically; that is
 the roadmap's own design and it must not be re-broken by a hand-maintained list.
 
-> **`real/*` has no comparison contract yet — see §7.3 before implementing this walk.**
+> **`real/*`'s comparison contract is now defined by SPR-D-01 — see §7.3.**
+> *(Superseded, retained: this previously read "`real/*` has no comparison contract yet".)*
 > The field table below is headed *per **golden** fixture* for a reason: RM-01 carries an
 > `annotation.json` on a different schema, with **no `expected.json` and no
 > `causal_record`**. As written, a `real/*` walk would therefore either fail permanently
 > or pass vacuously — and a vacuous walk is worse, because it reports coverage it does
-> not have. The missing artifact is RM-01 "Half B" (§7.3), which cannot be authored until
-> **HD-20** is ruled; **S0 in §8 already blocks on exactly that.** Do not implement the
-> `real/*` branch of this walk before then, and do not quietly narrow the walk to
-> `golden/*` to make it pass.
+> not have. **SPR-D-01 supplies the missing artifact:** RM-01 **Half B** (§7.3), carried in
+> a separate `expected-causal.json` — the annotation schema is `additionalProperties:
+> false`, so it cannot be extended in place, and `annotation.json`'s values are retained
+> untouched. Three constraints on this walk: the **stop
+> index must be engine-derived, not fixture-supplied**, or the clause asserts nothing
+> about the engine's own detection; the comparison is scoped to **Phase-2-owned
+> behaviour**; and **do not quietly narrow the walk to `golden/*` to make it pass** — a
+> vacuous walk is worse than a failing one, because it reports coverage it does not have.
 
 Per golden fixture, the engine must reproduce:
 
@@ -570,12 +575,15 @@ real data. Every breakout, retest, failure and expiry expectation in this reposi
 is synthetic. That is a real limit on what the Phase-2 and Phase-3 gates can claim,
 and it should be stated in the evidence log rather than discovered later.
 
-> **Read §7.3 before relying on this paragraph.** It holds only of RM-01's *approved
-> full-series record*. Under the ratified as-of-time rule, RM-01 **does** break out at
-> bar 10 — so whether §13–§17 have met real data is precisely the question escalated as
-> proposed **HD-20**, not a settled fact. If HD-20 resolves toward the as-of-time
-> expectation, this limit is lifted and the repository gains its first real-data
-> breakout.
+> **Superseded in part — read §7.3.** This holds only of RM-01's *approved full-series
+> record*. **HD-20 is RESOLVED (SPR-D-01, delegated, 2026-07-26; Auditor-confirmed):**
+> RM-01 carries **both** layers, and its as-of-time record stops at bar 10. So the
+> repository **does** now have a real-data stop — but the limit lifts only partly, and
+> precisely: **Phase 2 asserts `line_at_stop`, not `Λ^F`**, and asserts no `BROKEN_OUT`
+> state and no `BREAKOUT_CONFIRMED` reason code, because the Product Owner ruled Phase 3
+> owns confirmed breakout, retest, failure and expiry. **§15–§17 have still never met real
+> data**, and RM-01's Phase-2 assertable surface is *narrower* under Half B than under
+> Half A — bars 0–9 plus the stop index.
 
 ### 7.3 **Finding — RM-01's approved record is full-series; as-of-time it appears to break out at `t = 10`**
 

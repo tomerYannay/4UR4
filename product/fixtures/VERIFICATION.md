@@ -97,9 +97,17 @@ values reproduce independently within 6-significant-figure tolerance.**
 > **Both results are arithmetically correct about different objects** — this section's
 > full-series hull (`B* = (25, 129.88)`) is genuinely never closed above, and §21.4's own
 > corollary predicts an as-of-time breakout may exist where a full-series calculation
-> reports none. **Nothing below is withdrawn.** The resolution is escalated as proposed
-> **HD-20** and is **Product-Owner-gated**; it is not decided here, and this notice claims
-> no authority.
+> reports none. **Nothing below is withdrawn** — everything in this section is **Half A**,
+> the full-series layer, retained verbatim.
+>
+> **RESOLVED — [SPR-D-01](../human-decisions.md), 2026-07-26** (HD-20 closed). *Approved
+> under bounded Product Owner delegation; not direct Product Owner authorship* — decided by
+> the Strategic Product Reviewer under HD-21 and confirmed by the Project Auditor at
+> `5b99ba6`. **RM-01 carries both layers**; Half B lives in a separate
+> `expected-causal.json`. Half B is an **evidentiary conformance expectation, not an
+> economic endorsement**: 4UR4 does not assert the bar-10 signal is a good trade, and
+> whether the short-history / post-IPO false-positive class it exemplifies should be
+> suppressed is an open Phase 4 backtest question.
 
 Independent verification of the first real-market fixture, computed by the primary session
 (verifier) from `real/RM-01/input.csv` (derived from immutable `alphavantage-source.json`,
