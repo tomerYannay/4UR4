@@ -338,7 +338,7 @@ earlier than it), with the documented `min_formation_bars = 8`, `min_ath_age_bar
 
 So RM-01 produces a **confirmed breakout at bar 10 (2026-06-29)** under as-of-time
 evaluation, where its approved record states `confirmed_bar: null`. This was derived
-**independently three times** — Phase-2 planning, an orchestrating session, and the
+**independently five times** — Phase-2 planning, an orchestrating session, and the
 Strategic Product Reviewer — agreeing to **six significant figures**.
 
 **Both records are arithmetically correct, about different objects.** The approved record
@@ -379,11 +379,8 @@ to HD-20.** Suppressing the bar-10 breakout by tolerance would require
 > sample, which is the argument against it — but that is the Product Owner's call, not a
 > reason to state the constraint too strongly here.
 
-The
-envelope tolerance `eps` is irrelevant to it: a breakout is a close-versus-line test, not
-an envelope test. And delaying formation makes the margin **larger**, not smaller, because
-within an episode the causal line only ever shallows (§21.4). No parameter setting
-available under the current specification removes this breakout.
+The envelope tolerance `eps` is irrelevant to it: a breakout is a close-versus-line test,
+not an envelope test.
 
 **The structural cause — a gap in the evidence system, not a one-off incident.** **No
 mechanical guard has ever covered RM-01.** `tools/check-evidence.mjs` only

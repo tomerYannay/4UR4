@@ -88,7 +88,7 @@ values reproduce independently within 6-significant-figure tolerance.**
 > annotation, and `fixture-replay.mjs` derives its fixture list from `golden/` and never
 > reads `real/`.
 >
-> Re-derived as-of-time — independently, three times, agreeing to six significant figures —
+> Re-derived as-of-time — independently, five times, agreeing to six significant figures —
 > **RM-01 confirms a breakout at bar 10 (2026-06-29)**: close `164.19` against a causal line
 > at `150.593`, margin **0.0864461** log units. Suppressing it would need `ε_break` at
 > **≈8.6×** its documented value, and HD-13 forbids resolving fixture outcomes by tolerance

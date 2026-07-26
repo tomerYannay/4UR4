@@ -596,7 +596,7 @@ illustrative `ε_break = 0.01`):
 
 | Bar | Date | Event | Arithmetic |
 |---|---|---|---|
-| — | — | anchor | `A = (2, 225.64)`, `yA ≈ 5.418942` |
+| — | — | anchor | `A = (2, 225.64)`, `yA ≈ 5.418941` |
 | 8 | 2026-06-25 | `t_form = 8` (F1 binds; F2 satisfied from `t = 6`) | `B*_8 = (3, 213.7999)`, `m ≈ −0.0539003`, envelope-valid over `S_8` |
 | 9 | 2026-06-26 | pierce beyond `ε` → `INVALID_PIERCE` + `WICK_BREAK`; re-selects | `y(158.40) ≈ 5.0651235 > ŷ_9(9) + 0.02 ≈ 5.0616389`; close `153.23` does not confirm |
 | 10 | 2026-06-29 | **breakout predicate fires** | `Λ_10`: `B* = (9, 158.40)`, `m ≈ −0.0505453`, `ŷ_10(10) ≈ 5.014578`; `ln(164.19) ≈ 5.101024 > 5.014578`, **margin ≈ 0.086446 log units (≈ 9.0%) over the line** |

@@ -896,11 +896,19 @@ confirmation remains mandatory before financial authorization.**
   `−0.0240143`) is never closed above — true. Under §21, the line judging bar 10 is built
   only from bars 0–9, binds `B* = (9, 158.40)` after bar 9's wick-break re-selection, and
   sits at **150.593**; the close of **164.19** clears it by **0.0864461** log units (≈9%).
-  Derived independently **four times** — Phase 2 planner, orchestrating session, and the
-  Strategic Product Reviewer twice — agreeing to six significant figures.
-- **It cannot be tuned away.** Suppression requires `ε_break ≥ 0.0864461`, **≈8.6×** the
-  documented `0.01`; `ε` is irrelevant; **delaying formation enlarges the margin**. HD-13
-  forbids resolving fixture outcomes by tolerance in any case.
+  Derived independently **five times** — Phase 2 planner, orchestrating session, Strategic
+  Product Reviewer, Verification and Code Review — agreeing to six significant figures.
+- **Tolerance cannot suppress it — but one documented parameter can.** Suppression by
+  tolerance would require `ε_break ≥ 0.0864461`, **≈8.6×** the documented `0.01`, and
+  HD-13 forbids resolving fixture outcomes by tolerance in any case. `ε` is irrelevant.
+  **However — `min_formation_bars ≥ 12` removes the breakout entirely** (8–10 → bar 10,
+  margin `0.0864461`; 11 → bar 11, margin `0.0660743`; **12–20 → none**). That parameter
+  is already first-class, named, versioned and backtestable under D-TL-12 / HD-14, so
+  **option (3) below is a *parameter* change, not a new rule** — materially cheaper than
+  first presented. It remains a setting fitted to a single 29-bar sample, which is the
+  argument against it. *(An earlier revision of this entry said "delaying formation
+  enlarges the margin" — false; it inverted §21.4, since shallower means higher and the
+  margin therefore shrinks. The Product Owner was corrected on the artifact.)*
 - **Why it is Product-Owner-gated rather than a documentation fix.** The causal line at
   bar 10 sits **below the entire recent trading range** — a steep two-point fit over a
   6-bar window after an IPO spike. §21.3's own derivation names that as precisely the
