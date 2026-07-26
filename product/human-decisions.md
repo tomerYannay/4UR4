@@ -1387,3 +1387,145 @@ structure.
    at any time without cause.
 6. **The Project Auditor finds any HD-21 condition unmet** — then this decision does not
    stand.
+
+---
+
+## SPR-D-03 — `product/fixtures/real/**` is R2, permeable by necessity · `DELEGATED_PRODUCT_DECISION_APPROVED`
+
+> **Approved under bounded Product Owner delegation; not direct Product Owner authorship.**
+
+- **Decision ID:** SPR-D-03 · **Resolves:** M-09 (`maintenance-backlog.md`)
+  · **Authority:** [HD-21](https://github.com/tomerYannay/4UR4/issues/27)
+  · **Ruled at head:** `7ab8075` (PR [#33](https://github.com/tomerYannay/4UR4/pull/33) strategic review)
+  · **Status:** **RESOLVED — condition-10 CONFIRMED by the Project Auditor at `f0455f6`,
+  all ten HD-21 conditions met.** Propagated at `70362fa`+ (§3 table row R2b, §10 author
+  brief, schema `author_independence`, M-09, `project-state.md`, the `bash-guard.mjs`
+  comment).
+
+> **Correction, Project Auditor F-3.** When first written, clause 1 below said
+> `real/**` "**is** classified R2 … in §3". It was not — the §3 table had no `real/**`
+> row at all. A prescription written as a statement of fact, the same class as M-01/M-02.
+> It is now true because the propagation pass made it true, and it was not true when the
+> sentence was written. Recorded rather than quietly fixed by the passage of time.
+
+**Written here before it is cited anywhere else**, per the sequencing rule above. This is
+the first delegated decision to follow that rule from the start; SPR-D-01 did not, and
+SPR-D-02 was withheld and then vacated without ever being written.
+
+### History that must travel with this record
+
+**SPR-D-02 proposed the same ruling and was VACATED.** It was proposed, withheld, then
+declined outright, and was **never written to this register**. SPR-D-03 is not a re-run of
+it: the Strategic Product Reviewer records that SPR-D-02 did not lead with the argument
+that now decides the question — that the quarantine clause being corrected was **agent-invented
+scope**, not Product Owner scope. That argument was established by the Project Auditor
+during the PR #30 audit, after SPR-D-02 was declined. The record is retained rather than
+overwritten so the reversal is visible as a reversal.
+
+### The decision
+
+`product/fixtures/real/**` is classified **R2 — PERMEABLE by necessity** in §3 of
+[`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md),
+on the same footing as `product/fixtures/golden/**`, for the Phase-2 engine author and
+successor-phase engine authors.
+
+1. `real/RM-01/input.csv`, `annotation.json` and `README.md` are **permeable**. Half A is the
+   human-approved, non-circular anchor and **is** the contract.
+2. `real/RM-01/expected-causal.json` and `schema/real-causal.schema.json` are **permeable**.
+   Half B is the B-clause conformance target the Product Owner placed in the Phase 2 exit gate.
+3. **Mandatory no-credit rider — it must travel with the classification.** Reproducing
+   `expected-causal.json` earns **conformance credit only**. It earns **no independence
+   credit** (HD-15 condition 1 — agreement with the reference model earns none, and Half B is
+   replay-generated) and **no non-circularity credit** (SPR-D-01 limit 3 — RM-01's
+   non-circularity attaches to Half A's human-approved geometry and the real prices, never to
+   Half B's provenance).
+4. **The quarantine set is unchanged in substance.** It remains the causal reference model and
+   its successors under `tools/`, `product/fixtures/VERIFICATION.md`, and the mechanism
+   document. **Nothing is added to or removed from the `QUARANTINE` configuration** — `real/**`
+   was never in it. Adopting the restrictive reading would have meant *adding* a control, not
+   preserving one.
+5. The `author_independence` description in
+   [`fixtures/schema/real-causal.schema.json`](fixtures/schema/real-causal.schema.json) is
+   **superseded, not deleted**. Its clause requiring the Phase-2 author to have *"read neither
+   this file nor the reference model"* widened Product-Owner-approved text by agent authorship.
+   The corrected text must **retain** the statement that that file's own author read the model
+   and is disqualified, and must record that the widening clause was superseded by SPR-D-03.
+
+### Why this is inside the delegation, boundary by boundary
+
+Checked individually rather than concluded in aggregate. No provider purchase or spend · no
+licensing acceptance · no security/privacy/billing/PII (the artifact is committed public
+fixture data already in the repository) · no irreversible external action · no core
+product-thesis change · no roadmap phase-order change. It is **not a GOV-015 lift or
+widening**: it expands no implementation permission, and HD-22 already governs what may be
+built.
+
+### The argument that decides it
+
+**E2-AUTHOR-B is Product-Owner-approved text, and it names only the reference model under
+`tools/`.** The *"nor this file"* clause in the schema widened a PO-approved criterion without
+any ruling. Correcting it **restores the Product Owner's own text**; it does not reduce the
+Product Owner's control. A delegated decision that narrows agent-invented scope back to
+PO-authored scope is the safest available use of this delegation.
+
+Supporting, on the HD-21 tie-break order: **mechanical verifiability (tie-break 3) is
+decisive.** Permeable is the only option under which the Product-Owner-ruled RM-01 B-clause is
+assertable inside the engine's own suite, in CI, at every commit. Look-ahead bias (1) and
+causal correctness (2) are neutral — this is a read-permission question, not an
+evaluation-window one.
+
+### The argument the record under-claimed (Project Auditor F-1)
+
+**Half B's numbers were already permeable, so the "split" alternative was never a real
+control.** The §3 table classifies `product/roadmap.md` as **R3 PERMEABLE**, and the
+roadmap's own Phase-2 exit criteria already publish every Half B value: stop bar 10,
+`A = (2, 225.64)`, `B* = (9, 158.40)`, `m = −0.0505453`, `b = 5.52003`, line `150.593`,
+close `164.19`, margin `0.0864461`, `t_form = 8`, `(3, 213.7999)`, `m = −0.0539003` — and
+the margin-convention trap besides. A compliant author reading only permeable sources
+already had all of them.
+
+This is what actually makes the split option unavailable: it would have been a control over
+the **interface** and not over the **information**. It also converts "risks accepted" item 3
+(*"the §8.4 fitting risk grows by one artifact — unchanged in kind"*) from an assertion into
+a demonstration. The original record argued the split down on proportionality; that was the
+weaker version of a decisive argument.
+
+### Rejected alternatives
+
+- **Quarantine `real/**` entirely.** Rejected: it makes the Product Owner's own Phase 2 exit
+  gate **unsatisfiable by the ticket**. An author who may not read the target cannot know the
+  field set, the margin convention (raw clearance vs. net of `ε_break` — the ambiguity SPR-D-01
+  flagged as live), the `not_asserted` exclusion set, or the `input_binding` hash. The
+  restrictive direction is usually the safe one; here it is the unsatisfiable one.
+- **Split: Half A permeable, Half B quarantined.** The only real contender, and its argument is
+  genuine — Half B is replay-generated, so reading it is reading model output. Rejected on
+  proportionality: the 23 golden `causal_record` blocks are **already R2 and are model outputs
+  of identical provenance**, and §8.4 of the mechanism document already concedes that an engine
+  fitted entirely to `causal_record` would pass every control in that document. Excluding one
+  further model-derived expectation buys almost nothing against that threat and costs the
+  corpus's only real-market gate. The residual is carried by the rider in (3) and by Half A.
+
+### Risks accepted, recorded rather than mitigated away
+
+1. The engine's RM-01 B-clause agreement is a **regression guard against today's reference
+   model**, not independent verification.
+2. **The ruling is partly retrospective** — PR #33's engine already reads
+   `expected-causal.json`. Disclosed rather than laundered: no configured control was
+   circumvented (`real/**` was never in `QUARANTINE`), and the ruling would be identical for a
+   Phase-3 author who has not yet begun.
+3. The §8.4 fitting risk grows by one artifact. Unchanged in kind.
+
+### Reversibility
+
+Full, by later mechanism or specification revision. Reversal costs one table row, one schema
+description, and — for a future phase — a clean-room profile that excludes `real/**`. **No code
+depends on the classification.** Reversal is by **superseding** this record, never deleting it.
+
+### What would trigger reconsideration
+
+1. A real fixture whose expectation is **not** replay-generated.
+2. Issue [#20](https://github.com/tomerYannay/4UR4/issues/20)'s P1 clean-room procedure being
+   exercised for real, forcing an explicit include/exclude list.
+3. **Any Product Owner instruction** — delegated, overturnable at any time without cause.
+4. **The Project Auditor finding any HD-21 condition unmet** — then SPR-D-03 does not stand and
+   M-09 reopens unchanged.

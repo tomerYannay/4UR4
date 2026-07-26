@@ -1,7 +1,9 @@
 name: Governance Validation
 
 # Enforces the 4UR4 Agent Operating System on every change.
-# Dependency-free: it only needs Node to run tools/validate.mjs.
+# Needs Node for the four governance gates, and Python 3 for the Phase 2 engine
+# conformance suite. (This line read "Dependency-free: it only needs Node" while the
+# file already ran python3 -- a false claim in the file that defines the gates.)
 
 on:
   pull_request:
@@ -18,6 +20,71 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # Full history: the fixture-immutability guard below diffs against the
+          # merge base, which a depth-1 checkout does not have.
+          fetch-depth: 0
+
+      - name: Fixture immutability — a fixture may not be edited to make the engine pass
+        # HD-22 calls this "the one control that cannot be recovered after the fact: a
+        # fixture edited to accommodate an engine looks identical to a fixture that was
+        # always right." Until now it was the only HD-22 binding condition with NO
+        # mechanical guard -- it rested on a human running `git diff` and transcribing the
+        # result into a review. Recommended by the Project Auditor, which could not verify
+        # that negative from file contents alone.
+        #
+        # The rule is NOT "fixtures never change" -- adding a fixture tightens the gate and
+        # is welcome. The rule is that a change to engine/ may not travel with a
+        # MODIFICATION or DELETION of an existing fixture. Those must land separately, so
+        # the edit is reviewed on its own merits rather than as a detail of an engine PR.
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          base="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=0 origin "${{ github.base_ref }}" >/dev/null 2>&1 || true
+          merge_base="$(git merge-base "$base" HEAD)"
+
+          engine_changed="$(git diff --name-only "$merge_base" HEAD -- engine/ | head -1)"
+          if [ -z "$engine_changed" ]; then
+            echo "No engine/ changes in this PR — fixture-immutability guard not engaged."
+            exit 0
+          fi
+
+          # M = modified, D = deleted, R = renamed. A = added is deliberately permitted:
+          # adding a fixture TIGHTENS the gate automatically and is welcome.
+          changed="$(git diff --name-only --diff-filter=MDR "$merge_base" HEAD -- product/fixtures/)"
+
+          # Fixture DATA -- the artifacts HD-22 names, and the ones that cannot be
+          # recovered after the fact. Hard failure.
+          data="$(echo "$changed" | grep -E '(input\.csv|expected\.json|expected-causal\.json|annotation\.json)$' || true)"
+
+          # Everything else under product/fixtures/ (schemas, READMEs). Surfaced loudly,
+          # not failed. SCOPE DISCLOSED, because narrowing a guard to fit the PR that
+          # introduces it is the exact failure this guard exists to catch:
+          #   The PR that added this step modifies product/fixtures/schema/real-causal.schema.json
+          #   -- one `description` field, propagating SPR-D-03. That is a governance record,
+          #   not a fixture bent to make the engine pass, and it is what surfaced the
+          #   distinction. A schema edit CAN still weaken a gate, so it is printed for a
+          #   reviewer rather than silently permitted. If a reviewer thinks this should be a
+          #   hard failure too, that is a one-word change to the block below and I will not
+          #   argue for the looser reading.
+          other="$(echo "$changed" | grep -vE '(input\.csv|expected\.json|expected-causal\.json|annotation\.json)$' || true)"
+
+          if [ -n "$other" ]; then
+            echo "::warning::This PR changes engine/ and also touches non-data files under product/fixtures/. Review these on their own merits:"
+            echo "$other" | sed 's/^/  /'
+          fi
+
+          if [ -n "$data" ]; then
+            echo "::error::HD-22 fixture immutability: this PR changes engine/ AND modifies or deletes committed FIXTURE DATA."
+            echo "$data" | sed 's/^/  /'
+            echo ""
+            echo "A disagreement between the engine and a committed fixture is ESCALATED, never reconciled."
+            echo "If the fixture is genuinely wrong, land that correction in its own PR, reviewed on its own merits."
+            echo "HD-22: 'a fixture edited to accommodate an engine looks identical to a fixture that was always right.'"
+            exit 1
+          fi
+          echo "PASS — engine/ changed; no committed fixture data was modified or deleted."
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -52,3 +119,22 @@ jobs:
 
       - name: Validate fixture JSON against the schema, and documentation links
         run: node tools/check-evidence.mjs
+
+      - name: Set up Python
+        # Pinned so a runner image change is a DECISION rather than an event: the engine
+        # suite carries libm-sensitive assertions (the GX-14 tie preflight, the M-1/M-2
+        # ulp constructions). They fail loudly by design, but an unpinned interpreter
+        # makes that failure arrive as a surprise.
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Phase 2 engine — conformance against every fixture (23 golden + RM-01)
+        # Without this the Phase 2 exit gate is an AUTHOR-RUN CLAIM that can silently
+        # drift — the exact failure Issue #16 exists to correct, and the same reason the
+        # golden replay above runs in CI rather than on a developer's machine.
+        #
+        # The engine is proven against the FIXTURES, never against tools/fixture-replay.mjs:
+        # agreement with the reference model earns no credit (HD-15 condition 1), and the
+        # engine imports nothing under tools/ (asserted by its own architecture test).
+        run: python3 -m engine.tests.run_all

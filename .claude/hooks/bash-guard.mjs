@@ -85,7 +85,10 @@ export function isKnownRole(role) { return Object.hasOwn(ROLE_POLICY, role); }
 // CONTRACT the engine must satisfy, and phase2-independence-mechanism.md classifies
 // product/fixtures/golden/** — including every causal_record — as R2, "PERMEABLE by
 // necessity". Quarantining the contract would make the gate unreadable by the author
-// who has to pass it. (product/fixtures/real/** is unclassified — M-09, open.)
+// who has to pass it. product/fixtures/real/** is likewise R2b PERMEABLE — SPR-D-03,
+// condition-10 CONFIRMED, closing M-09. It was never in this QUARANTINE list; the
+// restrictive reading lived only in a schema description, and adopting it would have meant
+// ADDING a control rather than preserving one.
 // ----------------------------------------------------------------------------
 export const QUARANTINE = {
   'implementation-engineer': [

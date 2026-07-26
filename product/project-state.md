@@ -202,7 +202,24 @@ Stated as **owed**, not done.
   [`maintenance-backlog.md`](maintenance-backlog.md) (M-01…M-08 plus the PR #30 review set).
   Nothing in that file blocks a milestone **except M-09**, which is not a wording item — see
   Delegated product decisions.
-- **`main` is not branch-protected.** `mergeStateStatus: CLEAN` on PR #25 and PR #30
+- **`main` IS branch-protected — 6 of HD-22's 7 parts, with the seventh open and blocked
+  on [#21](https://github.com/tomerYannay/4UR4/issues/21).** Measured, not asserted:
+  `enforce_admins: true` · PR-only merges · required check `Validate agent OS & governance`
+  with `strict: true` · no force pushes · no deletions · direct push **empirically rejected**
+  (`protected branch hook declined`). **The one gap: `required_approving_review_count: 0`**,
+  so "required exact-head reviews" is **unimplemented, not partially met** — at count 0,
+  `dismiss_stale_reviews: true` is inert because there is no review to dismiss. It cannot be
+  fixed by raising the number: GitHub forbids a PR author from approving their own PR, and
+  under one shared identity every PR is authored by that identity, so a count of 1 would make
+  `main` permanently unmergeable and the predictable response would be to disable
+  `enforce_admins` — trading a real protection for a theatrical one. **The constraint is #21,
+  not the setting.** *"Full branch protection is in place" is not an available statement.*
+  **The two gates disagree on whether this blocks merging engine code** — the Project Auditor
+  says no (the load-bearing protections are in place; the defect is #21 and is already
+  ticketed), the Strategic Product Reviewer says yes (HD-22 states it as a precondition on
+  Phase 2 product code merging). **Unresolved; it is a Product Owner call.**
+
+  Historical, retained: `mergeStateStatus: CLEAN` on PR #25 and PR #30
   reflected the **absence of required checks, not their satisfaction** — agent discipline
   was the entire merge gate. **The Product Owner now requires full branch protection before
   any Phase 2 product code merges** ([#31](https://github.com/tomerYannay/4UR4/issues/31)),
@@ -307,6 +324,17 @@ selects a provider, or authorizes spend or licensing.**
 - **Sequencing rule, binding on SPR-D-02 onward:** a delegated decision's status line reads
   `RESOLVED — pending condition-10 audit` until the Project Auditor confirms it, and only
   then is promoted.
+- **SPR-D-03 — STANDS. M-09 is CLOSED.** `product/fixtures/real/**` is classified **R2b
+  PERMEABLE by necessity**, with a mandatory no-credit rider. **Condition-10 CONFIRMED by the
+  Project Auditor against all ten HD-21 conditions**, and — a first for this register — the
+  decision was written to [`human-decisions.md`](human-decisions.md) **before anything cited
+  it forward**, which is the sequencing rule SPR-D-01 broke and SPR-D-02 died on. The audit
+  also recorded three corrections to the record itself (F-1 under-claim, F-2 the §10 author
+  brief's `golden/** only`, F-3 a prescription written as fact); all three are applied.
+  **Scope: M-09 only. It does not clear Phase 2 entry.**
+
+  Superseded, retained because the reversal must stay visible:
+
 - **SPR-D-02 — DOES NOT STAND.** A ruling on whether `real/**` is R2 *permeable* in the
   independence quarantine table was proposed in the PR #30 strategic review, but the
   **Project Auditor returned NOT CONFIRMED** under **HD-21 condition 10**: the decision was
