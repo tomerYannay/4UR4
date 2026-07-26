@@ -75,6 +75,15 @@ __all__ = ["Line", "SealedBar", "Reselection", "BarEvent", "StopRecord", "Causal
 #: being a pure function of the prefix); it simply records no reset, because
 #: there was no structure to invalidate.  RM-01 exercises this at bars 1 and 2
 #: and its committed record asserts no transition there either way.
+#:
+#: This comment previously read as a discretionary tie-break.  It is not: the
+#: Verification gate ruled the reading here CORRECT and RATIFIED, and showed the
+#: alternative (emit ``NONE -> NONE``) is not merely unattractive but **breaks
+#: §21.3 on the committed corpus** -- it records events inside the head-of-series
+#: run that §21.3 says must "not be recorded as an event at all".  Demonstrated,
+#: not argued.  The two readings are also behaviourally identical across all 24
+#: committed fixtures, so nothing here is load-bearing for conformance; it is
+#: load-bearing for what the engine would do on a series the corpus lacks.
 #: Phase 3 adds ``BROKEN_OUT`` and ``RETESTED`` to this tuple.
 _LINE_BEARING = (LineState.ACTIVE,)
 

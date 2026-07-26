@@ -92,7 +92,7 @@ def select_second_anchor(prefix: Prefix, t_anchor: int, eps: float) -> Selection
                 slope=slope,
                 intercept=intercept,
                 worst_gap=worst_gap,
-                envelope_valid=worst_gap <= eps,
+                envelope_valid=_is_envelope_valid(prefix, t_anchor, slope, intercept, eps),
             )
         )
 
@@ -125,6 +125,31 @@ def _worst_gap(
         if gap > worst:
             worst = gap
     return worst
+
+
+def _is_envelope_valid(prefix, t_anchor: int, slope: float, intercept: float, eps: float) -> bool:
+    """Envelope validity in the PINNED comparison form: ``lhs > y_hat + eps``.
+
+    Plan §4.3 pins the right-hand side to be formed FIRST -- ``lhs > y_hat + eps`` --
+    and explicitly forbids ``lhs - y_hat > eps``.  This predicate previously used
+    ``worst_gap <= eps``, which is the forbidden form, twelve lines above
+    :func:`envelope_violations` using the pinned one.  Two forms of ONE predicate in one
+    module is exactly the hazard the pin exists to prevent: at a boundary they can
+    disagree by an ulp, which would yield ``envelope_valid=True`` alongside
+    ``envelope_violations() > 0`` for the same candidate -- an internal contradiction
+    RM-01's Half-A assertion depends on being impossible.
+
+    Code Review measured 0 disagreements over 13,043 candidate evaluations on the
+    committed corpus, so nothing moves today.  It is unified anyway, because "measured
+    identical on this corpus" is precisely the argument that mutations M-1 and M-2
+    defeated: a 6-significant-figure corpus cannot pin arithmetic form.
+
+    ``worst_gap`` is retained as REPORTING-ONLY -- the fixtures assert it.
+    """
+    for j in range(t_anchor + 1, prefix.length):
+        if prefix.y[j] > y_hat(slope, intercept, j) + eps:
+            return False
+    return True
 
 
 def envelope_violations(

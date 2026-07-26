@@ -1,7 +1,9 @@
 name: Governance Validation
 
 # Enforces the 4UR4 Agent Operating System on every change.
-# Dependency-free: it only needs Node to run tools/validate.mjs.
+# Needs Node for the four governance gates, and Python 3 for the Phase 2 engine
+# conformance suite. (This line read "Dependency-free: it only needs Node" while the
+# file already ran python3 -- a false claim in the file that defines the gates.)
 
 on:
   pull_request:
@@ -52,6 +54,15 @@ jobs:
 
       - name: Validate fixture JSON against the schema, and documentation links
         run: node tools/check-evidence.mjs
+
+      - name: Set up Python
+        # Pinned so a runner image change is a DECISION rather than an event: the engine
+        # suite carries libm-sensitive assertions (the GX-14 tie preflight, the M-1/M-2
+        # ulp constructions). They fail loudly by design, but an unpinned interpreter
+        # makes that failure arrive as a surprise.
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Phase 2 engine — conformance against every fixture (23 golden + RM-01)
         # Without this the Phase 2 exit gate is an AUTHOR-RUN CLAIM that can silently

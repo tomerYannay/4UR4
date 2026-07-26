@@ -495,8 +495,13 @@ class PivotsAreNonAuthoritative(unittest.TestCase):
 class LemmaEquivalence(unittest.TestCase):
     """§21.4 — the closed form agrees with the §8 brute force at EVERY prefix.
 
-    The oracle is written from §21.4, the engine from §8; they share only
-    ``logspace``.  This is a genuine two-version check.
+    The oracle is written from §21.4, the engine from §8.  They share
+    ``logspace`` AND -- on §21.4's mandated fallback branch -- the engine's own
+    ``anchor_of`` and ``select_second_anchor``: measured, 77 of 590 prefixes are
+    decided by that fallback and 513 by the closed form.  So this is a genuine
+    two-version check on the 513 and a self-consistency check on the 77.  See
+    ``lemma_oracle`` for the correction; the earlier "share only logspace"
+    wording overstated it.
     """
 
     def test_lemma_matches_brute_force_on_every_fixture_prefix(self) -> None:
