@@ -96,13 +96,13 @@ one file and lifts nothing.
   directories, `GX-01`…`GX-23`, each with `input.csv` + `expected.json`, plus `real/RM-01/`.*
 - **[PR #18](https://github.com/tomerYannay/4UR4/pull/18) MERGED** as `e56ed8e` — the Phase 0
   evidence correction and the HD-12 as-of-time fixture audit. The **23 golden fixtures
-  (GX-01…GX-23)** reproduce **exactly** under as-of-time replay in CI. *(Corrected
-  2026-07-26: this previously read "23 golden + RM-01". **RM-01 is not replayed** —
-  `fixture-replay.mjs` reads only `golden/`, and `check-evidence.mjs` only schema-validates
-  RM-01's annotation. No mechanical guard has ever covered RM-01's geometry, which is why
-  the divergence escalated as HD-20 — since resolved by **SPR-D-01** — survived that audit.
-  SPR-D-01's B-clause is the first mechanical guard proposed over RM-01, and if its
-  expectation is replay-generated it is a **regression guard against today's model**, not
+  (GX-01…GX-23)** reproduce **exactly** under as-of-time replay in CI. *(At the time of
+  PR #18, **RM-01 was not replayed** — `fixture-replay.mjs` read only `golden/` and
+  `check-evidence.mjs` only schema-validated RM-01's annotation, so no mechanical guard
+  had ever covered its geometry. That is why the divergence escalated as HD-20 — since
+  resolved by **SPR-D-01** — survived that audit. **This is now closed:** RM-01 carries
+  `expected-causal.json` and is asserted by `--all` in CI. Its expectation **is**
+  replay-generated, so it **is** a **regression guard against today's model**, not
   independent verification.)* Landed with
   it: spec §21, D-TL-11, D-TL-12, GX-20, the HD-14 formation-gate regressions
   GX-21/GX-22/GX-23, and `tools/fixture-replay.mjs` (permitted under HD-15).
@@ -247,7 +247,7 @@ provider, or authorizes spend or licensing.**
   and **no** `BROKEN_OUT` state and **no** `BREAKOUT_CONFIRMED` reason code, which remain
   Phase 3's. **Half B narrows RM-01's Phase-2 assertable surface** to bars **0–9** plus the
   stop index, so *"the gate is strengthened"* is true of the gate as a whole and **false of
-  RM-01**. If Half B is replay-generated it is **model-derived**, so RM-01's non-circularity
+  RM-01**. Half B **is** replay-generated and therefore **model-derived**, so RM-01's non-circularity
   attaches to **Half A's human-approved geometry and the real prices**, not to Half B's
   provenance. The 2026-07-25 Product Owner approval, SC-1, SC-2/HD-11, `annotation.json`'s
   values and the **golden fixtures** are all unchanged; parameters stay at their ratified

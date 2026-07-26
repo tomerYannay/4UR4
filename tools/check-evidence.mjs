@@ -93,6 +93,29 @@ for (const id of ids) chk(JSON.parse(readFileSync(join(ROOT, `product/fixtures/g
 const ras = JSON.parse(readFileSync(join(ROOT, 'product/fixtures/schema/real-annotation.schema.json'), 'utf8'));
 chk(JSON.parse(readFileSync(join(ROOT, 'product/fixtures/real/RM-01/annotation.json'), 'utf8')), ras, '', 'RM-01');
 
+// Real-market causal expectations (SPR-D-01 Half B) against real-causal.schema.json.
+// Deliberately a SEPARATE schema from fixture.schema.json: that one pins ^GX-\d{2}$ and
+// requires a full transition list, so admitting a real fixture would have meant WEAKENING
+// the golden gate rather than adding to it.
+//
+// The walk FAILS on a real fixture directory that carries no expectation, rather than
+// skipping it. A real/* walk that quietly covers nothing reports coverage it does not
+// have, which is worse than a failing one — and RM-01 spent its whole history with no
+// mechanical guard precisely because the absence was invisible.
+const rcs = JSON.parse(readFileSync(join(ROOT, 'product/fixtures/schema/real-causal.schema.json'), 'utf8'));
+const realDir = join(ROOT, 'product/fixtures/real');
+const realIds = existsSync(realDir)
+  ? readdirSync(realDir).filter((d) => /^RM-\d\d$/.test(d)).sort() : [];
+for (const id of realIds) {
+  const p = join(realDir, id, 'expected-causal.json');
+  if (!existsSync(p)) {
+    errs.push(`${id}: no expected-causal.json — a real fixture with no causal expectation is`
+      + ` unguarded, and this gate must not pass over it silently (SPR-D-01 Half B).`);
+    continue;
+  }
+  chk(JSON.parse(readFileSync(p, 'utf8')), rcs, '', id);
+}
+
 // NEGATIVE CONTROL. A validator that silently regressed to a no-op would print PASS
 // forever — exactly the failure mode this file exists to prevent, and the same reason
 // tools/fixture-replay.mjs carries a positive control on its formation checks. Feed a
@@ -110,6 +133,42 @@ chk({
   expected_reason_codes: [], rejection_rationale: [], geometry_check: {},
   not_a_real_field: 1,                                        // fails additionalProperties
 }, schema, '', 'NEGATIVE-CONTROL', control);
+// Second negative control, for the real-causal schema specifically. The control above
+// proves `chk` works; it does not prove THIS schema constrains anything. A schema wired
+// in but written permissively would validate every instance forever, which is the same
+// silent-no-op class one level down. This instance violates the three constraints that
+// carry SPR-D-01's limits — the model-derived `const`s and the RM id pattern.
+const rcControl = [];
+chk({
+  fixture_id: 'GX-01',                       // fails `pattern` — wrong id namespace
+  layer: 'full-series',                      // fails `const`
+  purpose: 'x', spec_refs: [],               // fails `minItems`
+  provenance: {
+    generated_by: 'x',
+    derivation: 'hand-derived',              // fails `const` — the overclaim limit 3 forbids
+    is_independent_verification: true,       // fails `const` — the overclaim limit 3 forbids
+    guard_kind: 'independent-verification',  // fails `const`
+    author_independence: 'x', note: 'x',
+  },
+  assertable_surface: { bars_from: 0, bars_to: 9, plus_stop_index: false, rationale: 'x' },
+  not_asserted: { fields: [], rationale: 'x' },
+  params: { tolerance_version: 'x', eps_break_locked: true },  // fails `const`
+  formation: { t_form: 0, B_star_at_formation: {}, log_slope_at_formation: 0, gate_trace: [] },
+  as_of_time_selection: [],
+  line_at_stop: { stop_index: 0, stop_index_is_engine_derived: false },  // fails `const` + required
+  non_endorsement: 'x',
+  smuggled_field: 1,                         // fails additionalProperties
+}, rcs, '', 'RC-NEGATIVE-CONTROL', rcControl);
+const RC_MUST_CATCH = ['pattern', 'const mismatch', 'minItems', 'additional property', 'missing required'];
+const rcMissed = RC_MUST_CATCH.filter((k) => !rcControl.some((e) => e.includes(k)));
+if (rcMissed.length) {
+  errs.push(`REAL-CAUSAL NEGATIVE CONTROL FAILED — real-causal.schema.json did not detect:`
+    + ` ${rcMissed.join(', ')} (it reported: ${rcControl.join(' | ') || 'nothing'})`);
+} else {
+  console.log(`real-causal negative control: PASS — a known-bad Half B instance produced`
+    + ` ${rcControl.length} errors covering all ${RC_MUST_CATCH.length} asserted keyword classes`);
+}
+
 const MUST_CATCH = ['pattern', 'const mismatch', 'not in enum', 'additional property', 'minItems', 'missing required'];
 const missed = MUST_CATCH.filter((k) => !control.some((e) => e.includes(k)));
 if (missed.length) {
@@ -121,7 +180,8 @@ if (missed.length) {
 }
 
 console.log(errs.length ? `SCHEMA: ${errs.length} error(s)\n  ` + errs.join('\n  ')
-  : `schema: PASS — ${ids.length} golden fixtures + RM-01 annotation validate`);
+  : `schema: PASS — ${ids.length} golden fixtures + RM-01 annotation`
+    + ` + ${realIds.length} real causal expectation(s) validate`);
 
 // ------------------------------------------------------- documentation links
 const md = [];
