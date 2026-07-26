@@ -33,7 +33,7 @@ sides and the two agree degenerately.
 A THIRD correction: the 77 were glossed as "the formation-critical early prefixes
 and every post-reset prefix".  Incomplete, and it omitted a class §21.4 names.
 Measured composition -- 42 are early (``t <= 2``); of the 35 later, **31** are
-``B* = ⊥`` cascades (GX-20 t=7..26 alone is 23), **2** are anchor changes, and
+``B* = ⊥`` cascades (GX-20 t=7..26 alone is 20), **2** are anchor changes, and
 **2** are ATH ties (GX-12 t=3, GX-20 t=6).  By trigger tag over all 77:
 ``B*=⊥`` only 52, ``anchor_changed`` + ``B*=⊥`` 21, ``anchor_changed`` only 2,
 ``ath_tie`` only 2.  The dominant later class is ``B* = ⊥`` cascades, which are
