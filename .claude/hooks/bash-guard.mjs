@@ -37,6 +37,12 @@ export const ROLE_POLICY = {
   // Doc-writing agents that have no Bash tool; if ever invoked, treat as read-only.
   'product-steward': ['DANGER', 'FILE', 'GIT', 'GH'],
   architect: ['DANGER', 'FILE', 'GIT', 'GH'],
+  // Read-only strategic gate. It was MISSING from this table, and once AC-4 made unknown
+  // roles inherit the engineer's quarantine, that omission silently DENIED it
+  // docs/architecture/phase2-independence-mechanism.md — the document it is asked to rule
+  // on for M-09 — and product/fixtures/VERIFICATION.md. A permanent gating agent was
+  // quarantined by an oversight in a register nobody was asserting against the agent set.
+  'strategic-product-reviewer': ['DANGER', 'FILE', 'GIT', 'GH'],
 };
 export const KNOWN_ROLES = Object.keys(ROLE_POLICY);
 
@@ -60,9 +66,16 @@ export function isKnownRole(role) { return Object.hasOwn(ROLE_POLICY, role); }
 // model) is what is assessed at the gate and GOVERNS where the two diverge. This
 // hook is the cheapest place to stop an A-violation from ever being written.
 //
-// Scoped to the ONE role that authors product code. Every other role must be able to
-// read these files: Verification and Code Review re-derive fixture values from the
-// model, and the Project Auditor reads everything.
+// Scoped to the ONE role that authors product code. Every other REGISTERED role must be
+// able to read these files: Verification and Code Review re-derive fixture values from the
+// model, the Project Auditor reads everything, and the Strategic Product Reviewer must
+// read the mechanism document to rule on it.
+//
+// "Registered" is load-bearing, and was not always true. AC-4 makes an UNKNOWN role
+// inherit this quarantine, so any permanent agent missing from ROLE_POLICY is silently
+// denied. That happened to strategic-product-reviewer. The parity check in
+// tools/validate.mjs now asserts ROLE_POLICY covers every agent on disk, so the omission
+// fails the build instead of quietly removing a gate's access.
 //
 // NOT quarantined, deliberately: the fixtures themselves. They are the conformance
 // CONTRACT the engine must satisfy, and phase2-independence-mechanism.md classifies

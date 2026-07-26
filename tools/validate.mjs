@@ -255,6 +255,30 @@ if (existsSync(freezeFile)) {
   }
 } else err('missing governance/build-freeze.md');
 
+// ---- agent / ROLE_POLICY parity ---------------------------------------------
+// Every permanent agent must appear in bash-guard's ROLE_POLICY. This is not tidiness:
+// AC-4 makes an UNKNOWN role inherit the implementation-engineer quarantine, so an agent
+// missing from that table is SILENTLY DENIED the quarantined paths. It happened to
+// strategic-product-reviewer, which was thereby denied the very document it is asked to
+// rule on. A register nobody asserts against reality drifts; this makes the drift fail CI.
+try {
+  const guardSrc = readFileSync(join(ROOT, '.claude/hooks/bash-guard.mjs'), 'utf8');
+  const policyBlock = (guardSrc.match(/ROLE_POLICY\s*=\s*\{([\s\S]*?)\n\};/) || [])[1] || '';
+  if (!policyBlock) {
+    err('bash-guard.mjs: ROLE_POLICY block not found — agent/role parity cannot be checked');
+  } else {
+    const mapped = new Set([...policyBlock.matchAll(/^\s*'?([a-z][a-z0-9-]*)'?\s*:/gm)].map((m) => m[1]));
+    const unmapped = agents.filter((a) => a.gov && a.gov.status === 'permanent' && !mapped.has(a.gov.id))
+      .map((a) => a.gov.id);
+    if (unmapped.length) {
+      err(`bash-guard ROLE_POLICY is missing permanent agent(s): ${unmapped.join(', ')}.`
+        + ` Unmapped roles inherit the E2-AUTHOR quarantine (AC-4) and are silently denied.`);
+    }
+  }
+} catch (e) {
+  err(`agent/ROLE_POLICY parity check could not run: ${e.message}`);
+}
+
 // ---- freeze-list parity -----------------------------------------------------
 // The prose list in build-freeze.md and PRODUCT_CODE_DIRS are two statements of one fact,
 // and two statements of one fact drift. This makes the drift a build failure rather than

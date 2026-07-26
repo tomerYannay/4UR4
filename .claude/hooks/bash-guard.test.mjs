@@ -304,6 +304,24 @@ eq(quarantineBlock(ENG, 'echo mytools done'), null,
 eq(quarantineBlock(ENG, 'node --test engine/'), null,
   'running the engine tests must not block');
 
+
+// ---- every permanent agent must be registered ------------------------------
+// strategic-product-reviewer was MISSING from ROLE_POLICY. Once AC-4 made unknown roles
+// inherit the engineer quarantine, that omission silently DENIED a permanent gating agent
+// the very document it is asked to rule on. tools/validate.mjs now asserts ROLE_POLICY
+// covers every agent on disk; these assert the consequence at the hook level.
+for (const role of ['orchestrator', 'implementation-engineer', 'verification', 'code-reviewer',
+                    'product-innovation', 'project-auditor', 'release-ops', 'product-steward',
+                    'architect', 'strategic-product-reviewer']) {
+  eq(KNOWN_ROLES.includes(role), true, `ROLE_POLICY registers permanent agent '${role}'`);
+}
+for (const f of ['docs/architecture/phase2-independence-mechanism.md',
+                 'product/fixtures/VERIFICATION.md',
+                 'tools/fixture-replay.mjs']) {
+  eq(evaluateFileAccess('strategic-product-reviewer', { file_path: f }).decision, 'allow',
+    `strategic-product-reviewer reads ${f} — it must, to rule on the mechanism`);
+}
+
 // ---- report -----------------------------------------------------------------
 if (failures.length === 0) {
   console.log(`bash-guard tests: ✅ PASS — ${pass} assertions, 0 failures.`);
