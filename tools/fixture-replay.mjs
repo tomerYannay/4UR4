@@ -497,8 +497,8 @@ export function buildRealRecord(fx) {
   if (stop === null) return { stop_index: null, unreachable: 'no engine-derived stop' };
   const surface = r.bars.filter((x) => x.t < stop);
   // `replay()` permits formation and breakout on the same bar, which leaves no bar
-  // strictly before the stop carrying a line. Report that instead of dereferencing
-  // undefined — a harness that dies with a stack trace reports nothing at all.
+  // strictly before the stop carrying a line. Return an `unreachable` marker that
+  // `compareReal` turns into a reported diff, rather than dereferencing undefined.
   const first = surface.find((x) => x.line);
   if (!first) {
     return {
@@ -579,7 +579,11 @@ export function compareReal(fx) {
     }
   };
 
-  if (got.stop_index === null) return [`no engine-derived stop index — ${got.unreachable}`];
+  // Covers BOTH unreachable shapes: no engine-derived stop at all, and a stop whose
+  // line first forms on the stop bar itself (non-null stop, no pre-stop surface). Keyed
+  // on `unreachable` rather than on `stop_index === null`, because the second shape
+  // carries a stop index and the narrower guard fell through into `got.formation`.
+  if (got.unreachable) return [`cannot assert a Half B surface — ${got.unreachable}`];
 
   // Limit 3: the artifact must state its own provenance on its face.
   const pv = e.provenance || {};
@@ -618,8 +622,9 @@ export function compareReal(fx) {
   // comparison pass.
   const ib = e.input_binding;
   if (!ib || !ib.input_csv_sha256) {
-    diffs.push('input_binding.input_csv_sha256 is REQUIRED — without it an edit to bars after'
-      + ' the stop index would change no asserted value and go undetected');
+    diffs.push('input_binding.input_csv_sha256 is REQUIRED — without it there are edits to bars'
+      + ' after the stop index that change no asserted value at all (halving a post-stop close is'
+      + ' invisible to every field this document asserts) and would go undetected');
   } else {
     const actual = createHash('sha256')
       .update(readFileSync(join(fx.dir, ib.input_csv || 'input.csv'))).digest('hex');
@@ -1211,15 +1216,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // ---- real-market fixtures (SPR-D-01 Half B) --------------------------------
   // Scoped to the narrowed Phase-2-owned surface. Runs under --all and --real, and
   // is skipped for a single-fixture GX run so `--all GX-01` stays a scoped run.
-  let realFailures = 0;
+  let realFailures = 0;          // anything that fails the gate
+  let realCompareFailures = 0;   // comparison failures only, for the summary line
   let realIds = [];
+  let realDirs = [];
   if (!only && (has('--all') || has('--real'))) {
     realIds = listRealFixtures();
     // A real/ walk that finds no expectation must FAIL, never silently skip: a
     // vacuous walk reports coverage it does not have, which is worse than a failing
     // one. `real/` is not empty — RM-01 is committed — so zero discoveries here
     // means the expectation is missing, not that there is nothing to check.
-    const realDirs = existsSync(REAL) ? readdirSync(REAL).filter((d) => /^RM-\d\d$/.test(d)).sort() : [];
+    realDirs = existsSync(REAL) ? readdirSync(REAL).filter((d) => /^RM-\d\d$/.test(d)).sort() : [];
     // Per-directory, not "only if ALL of them lack one" — that weaker form would let a
     // second real fixture added without an expectation be silently skipped while RM-01
     // kept the walk looking healthy.
@@ -1231,7 +1238,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     for (const id of realIds) {
       const fx = loadRealFixture(id);
       const d = compareReal(fx);
-      if (d.length) realFailures++;
+      if (d.length) { realFailures++; realCompareFailures++; }
       console.log(`${d.length ? '✗' : '✓'} ${id}  causal Half B`
         + `${fx.expected.line_at_stop ? ` stop@${fx.expected.line_at_stop.stop_index}`
           + ` B*=(${fx.expected.line_at_stop.B.t},${fx.expected.line_at_stop.B.H})`
@@ -1244,8 +1251,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   else {
     console.log(`\n${ids.length - failures}/${ids.length} fixtures reproduce exactly under as-of-time (§21/HD-12) replay.`);
     if (realIds.length) {
-      console.log(`${realIds.length - realFailures}/${realIds.length} real-market fixture(s) reproduce their`
-        + ` SPR-D-01 Half B surface (bars 0..stop-1 + engine-derived stop index).`);
+      // Count comparisons over fixtures that HAVE an expectation; report missing ones
+      // separately. Mixing them printed "0/1" when RM-01 had in fact reproduced and a
+      // second directory was merely unguarded.
+      const missing = realDirs.length - realIds.length;
+      console.log(`${realIds.length - realCompareFailures}/${realIds.length} real-market fixture(s)`
+        + ` reproduce their SPR-D-01 Half B surface (bars 0..stop-1 + engine-derived stop index)`
+        + `${missing ? `; ${missing} real fixture dir(s) carry NO expectation and are unguarded` : ''}.`);
     }
   }
   process.exit(failures || setLevelFailures || realFailures ? 1 : 0);

@@ -140,7 +140,8 @@
     "input_binding": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Ties this expectation to the exact committed bytes it was derived from, so a silent input edit cannot leave a passing gate.",
+      "required": ["input_csv_sha256", "bar_count"],
+      "description": "Ties this expectation to the exact committed bytes it was derived from, so a silent input edit cannot leave a passing gate. It is the ONLY check covering bars AFTER the stop index, which no asserted value touches — halving a post-stop close changes nothing else in this document. `required` here as well as at the root: without it `\"input_binding\": {}` satisfied the schema and only the harness objected.",
       "properties": {
         "input_csv": { "type": "string" },
         "input_csv_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },

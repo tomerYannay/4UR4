@@ -83,10 +83,12 @@ values reproduce independently within 6-significant-figure tolerance.**
 > ### ⚠ Everything in this section is a **full-series** result — read `README.md` §6b first
 >
 > This verification predates **HD-12** (as-of-time evaluation, ratified 2026-07-25) and was
-> never redone under it. **RM-01 was not covered by the 2026-07-25 causal audit**, and no
-> mechanical guard has ever replayed it: `check-evidence.mjs` only schema-validates its
-> annotation, and `fixture-replay.mjs` derives its fixture list from `golden/` and never
-> reads `real/`.
+> never redone under it. **RM-01 was not covered by the 2026-07-25 causal audit**, and at
+> that time no mechanical guard had ever replayed it: `check-evidence.mjs` only
+> schema-validated its annotation, and `fixture-replay.mjs` derived its fixture list from
+> `golden/` and never read `real/`. *(**Superseded 2026-07-26** — that gap is closed; see
+> the resolution block below in this same section. Retained because it is the finding that
+> explains why the divergence escaped, not a current statement of coverage.)*
 >
 > Re-derived as-of-time by **five separate agent sessions**, agreeing to six significant
 > figures — **RM-01 confirms a breakout at bar 10 (2026-06-29)**: close `164.19` against a

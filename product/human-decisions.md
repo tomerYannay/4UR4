@@ -959,6 +959,10 @@ confirmation remains mandatory before financial authorization.**
   RM-01.** `check-evidence.mjs` only schema-validates its annotation and
   `fixture-replay.mjs` never reads `real/`. That is why this survived the 2026-07-25
   causal audit — a gap in the evidence system, not a one-off.
+  *(**As recorded on 2026-07-26, and since closed.** `expected-causal.json`,
+  `real-causal.schema.json` and the `real/`-reading extension to both evidence tools now
+  place RM-01 under mechanical causal replay in CI. Marked rather than rewritten: this is
+  the finding as it stood, and it is what the closure answers.)*
 
 ## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
 
