@@ -126,9 +126,14 @@ console.log(broken.length ? `DOC LINKS: ${broken.length} broken\n  ` + broken.jo
 // columns. In an evidence log that silently turns a CORRECTED finding into an
 // apparently open one. Nothing caught this until a reviewer rendered the file
 // through GitHub's own GFM endpoint; this is that check.
-const tableErrs = [];
-for (const f of md) {
-  const lines = readFileSync(f, 'utf8').split('\n');
+// Scans one document. Returns {errs, tables, rows} — the census matters as much as
+// the errors: a scanner that silently stopped matching tables would report zero
+// errors AND zero rows, which is distinguishable from a genuine pass. Factored out
+// so the controls below can run the real code over synthetic input.
+function scanTables(text, label) {
+  const out = [];
+  const lines = text.split('\n');
+  let tables = 0, rows = 0;
   for (let i = 0; i < lines.length; i++) {
     const isRow = (l) => l !== undefined && l.trimStart().startsWith('|');
     if (!isRow(lines[i]) || !/^\s*\|[\s:|-]+\|\s*$/.test(lines[i + 1] ?? '')) continue;
@@ -136,17 +141,60 @@ for (const f of md) {
     // unescaped pipes, which is exactly what the renderer treats as a separator.
     const pipes = (l) => (l.replace(/\\\|/g, '').match(/\|/g) || []).length;
     const cols = pipes(lines[i]);
+    tables++;
     let j = i + 2;
     for (; isRow(lines[j]); j++) {
+      rows++;
       const n = pipes(lines[j]);
       if (n !== cols) {
-        tableErrs.push(`${f.replace(ROOT + '/', '')}:${j + 1}: table row has ${n} column separators, header has ${cols}`
+        out.push(`${label}:${j + 1}: table row has ${n} column separators, header has ${cols}`
           + ` — a row wrapped across lines renders as separate one-cell rows`);
       }
     }
     i = j;
   }
+  return { errs: out, tables, rows };
+}
+
+// CONTROLS. The schema validator above carries a negative control because a
+// validator that regressed to a no-op prints PASS forever. This gate defends
+// against precisely that failure mode, so it needs the same treatment — and it
+// needs a POSITIVE control too, because the cheapest way to make a checker stop
+// finding anything is to make it stop recognising its input.
+const NEG = [
+  // The real defect this gate was written for: a row that lost its separator and
+  // rendered as several one-cell rows with an empty trailing column.
+  '| Finding | Correction |\n|---|---|\n| a finding that wrapped\nacross two lines | fix |',
+  // An unescaped pipe inside a code span — the specification §18 defect. GFM splits
+  // the cell here even though it looks like content.
+  '| Rule | Code |\n|---|---|\n| `|x| > 1` | SPLIT |',
+];
+const POS = [
+  '| a | b |\n|---|---|\n| 1 | 2 |',                   // ordinary table
+  '| Rule | Code |\n|---|---|\n| `\\|x\\| > 1` | OK |', // correctly escaped pipes
+  '| a | b |\n|:--|--:|\n| 1 | 2 |',                   // alignment colons
+];
+const ctlErrs = [];
+NEG.forEach((s, i) => {
+  const r = scanTables(s, `NEG-${i}`);
+  if (!r.errs.length) ctlErrs.push(`TABLE NEGATIVE CONTROL ${i} FAILED — malformed table not detected`);
+});
+POS.forEach((s, i) => {
+  const r = scanTables(s, `POS-${i}`);
+  if (r.errs.length) ctlErrs.push(`TABLE POSITIVE CONTROL ${i} FAILED — valid table rejected: ${r.errs.join('; ')}`);
+  if (r.tables !== 1) ctlErrs.push(`TABLE POSITIVE CONTROL ${i} FAILED — table not recognised at all (found ${r.tables})`);
+});
+if (!ctlErrs.length) {
+  console.log(`table controls: PASS — ${NEG.length} known-bad tables detected, ${POS.length} valid tables accepted`);
+}
+
+const tableErrs = [...ctlErrs];
+let nTables = 0, nRows = 0;
+for (const f of md) {
+  const r = scanTables(readFileSync(f, 'utf8'), f.replace(ROOT + '/', ''));
+  tableErrs.push(...r.errs);
+  nTables += r.tables; nRows += r.rows;
 }
 console.log(tableErrs.length ? `MARKDOWN TABLES: ${tableErrs.length} malformed row(s)\n  ` + tableErrs.join('\n  ')
-  : `markdown tables: PASS — every row single-line with a matching column count`);
+  : `markdown tables: PASS — ${nRows} body rows in ${nTables} tables, every row single-line with a matching column count`);
 process.exit(errs.length || broken.length || tableErrs.length ? 1 : 0);
