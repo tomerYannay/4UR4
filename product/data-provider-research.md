@@ -28,7 +28,7 @@ Provider names are intentionally omitted to avoid steering the human decision.
 ## R1 — Historical daily OHLCV
 
 - **Question / scope:** Where can 4UR4 obtain accurate, **split/dividend-adjusted**
-  daily open/high/low/close/volume for all S&P 500 constituents with enough
+  daily open/high/low/close/volume for all **4UR4 US Large-Cap 500** members with enough
   history to reach each name's **all-time high** (the trendline anchor)?
 - **What to evaluate:** history depth (years), adjustment methodology (and access
   to *both* raw and adjusted), coverage completeness, correction/restatement
@@ -64,11 +64,22 @@ Provider names are intentionally omitted to avoid steering the human decision.
 - **Human-gated note:** premium corporate-actions data may be paid →
   **HUMAN-GATED (GOV-013)**.
 
-## R4 — Historical S&P 500 constituents (survivorship-bias-free)
+## R4 — Point-in-time universe membership (survivorship-bias-free)
 
-- **Question / scope:** Can we obtain **point-in-time** S&P 500 membership so the
-  scanner and any backtest see the *actual* index members on each historical
-  date, not today's members projected backward?
+> **Re-scoped by HD-18 (2026-07-26, [#24](https://github.com/tomerYannay/4UR4/issues/24)).**
+> This question originally asked how to *license* S&P 500 membership. That route was
+> closed: membership is licensed separately from prices and far more restrictively, and
+> the two best survivorship-free datasets are both barred from commercial use. 4UR4 now
+> **computes its own** point-in-time universe, so R4 asks what *inputs* that computation
+> needs — chiefly point-in-time **shares outstanding**, which no candidate provider was
+> evaluated for, because the question did not exist when this instrument was written.
+> See [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md).
+
+- **Question / scope:** What inputs does a **self-computed point-in-time** universe
+  need, so the scanner and any backtest see the members that a versioned rule set
+  *would have selected* on each historical date — never today's members projected
+  backward? Point-in-time market cap requires point-in-time **shares outstanding**;
+  SEC filings are the free primary source, with a filing lag that must be modelled.
 - **What to evaluate:** point-in-time constituent history, add/remove dates,
   history depth, licensing for index-membership data.
 - **Evidence to collect:** a sample historical membership snapshot for a past date
@@ -123,7 +134,7 @@ Provider names are intentionally omitted to avoid steering the human decision.
 ## R8 — Expected cost
 
 - **Question / scope:** What is the total expected recurring cost to cover
-  R1–R7 at MVP scope (S&P 500, daily), and how does it scale toward SaaS?
+  R1–R7 at MVP scope (~500 US large-caps, daily), and how does it scale toward SaaS?
 - **What to evaluate:** pricing tiers, rate limits vs. our batch volume, overage
   costs, contract/commitment terms, cost of the *combination* of datasets (OHLCV +
   constituents + delisted + corporate actions + sentiment often span tiers/vendors).

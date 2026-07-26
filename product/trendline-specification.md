@@ -72,7 +72,8 @@ stated rules.
   `high` or `close` is invalid input (see §17 edge cases).
 - **Positivity:** All prices must be `> 0` for `ln` to be defined. A non-positive
   price is invalid input and rejected before geometry runs.
-- **Source:** Real market data, S&P 500 universe initially (per thesis). Data
+- **Source:** Real market data, the **4UR4 US Large-Cap 500** universe initially (HD-18;
+  per thesis). Data
   provenance/vendor is a data-layer ticket concern, not this spec.
 
 > **Decision D-TL-00 — Bar granularity** · Default: daily (`1D`). ·
@@ -1530,8 +1531,11 @@ The Architect proposes the Product Steward add these to
    domination uses **every bar high** (not pivots-only); the canonical anchor is
    the all-highs upper-log-hull vertex and **pivot detection is
    non-authoritative** (§5, §6, §8). Proof fixture: **GX-19**.
-5. **OQ-TL-5:** Universe/data-vendor and split/dividend data availability for S&P 500
-   (data-layer ticket dependency, not this spec).
+5. **OQ-TL-5 — PARTLY RESOLVED 2026-07-26 (HD-18):** the universe is the **4UR4 US
+   Large-Cap 500**, 4UR4's own point-in-time set, **not licensed S&P 500 membership**
+   (`docs/architecture/universe-methodology.md`). Data-vendor and split/dividend
+   availability remain open under **HD-06** (still PENDING) — a data-layer ticket
+   dependency, not this spec.
 6. **OQ-TL-6:** Should very long (multi-decade) histories switch to weekly bars to
    tame pivot noise (D-TL-00)?
 7. **OQ-TL-7 (high) — RESOLVED 2026-07-25 (HD-12):** anchor selection is **rolling,

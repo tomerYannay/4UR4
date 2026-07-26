@@ -167,6 +167,41 @@ scenarios; implementation planning; acceptance criteria.
 **Agents may recommend one provider clearly** — but must not purchase, subscribe,
 accept terms, or record HD-06 as approved.
 
+### Leading candidate and evidence prerequisites — Product Owner, 2026-07-26
+
+Ruled in the second batch of 2026-07-26
+([artifact](https://github.com/tomerYannay/4UR4/issues/24)):
+
+> **Intrinio Startup may be recorded as the current evidence-based leading candidate at
+> approximately \$5,994 for year 1, but it is not selected or approved for purchase.**
+
+**Recorded as a candidate, not a selection.** Research: [`data-provider-findings.md`](data-provider-findings.md)
+§13. It is the only surveyed candidate clearing both hard filters — 50+ years of history
+*and* a published display licence. Runner-up **Massive Stocks Business**; §13.5 states
+what flips the ranking.
+
+**Eight prerequisites must be obtained or prepared before the final HD-06 decision:**
+
+| # | Prerequisite | Status at 2026-07-26 |
+|---|---|---|
+| 1 | Written confirmation that daily high/low are **consolidated-tape** | **BLOCKING** — vendor docs silent; this is C-1 |
+| 2 | Exact historical-depth coverage | partial — published claim, not sample-verified |
+| 3 | **Split-only** adjustment availability (HD-01) | raw OHLC + `split_ratio` exposed; `adj_*` bundles dividends and must be banned |
+| 4 | Delisted-history coverage | partial |
+| 5 | Redistribution / display rights | published display licence; terms to be confirmed |
+| 6 | **Point-in-time universe implications** | **new work** — created by HD-18; not evaluated by the original research |
+| 7 | Complete first-year and recurring cost | ≈\$5,994 year 1; recurring to confirm |
+| 8 | **Cancellation and data-retention constraints** | **new work** — Norgate and EODHD require deleting *derived* data on lapse, making an archive a rental; must now be asked of every candidate |
+
+Prerequisites 6 and 8 are work the original research **did not do**: 6 exists only
+because of [HD-18](#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high),
+and 8 was surfaced by a finding about other vendors that must now be put to the leading
+one. Preparation: [`hd06-due-diligence.md`](hd06-due-diligence.md).
+
+**Standing prohibition, restated:** do not purchase, subscribe, accept licensing terms,
+or commit spend. **[#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band
+confirmation remains mandatory before financial authorization.**
+
 > **Boundary 5 binds the relay channel itself.** Every artifact in this repository —
 > including the rulings that authorize agent work — is authored by a single account,
 > and this ruling arrived that way too, disclosed as a relay. Boundary 5 is
@@ -734,9 +769,113 @@ accept terms, or record HD-06 as approved.
   and redistribution do not. Agents may **recommend one provider clearly** and must not
   purchase, subscribe, accept terms, or record HD-06 as approved.
 
+## HD-18 — 4UR4 computes its own point-in-time universe · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/24), against head `83b0fcc`).
+- **Decision:** 4UR4 uses a **self-computed, point-in-time universe of the 500 largest
+  eligible US-listed operating companies** rather than licensed S&P 500 constituent
+  membership. Working product name: **4UR4 US Large-Cap 500**.
+- **Binding requirements:**
+  1. **Do not call it the S&P 500**, and **do not imply endorsement by or equivalence
+     to S&P Dow Jones Indices.**
+  2. Transparent, **versioned** eligibility and ranking rules.
+  3. **Point-in-time membership history preserved**; **delisted securities preserved**;
+     survivorship bias avoided.
+  4. Additions and removals recorded with **effective dates and evidence**.
+  5. Inclusion, liquidity, security-type, domicile and rebalance rules **independently
+     versioned and backtestable**.
+- **Delegation:** the Strategic Product Reviewer may choose the safest reversible
+  **initial research defaults**; **material changes to the intended market segment
+  remain Product Owner-gated** (see [HD-17](#hd-17--bounded-delegation-for-reversible-ambiguity--materiality-high)).
+- **Reason:** licensed index membership was an **unpriced, unbounded exposure**.
+  [`survivorship-bias-findings.md`](survivorship-bias-findings.md) established that
+  membership is licensed **separately from prices and far more restrictively** — an
+  executed S&P Master Index License Agreement on SEC EDGAR contracts constituent data
+  under a separate MSA with separate fees — and that SPDJI **withdrew constituent names
+  from Compustat in 2020** to license directly. The two best survivorship-free datasets,
+  Norgate and CRSP, are both **licence-barred** from commercial use. A self-computed
+  universe converts a dependency that could be withdrawn or repriced unilaterally into a
+  methodology the project owns.
+- **Cost of the decision, stated rather than discovered later.** A mechanical rule
+  **cannot reproduce S&P 500 membership**: the index committee applies discretion —
+  profitability screens, float, sector balance, judgement. Three consequences follow:
+  1. **Backtest results will not be comparable to published S&P 500 strategy results.**
+     A licensing feature and an interpretation liability at once; it must be disclosed
+     wherever results are reported.
+  2. **Eligibility rules become product surface.** "Operating company" (excluding ETFs,
+     closed-end funds, SPACs, trusts, shells), the domicile-vs-listing question, and
+     **share-class handling for dual-class names** each materially change a top-500
+     ranking. Each is a rule someone must own, version and re-derive.
+  3. **Reconstruction is the hard part.** Point-in-time membership needs point-in-time
+     market cap, which needs point-in-time **shares outstanding** — a harder dataset to
+     source than prices, and one the provider research **did not evaluate, because the
+     question did not exist when it ran**.
+- **Design:** [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md).
+- **What this did NOT do:** it did not lift GOV-015, select a provider, or authorize
+  spend.
+
+## HD-19 — Independence checker permitted as verification tooling · materiality: **med**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**
+  ([artifact](https://github.com/tomerYannay/4UR4/issues/24)).
+- **Decision:** the independence checker proposed under
+  [#20](https://github.com/tomerYannay/4UR4/issues/20) is **permitted under GOV-015 as
+  verification/governance tooling**, on the same footing as
+  [HD-15](#hd-15--gov-015-scope-is-toolsfixture-replaymjs-permitted-under-the-build-freeze--materiality-high),
+  subject to six boundaries:
+  1. **not product implementation**;
+  2. **not imported or executed by production/runtime code**;
+  3. **no provider or market-data acquisition**;
+  4. **deterministic and auditable**;
+  5. it **validates process independence rather than pretending to prove what an agent
+     privately read**;
+  6. it **must fail honestly when independence cannot be established.**
+- **Why 5 and 6 are the substantive ones.** Boundary 5 ratifies the design's own
+  conclusion in [`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md):
+  what an agent read is not provable after the fact, and a checker claiming otherwise
+  would be theatre. Boundary 6 forbids this repository's most persistent failure mode —
+  a gate that cannot fail and therefore certifies nothing. Both were reached
+  independently by the design and the ruling.
+- **Delegation:** for the **remaining #20 escalations**, the Strategic Product Reviewer
+  may choose the safest reversible option where it does **not** change product
+  behaviour, lift GOV-015, incur spend, accept licensing, or weaken separation of
+  duties.
+- **Not a freeze lift.** `build_freeze` stays `ON`. Like HD-15, this covers specific
+  tooling for a specific purpose and is **not a precedent** for committing executable
+  product functionality under the freeze.
+
+## Decision log — 2026-07-26 (Product Owner, second batch)
+
+- **2026-07-26 — [HD-18](#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high)
+  approved** ([artifact](https://github.com/tomerYannay/4UR4/issues/24)): 4UR4 computes
+  its own point-in-time **4UR4 US Large-Cap 500** universe instead of licensing S&P 500
+  membership. This is a **product-definition change** and the largest single decision on
+  this branch — it removes an unbounded licensing exposure at the cost of comparability
+  with published S&P 500 results, and it makes the eligibility rules product surface.
+  Requirements, roadmap, glossary, research documents, acceptance criteria and issue
+  wording updated consistently.
+
+- **2026-07-26 — HD-06 unchanged in status, advanced in evidence.** **Intrinio Startup
+  is recorded as the current evidence-based leading candidate at approximately \$5,994
+  for year 1** — *"but it is not selected or approved for purchase."* Eight
+  prerequisites must be obtained or prepared before the final decision; see the
+  [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high) entry.
+  **[#21](https://github.com/tomerYannay/4UR4/issues/21)'s out-of-band confirmation
+  remains mandatory before financial authorization** — this ruling names a number and
+  simultaneously refuses to be the authority for spending it, which is the correct
+  posture on a single-account relay channel.
+
+- **2026-07-26 — [HD-19](#hd-19--independence-checker-permitted-as-verification-tooling--materiality-med)
+  approved:** the #20 independence checker is permitted as verification/governance
+  tooling under six boundaries, and the remaining #20 escalations fall to the Strategic
+  Product Reviewer's bounded delegation.
+
 *This register records the Product Owner's rulings of 2026-07-24, 2026-07-25 and
-2026-07-26. Ruled items are governing; **HD-06 remains a proposal pending human
-decision** ([GOV-013](../governance/approval-gate.md)), now with an explicit authority
-boundary and with [#21](https://github.com/tomerYannay/4UR4/issues/21) as a
-precondition. The build-freeze ([GOV-015](../governance/build-freeze.md)) **remains
-ON**; the roadmap baseline being approved (HD-16) does not change that.*
+2026-07-26 (two batches). Ruled items are governing; **HD-06 remains a proposal pending
+human decision** ([GOV-013](../governance/approval-gate.md)), now with an explicit
+authority boundary, eight evidence prerequisites, and
+[#21](https://github.com/tomerYannay/4UR4/issues/21) as a precondition. The build-freeze
+([GOV-015](../governance/build-freeze.md)) **remains ON**; neither the roadmap baseline
+approval (HD-16), the universe decision (HD-18), nor the tooling permission (HD-19)
+changes that.*

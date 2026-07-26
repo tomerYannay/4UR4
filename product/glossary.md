@@ -22,6 +22,35 @@ here.
 | **Ready** | A ticket that meets the [Definition of Ready](../governance/definition-of-ready.md). |
 | **Done** | A ticket that meets the [Definition of Done](../governance/definition-of-done.md) with evidence. |
 
+## Universe & membership terms (HD-18, [#24](https://github.com/tomerYannay/4UR4/issues/24), 2026-07-26)
+
+> **The spine of this section.** Membership on a date `d` must never be derived
+> from information that did not exist on `d`. That is the **same causal
+> discipline HD-12 ratified for anchor selection** — see **As-of-time (rolling
+> causal) evaluation**, **Available prefix (`S_t`)** and **Active line at bar `t`**
+> in the geometry table below — applied **one layer down**, to *which securities
+> exist in the scan at all* rather than to *which bars build the line*. A causal
+> engine run over a hindsight-selected universe is not causal; the two disciplines
+> are one idea at two levels, and either alone is insufficient.
+
+| Term | Meaning in 4UR4 |
+|------|-----------------|
+| **4UR4 US Large-Cap 500** | 4UR4's universe and its working product name: a **self-computed, point-in-time universe of the 500 largest eligible US-listed operating companies**, built by 4UR4 from transparent, versioned eligibility and ranking rules (HD-18). **What it is not:** it is **not the S&P 500**, not licensed S&P 500 constituent membership, and **not endorsed by, affiliated with, sponsored by, or equivalent to S&P Dow Jones Indices**. **Why it exists:** index *membership* is licensed separately from prices and far more restrictively — a separate MSA with separate fees, and SPDJI withdrew constituent names from Compustat in 2020 to license directly — while the two most complete survivorship-free datasets (Norgate, CRSP) are licence-barred from commercial use ([`survivorship-bias-findings.md`](survivorship-bias-findings.md) §2.3, §4.1, §4.2). Building the universe removes an unpriced dependency a third party could withdraw or reprice. **Its cost:** a mechanical top-500 rule cannot reproduce a committee's discretionary membership, so **4UR4 results are not comparable to published S&P 500 strategy results** — see **UNIV-DISC**. |
+| **Universe** | The set of securities 4UR4 scans **on a given date** — always the 4UR4 US Large-Cap 500 as of that date, never a present-day list applied to the past. |
+| **S&P 500** | An external index published by S&P Dow Jones Indices. In 4UR4 documents it appears **only** as an external market reference or as the thing deliberately *not* used as 4UR4's universe; every such use states which. It is never 4UR4's universe and 4UR4 claims no relationship to it. |
+| **Eligibility rules** | The versioned criteria deciding which securities may be members at all — security type, domicile, listing venue, liquidity, operating-company status. Published, transparent, and **independently versioned** so each can change and be backtested on its own. Their initial research defaults may be set as safest-reversible under HD-17; a **material change to the intended market segment is Product Owner-gated**. |
+| **Ranking rule** | The versioned rule ordering the eligible set to select the 500 members (e.g. by market capitalisation), stated precisely enough that a third party reproduces the same list from the same inputs. |
+| **Point-in-time membership** | Membership as it actually stood on date `d`, derived **only** from information available on `d`. The universe that judges bar `t` may not be built from anything after it. This is **as-of-time discipline applied to the universe** (HD-12's causal rule, one layer down) and is the property that makes a backtest honest about *which names could have been traded*. |
+| **As-of-date membership rebuild** | The reproducible reconstruction of the membership list for a past date from the rules plus the inputs; the demonstration (not assertion) that survivorship bias is absent — a rebuilt past list must contain names absent from today's. |
+| **Survivorship bias** | Measuring a strategy on a universe selected with hindsight: today's members carry the survivors and have already deleted the failures. Two distinct biases must both be fixed — wrong *membership* (a hindsight-chosen list) and missing *prices* for names that no longer trade; fixing one alone leaves the other. Published estimates for exactly this failure mode reach **up to 8 percentage points of annualised return** — the same order as, or larger than, the entire effect 4UR4 is trying to measure ([`survivorship-bias-findings.md`](survivorship-bias-findings.md) §1). |
+| **Delisted security** | A security that has ceased trading (failure, acquisition, receivership, going private). It is **preserved** in 4UR4's history with its terminal record and its membership span — never dropped because it does not exist today. The common silent failure is a provider returning success with an empty series for such a name. |
+| **Membership change record (add / remove event)** | The record of a security entering or leaving the universe, carrying the **effective date** and the **evidence** that justifies it, so any single change can be audited alone. Events are **not** reliably paired — spin-offs and one-sided moves produce adds without removes and vice versa. |
+| **Rebalance** | The scheduled, versioned recomputation of membership under the current rule set, producing membership change records with effective dates. The rebalance rule (cadence, buffer, effective-date convention) versions **independently** of the eligibility and ranking rules. |
+| **Universe rule-set version** | The identifier naming which versions of the inclusion, liquidity, security-type, domicile and rebalance rules produced a given membership series. Every backtest records it, so a change of rules shows up as a change in results rather than hiding inside one. |
+| **Stable security identity** | A non-ticker identifier (e.g. CIK) carried through the data layer, because tickers are reused and reassigned and change at rename or delisting. Membership history keyed on ticker silently misidentifies names — a rename can look exactly like a removal. |
+| **UNIV-METH** | The Phase 1 exit gate on the universe *methodology* — versioned eligibility/ranking rules, point-in-time membership, delisted names preserved, adds/removes with effective dates and evidence, bias absence demonstrated, rule set independently versioned and backtestable ([`roadmap.md`](roadmap.md), Phase 1). |
+| **UNIV-DISC** | The disclosure that must travel **inside** any artifact reporting backtest results, binding Phases 4–8: the universe is 4UR4's own methodology (with rule-set version), it is not the S&P 500 and implies no S&P Dow Jones Indices endorsement or equivalence, and **results are not comparable to published S&P 500 strategy results**. Enforced by a failing harness, not by a promise ([`roadmap.md`](roadmap.md), Phase 4). |
+
 ## Geometry & detection terms (from the trendline specification)
 
 | Term | Meaning in 4UR4 |
@@ -42,7 +71,7 @@ here.
 | **Line expiry / reset** | Retirement and recomputation of the line — ~`E_expiry` (~100) bars after breakout, on a new ATH, or on structural change. |
 | **Reason code** | The named, machine-readable justification emitted with every accept, reject, or state transition (e.g. `INVALID_PIERCE`, `RESET_NEW_ATH`, `NO_VALID_SECOND_ANCHOR`). |
 | **Line state machine** | The deterministic states ACTIVE → WICK_BREAK / BROKEN_OUT / RETESTED / FAILED_BREAKOUT / EXPIRED, each transition a pure function of the bar stream. |
-| **As-of-time (rolling causal) evaluation** | Evaluating each bar against a line built only from strictly earlier bars, so no classification can ever depend on future bars; a confirmed breakout freezes the line for all downstream tests (§21, D-TL-11, HD-12). |
+| **As-of-time (rolling causal) evaluation** | Evaluating each bar against a line built only from strictly earlier bars, so no classification can ever depend on future bars; a confirmed breakout freezes the line for all downstream tests (§21, D-TL-11, HD-12). **The same discipline governs the universe one layer down** — see **Point-in-time membership** above: a causal engine run over a hindsight-selected universe is not causal. |
 | **Available prefix (`S_t`)** | The bars `0 … t−1` visible when evaluation bar `t` is processed; the active line `Λ_t` is built from `S_t` only (§21.1). |
 | **Active line at bar `t` (`Λ_t`)** | The canonical line — anchor, second anchor, slope, intercept, tolerance version — computed from `S_t` and in force for bar `t`'s wick/close/breakout/touch/failure/retest tests (§21.1). |
 | **Formation eligibility / formation bar (`t_form`)** | The three as-of-time gates (minimum available history, anchor not too recent, an envelope-valid `B*` exists) that must all hold before a line first becomes `ACTIVE`; `t_form` is the earliest bar satisfying them (§21.3). |
@@ -63,7 +92,7 @@ here.
 | **Triple-barrier label** | Win if forward return reaches `+R_win` before a `−R_stop` stop within horizon `H_label` bars, else loss (default `+15% / −7% / 60 bars`, first touch). |
 | **Calibration / rank-ordering lift** | The property that higher scores track higher realized win-rates (v1 validated by rank-ordering, not probability calibration). |
 | **Market-regime score** | A proprietary, decomposable measure of overall market state (risk-on ↔ risk-off) computed from market internals; **research context only** ([GOV-014](../governance/market-sentiment-context.md)), never in Confidence v1. |
-| **Breakout breadth** | A self-referential regime feature: the count/rate of concurrent confirmed breakouts across the universe; sentiment context only. |
+| **Breakout breadth** | A self-referential regime feature: the count/rate of concurrent confirmed breakouts across the **4UR4 US Large-Cap 500** universe (never an index-derived breadth statistic); sentiment context only. |
 
 > If a term is missing or ambiguous, the **Product Steward** adds it here as part
 > of making a ticket Ready — not the agent that happens to trip over it.

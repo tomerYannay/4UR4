@@ -150,10 +150,13 @@ select one, commit spend, or accept licensing terms.
 
 ## Ticket (d) — Survivorship-bias-free constituents + corporate-actions research
 
-- **Title:** Survivorship-bias-free S&P 500 constituents + delisted history research (research only)
+- **Title:** Survivorship-bias-free universe constituents + delisted history research (research only)
+  *(HD-18, 2026-07-26: redirected from licensed S&P 500 membership to the self-computed
+  **4UR4 US Large-Cap 500**. The ticket's purpose — an unbiased point-in-time universe —
+  is unchanged; the source of membership is not.)*
 - **Epic:** `epic: market-data-foundation`
 - **Phase:** 1 — Market-data foundation
-- **Context:** Correct backtests require point-in-time S&P 500 membership and
+- **Context:** Correct backtests require point-in-time universe membership and
   delisted price history (data research R4/R5); this is correctness-critical and
   commonly a paid, licensed dataset (HD-07). Research availability/licensing/cost
   only — no acquisition.

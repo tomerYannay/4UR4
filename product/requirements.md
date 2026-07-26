@@ -16,8 +16,8 @@ Status: proposed planning artifact under [GOV-015](../governance/build-freeze.md
 ## 1. Target user
 
 - **Primary (MVP): the internal 4UR4 analyst / operator.** A technically literate
-  trader-analyst who reviews a **daily end-of-day scan** of the S&P 500 for
-  high-quality breakouts from ATH-anchored logarithmic descending resistance
+  trader-analyst who reviews a **daily end-of-day scan** of the **4UR4 US Large-Cap 500**
+  for high-quality breakouts from ATH-anchored logarithmic descending resistance
   trendlines, and needs to understand *why* each signal is rated as it is.
 - **Secondary (later, Phase 7): the SaaS subscriber.** A self-directed retail or
   semi-professional trader who subscribes to receive **alerts** on confirmed
@@ -29,7 +29,8 @@ portfolio management, or financial advice (see §5, inherited from the vision).
 ## 2. User problem
 
 Traders can *see* long descending resistance lines from an all-time high on a
-chart, but doing this **consistently, objectively, and at S&P 500 scale** is hard:
+chart, but doing this **consistently, objectively, and at large-cap-universe scale**
+is hard:
 
 - Drawing the "right" line is subjective; two analysts draw two different lines.
 - Deciding when a breakout is *real* (close-confirmed, persistent, volume-backed)
@@ -44,8 +45,9 @@ chart, but doing this **consistently, objectively, and at S&P 500 scale** is har
 ## 3. Core value proposition
 
 **A deterministic scanner that finds ONE canonical ATH-anchored logarithmic
-descending resistance line per S&P 500 name, detects confirmed breakouts and
-retests, and attaches an explainable, decomposable confidence score** — so a user
+descending resistance line per name in the 4UR4 US Large-Cap 500, detects confirmed
+breakouts and retests, and attaches an explainable, decomposable confidence score** —
+so a user
 can trust the signal *and see exactly why*. Correctness and explainability are the
 product, not speed or breadth.
 
@@ -73,14 +75,18 @@ In scope for the MVP (traces to the trendline + confidence specs):
   HD-04), decomposed into named contributions C1–C7 with reason strings, with
   **sentiment excluded from the score** pending an out-of-sample backtest showing
   improvement plus human approval (HD-08) (confidence spec §1–§4).
-- **Daily end-of-day batch scan** of the S&P 500 over **real market data**, with
-  provenance/versioning stamped on every result (architecture §5).
+- **Daily end-of-day batch scan** of the **4UR4 US Large-Cap 500** over **real market
+  data**, with provenance/versioning stamped on every result (architecture §5).
 - **Historical scanner + backtest harness** for rank-ordering validation of
   Confidence v1 (confidence spec §7).
 - **Internal dashboard** to inspect scans, lines, breakouts, retests, and the
   **decomposed** score.
-- **Golden-example fixtures** (trendline GX-01..GX-23; confidence CF-EV-01..07) as
-  the correctness contract.
+- **Golden-example fixtures** as the correctness contract: the trendline set in
+  `product/fixtures/golden/` (currently GX-01..GX-23) plus RM-01, and the confidence
+  CF-EV set defined in [`confidence-specification.md`](confidence-specification.md) §11.
+  Referenced by location rather than by a typed list — a hand-maintained enumeration
+  here would fall out of date the next time a fixture is added, which is exactly how
+  the Phase 2/3 exit criteria came to name 12 of 23.
 
 ## 5. Explicit non-goals (out of scope for the MVP)
 
@@ -108,7 +114,7 @@ In scope for the MVP (traces to the trendline + confidence specs):
 
 **Journey A — Internal analyst reviews the daily scan (MVP).**
 It is end-of-day. The overnight/EOD batch has pulled adjusted daily OHLCV for the
-S&P 500, run the deterministic engine per name, and persisted results. The analyst
+universe, run the deterministic engine per name, and persisted results. The analyst
 opens the internal dashboard and sees a list of names with new state changes:
 three new `BROKEN_OUT`, one `RETESTED`, two `FAILED_BREAKOUT`. She clicks a
 breakout on symbol AAAA: the chart shows the ATH anchor `A`, the selected second
@@ -196,16 +202,18 @@ Traceability: each FR cites the governing spec.
 - **FR-15** The **data layer** MUST expose a provider-agnostic interface for daily
   OHLCV on a **split-adjusted, dividend-UNadjusted ("as-traded") basis** (HD-01),
   applied consistently across ATH selection, pivots, line fitting, and breakout
-  tests, plus point-in-time S&P 500 constituents; it MUST own the split/dividend
+  tests, plus **point-in-time 4UR4 US Large-Cap 500 membership** (FR-19); it MUST own
+  the split/dividend
   **adjustment policy** and **provenance tagging** (architecture §3.2; data research
   R1, R3, R4).
-- **FR-16** The **worker** MUST run a **daily EOD batch** over the S&P 500, persist
+- **FR-16** The **worker** MUST run a **daily EOD batch** over the **4UR4 US Large-Cap
+  500**, persist
   results, write an auditable `scan_run` record, and enqueue alerts for new
   confirmed events (architecture §3.3).
 - **FR-17** The **historical scanner / backtest harness** MUST replay historical
   bars survivorship-bias-free and emit a **rank-ordering / lift** report for
   Confidence v1. Trustworthy backtesting has a **correctness-critical dependency on
-  point-in-time S&P 500 constituents and delisted price history** (HD-07 — the need
+  point-in-time universe membership and delisted price history** (HD-07 — the need
   is approved; acquisition remains human-gated); any backtest run without them MUST
   be flagged **biased/provisional** (confidence §7; architecture §3.1; data research
   R4/R5).
@@ -215,6 +223,26 @@ Traceability: each FR cites the governing spec.
   alerts to channels (email first) with mandatory disclaimers (architecture §3.6).
 - **FR-20** All engine tolerances/constants MUST be **named, versioned config**
   with the spec defaults, never hard-coded magic numbers (trendline §20).
+- **FR-21** The **universe** MUST be the **4UR4 US Large-Cap 500** — 4UR4's own
+  point-in-time set of the 500 largest eligible US-listed operating companies
+  (**HD-18**) — and MUST NOT be licensed S&P 500 constituent membership. The system
+  MUST NOT describe its universe as the S&P 500 or imply endorsement by, or
+  equivalence to, S&P Dow Jones Indices. Eligibility, liquidity, security-type,
+  domicile, ranking and rebalance rules MUST be **transparent, independently versioned
+  and backtestable**, and a result MUST be attributable to the methodology version that
+  produced it (design: `docs/architecture/universe-methodology.md`).
+- **FR-22** Universe membership MUST be **point-in-time and causal**: membership on date
+  `d` MUST be derived only from information available on `d`. **Delisted securities MUST
+  be retained**, and additions and removals MUST be recorded with **effective dates and
+  evidence**. This is the same as-of-time discipline **HD-12** ratified for trendline
+  anchor selection, applied one layer down — a backtest that reconstructs membership
+  from later information is survivorship-biased in exactly the way HD-12 forbids for
+  events.
+- **FR-23** Anywhere backtest or scan results are **reported** — dashboard, exports,
+  alerts, marketing — the system MUST disclose that the universe is 4UR4's own
+  methodology and that **results are not comparable to published S&P 500 strategy
+  results**. A mechanical rule cannot reproduce a committee-selected index, so
+  comparability is not a defect to be fixed but a fact to be stated.
 
 ## 8. Non-functional requirements
 
@@ -229,7 +257,7 @@ Traceability: each FR cites the governing spec.
   (algo_version, confidence_version, snapshot_id, input bars).
 - **NFR-4 — Determinism.** No randomness; no float-order-dependent tie resolution.
   All ties resolved by explicit stated rules (trendline §20).
-- **NFR-5 — Performance (daily S&P 500 scan).** The full ~500-name EOD batch MUST
+- **NFR-5 — Performance (daily universe scan).** The full ~500-name EOD batch MUST
   complete within the overnight window with margin (target budget set at
   build-lift time; correctness never traded for speed). Engine is a pure library
   with no I/O in the hot path (architecture §3.1).
@@ -303,9 +331,12 @@ Traceability: each FR cites the governing spec.
 ## 11. Success metrics
 
 **Leading (product):**
-- Daily EOD S&P 500 batch completes within the overnight window (green
-  `scan_run`), ≥ N consecutive days.
-- 100% of GX-01..GX-23 and CF-EV-01..07 fixtures pass on every engine build.
+- Daily EOD **4UR4 US Large-Cap 500** batch completes within the overnight window
+  (green `scan_run`), ≥ N consecutive days.
+- 100% of the golden fixtures in `product/fixtures/golden/` (currently GX-01..GX-23),
+  RM-01, and the CF-EV set defined in `confidence-specification.md` §11 pass on every
+  engine build. Enumerated by directory rather than by a typed list, so adding a
+  fixture tightens this gate instead of silently leaving it behind.
 - 100% of emitted signals carry a full, reproducible decomposition + reason codes.
 
 **Lagging (product):**

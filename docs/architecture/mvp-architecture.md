@@ -37,7 +37,7 @@ Top-level modules/packages (illustrative names; **prose only** under freeze):
 4ur4/                         (repo root — conceptual)
 ├── engine/        Python trendline + backtesting engine  (pure, deterministic core)
 ├── data/          Market-data abstraction layer          (provider-agnostic interface)
-├── worker/        Scanner / batch daily S&P 500 job       (orchestrates engine over data)
+├── worker/        Scanner / batch daily universe job      (orchestrates engine over data)
 ├── api/           Thin read-model API service             (serves stored results)
 ├── alerts/        Alert pipeline                          (queue → notification channels)
 ├── web/           Web frontend                            (internal dashboard → SaaS)
@@ -80,7 +80,7 @@ what keeps the core testable and reproducible.
 ### 3.2 Market-data abstraction layer (`data/`)
 - A **provider-agnostic interface** so 4UR4 is never locked to one vendor. The
   engine and worker speak to an internal contract (e.g. "give me adjusted daily
-  OHLCV for symbol X over range R", "give me point-in-time S&P 500
+  OHLCV for symbol X over range R", "give me point-in-time 4UR4 US Large-Cap 500
   constituents"), and concrete adapters implement it per provider.
 - This is the seam that ties directly to the data-provider research
   ([`../../product/data-provider-research.md`](../../product/data-provider-research.md)):
@@ -90,7 +90,7 @@ what keeps the core testable and reproducible.
   **provenance tagging** (which provider, which snapshot).
 
 ### 3.3 Worker / scanner (`worker/`)
-- Runs the **batch daily scan** of the S&P 500: pull bars via `data/`, run
+- Runs the **batch daily scan** of the **4UR4 US Large-Cap 500**: pull bars via `data/`, run
   `engine/` over each name, persist trendlines/breakouts/retests/scores to
   PostgreSQL, and enqueue alerts for new confirmed events.
 - Batch, idempotent, and **auditable**: each run writes a scan/run record (what
@@ -126,7 +126,7 @@ Core tables (columns are indicative, **not** a migration):
 
 | Table | Purpose | Notable fields (high level) |
 |-------|---------|-----------------------------|
-| `securities` | S&P 500 (and delisted) universe | symbol, name, sector, first/last seen, is_active |
+| `securities` | 4UR4 US Large-Cap 500 (and delisted) universe | symbol, name, sector, first/last seen, is_active |
 | `bars` | Daily OHLCV (adjusted + policy noted) | security_id, date, o/h/l/c/v, adjustment_policy, data_source, snapshot_id |
 | `trendlines` | Detected ATH-anchored log descending lines | security_id, ath_ref, anchor points, params, algo_version, valid_from/expiry |
 | `breakouts` | Confirmed breakouts | trendline_id, confirm_date, confirmation_rule_ref, expiry (~100 bars) |

@@ -1,5 +1,34 @@
 # 4UR4 — Survivorship-Bias Findings (R4 / R5 / R7-constituents)
 
+> ## ⚠ Superseding decision — read before using this document
+>
+> **This research was ruled on.** On **2026-07-26** the Product Owner approved
+> [**HD-18**](human-decisions.md#hd-18--4ur4-computes-its-own-point-in-time-universe--materiality-high)
+> ([artifact](https://github.com/tomerYannay/4UR4/issues/24)), adopting **§6.2 item 3**
+> of this document: 4UR4 uses a **self-computed point-in-time universe — the 4UR4 US
+> Large-Cap 500** — rather than licensed S&P 500 constituent membership.
+>
+> **This document is therefore mostly a record of a route that was closed, and why.**
+> Its references to the S&P 500 are deliberately left intact: the licensing evidence
+> (an executed S&P Master Index License Agreement on SEC EDGAR contracting constituent
+> data under a separate MSA with separate fees; SPDJI withdrawing constituents from
+> Compustat in 2020; Norgate and CRSP both licence-barred from commercial use) **is the
+> justification for HD-18** and would be destroyed by a find-and-replace.
+>
+> What **carries forward unchanged**: the bias quantification (§1), the delisted-history
+> findings (§3), the silent-failure catalogue (§3.2), the worked membership-comparison
+> evidence (§5), and the retention-on-lapse findings — which HD-06 now requires be put
+> to **every** candidate, including the leading one.
+>
+> What **no longer applies**: any recommendation to acquire a licensed constituent
+> dataset. The design that replaces it is
+> [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md).
+>
+> One consequence this research did not have to confront, and the methodology does:
+> a self-computed universe needs point-in-time **market cap**, hence point-in-time
+> **shares outstanding** — a dataset **no candidate provider was evaluated for**,
+> because the question did not exist while this document was being written.
+
 > **Status: RESEARCH / CONTEXT ONLY.** Produced under the
 > [GOV-015](../governance/build-freeze.md) build-freeze as **freeze-permitted
 > research**. This document **selects nothing, buys nothing, and commits
