@@ -34,6 +34,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-20 | high | RM-01: as-of-time result diverges from the approved full-series record | **RESOLVED — SPR-D-01 (delegated)** |
 | HD-21 | high | Bounded autonomous product-decision authority delegated to the Strategic Product Reviewer | **APPROVED** |
 | HD-22 | high | GOV-015 scope lift — Phase 2 `engine/` only | **APPROVED** |
+| HD-23 | high | Autonomous-execution directive: finish the permitted work; product delivery outranks governance polish | **PENDING PRODUCT OWNER CONFIRMATION** |
 
 ---
 
@@ -1226,6 +1227,97 @@ authority boundary, eight evidence prerequisites, and
 ([GOV-015](../governance/build-freeze.md)) **remains ON**; neither the roadmap baseline
 approval (HD-16), the universe decision (HD-18), nor the tooling permission (HD-19)
 changes that.*
+
+## HD-23 — Autonomous-execution directive · materiality: **high**
+
+- **Status:** **PENDING PRODUCT OWNER CONFIRMATION.** Recorded as **relayed**, not as ruled.
+- **Relayed:** 2026-07-28, by the Product Owner **to the Orchestrator**, which relayed it
+  onward to the working agents.
+- **Artifact:** **NONE.** There is **no citable external artifact** — no issue comment, no PR
+  review, no commit trailer. This entry is the only record, and it is a record of a relay
+  through the Orchestrator under the **single shared identity**
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) /
+  [#34](https://github.com/tomerYannay/4UR4/issues/34) describe. **It is not dressed as a
+  ruling with an artifact link it does not have.** Every other HD in this register above HD-23
+  cites an artifact; this one cannot, and the difference is the point.
+
+**Operative terms, as relayed.**
+
+1. **Finish the remaining permitted work autonomously** — do not stop to ask about matters
+   already inside an approved scope.
+2. **Product delivery outranks governance polish** where the two compete for the same session.
+3. **Log non-blocking defects and continue.** The [maintenance
+   backlog](maintenance-backlog.md) is the destination.
+4. **Fix immediately — do not defer — when a defect** changes product behaviour · invalidates
+   evidence · creates look-ahead bias · weakens security or merge integrity · **causes tests to
+   pass vacuously** · or blocks the current milestone.
+5. **Human-only stops, unchanged:** spend · licensing · privacy, security, billing or PII
+   approval · irreversible external action · material change to the core thesis or the target
+   customer · roadmap phase-order change · **a new or widened [GOV-015](../governance/build-freeze.md)
+   scope.**
+6. It stated that **"GOV-015 is lifted only for the already approved Phase 2 engine scope"**
+   and that **"HD-06 remains PENDING"**. Both are **consistent with this register** — HD-22's
+   lift is `scope: ["engine/"]` and HD-06 is PENDING — so neither sentence changes anything;
+   they are recorded because a directive that restates existing limits is evidence about its
+   own intended breadth.
+
+**Its delegation language is broader in SHAPE than HD-21's, and the difference is recorded
+rather than smoothed.** HD-21 delegates **reversible product-definition questions** under ten
+conditions with a mandatory record format and an independent Project Auditor confirmation.
+HD-23 additionally directs the resolution of **"technical ambiguities"** — a category
+[HD-21](#hd-21--bounded-autonomous-product-decision-authority--materiality-high) **does not
+name**, and one whose natural reading reaches engineering judgement rather than product
+definition. Three observations, none of which resolve it:
+
+- Read narrowly, "technical ambiguities" adds nothing: engineering judgement inside an
+  approved ticket was never Product-Owner-gated.
+- Read broadly, it would let an agent settle questions that are product-definitional in
+  substance and merely technical in appearance — the class HD-21 deliberately fenced with its
+  ten conditions and condition-10 audit.
+- **Nothing in this session relied on the broad reading**, so the ambiguity did not have to be
+  resolved and was not. It is recorded here so that a later session cannot cite HD-23 as a
+  widening of HD-21 without a human first saying which reading was meant.
+
+**Two places this directive was read too broadly, and corrected. Both corrections stand.**
+
+- **(a) It did NOT authorize an agent merge.** *"Merge through the strongest currently
+  available safe path"* was read by the Orchestrator as authorizing an **agent** merge of PR
+  [#35](https://github.com/tomerYannay/4UR4/pull/35). **Release & Ops refused, under
+  [GOV-013](../governance/approval-gate.md) clause 4, and was right.** The strongest currently
+  available safe path **is the Product Owner's own merge** — the path actually used for PR #32
+  and PR #33 — and **a weaker path is not the strongest.** The sentence is a *ranking
+  instruction*; reading it as a *permission* inverts it. GOV-013 clause 4 is unaffected by
+  HD-23 and continues to require a human approval naming the PR and its head.
+- **(b) It did NOT rule on E2-AUTHOR criterion 5.** *"Shared GitHub identity must not block
+  product progress"* was considered as a possible disposition of E2-AUTHOR criterion 5 and
+  found **insufficient**: a general instruction about a class of obstacle is **not a
+  disposition of the specific artifact** that #20 **AC-8** names. AC-8 offers exactly two
+  routes — resolve #21, or rule the §9 stopgap acceptable — and a sentence that does neither
+  selects neither. Criterion 5 therefore **remains open**; see
+  [`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md)
+  §9 and [#36](https://github.com/tomerYannay/4UR4/issues/36) Part B.
+
+**Dependency check — deliberate.** **No determination made this session depends on HD-23.**
+The attestation, the HD-23 record itself, the ticket-set repairs and the maintenance rows are
+all document work inside already-permitted scope, and each would stand unchanged if the
+Product Owner declined to confirm this directive. If HD-23 is **not** confirmed, nothing
+recorded on this branch is invalidated; only the *autonomy* the working sessions exercised
+would lose its stated basis, and that basis was never load-bearing for any product or
+governance conclusion.
+
+**What this does not do.** It does not lift or widen GOV-015 (its own term 5 forbids that).
+It does not make **HD-06** decidable. It does not supersede HD-21 or HD-17. It does not create
+an artifact where #21 says none can exist. It is **not** a merge authorization
+(GOV-013 clause 4).
+
+## Decision log — 2026-07-28 (relayed, unconfirmed)
+
+- **2026-07-28 — HD-23 relayed, not ruled.** An autonomous-execution directive reached the
+  working agents through the Orchestrator with **no citable artifact**. It is recorded above as
+  **PENDING PRODUCT OWNER CONFIRMATION**, with its two over-broad readings and their
+  corrections, and with the note that no determination made that day depends on it. **This is
+  the first entry in this register that names no artifact**, which is itself the disclosure
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) exists to fix.
 
 ---
 
