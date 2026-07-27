@@ -47,8 +47,14 @@ class Candidate:
     y: float
     slope: float
     intercept: float
-    #: ``max`` over the domination set of ``y[j] - y_hat_i(j)``.  Exactly ``0``
-    #: at ``j == i`` and therefore never negative.
+    #: ``max`` over the domination set of ``y[j] - y_hat_i(j)``.  ``0`` at
+    #: ``j == i`` **up to rounding** (see :func:`domination_set`), so "therefore
+    #: never negative" does not follow and is not asserted: measured over every
+    #: evaluable prefix of the corpus it is a tiny negative (``-2^-50``) at 47 of
+    #: 104862 candidates, wherever the ``j == i`` residual is negative and every
+    #: other dominated bar sits strictly below the line.  What the fixtures assert
+    #: is narrower and does hold — 19 recorded entries across GX-01…GX-23 are
+    #: exactly ``0``.
     worst_gap: float
     envelope_valid: bool
 
@@ -84,11 +90,26 @@ def domination_set(t_anchor: int, length: int) -> Tuple[int, ...]:
       the rule to the available prefix ``S_t`` = bars ``0 … t−1``, which this
       ``Prefix`` *is*; so the last dominated bar is ``length - 1``.
     * **``tB`` is included**, although §8 step 3's union formally omits it.  That is
-      a superset, and a provably inert one: §7 fixes ``b`` so that
-      ``ŷ_B(tB) = yB``, making the constraint at ``tB`` read ``yB <= yB + ε`` for
-      ``ε >= 0``.  It is kept because D-TL-05 says domination is over *every* bar
-      high, and because ``Candidate.worst_gap``'s documented "exactly ``0`` at
-      ``j == i``" — which the fixtures assert — is that inclusion.
+      a superset, and one that is inert only for ``ε`` **well above rounding** — it
+      is *not* inert "for ``ε >= 0``", and no proof of that is available here: §7
+      fixes ``b`` so that ``ŷ_B(tB)`` is ``yB`` *zero up to rounding*, and in this
+      module "up to rounding" is the whole content (M-1, M-2).  Measured over the
+      6754 ``(tA, i)`` candidate pairs of the corpus, ``yB - ŷ_B(tB)`` is exactly
+      ``0`` in 6528 (96.65%), strictly negative in 126, and **strictly positive in
+      100 (1.48%)** — and at those 100, ``exceeds(yB, ŷ_B(tB), 0.0)`` is ``True``.
+      So at ``ε = 0``, which ``params.py`` accepts (it rejects only ``ε < 0``), those
+      candidates are invalidated by their **own** bar ``tB`` and the selection can
+      return ``NO_VALID_SECOND_ANCHOR`` where §8 — which excludes ``tB`` — has a
+      line: the deviation is **not** in the conservative direction.  No decimal
+      constant is the bound, because the residual is a couple of ulps of the
+      intermediate ``m·tB`` and so grows with the index: ``8.9e-16`` (``2^-50``) is
+      the measured maximum over this corpus, while random draws at ``t ~ 1e5`` reach
+      ``~1e-11``.  At the ratified ``ε = 0.02`` the inclusion is inert by thirteen
+      orders of magnitude, and ``ε = 1e-15`` already suffices across the corpus.  It
+      is kept because D-TL-05 says domination is over *every* bar high, and because
+      ``Candidate.worst_gap``'s documented ``0`` at ``j == i`` — which the fixtures
+      assert — is that inclusion.  Narrowing the set to §8's exact quantifier is a
+      behaviour change, and is not this docstring's to authorize.
 
     The two ways to get the near end wrong, and why only one of them is visible in
     an outcome: ``range(t_anchor, …)`` adds the constraint ``yA <= ŷ_B(tA) + ε``,
