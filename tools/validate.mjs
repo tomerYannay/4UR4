@@ -344,9 +344,28 @@ else {
   //
   // WHAT THIS STILL DOES NOT DO -- stated because the last three attempts overclaimed:
   // it pins the presence of exact lines, NOT the behaviour of the step. Adding a line
-  // (`changed=""` after the diff) or inverting a test elsewhere leaves every pinned line
-  // intact and the guard inert. `continue-on-error` is forbidden below as a YAML KEY IN ANY
-  // SPELLING -- not because it is the cheapest neutering (a one-character `-z`->`-n` on the
+  // (`changed=""` after the diff) leaves every pinned line intact and the guard inert. So
+  // does inverting the TRIGGER test (`-z`->`-n` on the engine/ diff), which early-exits 0
+  // exactly when engine/ changed. Inverting the BLOCKING test is different and must not be
+  // described the same way: it lets the attacking PR through but hard-fails every engine PR
+  // with a clean fixture tree, so it is loud, not inert. `continue-on-error` is forbidden below as a YAML KEY IN ANY
+  // SPELLINGS ENUMERATED AND TESTED BELOW -- and NOT in any spelling, which is a claim no
+  // line-anchored regex can support over YAML. Caught, each measured: bare, "double-quoted",
+  // 'single-quoted', space-before-colon, and DASH-LED (`- continue-on-error: true`, the key
+  // leading a step). That last one is ordinary Actions YAML -- every step here happens to be
+  // written `- name:`, so leading with this key instead is idiomatic, not exotic -- and it
+  // evaded the previous regex while leaving the engine suite's pinned `run:` line intact,
+  // making the 136-test HD-22 exit gate advisory in one added line.
+  //
+  // NOT caught, and this list is the honest boundary rather than a to-do: flow-style step
+  // mappings (`- {name: X, continue-on-error: true}`), the explicit-key indicator
+  // (`? continue-on-error`), and escape sequences in double-quoted scalars
+  // (`"continue-on-err\u006Fr"`). All resolve to the same key. Closing them requires PARSING
+  // the workflow as YAML and testing the object graph; this repository carries no YAML parser
+  // and adding one is an architectural change, not a fix. The structural point, which cost
+  // several rounds to reach: widening the regex again while keeping absolute wording would be
+  // wrong for the same reason it was wrong before. Either parse, or scope the claim. This
+  // scopes the claim. The ban is here not because it is the cheapest neutering (a one-character `-z`->`-n` on the
   // trigger is cheaper) but because it is a whole-step off switch. The gap is real: M-39.
 
   const wfLines = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8')
@@ -376,7 +395,7 @@ else {
   // one spelling. Widening the test is preferred over narrowing the claim here, because it
   // makes the sentence true regardless of how GitHub's YAML parser treats quoted keys --
   // which Code Review explicitly declined to assert, having no parser available to measure it.
-  if (wfLines.some((l) => /^["']?continue-on-error["']?\s*:/.test(l))) {
+  if (wfLines.some((l) => /^(-\s+)?["']?continue-on-error["']?\s*:/.test(l))) {
     err(`${CI_WORKFLOW}: \`continue-on-error\` makes a failing gate non-fatal — it has no legitimate use here`);
   }
 }
