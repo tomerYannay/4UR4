@@ -1130,7 +1130,6 @@ a claim about a human, it is a human. **Provenance:** the API confirms
 `mergedBy.login = tomerYannay` for both, which is all it can confirm; that this was the Product
 Owner rather than an agent rests on the Product Owner's own statement.
 
-
 ## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
 
 - **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-26**

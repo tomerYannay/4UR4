@@ -321,7 +321,16 @@ else {
   // is convert a SILENT one-hunk deletion into a deliberate two-file edit that shows up in
   // the diff as an assertion being removed. Real closure is a required reviewer or a second
   // identity (#21, #34, HD-22 part 3), neither of which exists yet.
-  const wf = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8');
+  // Check against the file with COMMENT LINES STRIPPED. The first version of this check
+  // scanned the whole file, which is the same defect as the old whole-file freeze-marker
+  // scan: prose could satisfy it. That was not hypothetical -- `--no-renames` already
+  // appeared twice in comments, so the bare-flag assertion was dead on arrival. Fixing the
+  // instance (pinning the full command line) left the CLASS open: both gates then showed the
+  // version pins were one good-faith sentence away from the same fate, since the file carries
+  // a seven-line comment about the Node step's deletion and re-pinning -- exactly where
+  // "previously pinned at setup-node@v4" would land. Stripping comments closes the class.
+  const wfRaw = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8');
+  const wf = wfRaw.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
   const required = [
     ['actions/setup-node@', 'the Node toolchain four required checks run on'],
     ['actions/setup-python@', 'the pinned Python the engine conformance suite runs on'],
@@ -329,15 +338,32 @@ else {
     // NOT the bare flag: `--no-renames` appears three times in that file, twice in COMMENTS.
     // A substring check prose can satisfy is the same defect as the old whole-file freeze-marker
     // scan, so this pins the actual command line.
-    ['git diff --no-renames --name-only --diff-filter=MDT',
-     'the guard\'s executable rename/typechange fix (without it a `git mv` of a fixture passes)'],
+    // The WHOLE command including the pathspec and its closing paren. A shorter needle is
+    // defeated by substring containment: `-- product/fixtures/` is contained in
+    // `-- product/fixtures/schema/`, so pinning the prefix let the pathspec be narrowed to a
+    // subdirectory -- silently exempting every fixture outside it. Measured: that mutation
+    // passed until this needle was extended to the closing paren.
+    ['git diff --no-renames --name-only --diff-filter=MDT "$merge_base" HEAD -- product/fixtures/)',
+     'the guard\'s executable rename/typechange fix AND its full pathspec'],
     ['engine.tests.run_all', 'the Phase 2 engine conformance suite'],
+    // Presence of the step is not the same as the step DOING anything. Both gates
+    // demonstrated single-hunk neuterings that keep every needle above intact: flipping the
+    // trigger to `if: false`, or the failure to `exit 0`, leaves the guard present, named,
+    // pinned -- and inert. These two pin the parts that make it bite. This is still
+    // presence-of-tokens rather than semantics, and M-39/M-40 say so.
+    ["if: github.event_name == 'pull_request'", "the fixture guard's trigger (`if: false` neuters it silently)"],
+    ['exit 1', "the fixture guard's failure path (`exit 0` neuters it silently)"],
   ];
   for (const [needle, why] of required) {
     if (!wf.includes(needle)) err(`${CI_WORKFLOW} no longer contains \`${needle}\` — ${why}`);
   }
-  for (const [tool, ver] of [['actions/setup-node@', /setup-node@v\d/], ['actions/setup-python@', /setup-python@v\d/]]) {
-    if (wf.includes(tool) && !ver.test(wf)) err(`${CI_WORKFLOW}: ${tool} is not pinned to a major version`);
+  // Anchored to the `uses:` DIRECTIVE, not merely present somewhere in the file: a
+  // whole-file regex is satisfied by a version string anywhere, including a comment.
+  for (const [tool, ver] of [
+    ['actions/setup-node@', /^\s*uses:\s*actions\/setup-node@v\d/m],
+    ['actions/setup-python@', /^\s*uses:\s*actions\/setup-python@v\d/m],
+  ]) {
+    if (wf.includes(tool) && !ver.test(wf)) err(`${CI_WORKFLOW}: ${tool} is not pinned to a major version on its \`uses:\` line`);
   }
 }
 if (!existsSync(join(ROOT, SPECIALIST_GOV))) err(`missing temporary-specialist governance: ${SPECIALIST_GOV}`);
@@ -372,7 +398,7 @@ console.log(`Build-freeze:  ${freezeOn
     ? `ON — lifted scope: ${freezeScope.map((d) => `${d}/`).join(', ')} (all other product dirs frozen)`
     : 'ON (autonomous implementation disabled)')
   : 'UNKNOWN'}`);
-console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present' : 'MISSING'}`);
+console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present, content asserted' : 'MISSING'}`);
 console.log(`Bash hook:     ${hookOk ? 'configured (PreToolUse → bash-guard.mjs)' : 'MISSING/INVALID'}`);
 console.log('─'.repeat(58));
 for (const w of warns) console.log(`  ⚠︎  ${w}`);
