@@ -13,12 +13,21 @@ from __future__ import annotations
 import math
 import os
 import unittest
+from typing import List, Tuple
 
 from ..anchor import anchor_of
 from ..bars import Prefix
 from ..detector import detect, prefix_of, second_anchor_over
-from ..envelope import select_second_anchor
-from ..logspace import SPLIT_LOG_JUMP_THRESHOLD, ln_price, log_intercept, log_slope, sig6, y_hat
+from ..envelope import domination_set, envelope_violations, select_second_anchor
+from ..logspace import (
+    SPLIT_LOG_JUMP_THRESHOLD,
+    exceeds,
+    ln_price,
+    log_intercept,
+    log_slope,
+    sig6,
+    y_hat,
+)
 from ..params import DetectorParams, PivotParams
 from ..pivots import confirmed_pivots, is_pivot_high
 from ..state import LineState, PreconditionError, ReasonCode
@@ -243,6 +252,192 @@ class EnvelopeSelection(unittest.TestCase):
             log_slope(math.log(83.0), math.log(100.0), 9, 0),
             log_slope(math.log(68.89), math.log(100.0), 18, 0),
         )
+
+
+class _WatchedSequence:
+    """A read-recording stand-in for a ``Prefix``'s ``y`` tuple."""
+
+    __slots__ = ("_values", "_consulted")
+
+    def __init__(self, values: Tuple[float, ...], consulted: List[int]) -> None:
+        self._values = values
+        self._consulted = consulted
+
+    def __getitem__(self, index: int) -> float:
+        self._consulted.append(index)
+        return self._values[index]
+
+    def __len__(self) -> int:
+        return len(self._values)
+
+
+class _WatchedPrefix:
+    """``Prefix``-shaped, and records **which bars** a caller asks about.
+
+    Duck-typed rather than a subclass because ``Prefix`` fixes its ``__slots__``.
+    This is an *observation*, not a re-implementation: it says nothing about what
+    the right answer is, only which bar highs the engine consulted to reach it.
+    """
+
+    __slots__ = ("y", "high", "length")
+
+    def __init__(self, prefix: Prefix, consulted: List[int]) -> None:
+        self.y = _WatchedSequence(prefix.y, consulted)
+        self.high = prefix.high
+        self.length = prefix.length
+
+
+class EnvelopeDominationRange(unittest.TestCase):
+    """§8 step 3 — **where the domination set starts**, which nothing pinned.
+
+    Measured against the 136-test corpus as it stood before this class existed:
+    moving the near end to ``range(tA, …)`` failed **0** tests at every one of the
+    three places the range was written, and ``range(tA + 2, …)`` failed **0** in
+    ``_is_envelope_valid`` and **0** in ``envelope_violations``.  Only the copy that
+    also drives the *candidacy* loop was sensitive (29 failures), and that
+    sensitivity belongs to candidacy, not domination: mutating just the set handed
+    to ``_worst_gap`` failed **1** (GX-08's reported gap).  So the corpus did not
+    pin this endpoint in either direction, and the tests that ran over it passed
+    vacuously on that dimension.
+
+    The endpoint asserted here is **derived from the specification**, not from the
+    engine — the derivation is written out in :func:`envelope.domination_set` and
+    turns on §8 algorithm step 3's ``tA < t_i`` (strict, in both halves of its
+    union), §1/Notation's integer ordinals, and §21.1's ``S_t = bars 0 … t−1``.
+    Pinning whatever the code happened to do would reproduce the vacuity.
+    """
+
+    EPS = 0.02
+
+    #: ``A`` at bar 1, and bar 2 **ties** it.  A tying high is excluded from
+    #: candidacy (§6 rule 2 is strict) and retained in domination (D-TL-05), where
+    #: it undercuts every descending candidate by exactly that candidate's
+    #: per-bar slope — so with ``eps = 0.02`` it kills every candidate steeper
+    #: than ``-0.02``/bar, and all five candidates here are steeper.  The anchor
+    #: is deliberately **not** bar 0: a range hard-coded to ``range(1, …)`` would
+    #: pass a ``tA = 0`` construction by coincidence.
+    HIGHS = [90.0, 100.0, 100.0, 90.0, 80.0, 75.0, 70.0, 65.0]
+    T_ANCHOR = 1
+    #: The set §8 requires over ``HIGHS``, written out rather than computed, so
+    #: this test cannot agree with the code by construction.
+    EXPECTED_DOMINATION = (2, 3, 4, 5, 6, 7)
+
+    def _prefix(self) -> Prefix:
+        prefix = prefix_of(make_series(self.HIGHS))
+        anchor = anchor_of(prefix)
+        assert anchor is not None
+        self.assertEqual(
+            (anchor.t, anchor.high),
+            (self.T_ANCHOR, 100.0),
+            "the construction no longer anchors where it claims",
+        )
+        self.assertEqual(prefix.high[2], prefix.high[self.T_ANCHOR], "bar 2 must TIE the ATH")
+        return prefix
+
+    def test_the_set_runs_from_one_after_the_anchor_to_the_end_of_the_prefix(self) -> None:
+        """The endpoints, stated as literals.
+
+        ``tA`` itself is absent because §8 quantifies over ``t_i > tA`` strictly:
+        the anchor is the line's own endpoint, not something the line must
+        dominate — admitting it would impose ``yA <= ŷ_B(tA) + ε``, a *different*
+        predicate that no fixture can distinguish.  ``tA + 1`` is present because
+        ``t`` is an integer ordinal (§1), so ``t_i > tA`` begins at ``tA + 1``.
+        """
+        self.assertEqual(domination_set(1, 8), self.EXPECTED_DOMINATION)
+        self.assertEqual(domination_set(0, 5), (1, 2, 3, 4))
+        self.assertEqual(domination_set(2, 4), (3,))
+
+        self.assertNotIn(
+            1,
+            domination_set(1, 8),
+            "the anchor bar is in the domination set: this is `range(tA, ...)`, "
+            "which is not §8's `tA < t_i`",
+        )
+        self.assertIn(
+            2,
+            domination_set(1, 8),
+            "the first bar after the anchor is missing: this is `range(tA + 2, ...)`, "
+            "which drops a bar §8 requires to be dominated",
+        )
+        self.assertEqual(domination_set(1, 8)[0], 2)
+
+        # Far end: `length` is exclusive, so the last dominated bar is `length - 1`
+        # (§21.1 — S_t is bars 0 … t-1, and this Prefix *is* S_t).
+        self.assertEqual(domination_set(1, 8)[-1], 7)
+        self.assertNotIn(8, domination_set(1, 8))
+
+        # Degenerate prefixes: an anchor at the last bar dominates nothing.
+        self.assertEqual(domination_set(3, 4), ())
+        self.assertEqual(domination_set(0, 1), ())
+        self.assertEqual(domination_set(0, 0), ())
+
+    def test_the_first_dominated_bar_alone_decides_whether_a_line_exists(self) -> None:
+        """Behavioural: bar ``tA + 1`` is the ONLY piercer, and it is decisive.
+
+        Dropping it would resurrect the shallowest candidate and produce a line
+        where §8 says there is none (``NO_VALID_SECOND_ANCHOR``, §10.4) — so the
+        near end of the range is load-bearing here, not merely stated.
+        """
+        prefix = self._prefix()
+        selection = select_second_anchor(prefix, self.T_ANCHOR, self.EPS)
+        self.assertEqual([c.t for c in selection.candidates], [3, 4, 5, 6, 7])
+        self.assertNotIn(2, [c.t for c in selection.candidates], "H == HA is not a candidate")
+
+        shallowest = max(selection.candidates, key=lambda c: c.slope)
+        self.assertEqual(shallowest.t, 3)
+
+        # Anti-vacuity: bar tA+1 must be the ONLY bar piercing that candidate's
+        # line, or this test is about some other bar.  The indices are literal, and
+        # the predicate is the pinned one (§9, `logspace.exceeds`) — the axis under
+        # test here is the RANGE, so every other axis must be the sanctioned rule.
+        for j in (3, 4, 5, 6, 7):
+            self.assertFalse(
+                exceeds(prefix.y[j], y_hat(shallowest.slope, shallowest.intercept, j), self.EPS),
+                "bar %d also pierces; bar 2 is no longer the decisive one" % j,
+            )
+        self.assertTrue(
+            exceeds(prefix.y[2], y_hat(shallowest.slope, shallowest.intercept, 2), self.EPS)
+        )
+
+        # ...and the engine agrees, three ways: no line, the worst gap IS the gap
+        # at bar tA+1, and the reported violation count is exactly that one bar.
+        self.assertIsNone(
+            selection.selected,
+            "a line exists although the bar after the anchor pierces every "
+            "candidate — the domination set has lost its first bar",
+        )
+        self.assertEqual(
+            shallowest.worst_gap,
+            prefix.y[2] - y_hat(shallowest.slope, shallowest.intercept, 2),
+            "worst_gap is not the gap at bar tA+1; _worst_gap's domination set moved",
+        )
+        self.assertEqual(envelope_violations(prefix, self.T_ANCHOR, shallowest, self.EPS), 1)
+
+    def test_the_reported_count_consults_exactly_those_bars_and_no_others(self) -> None:
+        """The one direction no outcome can see: consulting ``tA`` is *inert*.
+
+        The gap at the anchor is ~0 by construction (§7 fixes ``b`` so that
+        ``ŷ(tA) = yA``), so ``range(tA, …)`` changes no selection, no gap at 6
+        significant figures and no violation count — measured, 0 failures.  It is
+        still a different predicate from §8's, so it is caught here by observing
+        **which bars the engine asks about** rather than what it concludes.
+        """
+        prefix = self._prefix()
+        selection = select_second_anchor(prefix, self.T_ANCHOR, self.EPS)
+        candidate = max(selection.candidates, key=lambda c: c.slope)
+
+        consulted: List[int] = []
+        watched = _WatchedPrefix(prefix, consulted)
+        count = envelope_violations(watched, self.T_ANCHOR, candidate, self.EPS)
+
+        self.assertEqual(
+            tuple(consulted),
+            self.EXPECTED_DOMINATION,
+            "the domination loop consulted %r; §8 step 3 quantifies over exactly "
+            "the bar highs with tA < t_i <= length-1" % (consulted,),
+        )
+        self.assertEqual(count, 1)
+        self.assertNotIn(self.T_ANCHOR, consulted, "the anchor bar was consulted")
 
 
 class PierceAndWickBreak(unittest.TestCase):
