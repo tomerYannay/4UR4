@@ -334,9 +334,13 @@ else {
   //                               satisfied the engine-suite needle while the suite was deleted.
   // Each of (2) and (3) was introduced by the commit that announced the previous one fixed.
   //
-  // Whole-line equality is what actually closes the substring class: a trailing comment, an
-  // appended `&& false`, or any other suffix changes the line and fails the match. It also
-  // removes the fragility of `exit 1` as a six-character needle.
+  // Whole-line equality ends the SUBSTRING class -- a trailing comment, an appended
+  // `&& false`, or any other suffix changes the line and fails the match -- and that is ALL
+  // it ends. The CARRIER class survives, measured: neuter the guard's failure path to
+  // `exit 0` and put a bare `exit 1` line in any other step's `run:` block, and this check
+  // passes. `exit 1` is the weakest needle for exactly that reason. Defeating it now takes
+  // deliberate evasion rather than good-faith prose, which is a real improvement and is not
+  // the same thing as closure.
   //
   // WHAT THIS STILL DOES NOT DO -- stated because the last three attempts overclaimed:
   // it pins the presence of exact lines, NOT the behaviour of the step. Adding a line
