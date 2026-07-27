@@ -345,8 +345,10 @@ else {
   // WHAT THIS STILL DOES NOT DO -- stated because the last three attempts overclaimed:
   // it pins the presence of exact lines, NOT the behaviour of the step. Adding a line
   // (`changed=""` after the diff) or inverting a test elsewhere leaves every pinned line
-  // intact and the guard inert. `continue-on-error` is forbidden below because it is the
-  // cheapest such neutering, but the general gap is real and is recorded in M-39.
+  // intact and the guard inert. `continue-on-error` is forbidden below as a YAML KEY IN ANY
+  // SPELLING -- not because it is the cheapest neutering (a one-character `-z`->`-n` on the
+  // trigger is cheaper) but because it is a whole-step off switch. The gap is real: M-39.
+
   const wfLines = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8')
     .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
   const hasLine = (needle) => wfLines.includes(needle);
@@ -367,7 +369,14 @@ else {
     if (!hasLine(line)) err(`${CI_WORKFLOW} no longer contains the exact line \`${line}\` — ${why}`);
   }
   // Negative assertion: one line anywhere in this job makes any failing step non-fatal.
-  if (wfLines.some((l) => l.startsWith('continue-on-error'))) {
+  // Matched as a YAML KEY in any spelling, not by string prefix. The first version was
+  // `l.startsWith('continue-on-error')`, which a QUOTED key defeats -- `"continue-on-error":
+  // true` trims to a line starting with `"`. Code Review's eleventh mutation, and the same
+  // defect once more: the word in the record was "forbidden outright" while the code tested
+  // one spelling. Widening the test is preferred over narrowing the claim here, because it
+  // makes the sentence true regardless of how GitHub's YAML parser treats quoted keys --
+  // which Code Review explicitly declined to assert, having no parser available to measure it.
+  if (wfLines.some((l) => /^["']?continue-on-error["']?\s*:/.test(l))) {
     err(`${CI_WORKFLOW}: \`continue-on-error\` makes a failing gate non-fatal — it has no legitimate use here`);
   }
 }
