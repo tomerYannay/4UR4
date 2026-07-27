@@ -38,10 +38,12 @@ jobs:
         # that edits a fixture to match a wrong engine AND deletes this step in the same
         # commit produces a green required check under the correct context name, mergeable at
         # `required_approving_review_count: 0`, with no repository artifact recording it.
-        # `tools/validate.mjs` now asserts this step's presence, which converts a silent
+        # `tools/validate.mjs` now asserts this step's exact lines, which converts a silent
         # one-hunk deletion into a deliberate two-file edit -- but that assertion lives in the
-        # same repository and the same PR can delete it too. It raises the cost; it does not
-        # close the hole. Real closure is a required reviewer or a second identity
+        # same repository and the same PR can delete it too, and it pins LINES rather than
+        # BEHAVIOUR: inverting the `-n`/`-z` test, or appending `changed=""` after the pinned
+        # diff, leaves every pinned line intact and this step inert. It raises the cost; it
+        # does not close the hole. Real closure is a required reviewer or a second identity
         # (#21, #34, HD-22 part 3), none of which exists yet. Found by the Verification gate.
         #
         # The rule is NOT "fixtures never change": ADDING a fixture tightens the gate

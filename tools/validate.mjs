@@ -321,49 +321,50 @@ else {
   // is convert a SILENT one-hunk deletion into a deliberate two-file edit that shows up in
   // the diff as an assertion being removed. Real closure is a required reviewer or a second
   // identity (#21, #34, HD-22 part 3), neither of which exists yet.
-  // Check against the file with COMMENT LINES STRIPPED. The first version of this check
-  // scanned the whole file, which is the same defect as the old whole-file freeze-marker
-  // scan: prose could satisfy it. That was not hypothetical -- `--no-renames` already
-  // appeared twice in comments, so the bare-flag assertion was dead on arrival. Fixing the
-  // instance (pinning the full command line) left the CLASS open: both gates then showed the
-  // version pins were one good-faith sentence away from the same fate, since the file carries
-  // a seven-line comment about the Node step's deletion and re-pinning -- exactly where
-  // "previously pinned at setup-node@v4" would land. Stripping comments closes the class.
-  const wfRaw = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8');
-  const wf = wfRaw.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
-  const required = [
-    ['actions/setup-node@', 'the Node toolchain four required checks run on'],
-    ['actions/setup-python@', 'the pinned Python the engine conformance suite runs on'],
-    ['Fixture immutability', 'the HD-22 fixture-immutability guard'],
-    // NOT the bare flag: `--no-renames` appears three times in that file, twice in COMMENTS.
-    // A substring check prose can satisfy is the same defect as the old whole-file freeze-marker
-    // scan, so this pins the actual command line.
-    // The WHOLE command including the pathspec and its closing paren. A shorter needle is
-    // defeated by substring containment: `-- product/fixtures/` is contained in
-    // `-- product/fixtures/schema/`, so pinning the prefix let the pathspec be narrowed to a
-    // subdirectory -- silently exempting every fixture outside it. Measured: that mutation
-    // passed until this needle was extended to the closing paren.
-    ['git diff --no-renames --name-only --diff-filter=MDT "$merge_base" HEAD -- product/fixtures/)',
-     'the guard\'s executable rename/typechange fix AND its full pathspec'],
-    ['engine.tests.run_all', 'the Phase 2 engine conformance suite'],
-    // Presence of the step is not the same as the step DOING anything. Both gates
-    // demonstrated single-hunk neuterings that keep every needle above intact: flipping the
-    // trigger to `if: false`, or the failure to `exit 0`, leaves the guard present, named,
-    // pinned -- and inert. These two pin the parts that make it bite. This is still
-    // presence-of-tokens rather than semantics, and M-39/M-40 say so.
-    ["if: github.event_name == 'pull_request'", "the fixture guard's trigger (`if: false` neuters it silently)"],
+  // Needles are matched against WHOLE TRIMMED LINES, not as free substrings.
+  //
+  // This check has now been wrong three times in the same shape, and each fix closed the
+  // instance while leaving the class open:
+  //   1. whole-file scan       -- `--no-renames` was already in two comments: dead on arrival;
+  //   2. full command pinned   -- but `-- product/fixtures/` is a SUBSTRING of
+  //                               `-- product/fixtures/schema/`, so the pathspec could be
+  //                               narrowed to a subdirectory and still pass;
+  //   3. full-line comments stripped -- but only lines STARTING with `#`. A TRAILING comment
+  //                               survived, so `uses: actions/setup-python@v5  # engine.tests.run_all`
+  //                               satisfied the engine-suite needle while the suite was deleted.
+  // Each of (2) and (3) was introduced by the commit that announced the previous one fixed.
+  //
+  // Whole-line equality is what actually closes the substring class: a trailing comment, an
+  // appended `&& false`, or any other suffix changes the line and fails the match. It also
+  // removes the fragility of `exit 1` as a six-character needle.
+  //
+  // WHAT THIS STILL DOES NOT DO -- stated because the last three attempts overclaimed:
+  // it pins the presence of exact lines, NOT the behaviour of the step. Adding a line
+  // (`changed=""` after the diff) or inverting a test elsewhere leaves every pinned line
+  // intact and the guard inert. `continue-on-error` is forbidden below because it is the
+  // cheapest such neutering, but the general gap is real and is recorded in M-39.
+  const wfLines = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8')
+    .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+  const hasLine = (needle) => wfLines.includes(needle);
+
+  const requiredLines = [
+    ['uses: actions/setup-node@v4', 'the pinned Node toolchain four required checks run on'],
+    ['uses: actions/setup-python@v5', 'the pinned Python the engine conformance suite runs on'],
+    ['- name: Fixture immutability — a fixture may not be edited to make the engine pass',
+     'the HD-22 fixture-immutability guard step'],
+    ["if: github.event_name == 'pull_request'",
+     "the fixture guard's trigger (`if: false`, or an appended `&& false`, neuters it silently)"],
+    ['changed="$(git diff --no-renames --name-only --diff-filter=MDT "$merge_base" HEAD -- product/fixtures/)"',
+     "the guard's rename/typechange fix AND its full pathspec"],
     ['exit 1', "the fixture guard's failure path (`exit 0` neuters it silently)"],
+    ['run: python3 -m engine.tests.run_all', 'the Phase 2 engine conformance suite'],
   ];
-  for (const [needle, why] of required) {
-    if (!wf.includes(needle)) err(`${CI_WORKFLOW} no longer contains \`${needle}\` — ${why}`);
+  for (const [line, why] of requiredLines) {
+    if (!hasLine(line)) err(`${CI_WORKFLOW} no longer contains the exact line \`${line}\` — ${why}`);
   }
-  // Anchored to the `uses:` DIRECTIVE, not merely present somewhere in the file: a
-  // whole-file regex is satisfied by a version string anywhere, including a comment.
-  for (const [tool, ver] of [
-    ['actions/setup-node@', /^\s*uses:\s*actions\/setup-node@v\d/m],
-    ['actions/setup-python@', /^\s*uses:\s*actions\/setup-python@v\d/m],
-  ]) {
-    if (wf.includes(tool) && !ver.test(wf)) err(`${CI_WORKFLOW}: ${tool} is not pinned to a major version on its \`uses:\` line`);
+  // Negative assertion: one line anywhere in this job makes any failing step non-fatal.
+  if (wfLines.some((l) => l.startsWith('continue-on-error'))) {
+    err(`${CI_WORKFLOW}: \`continue-on-error\` makes a failing gate non-fatal — it has no legitimate use here`);
   }
 }
 if (!existsSync(join(ROOT, SPECIALIST_GOV))) err(`missing temporary-specialist governance: ${SPECIALIST_GOV}`);
