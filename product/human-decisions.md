@@ -1017,7 +1017,10 @@ criterion**, not advice.
 
 **What this does not do.** It does not touch **HD-06** — no provider is selected and no spend
 is authorized. It does not resolve **M-09** (the `real/**` quarantine classification), which
-remains open and must be ruled before the Phase 2 ticket meets its Definition of Ready. It
+*(as recorded on 2026-07-26, and since closed)* remained open and had to be ruled before the
+Phase 2 ticket met its Definition of Ready — **M-09 is now CLOSED by
+[SPR-D-03](#spr-d-03--productfixturesreal-is-r2b-permeable-by-necessity--delegated_product_decision_approved),
+condition-10 CONFIRMED.** Marked rather than rewritten, per this register's convention. It
 grants no Phase-2 credit for existing evidence tooling.
 
 **Related condition, recorded because events overtook it.**
@@ -1030,6 +1033,102 @@ mechanism existing**, on a Product Owner ruling relayed under the same single-ac
 **Also required by the same ruling:** full branch protection on `main` — PR-only merges,
 required CI, required exact-head reviews, no direct pushes, no force pushes, no branch
 deletion, no routine administrative bypass — **before Phase 2 product code merges**.
+**Read this together with the part 3 deviation immediately below: one of the seven is UNMET,
+and stopping at this paragraph gives an unqualified precondition that is not the current state.**
+
+### HD-22 part 3 — DEVIATION RECORDED, ruled by the Product Owner 2026-07-26
+
+**Six of the seven parts are in force. The seventh — "required exact-head reviews" — is
+UNMET, and it is unmet by structural impossibility rather than by omission.**
+
+*"Full branch protection is in place" is not an available statement about this repository.*
+
+| # | Part | State | Evidence |
+|---|------|-------|----------|
+| 1 | PR-only merges | **MET** | proven directly by the **empirical push rejection** in part 4. *(This row previously cited the `required_pull_request_reviews` block alone. That block IS "require a pull request before merging" and does enforce part 1's subject; what it does not enforce at count 0 is any **review**, so it is not evidence about reviews. An earlier correction here overshot and called it evidence that "enforces nothing" — false in the direction that matters for this row.)* |
+| 2 | required CI | **MET** | context `Validate agent OS & governance`, `strict: true` — the single job that runs the validator, the hook suite, the fixture re-derivation, the evidence checker and the 136-test engine conformance suite |
+| 3 | **required exact-head reviews** | **UNMET** | `required_approving_review_count: 0` |
+| 4 | no direct pushes | **MET** | proven empirically: a direct push was rejected, `protected branch hook declined` |
+| 5 | no force pushes | **MET** | `allow_force_pushes: false` |
+| 6 | no branch deletion | **MET** | `allow_deletions: false` |
+| 7 | no routine admin bypass | **MET** | `enforce_admins: true` |
+
+**Measured** against `gh api repos/tomerYannay/4UR4/branches/main/protection` on **2026-07-26**,
+with `main` at `ed92bbb`, and independently re-verified row-by-row by the Verification and Code
+Review gates at that head. None of these values is re-derivable from the working tree, so the
+measurement point is recorded with them.
+
+**Why part 3 cannot be satisfied by raising the number.** GitHub forbids a pull-request
+author from approving their own pull request. This repository has **one identity** — the
+Product Owner and every agent share `tomerYannay` — so every PR is authored by that identity
+and **no approving review can ever exist**. Setting the count to `1` would not tighten the
+gate; it would make `main` **permanently unmergeable**, and the predictable response is to
+switch `enforce_admins` off, trading a real protection for a theatrical one. **The constraint
+is [#21](https://github.com/tomerYannay/4UR4/issues/21) and
+[#34](https://github.com/tomerYannay/4UR4/issues/34), not the setting.** At count `0`,
+`dismiss_stale_reviews: true` is **inert** — there is no review to dismiss — so part 3 is
+**unimplemented, not partially met**. Do not read the two settings together as partial
+compliance.
+
+**The two gates split on this, and both were right about what they were looking at.** The
+Project Auditor ruled it non-blocking: the load-bearing protections for engine code are in
+place, and the defect is already ticketed. The Strategic Product Reviewer ruled it blocking:
+HD-22 states it as a precondition on Phase 2 product code merging, and a precondition that
+is quietly reinterpreted is not a precondition. **The Product Owner resolved it on
+2026-07-26: NOT BLOCKING, deviation to be recorded rather than closed.**
+
+**What the compensating controls do and do not cover.** Parts 1, 2, 4–7 mean no change
+reaches `main` without a PR whose required check ran the full gate at that head — **subject to
+one limit that must be stated in a section whose whole subject is that one identity holds every
+role.** `enforce_admins: true` prevents *bypassing* protection; it does **not** prevent
+*reconfiguring* it. The single identity that authors, reviews and merges is also the repository
+admin, so the settings can be relaxed, a merge taken, and the settings restored — leaving **no
+in-repo artifact and no gate**. Part 7's "no routine administrative bypass" carries some of this
+weight but not that. Recorded on the Project Auditor's finding.
+
+What they do **not** cover is the residual part 3 exists for: *that a party independent of the author
+looked at the exact head that merges.* Today that residual is carried by the agent review
+chain, whose verdicts are same-account relays with no citable artifact. **That is genuinely
+weaker, and it is not described here as equivalent.** It is why #21 stays open.
+
+**Closing this deviation requires a second identity** — a GitHub App or machine account —
+after which `required_approving_review_count: 1` becomes **settable**. It does **not** thereby
+become *meaningful*: a machine account operated by the same principal restores the **artifact**,
+not the **independence**, and that is precisely the theatrical control this section refuses
+above for `enforce_admins`. An earlier draft said "settable and meaningful", which
+over-promised and, worse, set the bar for closing this deviation too low. **The honest closure
+condition is a second identity under separate control, or an equivalent that makes the approving
+party genuinely distinct from the authoring one.** Until then this row stands as the honest
+state.
+
+*(Placement note: this paragraph belongs to **HD-22 part 3** — "this row" is part 3's table
+row. An earlier edit inserted the GOV-005 heading immediately above it, which silently
+reparented it under GOV-005 and left both of its back-references dangling across a section
+boundary: part 3 lost its stated closure condition and GOV-005 acquired one that is not about
+it. Caught by the Verification gate. Restored here.)*
+
+### Related deviation — GOV-005 "merged by Release & Ops only" (recorded 2026-07-26)
+
+Recorded **here** rather than only in [`project-state.md`](project-state.md), whose own header
+says *"current state only — not a history log"* — a routine refresh can sweep it, and a
+deviation that evaporates is not recorded. Flagged by the Project Auditor.
+
+PRs [#32](https://github.com/tomerYannay/4UR4/pull/32) (`758c0a0`) and
+[#33](https://github.com/tomerYannay/4UR4/pull/33) (`ed92bbb`) were **merged by the Product
+Owner personally through the GitHub UI**, not by Release & Ops.
+[GOV-005](../governance/definition-of-done.md) says *"Merged by **Release & Ops** only"*, with
+no agent qualifier in the clause itself. **This register does not reinterpret it as scoping only
+agents** — that reading was drafted and withdrawn, because it is exactly the "quietly
+reinterpreted precondition" this section objects to elsewhere. It is a **deviation**, recorded
+for the Auditor and for the Product Owner to dispose of.
+
+Why it happened: the Release & Ops gate **refused both merges**, and its refusals were correct
+each time — no channel existed in which a human authorization could be expressed
+([#34](https://github.com/tomerYannay/4UR4/issues/34)). Under a single shared identity the
+Product Owner performing the merge is the *only* act that carries attribution, because it is not
+a claim about a human, it is a human. **Provenance:** the API confirms
+`mergedBy.login = tomerYannay` for both, which is all it can confirm; that this was the Product
+Owner rather than an agent rests on the Product Owner's own statement.
 
 ## HD-21 — Bounded autonomous product-decision authority · materiality: **high**
 
@@ -1390,7 +1489,7 @@ structure.
 
 ---
 
-## SPR-D-03 — `product/fixtures/real/**` is R2, permeable by necessity · `DELEGATED_PRODUCT_DECISION_APPROVED`
+## SPR-D-03 — `product/fixtures/real/**` is R2b, permeable by necessity · `DELEGATED_PRODUCT_DECISION_APPROVED`
 
 > **Approved under bounded Product Owner delegation; not direct Product Owner authorship.**
 
