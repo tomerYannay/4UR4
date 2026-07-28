@@ -12,7 +12,8 @@ definition record; **the issues are authoritative** where the two disagree.
 > (labels only — no umbrella issues); at most 5 open **unstarted Ready** tickets;
 > one ticket = one verifiable outcome; no speculative implementation backlog.
 > Implementation tickets are `blocked: freeze` **unless their scope carries a lift** — as
-> `engine/` now does (HD-22).
+> `engine/` now does twice over, **HD-22** for Phase 2 and **HD-24 §3** for Phase 3.
+> **A lift removes `blocked: freeze`; it does not confer Ready.**
 >
 > **DoR ([GOV-004](../../governance/definition-of-ready.md)):** every ticket below
 > "Becomes Ready upon human roadmap approval ([GOV-013](../../governance/approval-gate.md));
@@ -45,14 +46,42 @@ definition record; **the issues are authoritative** where the two disagree.
 | d | Survivorship-free constituents + corporate-actions research | market-data-foundation | 1 | research-only (freeze-permitted) | **Ready** ([#5](https://github.com/tomerYannay/4UR4/issues/5)) |
 | e | Market-data ingestion & storage service | market-data-foundation | 1 | blocked (build-freeze) | blocked: freeze |
 | f | Deterministic trendline detection engine | trendline-detection-engine | 2 | implementation (HD-22 `engine/` lift) | **NOT Ready** — entry criteria; built anyway, see the deviation |
-| g | Breakout, freeze, retest, failure & expiry engine | trendline-detection-engine | 3 | blocked (build-freeze) | blocked: freeze — **no Phase-3 lift exists** |
+| g | Breakout, freeze, retest, failure & expiry engine | trendline-detection-engine | 3 | implementation (HD-24 §3 Phase-3 `engine/` lift) | **NOT Ready** — freeze lifted 2026-07-28; DoR element 7 unmet (ESC-1/3/4/5 open; Phase-2 exit undetermined) |
 | h | Phase-2 engine hardening (M-28/29/30/32) | trendline-detection-engine | 2 | implementation (HD-22 `engine/` lift) | **Ready** and in progress |
 
-**Totals:** 8 tickets defined · **2 delivered** (a, b — Phase 0) · **3 Ready and in
-progress** (c, d — Phase 1 research; h — engine hardening) · **2 blocked: freeze**
-(e, g) · **1 not Ready** (f). Open **unstarted** Ready count (0) ≤ 5 budget ✓; 3 epics ✓;
-no umbrella issues ✓. HD-06 remains **PENDING**: (c) may recommend a provider and may not
-select one, commit spend, or accept licensing terms.
+**Totals (recounted 2026-07-28):** 8 tickets defined · **2 delivered** (a, b — Phase 0) ·
+**3 Ready and in progress** (c, d — Phase 1 research; h — engine hardening) · **1 blocked:
+freeze** (e) · **2 not Ready** (f, g). HD-06 remains **PENDING**: (c) may recommend a provider
+and may not select one, commit spend, or accept licensing terms.
+
+**All three [GOV-008](../../governance/ticket-hygiene.md) budgets, stated — WIP was unstated
+before this change (M-55) and the idea budget was still unstated in the first form of this
+table — plus rule 4, whose row was mislabelled as rule 3.**
+
+*Corrected 2026-07-28, with the wrong label quoted rather than replaced in silence.* This block
+read *"All three GOV-008 budgets, stated — the third was previously unstated (M-55)"* over a
+table whose last row was headed **"3 — epics"**. **The epic constraint is
+[GOV-008](../../governance/ticket-hygiene.md) rule 4** — *"One ticket = one verifiable outcome.
+No umbrella/epic tickets"* — and **rule 3 is the idea budget**, *"at most **3** new idea cards
+per cycle"*. Rule 3 was therefore the budget still unstated, and the *"all three budgets"* claim
+was **false at the moment it was made**: the table stated two budgets and one non-budget rule
+under a third budget's number. Both are stated below. Found by Code Review.
+
+| Rule | Limit | Count now | Verdict |
+|---|---|---|---|
+| 1 — WIP `In Progress` | ≤ 3 | **3** (c, d, h) | **compliant and SATURATED** |
+| 2 — open **unstarted** Ready | ≤ 5 | **0** | compliant |
+| 3 — **idea budget**: new idea cards per cycle | ≤ 3 | **3** in the last cycle in which any were submitted — IDEA-0002/0003/0004, 2026-07-24, all still *awaiting triage* ([`../../ideas/inbox.md`](../../ideas/inbox.md)) — and **0** since | compliant, and saturated for that cycle |
+| 4 — one ticket = one verifiable outcome; no umbrella/epic tickets | 3 epic **labels**, no umbrella issues | 3 | compliant |
+
+**No budget is breached by this change, and the reason is worth stating rather than
+asserting.** Making a ticket **Ready** consumes the rule-2 budget, not the rule-1 WIP limit;
+only *starting* it consumes WIP. **(g) is not made Ready by this change** — see its DoR
+assessment below — so rule 2 stays at 0 either way. **But rule 1 is at its limit right now:
+WIP is exactly 3.** Whenever (g) does become Ready, **it cannot be started until a WIP slot
+frees**, and starting it while c, d and h are all in progress would breach GOV-008 rule 1.
+Recorded here because a totals line that checked two of GOV-008's rules read as a full check,
+and one of the unstated rules was the one at its limit.
 
 **Two corrections to the framing above, because it went stale rather than wrong-headed.**
 
@@ -62,12 +91,23 @@ select one, commit spend, or accept licensing terms.
    [#31](https://github.com/tomerYannay/4UR4/issues/31)), which lifted GOV-015 for
    `engine/` and nothing else. **(e) is unchanged and still `blocked: freeze`. (f) is not
    blocked by the freeze any more** — it is held by Phase-2 **entry** criteria and by the
-   DoR. **(g) is `blocked: freeze`**: the lift is a Phase-2 lift, and
+   DoR. ~~**(g) is `blocked: freeze`**: the lift is a Phase-2 lift, and
    [GOV-015](../../governance/build-freeze.md) rule 4 ties a lift to a specific approved,
-   Ready ticket.
-2. **(g) and (h) are ticket DEFINITIONS, not yet live issues.** (a)–(f) map to issues and
-   *"the issues are authoritative where the two disagree"*; **(g) and (h) have no issue
-   number yet**, so creating them is an Orchestrator action. Neither adds roadmap scope:
+   Ready ticket.~~ **Superseded 2026-07-28 by [HD-24](../human-decisions.md) §3
+   ([#39](https://github.com/tomerYannay/4UR4/issues/39)), which lifts GOV-015 for **Phase 3**
+   inside `engine/`. (g) is no longer `blocked: freeze`.** The struck sentence's second half
+   nevertheless still bites, in the opposite direction from how HD-24 §3 read it: rule 4 ties
+   a lift to a specific **approved, Ready** ticket, and **(g) is not Ready** — so the lift
+   exists and rule 4 is still unsatisfied. See (g)'s DoR assessment.
+2. **(g) is now a live issue; (h) is still a definition only.** (a)–(f) map to issues and
+   *"the issues are authoritative where the two disagree"*.
+   **(g) → [#40](https://github.com/tomerYannay/4UR4/issues/40)**, filed 2026-07-28 by the
+   Orchestrator from the Product Steward's draft. **Filing it supplies *specific* — one of
+   [GOV-015](../../governance/build-freeze.md) rule 4's three words — and supplies nothing
+   toward *approved* or *Ready*.** The issue says so on its own face, leads with
+   **"Status: NOT READY. Do not start."**, and instructs the filer not to apply a Ready label
+   and not to apply `blocked: freeze` (HD-24 §3 lifted it). **(h) has no issue number yet**;
+   creating it remains an Orchestrator action. Neither adds roadmap scope:
    **(g)** is the already-approved **Phase 3** roadmap item and **(h)** is corrective work
    inside the already-approved **Phase 2** item, so neither requires a new
    [GOV-002](../../governance/roadmap-authority.md) roadmap placement or a
@@ -344,14 +384,30 @@ select one, commit spend, or accept licensing terms.
   - **Only a human may dispose of this deviation.** An agent may record it; none may waive
     it (GOV-013).
 
-## Ticket (g) — Breakout, freeze, retest, failure & expiry engine  ·  **blocked: freeze**
+## Ticket (g) — Breakout, freeze, retest, failure & expiry engine  ·  **NOT Ready** (freeze lifted for Phase 3; DoR element 7 open)
 
-> **THIS TICKET IS NOT A FREEZE LIFT AND MUST NOT BE READ AS ONE.** It is
-> `blocked: freeze`. Its purpose is stated in the DoR note below: **[GOV-015](../../governance/build-freeze.md)
-> rule 4 requires a lift to attach to "a specific approved, Ready ticket — never a blanket
-> 'autonomy on'"**, and **no Phase 3 lift exists**. Until a Phase-3 ticket exists there is
-> nothing for a Phase-3 lift to attach to, so writing it down is what makes a *properly
-> scoped* lift grantable. **Granting it is the Product Owner's act, not this file's.**
+> **THE PHASE-3 FREEZE LIFT NOW EXISTS, AND THIS TICKET IS STILL NOT READY. Both halves
+> matter; neither may be read without the other.**
+>
+> **Superseded, and kept legible rather than deleted.** This banner previously read: *"THIS
+> TICKET IS NOT A FREEZE LIFT AND MUST NOT BE READ AS ONE. It is `blocked: freeze` … and no
+> Phase 3 lift exists."* **A Phase-3 lift now exists** — [HD-24](../human-decisions.md) §3,
+> Product Owner, 2026-07-28, [#39](https://github.com/tomerYannay/4UR4/issues/39) — so
+> `blocked: freeze` is removed **because HD-24 §3 lifts it**, and for no other reason.
+>
+> **What has NOT changed:** [GOV-015](../../governance/build-freeze.md) **rule 4** requires a
+> lift to attach to *"a specific **approved, Ready** ticket — never a blanket 'autonomy on'"*.
+> **HD-24 §3 asserted that attaching to this ticket satisfied rule 4. It did not** — at that
+> head this ticket was `blocked: freeze` and expressly not Ready, so it met *specific* and
+> failed *approved* and *Ready*. The repair is **forward**: the DoR below is re-assessed
+> **dated 2026-07-28**, element by element, against the state that exists now.
+>
+> **This ticket is NOT BACKDATED to Ready, and must not be.** The Phase-2 record already
+> carries the identical failure as a deviation — *"**#7 has NOT been backdated to Ready.**
+> Fitting the record to the outcome is the failure this corpus exists to catch"* — and
+> flipping this ticket to Ready would make HD-24 §3 read true by editing the ticket instead of
+> by finishing the work. **On the assessment below it is not Ready**, and it is left not
+> Ready. **Phase-3 implementation does not begin.**
 
 - **Title:** Deterministic trendline engine — confirmed breakout, line freezing (`Λ^F`),
   retest, failed breakout, expiry/recompute (implementation)
@@ -444,8 +500,15 @@ select one, commit spend, or accept licensing terms.
   - **ESC-2 … ESC-5 and OQ-P3-1 … OQ-P3-8** are carried in the plan with their owners
     (ESC-3 window right-edges, ESC-4 `FAILED_BREAKOUT` terminality against a new ATH,
     ESC-5 §16's `low` unguarded by §18 — Product Steward; ESC-2 a record-only correction).
-    **A Phase-3 lift should not be granted while ESC-1, ESC-3, ESC-4 and ESC-5 are open**,
-    because each of them decides behaviour this ticket would otherwise choose by itself.
+    ~~**A Phase-3 lift should not be granted while ESC-1, ESC-3, ESC-4 and ESC-5 are
+    open**~~ — **overtaken by events on 2026-07-28: the lift WAS granted, with all four still
+    open** ([HD-24](../human-decisions.md) §3). This was an agent recommendation, not a
+    condition anyone could impose on the Product Owner, and it is struck as a recommendation
+    rather than restated as a breach. **Its reason survives the grant intact:** each of the
+    four decides behaviour this ticket would otherwise choose by itself, so they now block the
+    ticket's **Definition of Ready** (element 7) instead of blocking the lift — and since rule
+    4 wants a *Ready* ticket, the practical effect is the same. **Implementation still does
+    not begin.**
 - **CORRECTION carried into this ticket rather than repeated as an error.** An earlier brief
   stated the six §15/§16/§17 parameters are *"not carried in any fixture's `params` block"*.
   **That was wrong** — it was generalised from a single fixture. Measured across the
@@ -457,26 +520,78 @@ select one, commit spend, or accept licensing terms.
   where a fixture carries one of the six, the engine reads it and asserts it equals the
   module default, so a future fixture carrying a non-default value fails loudly rather than
   being silently overridden.
-- **Dependencies:** **A Phase-3 freeze lift, which does not exist**; Phase 2 exit met;
-  **HD-03**; **HD-12**; trendline spec §11, §13–§18, §21. Phase-2 **E2-AUTHOR** continues
-  to bind.
+- **Dependencies — restated 2026-07-28, one discharged and two still open.**
+  - **A Phase-3 freeze lift — DISCHARGED.** [HD-24](../human-decisions.md) §3
+    ([#39](https://github.com/tomerYannay/4UR4/issues/39)) grants it for `engine/`:
+    `ACTIVE → BROKEN_OUT`, `Λ^F` freezing (§21.5), retest (§16), failed breakout (§15),
+    expiry/recompute (§17). *(Previously read: "A Phase-3 freeze lift, which does not exist".)*
+  - **Phase 2 exit met — OPEN, and it is a roadmap entry criterion for this phase.** The
+    Phase-2 exit determination **has not been made**, and **no agent other than the Product
+    Steward may make it**: it is a [GOV-002](../../governance/roadmap-authority.md) call for
+    the Steward, on a gate assessment. *(Previously: "No agent has made the Phase-2 exit
+    determination and none may; it is a GOV-002 call for the Product Steward" — which forbids
+    to every agent what it then assigns to one of them. The Steward is an agent; the
+    restriction is that no **other** agent may.)* **What the Product Owner has already
+    removed** is the *approval* step, not the determination:
+    [HD-24](../human-decisions.md) §4 rules that *"Phase 2 exit is authorized to close on its
+    acceptance criteria without further Product Owner approval."* The determination itself is
+    still owed and is **not made in this change**. E2-AUTHOR **criterion 5** is disclosed-not-satisfied, and **criterion 2** is
+    genuinely UNMET (ticket (f)'s recorded deviation). **This is not a formality:** starting
+    Phase 3 before Phase 2's exit is determined would build the second storey on an
+    undetermined first.
+  - **The four open specification escalations — OPEN.** ESC-1, ESC-3, ESC-4, ESC-5, carried at
+    [`../maintenance-backlog.md`](../maintenance-backlog.md) **M-50**, each decides behaviour
+    this ticket would otherwise choose by itself.
+  - **Unchanged and satisfied:** **HD-03**; **HD-12**; trendline spec §11, §13–§18, §21.
+    Phase-2 **E2-AUTHOR** continues to bind for the whole engine.
 - **Evidence plan (GOV-006):** Ticket branch + PR linked to the issue; the full-corpus
   conformance run with every fixture compared in full and in both directions; the sweep
   `final_state` comparison at every recorded scale; determinism and no-look-ahead runs;
   a reason-code coverage report counted **by emission, not by grepping source**; CI green;
   Verification verdict + Code Review approval.
-- **Autonomy level:** blocked (build-freeze).
-- **Responsible agent type:** Implementation Engineer (inactive for this scope under
-  freeze), supported by the Architect.
-- **DoR note:** **NOT Ready. `blocked: freeze`, and deliberately so.**
-  [GOV-015](../../governance/build-freeze.md) **rule 4** requires a lift to be *per-scope,
-  tied to a specific approved, Ready ticket — never a blanket "autonomy on"*. **No Phase-3
-  lift exists**; the freeze marker's `scope` is `["engine/"]` granted for **Phase 2**
+- **Autonomy level:** implementation, inside the **HD-24 §3 Phase-3 `engine/` lift**. **No new
+  or widened GOV-015 scope is requested or implied**, and the lift is not by itself permission
+  to start — rule 4 still wants a Ready ticket. *(Previously: "blocked (build-freeze)".)*
+- **Responsible agent type:** Implementation Engineer, supported by the Architect. *(The
+  Engineer is no longer inactive for this scope; [GOV-015](../../governance/build-freeze.md)
+  rule 3's inactivity attaches to frozen scopes, and this one is lifted.)*
+- **DoR note — RE-ASSESSED FORWARD, 2026-07-28. VERDICT: NOT READY (7 of 8 elements met;
+  element 7 unmet).** Assessed against
+  [GOV-004](../../governance/definition-of-ready.md) element by element, against the state of
+  the repository on this date. **Nothing here is backdated**, and the previous note is quoted
+  below rather than overwritten.
+
+  | # | [GOV-004](../../governance/definition-of-ready.md) element | Verdict | How it was checked |
+  |---|---|---|---|
+  | 1 | Traces to an approved roadmap item (GOV-002) | **MET** | [`roadmap.md`](../roadmap.md) **Phase 3 — Breakout & retest engine** is an existing phase of the Phase 0–9 baseline **approved** under GOV-013 as **HD-16** ([#23](https://github.com/tomerYannay/4UR4/issues/23)). This ticket adds no scope to it; the roadmap is not edited by this change |
+  | 2 | States user/business value and a success measure | **MET** | **Value:** Phase 2 stops the engine at the §13.1 predicate and calls the stop a *stop*; this ticket turns it into a transition and adds the four post-breakout behaviours — i.e. it is what makes the product *fire and then follow* rather than only draw. **Success measure:** the derived Phase-3 exit gate, plus the sweep comparison that raises asserted Phase-3 outcomes from **7** to **10** at the committed corpus. Both are counted from artifacts, not asserted |
+  | 3 | Explicit, testable acceptance criteria | **MET** | Seven criteria above, each either mechanically checked or stated by **deferral to a derived source** rather than by a restated list — the [#19](https://github.com/tomerYannay/4UR4/issues/19) remedy. E2-AUTHOR-A carries its own anti-vacuity assertion |
+  | 4 | Bounded — completable and verifiable in one flow | **MET, with the reservation stated and now heavier** | The Architect's plan bounds the delta at **one new module (`engine/frozen.py`, ~120 lines) plus edits to twelve existing files** — counted from the plan's own delta table ([`../../docs/architecture/phase3-implementation-plan.md`](../../docs/architecture/phase3-implementation-plan.md) §0), whose **ten** `edit` rows name **twelve** files because one row carries three test modules. *(This cell previously read **"plus edits to five existing ones"** — not the plan's number, and understated the very quantity this element assesses. Corrected 2026-07-28; found by Code Review.)* It is still **one verifiable outcome** — the Phase-3 exit gate — and splitting it would split that gate, which is the thing GOV-008 rule 4 exists to keep whole. **The reservation, restated against the true number:** five behaviours across thirteen files is the largest unit this file has ever called bounded, and if the flow does not complete in one pass the Steward splits it rather than letting it expand |
+  | 5 | Uses defined glossary terms; new terms added | **MET** | Checked term by term against [`../glossary.md`](../glossary.md): *Confirmed breakout*, *Breakout bar / confirmed bar*, *Failed breakout*, *Retest hold*, *Line expiry / reset*, *Line state machine*, *Frozen event line (`Λ^F`)*, *As-of-time (rolling causal) evaluation*, *Available prefix (`S_t`)*, *Active line at bar `t`*. **All present. No new term is introduced by this ticket**, so none needs adding |
+  | 6 | Names required evidence for Done (GOV-006) | **MET** | The evidence plan above names the full-corpus conformance run compared in both directions, the sweep `final_state` comparison at every recorded scale, determinism and no-look-ahead runs, a reason-code report counted **by emission rather than by grepping source**, CI green, and both gate verdicts |
+  | 7 | **No unaddressed dependency or open scope question** | **UNMET — this is the whole verdict** | Two independent failures, either one sufficient. **(a) Four open specification escalations** — **ESC-1** (§11 draws expiry as two edges, GX-07 records one), **ESC-3** (the §15/§16 window right edges are evidenced by no fixture), **ESC-4** (is `FAILED_BREAKOUT` terminal against a new ATH), **ESC-5** (§16 requires `low`, §18 does not guard it) — plus **OQ-P3-1…OQ-P3-8**, six of them owned by the Product Steward. Each decides behaviour the implementer would otherwise choose alone, which is the one disposition **HD-15 condition 3** forbids. **(b) The roadmap's own Phase 3 entry criterion — "Phase 2 exit met" — is undetermined**, and E2-AUTHOR criteria 2 and 5 are why |
+  | 8 | Respects the build-freeze (GOV-015) | **MET — newly, and this is the element HD-24 §3 changed** | `blocked: freeze` is removed **because [HD-24](../human-decisions.md) §3 lifts GOV-015 for Phase 3 inside `engine/`**, and for no other reason. The freeze marker's `scope` stays `["engine/"]` because the directory is unchanged; the phase distinction lives in `build-freeze.md`'s prose and **not** in the machine check |
+
+  **What must happen before this ticket can become Ready** — stated so the path is closable
+  rather than indefinite: **(i)** the Product Steward rules **ESC-1, ESC-3, ESC-4 and ESC-5**,
+  escalating ESC-1 to the Product Owner if the chosen close is a behaviour change, and gives
+  the Steward-owned **OQ-P3** rows normative dispositions instead of provisional ones —
+  **as a separate governed change; HD-15 condition 3 forbids amending the specification in the
+  same change as the engine**; and **(ii)** the Product Steward makes the **Phase 2 exit
+  determination** under GOV-002, on a gate assessment. Neither is done here, and neither is
+  the kind of thing that should be done quickly to unblock something.
+
+  **Superseded note, retained verbatim.** *"**NOT Ready. `blocked: freeze`, and deliberately
+  so.** [GOV-015](../../governance/build-freeze.md) **rule 4** requires a lift to be
+  per-scope, tied to a specific approved, Ready ticket — never a blanket 'autonomy on'. **No
+  Phase-3 lift exists**; the freeze marker's `scope` is `["engine/"]` granted for **Phase 2**
   (HD-22 enumerates what is authorized inside `engine/` and the Phase-3 behaviours are not
   among them). This ticket exists so that a Phase-3 lift **has a specific ticket to attach
   to** rather than being granted as a directory-wide blank cheque — that is **Part A of
-  [#36](https://github.com/tomerYannay/4UR4/issues/36)**. It also does not yet meet GOV-004
-  on its own terms: four open escalations are unaddressed scope questions.
+  [#36](https://github.com/tomerYannay/4UR4/issues/36)**. It also does not yet meet GOV-004 on
+  its own terms: four open escalations are unaddressed scope questions."* **The first half is
+  superseded by HD-24 §3; the last sentence is not, and it is the reason this ticket is still
+  not Ready. #36 Part A is answered — the lift was granted.**
 
 ## Ticket (h) — Phase-2 engine hardening: close the measured vacuous-test gap  ·  **Ready**
 
@@ -548,10 +663,16 @@ select one, commit spend, or accept licensing terms.
 
 ---
 
-*The build-freeze ([GOV-015](../../governance/build-freeze.md)) **remains ON**, with exactly
-one scope lifted — `engine/`, for Phase 2 (HD-22). Implementation tickets **(e)** and **(g)**
-do not become Ready-to-start until a human lifts the freeze for their own scope, per-scope and
-tied to a specific approved Ready ticket (rule 4). **(f)** is not freeze-blocked and is not
-Ready either: its Phase-2 entry criteria are open, and the deviation recorded under it — the
-engine was built before the ticket reached Ready — stands unresolved and has **not** been
-backdated away. **(h)** is Ready inside the existing lift and asks for no new scope.*
+*The build-freeze ([GOV-015](../../governance/build-freeze.md)) **remains ON**, with **two**
+scopes lifted, both inside `engine/` — **Phase 2** (HD-22, 2026-07-26) and **Phase 3**
+([HD-24](../human-decisions.md) §3, 2026-07-28). The marker's `scope` is `["engine/"]` for
+both, because the directory is the same one; **the validator cannot tell the two apart**, and
+`build-freeze.md` says so rather than leaving it to be discovered. Implementation ticket
+**(e)** stays `blocked: freeze` — no lift covers ingestion. **(g)** is **no longer
+freeze-blocked and is still NOT Ready**: DoR element 7 is unmet while ESC-1/3/4/5 are open and
+the Phase-2 exit determination is owed, so **rule 4 is still unsatisfied and Phase-3
+implementation does not begin**. **(f)** is not freeze-blocked and is not Ready either: its
+Phase-2 entry criteria are open, and the deviation recorded under it — the engine was built
+before the ticket reached Ready — stands unresolved and has **not** been backdated away.
+**(h)** is Ready inside the Phase-2 lift and asks for no new scope. **Neither (f) nor (g) has
+been made Ready to make an external record read true.***

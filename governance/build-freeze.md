@@ -126,6 +126,97 @@ fixture that was always right.
 
 **This lift does not touch HD-06.** No provider is selected and no spend is authorized.
 
+## Scoped lift — Phase 3 `engine/` only (Product Owner, 2026-07-28, [#39](https://github.com/tomerYannay/4UR4/issues/39) §3)
+
+**The freeze remains ON.** A **second** scope is lifted, alongside — not replacing — the
+Phase-2 lift above. Enumerated for the same reason: a scope stated only in prose is an
+intention, not a scope.
+
+**Authorized inside `engine/`, quoting §3's grant:** the **`ACTIVE → BROKEN_OUT` transition**
+· **line freezing** (`Λ^F`, §21.5) · **retest** (§16) · **failed breakout** (§15) ·
+**expiry and recompute** (§17). Read with the roadmap's behavioural **Phase 2 / Phase 3
+boundary rule**: Phase 3 owns the transition itself and everything downstream of it on the
+frozen line.
+
+**NOT authorized, and still frozen, quoting §3's list:** provider integration · live
+ingestion · `api` · `db` · `scanner` · `worker` · `dashboard` · `alerts` · `billing` ·
+`providers` · SaaS surfaces · spend · licensing · privacy/billing · external deployment.
+
+**E2-AUTHOR continues to bind the whole engine.** The Phase-2 conditions are not spent by the
+phase changing: **E2-AUTHOR-A** — the committed `engine/`, *including every module a Phase-3
+ticket adds*, must not import, copy, execute or mechanically translate
+`tools/fixture-replay.mjs` or any successor model under `tools/` — is the property assessed at
+the gate, and **agreement with the reference model earns no credit** (HD-15 condition 1). The
+**fixture-immutability** condition carries over unchanged: no fixture, `expected.json`,
+`annotation.json` or parameter may be edited to make the engine pass, and a disagreement is
+**escalated, never reconciled**.
+
+**Rule 4 is NOT satisfied by this lift, and that is stated here rather than left to be
+discovered.** §3 attaches the lift to **ticket (g)** in
+[`../product/planning/ticket-set.md`](../product/planning/ticket-set.md) and asserts that this
+*"satisfi[es] GOV-015 rule 4"*. **It did not, at the head the assertion was made against:**
+(g) was `blocked: freeze`, expressly **not Ready**, with no live issue. It satisfied
+*specific*; it failed *approved* and *Ready*. The Product Owner's authority to lift is not in
+question — a Product Owner decision outranks this file — but §3 did not **waive** rule 4, it
+**asserted** it. **(g)'s `blocked: freeze` is removed by this lift**, and its Definition of
+Ready was re-assessed forward and dated, **not backdated**; on that assessment it is **still
+not Ready**, because four open specification escalations (ESC-1, ESC-3, ESC-4, ESC-5) are
+unaddressed scope questions and the Phase-2 exit determination is owed. **Until (g) is Ready,
+rule 4 remains unsatisfied and Phase-3 implementation does not begin.** See
+[`../product/human-decisions.md`](../product/human-decisions.md) HD-24 §3.
+
+**The marker's `scope` is UNCHANGED, and the reason is a limit rather than a reassurance.**
+Phase 3 work is inside `engine/`, the directory the Phase-2 lift already names, so
+`scope: ["engine/"]` is correct and **must not change**: the marker is a list of directory
+names checked against the validator's guarded list, and this lift widens **authorized
+behaviour within** a directory, not the directory list. The consequence must be stated:
+**`tools/validate.mjs` CANNOT DISTINGUISH Phase-2 work from Phase-3 work inside `engine/`.**
+It never could — the Phase-2 lift was equally prose over a directory-name check — and it
+could not have distinguished them before this lift either. **The prose grants Phase 3; the
+machine check is blind to the difference.** That gap is named here on exactly the footing this
+file already uses for its other unguarded gaps: *the prose forbids it, the validator does
+not*. Anyone relying on CI to catch Phase-3 behaviour committed under a Phase-2-only
+authorization will not be caught by CI.
+
+**HD-24's closing directive asked for a widened `scope`, and that half of it was DECLINED.**
+Quoted so the departure is legible rather than invisible:
+
+> "To be recorded in `product/human-decisions.md` as **HD-24**, and in
+> `governance/build-freeze.md`'s machine-readable marker as **a widened `scope`**."
+
+The record was filed as HD-24. **The marker's `scope` was not widened**, for the reason the
+section above already states: `scope` is a **list of directory names**, `engine/` is **already
+in it**, and this lift widens authorized *behaviour inside* that directory. **No widening
+available in this field expresses this grant** — adding a name could only un-guard a *different*
+directory, and there are **18** such candidates (the 19 guarded names above, minus `engine`).
+They split in two, and **both halves point the same way**:
+
+- **Eight are on §3's own still-frozen list** — `api`, `db`, `scanner`, `worker`, `dashboard`,
+  `alerts`, `billing`, `providers`. Adding any of them would un-guard a directory §3 expressly
+  froze: **the literal opposite of what §3 ruled.**
+- **Ten appear on no list at all** — `src`, `lib`, `app`, `server`, `client`, `packages`,
+  `services`, `web`, `backend`, `frontend`. §3 neither authorized nor froze them. Adding any of
+  them would un-guard a directory **no decision addresses**, which is not what §3 ruled either.
+
+*Corrected 2026-07-28, and the correction matters more than the sentence.* This passage first
+read *"every candidate (`api`, `db`, … `providers`) is on §3's own still-frozen list"* — **false
+for ten of the eighteen**, measured. That is the **same conflation of the guarded list with §3's
+NOT-authorized list** that [`../tools/validate.mjs`](../tools/validate.mjs)'s own INVARIANT
+comment exists to record: *"685b65a's prose said the list 'was extended to cover the surfaces the
+NOT-authorized list above names' while `alerts`, `billing` and provider integration were named as
+forbidden and left unguarded."* The two lists are **not** the same list and never were. It
+recurred here in the one sentence carrying the entire evidentiary weight of an agent declining a
+Product Owner instruction — which is exactly where an over-claim must not sit. Found by Code
+Review. **A Product Owner instruction declined on
+engineering grounds is written down, not absorbed:** see
+[`../product/human-decisions.md`](../product/human-decisions.md) HD-24, *"HD-24's closing
+recording directive."* **Reversible by the Product Owner alone** — if a *directory* was
+intended, name it, and it is added here **and** to `PRODUCT_CODE_DIRS` together, per the
+pairing rule above. **No agent may widen `scope` on its own reading of that directive.**
+
+**This lift does not touch HD-06.** No provider is selected and no spend is authorized. It
+does not widen the lift beyond `engine/`, and it changes no roadmap phase order.
+
 <!-- DO NOT RENAME the heading below, relabel its fence, or insert anything between them:
      tools/validate.mjs parses the `## Freeze marker` heading plus the ```yaml fence
      immediately following it, and errors if it cannot find EXACTLY ONE such block.
@@ -136,8 +227,12 @@ fixture that was always right.
 ```yaml
 build_freeze: ON
 autonomous_implementation: ENABLED_FOR_SCOPE
-lifted_by: "Product Owner — issue #31, 2026-07-26"
-lifted_at: "2026-07-26"
+lifted_by: "Product Owner — issue #31 (HD-22, Phase 2), 2026-07-26; extended by issue #39 (HD-24 §3, Phase 3), 2026-07-28"
+lifted_at: "2026-07-28"
+# `scope` is a list of DIRECTORY names, matched against the validator's guarded list.
+# It is UNCHANGED because the directory is unchanged: both lifts are inside `engine/`.
+# The validator therefore cannot tell Phase-2 work from Phase-3 work here — see the
+# Phase 3 section above, which states that gap rather than leaving it to be discovered.
 scope: ["engine/"]
 ```
 
@@ -147,6 +242,12 @@ is **not** named in `scope`. `engine/` is guarded like every other product direc
 permitted **only** because the marker above names it — delete the `scope` entry and the
 validator fails on `engine/` immediately. That is what makes the lift's boundary mechanical
 rather than declaratory. The Auditor cross-checks merges against freeze scope.
+
+**What the marker does NOT reach.** `scope` names **directories**, so it draws the boundary
+*between* directories and never *inside* one. Two lifts now sit inside `engine/` — Phase 2
+(HD-22) and Phase 3 (HD-24 §3) — and **the validator cannot tell their work apart.** The
+boundary between them is the roadmap's behavioural Phase 2 / Phase 3 rule, enforced by review
+and by the Auditor, **not by CI**. Stated so it is not rediscovered as a surprise.
 
 ## Escalation
 Any product code committed under freeze → validator/CI failure + Auditor violation

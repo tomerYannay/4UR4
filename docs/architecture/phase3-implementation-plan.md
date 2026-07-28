@@ -1,12 +1,36 @@
 # Phase 3 — Breakout, freeze, retest, failure, expiry: implementation plan
 
 > **Authority:** Technical design (Architect). This document plans work; it builds
-> nothing and authorizes nothing. It is scoped to `engine/` only, per the
-> [GOV-015](../../governance/build-freeze.md) scoped lift (`scope: ["engine/"]`).
+> nothing and authorizes nothing. It is scoped to `engine/` only.
 > No new top-level directory, no new executable tool, nothing under `api/`, `db/`,
 > `scanner/`, `worker/`, `dashboard/`, `alerts/`, `providers/`.
 >
-> **E2-AUTHOR-B clean-room, declared on the artifact.** This plan was derived from
+> **Which lift applies — corrected, and dated (M-52).** As first written, this
+> block cited the [GOV-015](../../governance/build-freeze.md) lift as
+> `scope: ["engine/"]` **with no phase qualifier**, which reads as a
+> directory-scoped lift. The lift it named is narrower: `build-freeze.md` heads it
+> **"Scoped lift — Phase 2 `engine/` only"** and **HD-22** rules it for *"Phase 2
+> work under `engine/` and nothing else"*. A Phase-3 implementer reading the
+> uncorrected line would have concluded they were already lifted; they were not.
+> **The position as of this correction:** a **Phase 3** lift now exists —
+> **HD-24 §3**, Product Owner, 2026-07-28,
+> [#39](https://github.com/tomerYannay/4UR4/issues/39) — granting the
+> `ACTIVE → BROKEN_OUT` transition, `Λ^F` freezing (§21.5), retest (§16), failed
+> breakout (§15) and expiry/recompute (§17) inside `engine/`. The freeze marker's
+> `scope` is still `["engine/"]` **because the directory did not change**, so the
+> machine check does not distinguish the two lifts; the prose in `build-freeze.md`
+> does. **The lift is not by itself permission to start:** GOV-015 rule 4 ties a
+> lift to a specific approved, **Ready** ticket, and ticket (g) is **not Ready** —
+> see [`../../product/planning/ticket-set.md`](../../product/planning/ticket-set.md).
+>
+> **E2-AUTHOR-B declared read-abstention, declared on the artifact (M-53).** *Not a
+> clean room, and the earlier heading's word "clean-room" is withdrawn rather than
+> reinterpreted.* **P1 was not used** — the attestation records **"P1 WAS NOT
+> USED"** and that *"the model was present on disk throughout"* — so no separate
+> repository excluded the quarantined blobs from the object store. What follows is
+> a **read-abstention self-report**, which is the mechanism document's own category
+> under ***"Instruction is not a control."*** It is worth having and it is not a
+> control. This plan was derived from
 > `product/trendline-specification.md`, `product/roadmap.md`,
 > `product/human-decisions.md`, `product/fixtures/schema/fixture.schema.json`, the
 > committed golden `input.csv` / `expected.json` files, and the committed
