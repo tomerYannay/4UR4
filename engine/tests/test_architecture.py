@@ -12,6 +12,9 @@ A-3  nothing under ``engine/`` references, imports or executes any sibling
      tree is excluded without this file naming it
 A-4  ``ReasonCode`` and ``LineState`` are exactly the committed schema's closed sets
 A-5  the conformance harness derives its fixture list from the directory
+A-6  ``envelope.py`` writes the §8 domination range **once** and never spells the
+     pierce comparison itself — they had three and two copies, and a duplicated
+     rule is how the near end of that range came to be untested at all
 ===  =======================================================================
 """
 
@@ -310,6 +313,76 @@ class A5DerivedGate(unittest.TestCase):
             if name.startswith("test_gx_")
         }
         self.assertEqual(generated, set(golden_fixture_ids()))
+
+
+class A6OneStatementOfEachEnvelopeRule(unittest.TestCase):
+    """The §8 rules that live in ``envelope.py`` are each written down ONCE.
+
+    Not style.  The domination range was written three times, and the near end of
+    it was pinned by nothing: moved to ``range(tA, …)`` it failed 0 of 136 tests at
+    all three sites.  The pierce comparison was written twice, in a module whose
+    ``logspace`` dependency claims to be its only site.  Both are checked here as
+    static facts, because a fourth copy would be added by someone who never reads
+    the test that would have caught the third.
+    """
+
+    def _envelope(self) -> ast.Module:
+        return _parse(os.path.join(ENGINE_DIR, "envelope.py"))
+
+    @staticmethod
+    def _calls_to(tree: ast.AST, name: str) -> List[ast.Call]:
+        return [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == name
+        ]
+
+    def test_the_domination_range_is_built_in_exactly_one_place(self) -> None:
+        tree = self._envelope()
+        definition = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name == "domination_set"
+        ]
+        self.assertEqual(len(definition), 1, "envelope.domination_set is gone or doubled")
+
+        everywhere = {id(call) for call in self._calls_to(tree, "range")}
+        inside = {id(call) for call in self._calls_to(definition[0], "range")}
+        self.assertEqual(len(inside), 1, "domination_set no longer builds the range itself")
+        self.assertEqual(
+            everywhere,
+            inside,
+            "envelope.py builds %d ranges but only %d inside domination_set — the §8 "
+            "domination set has more than one definition again, and the copies are "
+            "what nothing pins" % (len(everywhere), len(inside)),
+        )
+
+    def test_no_comparison_in_envelope_evaluates_the_line_itself(self) -> None:
+        """Every pierce test must go through ``logspace.exceeds``.
+
+        Detected structurally: a comparison whose operands call ``y_hat`` is the
+        module spelling the pinned form ``lhs > y_hat + tol`` for itself, which is
+        exactly the second-spelling hazard.  ``_worst_gap``'s ``gap > worst`` is a
+        comparison of two gaps, not of a high against a line, so it does not
+        evaluate ``y_hat`` inside the comparison and is untouched by this rule.
+        """
+        offenders = []
+        for node in ast.walk(self._envelope()):
+            if isinstance(node, ast.Compare) and self._calls_to(node, "y_hat"):
+                offenders.append(getattr(node, "lineno", -1))
+        self.assertEqual(
+            offenders,
+            [],
+            "envelope.py compares against y_hat(...) directly at line(s) %r; §9's "
+            "pierce test has one pinned spelling and it is logspace.exceeds()"
+            % (offenders,),
+        )
+        self.assertTrue(
+            self._calls_to(self._envelope(), "exceeds"),
+            "envelope.py no longer calls exceeds at all; the check above is vacuous",
+        )
 
 
 class ScopeDiscipline(unittest.TestCase):

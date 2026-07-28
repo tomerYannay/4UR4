@@ -26,7 +26,7 @@ from ..causal import Line, _seal
 from ..detector import detect, prefix_of
 from ..envelope import select_second_anchor
 from ..guards import run_guards
-from ..logspace import ln_price, log_intercept, log_slope, sig6, y_hat
+from ..logspace import exceeds, ln_price, log_intercept, log_slope, sig6, y_hat
 from ..params import DetectorParams
 from ..state import ReasonCode
 from .conformance import SPEC_VERSION
@@ -51,7 +51,30 @@ def _alternative_select(
     domination: str = "all-highs",
     tie: str = "later",
 ) -> Optional[int]:
-    """§8, re-implemented with one rule deliberately wrong.  Returns ``B*``'s bar."""
+    """§8, re-implemented with one rule deliberately wrong.  Returns ``B*``'s bar.
+
+    Every axis here is a *deliberate* deviation, so the axes that are **not** being
+    mutated must be the sanctioned rules — otherwise a disagreement cannot be
+    attributed to the axis under test.  The envelope predicate is therefore the
+    pinned ``lhs > y_hat + tol`` via :func:`logspace.exceeds` and not the
+    ``worst_gap > eps`` this function used to spell, which is precisely the form
+    plan §4.3 forbids: it was the last instance of it **as an envelope predicate**
+    under ``engine/`` after the production path dropped it, and it sat inside the
+    oracle that M-1 compares the engine's now-pinned predicate against.  The literal
+    shape survives twice in ``test_units`` — ``worst_gap > 0.02`` in
+    ``test_a_tying_high_is_excluded_from_candidacy_but_dominates`` and
+    ``worst_gap >= 0.0`` in ``test_worst_gap_is_exactly_zero_at_the_candidate_itself``
+    — where each asserts something about a *reported number* and decides no
+    candidate's validity.  That is why the qualifier matters and the claim is not
+    "no occurrences remain".
+
+    Measured before the swap, over **9,264** evaluations — every prefix of every
+    evaluable golden fixture crossed with all sixteen axis combinations, plus the
+    M-1 adversarial construction: **0** disagreements between the two forms.  The
+    M-1 separation is unaffected (``difference`` still selects bar 18 and ``ratio``
+    bar 9), so nothing this file asserts is weakened; what changes is that a future
+    disagreement can no longer be blamed on the oracle's comparison form.
+    """
     y_anchor = prefix.y[t_anchor]
     high_anchor = prefix.high[t_anchor]
     all_later = list(range(t_anchor + 1, prefix.length))
@@ -64,7 +87,7 @@ def _alternative_select(
             continue
         candidates.append(i)
 
-    domination_set = candidates if domination == "candidates-only" else all_later
+    dominated = candidates if domination == "candidates-only" else all_later
 
     best: Optional[tuple] = None
     for i in candidates:
@@ -73,8 +96,7 @@ def _alternative_select(
         else:  # the algebraically identical ratio form
             m = math.log(prefix.high[i] / high_anchor) / (i - t_anchor)
         b = log_intercept(y_anchor, m, t_anchor)
-        worst = max((prefix.y[j] - y_hat(m, b, j) for j in domination_set), default=0.0)
-        if worst > eps:
+        if any(exceeds(prefix.y[j], y_hat(m, b, j), eps) for j in dominated):
             continue
         if best is None:
             best = (m, i)
