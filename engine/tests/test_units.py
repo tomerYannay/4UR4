@@ -210,8 +210,17 @@ class EnvelopeSelection(unittest.TestCase):
             self.assertGreater(candidate.worst_gap, 0.02)
 
     def test_worst_gap_is_exactly_zero_at_the_candidate_itself(self) -> None:
-        """M-15: a clamped or mis-scoped worst_gap.  The value is exactly 0 at
-        ``j == i`` and is never negative."""
+        """M-15: a clamped or mis-scoped worst_gap.
+
+        Scoped to what was measured, and not to an invariant.  Over GX-01's 8-bar
+        prefix at the §4 anchor the ``j == i`` residual is exactly ``0`` for all
+        seven candidates, so every ``worst_gap`` here is ``>= 0`` and the selected
+        one is exactly ``0``.  Non-negativity is **not** general: see
+        :attr:`envelope.Candidate.worst_gap`, which records ``-2^-50`` and
+        ``-2^-51`` at 47 candidates once ``tA`` is swept off the §4 anchor.  The
+        ``>= 0`` below is therefore a statement about this case and nothing wider —
+        it is the M-15 clamp check, not the withdrawn invariant.
+        """
         _expected, series, params = _golden("GX-01")
         prefix = prefix_of(series, 8)
         selection = select_second_anchor(prefix, 0, params.eps)
@@ -300,11 +309,17 @@ class EnvelopeDominationRange(unittest.TestCase):
     pin this endpoint in either direction, and the tests that ran over it passed
     vacuously on that dimension.
 
-    The endpoint asserted here is **derived from the specification**, not from the
-    engine — the derivation is written out in :func:`envelope.domination_set` and
-    turns on §8 algorithm step 3's ``tA < t_i`` (strict, in both halves of its
+    The two **endpoints** asserted here are derived from the specification, not from
+    the engine — the derivation is written out in :func:`envelope.domination_set`
+    and turns on §8 algorithm step 3's ``tA < t_i`` (strict, in both halves of its
     union), §1/Notation's integer ordinals, and §21.1's ``S_t = bars 0 … t−1``.
     Pinning whatever the code happened to do would reproduce the vacuity.
+
+    The set *between* those endpoints is a **superset** of §8 step 3's union, because
+    it retains ``tB``, which step 3 omits; that retention rests on D-TL-05 rather
+    than on step 3, and :func:`envelope.domination_set` records the tension instead
+    of claiming the specification settles it.  This class pins the engine's set —
+    endpoints and superset alike — so that neither can move unobserved.
     """
 
     EPS = 0.02
@@ -318,8 +333,13 @@ class EnvelopeDominationRange(unittest.TestCase):
     #: pass a ``tA = 0`` construction by coincidence.
     HIGHS = [90.0, 100.0, 100.0, 90.0, 80.0, 75.0, 70.0, 65.0]
     T_ANCHOR = 1
-    #: The set §8 requires over ``HIGHS``, written out rather than computed, so
-    #: this test cannot agree with the code by construction.
+    #: The set the engine dominates over ``HIGHS``, written out rather than
+    #: computed, so this test cannot agree with the code by construction.  It is a
+    #: **superset** of §8 step 3's union, not equal to it: step 3 quantifies over
+    #: ``tA < t_i < tB`` AND ``t_i > tB``, and so omits ``tB`` itself, which this
+    #: set contains for every candidate.  Why the superset is kept, why it is not
+    #: inert at ``ε = 0``, and what remains unresolved about the two endpoints are
+    #: all written out in :func:`envelope.domination_set`.
     EXPECTED_DOMINATION = (2, 3, 4, 5, 6, 7)
 
     def _prefix(self) -> Prefix:
@@ -433,8 +453,11 @@ class EnvelopeDominationRange(unittest.TestCase):
         self.assertEqual(
             tuple(consulted),
             self.EXPECTED_DOMINATION,
-            "the domination loop consulted %r; §8 step 3 quantifies over exactly "
-            "the bar highs with tA < t_i <= length-1" % (consulted,),
+            "the domination loop consulted %r; the set is the bar highs with "
+            "tA < t_i <= length-1 -- the SUPERSET of §8 step 3's union (which "
+            "quantifies over tA < t_i < tB and t_i > tB, omitting tB) plus tB "
+            "itself.  See envelope.domination_set for why the superset is kept."
+            % (consulted,),
         )
         self.assertEqual(count, 1)
         self.assertNotIn(self.T_ANCHOR, consulted, "the anchor bar was consulted")

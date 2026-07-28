@@ -58,9 +58,15 @@ def _alternative_select(
     attributed to the axis under test.  The envelope predicate is therefore the
     pinned ``lhs > y_hat + tol`` via :func:`logspace.exceeds` and not the
     ``worst_gap > eps`` this function used to spell, which is precisely the form
-    plan §4.3 forbids: it was the last instance of it under ``engine/`` after the
-    production path dropped it, and it sat inside the oracle that M-1 compares the
-    engine's now-pinned predicate against.
+    plan §4.3 forbids: it was the last instance of it **as an envelope predicate**
+    under ``engine/`` after the production path dropped it, and it sat inside the
+    oracle that M-1 compares the engine's now-pinned predicate against.  The literal
+    shape survives twice in ``test_units`` — ``worst_gap > 0.02`` in
+    ``test_a_tying_high_is_excluded_from_candidacy_but_dominates`` and
+    ``worst_gap >= 0.0`` in ``test_worst_gap_is_exactly_zero_at_the_candidate_itself``
+    — where each asserts something about a *reported number* and decides no
+    candidate's validity.  That is why the qualifier matters and the claim is not
+    "no occurrences remain".
 
     Measured before the swap, over **9,264** evaluations — every prefix of every
     evaluable golden fixture crossed with all sixteen axis combinations, plus the
