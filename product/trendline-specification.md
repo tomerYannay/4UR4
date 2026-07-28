@@ -518,6 +518,8 @@ ACTIVE ──(structural pierce, no breakout)──▶ ACTIVE with a re-selected
         (§10 note, §21.6; → NONE only if §10.3 or §10.4 applies)
 BROKEN_OUT ──(price returns & holds §16)──▶ RETESTED
 BROKEN_OUT ──(price closes back below line − ε §15)──▶ FAILED_BREAKOUT
+BROKEN_OUT / RETESTED ──(new ATH, §10.3 / §17 trigger 1)──▶ NONE (recompute; §21.7),
+        recorded as RESET_NEW_ATH
 BROKEN_OUT / RETESTED ──(t − breakout_bar ≥ E_expiry §17)──▶ NONE (recompute), recorded as
         ONE transition with reason EXPIRED_POST_BREAKOUT (ESC-1, ruled 2026-07-28)
 FAILED_BREAKOUT ──(new ATH, §10.3 / §17 trigger 1)──▶ NONE (recompute; §21.7) — HD-25
@@ -527,6 +529,14 @@ FAILED_BREAKOUT ──(t − breakout_bar ≥ E_expiry §17)──▶ NONE (reco
 
 State transitions are deterministic functions of the bar stream; each emits a
 reason code.
+
+> **Edge-list completeness (added 2026-07-28).** The `BROKEN_OUT`/`RETESTED` new-ATH reset
+> edge above was **drawn only in §21.5 and §21.7 and omitted from this diagram**. Because
+> [§21.6 rule 3](#216) requires an emitted transition sequence to be a **valid walk of §11**,
+> a conforming `BROKEN_OUT → NONE / RESET_NEW_ATH` would have traversed an edge this section
+> did not draw. Unexercised by the corpus — GX-06 and GX-22 both reset from `ACTIVE` — but it
+> is the ESC-1 defect class (a diagram disagreeing with the prose that governs it), and it is
+> load-bearing for Phase 3, which emits that transition. Found by Code Review on PR #42.
 
 > **As-of-time reading (§21, HD-12).** Every transition out of `ACTIVE` is decided
 > by comparing bar `t` against `Λ_t` — the line built from `S_t` only. Every
@@ -824,7 +834,7 @@ A retest is a positive confidence contributor.
 > |---|---|---|
 > | **ESC-3** | The window edges | Return: `breakout_bar < r ≤ breakout_bar + W_retest`. Hold: `r ≤ u ≤ r + h_hold`, so the return bar itself is a valid hold bar — which is what every corpus retest in fact records. Left edge open, right edges **inclusive** |
 > | **OQ-P3-1** | Is `ŷ` evaluated at the return bar or the hold bar? | At the **hold bar's own index** — `ŷ_F(u)`, not `ŷ_F(r)` — because §21.2 step 2 evaluates each bar against the line as it stands **at that bar**. Reading it at `r` would judge bar `u` by another bar's geometry, which §21 exists to forbid |
-> | **OQ-P3-2** | Is `RETEST_HELD` recorded at the return bar or the hold bar? | At the **hold bar `u`** — that is where the state changes, and §21.6 rule 1 attributes a record to the bar where its effect lands. The return leg on its own emits **no** transition record |
+> | **OQ-P3-2** | Is `RETEST_HELD` recorded at the return bar or the hold bar? | At the **hold bar `u`** — that is where the state changes, and **§21.8 rule 1 FORCES it**: recording at the return bar `r` would require a later bar `u > r` to establish `r`'s classification, which §21.8 rule 1 prohibits. (An earlier form cited §21.6 rule 1, whose bar-attribution text is scoped to *re-selection* records; the ruling is right, the citation was not. Found by Code Review on PR #42.) The return leg on its own emits **no** transition record |
 > | **OQ-P3-3** | A second `RETEST_HELD` while `RETESTED`? A fresh return leg after a failed hold? | **No** second `RETEST_HELD`: §11 has no `RETESTED → RETESTED` edge, and `RETESTED` is reached once per episode. **Yes** to a fresh return leg: any bar still inside the return window may open a new hold window after a hold window lapses without a qualifying close |
 >
 > **Why these are ruled rather than left provisional:** each decides behaviour an implementer
