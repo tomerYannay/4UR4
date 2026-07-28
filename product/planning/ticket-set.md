@@ -362,11 +362,15 @@ select one, commit spend, or accept licensing terms.
   post-breakout behaviours the roadmap's **behavioural Phase 2 / Phase 3 boundary rule**
   assigns to it. The Architect has produced a full implementation plan for this ticket —
   **design only; it builds nothing and authorizes nothing** (GOV-015 rule 3: *the Architect
-  may design but not build*). Its intended home is
-  `docs/architecture/phase3-implementation-plan.md`. **It is NOT YET in the repository**; see
-  [`../maintenance-backlog.md`](../maintenance-backlog.md) **M-48**, which is why this
-  reference is plain text and not a link. Everything this ticket states about the plan's
-  findings is restated here, so the ticket stands on its own if the plan is lost.
+  may design but not build*). **The plan is committed:**
+  [`../../docs/architecture/phase3-implementation-plan.md`](../../docs/architecture/phase3-implementation-plan.md).
+  Its byte-exact copy and the sha256 that evidences it are recorded at
+  [`../maintenance-backlog.md`](../maintenance-backlog.md) **M-51**. *Correction, recorded
+  rather than overwritten: until the plan landed, this sentence read "**It is NOT YET in the
+  repository**" and cited **M-48** — the first half went stale when the plan was committed,
+  and the citation was wrong from the start, since M-48 is the bash-guard over-block row and
+  has nothing to do with the plan.* Everything this ticket states about the plan's findings is
+  restated here, so the ticket stands on its own if the plan is lost.
 - **Scope (in-scope):** confirmed breakout (§13.2) · line freezing `Λ^F` (§21.5) · retest
   (§16) · failed breakout (§15) · expiry and recompute (§17) · the §15/§16/§17 parameters
   as named, versioned config. **`engine/` only.**

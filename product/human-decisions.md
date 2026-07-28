@@ -1238,8 +1238,21 @@ changes that.*
   through the Orchestrator under the **single shared identity**
   [#21](https://github.com/tomerYannay/4UR4/issues/21) /
   [#34](https://github.com/tomerYannay/4UR4/issues/34) describe. **It is not dressed as a
-  ruling with an artifact link it does not have.** Every other HD in this register above HD-23
-  cites an artifact; this one cannot, and the difference is the point.
+  ruling with an artifact link it does not have.**
+- **Scope of that last claim, corrected against the file.** An earlier form of this entry said
+  *"every other HD in this register above HD-23 cites an artifact"*. **That is false, and was
+  measured false at this head:** **HD-01–HD-05 and HD-07–HD-11 — ten entries — cite no
+  artifact and do not use the word.** They predate the practice, and no blanket ratification
+  reaches them: the [#16](https://github.com/tomerYannay/4UR4/issues/16#issuecomment-5080542012)
+  ratification covers **HD-12/13/14/15 only**. The register concedes the pattern in its own
+  2026-07-25 decision log — *"this ruling reached the repository as a direct Product Owner
+  instruction; it now also carries a posted artifact"*. **What is true is narrower, and is
+  enough:** every HD from **HD-12 onward** carries a citable artifact in its own text, and
+  **HD-23 is the only one of those that does not**; where HD-12/13/14 recorded the lack as
+  *pending* and the #16 ratification then supplied it, HD-23 has no ratification in prospect,
+  because the relay ran through the single shared identity. **The disposition below does not
+  rest on the discarded wording** — it rests on the absence itself, which is why the wording
+  is corrected rather than defended.
 
 **Operative terms, as relayed.**
 
@@ -1315,8 +1328,13 @@ an artifact where #21 says none can exist. It is **not** a merge authorization
 - **2026-07-28 — HD-23 relayed, not ruled.** An autonomous-execution directive reached the
   working agents through the Orchestrator with **no citable artifact**. It is recorded above as
   **PENDING PRODUCT OWNER CONFIRMATION**, with its two over-broad readings and their
-  corrections, and with the note that no determination made that day depends on it. **This is
-  the first entry in this register that names no artifact**, which is itself the disclosure
+  corrections, and with the note that no determination made that day depends on it. **It is
+  the first entry since HD-12 — the point from which every entry carries a citable artifact —
+  to name none**, and the first anywhere in the register to carry an explicit
+  **`Artifact: NONE`** field rather than leave the gap to be counted. *(An earlier form of
+  this line said "the first entry in this register that names no artifact". The ten earliest
+  entries — HD-01–HD-05, HD-07–HD-11 — name none either; they predate the practice and no
+  ratification covers them.)* The absence is itself the disclosure
   [#21](https://github.com/tomerYannay/4UR4/issues/21) exists to fix.
 
 ---
