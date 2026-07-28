@@ -518,7 +518,11 @@ ACTIVE ──(structural pierce, no breakout)──▶ ACTIVE with a re-selected
         (§10 note, §21.6; → NONE only if §10.3 or §10.4 applies)
 BROKEN_OUT ──(price returns & holds §16)──▶ RETESTED
 BROKEN_OUT ──(price closes back below line − ε §15)──▶ FAILED_BREAKOUT
-BROKEN_OUT / RETESTED ──(~100 bars elapsed §17)──▶ EXPIRED ──▶ NONE (recompute)
+BROKEN_OUT / RETESTED ──(t − breakout_bar ≥ E_expiry §17)──▶ NONE (recompute), recorded as
+        ONE transition with reason EXPIRED_POST_BREAKOUT (ESC-1, ruled 2026-07-28)
+FAILED_BREAKOUT ──(new ATH, §10.3 / §17 trigger 1)──▶ NONE (recompute; §21.7) — HD-25
+FAILED_BREAKOUT ──(t − breakout_bar ≥ E_expiry §17)──▶ NONE (recompute), reason
+        EXPIRED_POST_BREAKOUT — HD-25
 ```
 
 State transitions are deterministic functions of the bar stream; each emits a
@@ -531,10 +535,12 @@ reason code.
 > (§21.3) the state is `NONE` with reason `INSUFFICIENT_BARS` or `ATH_TOO_RECENT`
 > (§18); while the state is `NONE` no breakout, wick-break, retest or failure event
 > can be emitted, because there is no line to test against. While the state is
-> `BROKEN_OUT` or `RETESTED`, **anchor re-selection is suspended** — the frozen line
-> `Λ^F` governs (§21.5) — so the transitions still available (`RETEST_HELD`,
+> `BROKEN_OUT`, `RETESTED` **or `FAILED_BREAKOUT`**, **anchor re-selection is suspended** —
+> the frozen line `Λ^F` governs (§21.5) — so the transitions still available (`RETEST_HELD`,
 > `FAILED_BREAKOUT`, `EXPIRED_POST_BREAKOUT`, `RESET_NEW_ATH`) are **all** evaluated
-> against `Λ^F`, never against a re-selected line.
+> against `Λ^F`, never against a re-selected line. *(`FAILED_BREAKOUT` added to the frozen
+> regime by [HD-25](human-decisions.md), 2026-07-28: it has two episode-ending exits, so it
+> is a post-breakout state like the other two and not a sink.)*
 
 > **Revised per HD-03 (Product Owner, 2026-07-24).** `ACTIVE → BROKEN_OUT` fires on
 > the **first** qualifying daily close above the line (§13), so
@@ -544,6 +550,38 @@ reason code.
 > the alert. The `WICK_BREAK` vs `BROKEN_OUT` distinction is unchanged: `WICK_BREAK`
 > is an intrabar-only pierce whose close does **not** clear the line (stays
 > `ACTIVE`), whereas `BROKEN_OUT` requires that first **close** above line + ε_break.
+
+> **ESC-1 RULED (Product Steward, 2026-07-28) — expiry is ONE record, and `EXPIRED` is a
+> reserved unreachable state.** The escalation was that §11 drew
+> `BROKEN_OUT / RETESTED ──▶ EXPIRED ──▶ NONE` — two edges through a state named `EXPIRED` —
+> while fixture **GX-07** records **one** transition, `bar 110: BROKEN_OUT → NONE /
+> EXPIRED_POST_BREAKOUT`. **Ruling: §11 is amended to draw ONE edge, labelled
+> `EXPIRED_POST_BREAKOUT`**, which is the reading GX-07 already encodes.
+> - `EXPIRED` **remains a member of the fixture schema's closed `from`/`to` enum**, because
+>   that schema is committed and a conforming engine's `LineState` set must **equal** it. It
+>   is **reserved and unreachable**: no conforming detector emits a transition into or out of
+>   it. An implementation MUST say so at the definition site rather than leave a later reader
+>   to "fix" the unreachability and break GX-07.
+> - **This is a clarification, not a behaviour change**, which is why it closes with the
+>   Product Steward rather than escalating to the Product Owner: **no committed expectation
+>   moves.** The premise is measurable and was measured — **GX-07 is the only fixture that
+>   expires**, and it already records the single-edge form.
+> - The alternative close — ruling `EXPIRED` a transient state a conforming detector must
+>   record — is **REJECTED**: it would put the specification in conflict with a committed
+>   fixture that [HD-22](human-decisions.md) forbids editing, converting a wording defect into
+>   a corpus defect.
+
+> **HD-25 RULED (Product Owner, 2026-07-28) — `FAILED_BREAKOUT` retains BOTH exits.** A new
+> ATH resets it (§10.3, §17 trigger 1, unqualified) and expiry retires it at
+> `t − breakout_bar ≥ E_expiry` with `EXPIRED_POST_BREAKOUT → NONE` and recompute (§17,
+> §21.5). `FAILED_BREAKOUT` is **episode-terminal, not name-terminal**: within its episode it
+> is final — once recorded, §15 and §16 are **not** re-evaluated for that episode
+> (fixture-forced by GX-12 at the 0.5× sweep scale) — and the two exits above **end the
+> episode** rather than reopening it. Recorded at [HD-25](human-decisions.md). It resolves the
+> §7.6-vs-§11 self-contradiction in the Phase-3 plan **in favour of §7.6**: the frozen regime
+> **does** extend to `FAILED_BREAKOUT`, so `Λ^F` governs there and anchor re-selection stays
+> suspended until the state returns to `NONE`. **Nothing moves on the corpus** — no fixture
+> has a post-failure new ATH and none has a tail reaching `E_expiry`.
 
 ---
 
@@ -709,7 +747,7 @@ decisively **below** the line:
 ```
 ln(C[t]) < ŷ_F(t) − ε_fail     # default ε_fail = 0.01
                                # ŷ_F = the FROZEN event line Λ^F (§21.5), NOT a re-selected line
-within F_fail bars of the breakout bar    # default F_fail = 10 bars
+breakout_bar < t ≤ breakout_bar + F_fail   # default F_fail = 10 bars (ESC-3, ruled 2026-07-28)
 ```
 
 > **As-of-time reading (§21, HD-12).** After `BROKEN_OUT` the geometry is **frozen**:
@@ -721,6 +759,24 @@ within F_fail bars of the breakout bar    # default F_fail = 10 bars
 Transition `BROKEN_OUT → FAILED_BREAKOUT`, reason `FAILED_BREAKOUT`. A failed
 breakout is a first-class labeled outcome (feeds later ML success labels — see
 confidence spec §labels).
+
+> **ESC-3 RULED (Product Steward, 2026-07-28) — the failure window is the half-open
+> interval `(breakout_bar, breakout_bar + F_fail]`.** §15 previously said only *"within
+> `F_fail` bars of the breakout bar"*, which bounded neither end. The **left** edge is
+> **fixture-forced open** — the breakout bar itself is never a failure bar — and the **right**
+> edge is **inclusive**. The right edge is evidenced by **no fixture and cannot be**: measured
+> across the golden corpus at 2026-07-28, the **largest** event gap `bar − breakout_bar` is
+> **4** (GX-04 `RETEST_HELD` +4, GX-05 and GX-17 `FAILED_BREAKOUT` +4, GX-19 `RETEST_HELD`
+> +1) against a window of **10**, so no committed expectation can distinguish `≤` from `<`,
+> and none moves under this ruling. It is ruled rather than left provisional because an
+> unruled boundary would be settled by whoever writes the engine, which
+> [HD-15](human-decisions.md) condition 3 forbids. Coverage is therefore owed as a
+> **constructed unit test** at both edges, not as a fixture.
+
+> **HD-25 (2026-07-28) — what `FAILED_BREAKOUT` closes and what it does not.** Once this
+> transition is recorded, §15 and §16 are **not re-evaluated for that episode**: there is no
+> second failure and no later retest of the same broken line. The episode still ends by a new
+> ATH or by expiry (§17, §21.7). See §11.
 
 > **Decision D-TL-08 — Failed-breakout window/threshold** · Default: close back
 > below line by `ε_fail = 0.01` within `F_fail = 10` bars. · Alternative: any
@@ -744,17 +800,38 @@ toward the **broken line (now acting as support)** and holds.
 
 Conditions:
 
-1. **Return:** within `W_retest` bars of the breakout bar (default `W_retest =
-   20`), a bar low approaches the line from above:
-   `ln(L[t]) ≤ ŷ(t) + ε_retest` (default `ε_retest = 0.01`) — i.e. price dips to
+1. **Return:** at a **return bar** `r` with `breakout_bar < r ≤ breakout_bar + W_retest`
+   (default `W_retest = 20`), a bar low approaches the line from above:
+   `ln(L[r]) ≤ ŷ_F(r) + ε_retest` (default `ε_retest = 0.01`) — i.e. price dips to
    the line.
-2. **Hold as support:** the **close** of that bar (or within `h_hold = 3` bars)
-   is back **at/above** the line: `ln(C) ≥ ŷ(t) − ε_retest`. Price touched and
-   held.
+2. **Hold as support:** at a **hold bar** `u` with `r ≤ u ≤ r + h_hold` (default
+   `h_hold = 3` — the return bar itself qualifies), the **close** is back **at/above** the
+   line **evaluated at `u`**: `ln(C[u]) ≥ ŷ_F(u) − ε_retest`. Price touched and held.
 3. **No structural failure** (§15) during the window.
 
-Transition `BROKEN_OUT → RETESTED`, reason `RETEST_HELD`. A retest is a positive
-confidence contributor.
+Transition `BROKEN_OUT → RETESTED`, reason `RETEST_HELD`, **recorded at the hold bar `u`**.
+A retest is a positive confidence contributor.
+
+> **ESC-3, OQ-P3-1, OQ-P3-2 and OQ-P3-3 RULED (Product Steward, 2026-07-28).** The four
+> under-determinations of the retest leg are closed together, because they are one question
+> — *which bar is `t`?* — asked four ways. All four are **unexercised by the corpus**, and
+> the measurement that establishes it is stated rather than assumed: **no `return_bar` field
+> exists in any event, corpus-wide**, so **no committed fixture separates the return leg from
+> the hold leg at all**; and the largest event gap `bar − breakout_bar` anywhere in the corpus
+> is **4**, against windows of 10 and 20.
+>
+> | ID | Question | **Ruling** |
+> |---|---|---|
+> | **ESC-3** | The window edges | Return: `breakout_bar < r ≤ breakout_bar + W_retest`. Hold: `r ≤ u ≤ r + h_hold`, so the return bar itself is a valid hold bar — which is what every corpus retest in fact records. Left edge open, right edges **inclusive** |
+> | **OQ-P3-1** | Is `ŷ` evaluated at the return bar or the hold bar? | At the **hold bar's own index** — `ŷ_F(u)`, not `ŷ_F(r)` — because §21.2 step 2 evaluates each bar against the line as it stands **at that bar**. Reading it at `r` would judge bar `u` by another bar's geometry, which §21 exists to forbid |
+> | **OQ-P3-2** | Is `RETEST_HELD` recorded at the return bar or the hold bar? | At the **hold bar `u`** — that is where the state changes, and §21.6 rule 1 attributes a record to the bar where its effect lands. The return leg on its own emits **no** transition record |
+> | **OQ-P3-3** | A second `RETEST_HELD` while `RETESTED`? A fresh return leg after a failed hold? | **No** second `RETEST_HELD`: §11 has no `RETESTED → RETESTED` edge, and `RETESTED` is reached once per episode. **Yes** to a fresh return leg: any bar still inside the return window may open a new hold window after a hold window lapses without a qualifying close |
+>
+> **Why these are ruled rather than left provisional:** each decides behaviour an implementer
+> would otherwise choose alone, which is the one disposition [HD-15](human-decisions.md)
+> condition 3 forbids. **No committed expectation moves under any of them**, so the rulings
+> are normative for future evidence, and the boundaries owe **constructed unit tests**, not
+> fixtures.
 
 > **Decision D-TL-09 — Retest window/tolerances** · Default: `W_retest = 20`
 > bars, `ε_retest = 0.01`, hold within `h_hold = 3` bars. · Alternative:
@@ -769,14 +846,23 @@ bars of t=81 ✓ → **RETEST_HELD**.
 
 ## 17. Line expiry & recalculation (~100 bars after breakout)
 
-- **Expiry trigger:** `EXPIRED` when `t − breakoutBar ≥ E_expiry`, default
+- **Expiry trigger:** the line **expires** when `t − breakoutBar ≥ E_expiry`, default
   `E_expiry = 100` bars, measured from the **frozen** `breakout_bar` (§21.5) and
   evaluated against the frozen line `Λ^F`. On expiry the line is retired (`→ NONE`)
   and the detector **recomputes** from scratch over the full **available** history
   (the prefix, §21.1) — never over bars the detector has not yet reached.
+  - **ESC-1 (ruled 2026-07-28):** expiry emits **exactly one** transition record,
+    `BROKEN_OUT | RETESTED | FAILED_BREAKOUT → NONE` with reason
+    `EXPIRED_POST_BREAKOUT`. There is **no intermediate `EXPIRED` state**; the enum member
+    of that name is reserved and unreachable (§11).
+  - **HD-25 (Product Owner, 2026-07-28):** expiry applies to **`FAILED_BREAKOUT`** on the
+    same clock and against the same frozen line, so a failed episode is retired rather than
+    held open forever.
 - **Recalculation triggers (any):**
   1. **New ATH** — a bar high exceeds the prior `HA`. Immediate reset: new anchor
-     `A`, new envelope, new line. (Old line reason `RESET_NEW_ATH`.)
+     `A`, new envelope, new line. (Old line reason `RESET_NEW_ATH`.) **This trigger is
+     unqualified by state** — it fires from `ACTIVE`, `BROKEN_OUT`, `RETESTED` **and
+     `FAILED_BREAKOUT` alike** ([HD-25](human-decisions.md), 2026-07-28; §21.7).
   2. **New bar high that changes the envelope hull** (§8) — e.g. a new lower high
      that becomes the binding `B*`. Pivot status is irrelevant to this trigger:
      **any** later bar high can re-bind the hull (§6, §8, D-TL-05). Recompute the
@@ -812,6 +898,21 @@ bars of t=81 ✓ → **RETEST_HELD**.
 > **General rule:** *no line ever takes effect on the bar that caused it to be
 > computed.*
 
+> **OQ-P3-6 RULED (Product Steward, 2026-07-28) — the post-expiry re-formation sees the WHOLE
+> grown prefix, post-breakout highs included.** After `EXPIRED_POST_BREAKOUT` returns the
+> detector to `NONE`, the new formation re-derives `B*` over `S_{t+1}` **in full**, including
+> the highs that suspension (§21.5) refused to roll while the episode was open. It is not a
+> resumption of the pre-breakout candidate set. Two committed rules force this and neither
+> admits an exception: §21.1 makes `B*_t` a **pure function of `S_t`**, and §17 above says the
+> detector *"recomputes from scratch over the full **available** history"*. Carrying a stale
+> candidate set across an episode boundary would make selection depend on history rather than
+> on the prefix, which §21.1 forbids. **Unexercised:** on GX-07 this would bind
+> `B*_{111} = (110, 95)`, but the series ends at bar 110, so no committed expectation moves.
+
+> **OQ-P3-5 RULED (Product Steward, 2026-07-28) — see §21.4.** When a series contains more
+> than one breakout episode, the **latest** episode supplies the reported `Λ^F` and
+> `confirmed_bar`. Ruled there because it is a **reporting** rule, not an expiry rule.
+
 > **Decision D-TL-10 — Expiry horizon** · Default: `E_expiry = 100` bars. ·
 > Alternative: expiry keyed to volatility/ATR or to retest completion.
 > · Materiality: med · Human-approval: no (matches thesis "~100 bars").
@@ -833,6 +934,30 @@ bars of t=81 ✓ → **RETEST_HELD**.
 | **Ties in envelope (two candidate bar highs give identical dominating slope)** | Prefer the **later** `B` (longer confirmed structure). | `ENVELOPE_TIE_LATER` |
 | **Non-positive price** | Invalid input, reject bar-set. | `INVALID_PRICE` |
 | **Flat-top plateau at a pivot** | Earliest bar of plateau is the pivot (§5 `≥` rule). | — |
+
+> **ESC-5(a) RULED (Product Steward, 2026-07-28) — §18 gains NO fourth row in this
+> amendment; a missing `low` reaching a §16 predicate is a CALLER DEFECT, not a reason
+> code.** §1 lists `low` among the required input fields, but the table above names only a
+> missing `high` or `close` as `INVALID_INPUT`, and §16's return leg reads `ln(L[r])`. The
+> disposition, ruled:
+> - A bar whose `low` is absent **must not reach** a §15/§16/§17 predicate. If it does, a
+>   conforming detector raises a **precondition/caller error** — the same class as a
+>   non-positive basis or an out-of-order series — and does **not** mint a reason code.
+> - **Why not a reason code:** the fixture schema's reason-code set is **closed**, and the
+>   detector's set must equal it. Emitting a code that is not in the closed set is a schema
+>   violation; adding one is a schema change, which is a product-definition change and not
+>   available to an implementer.
+> - **Why not a fourth guard row here:** adding an `INVALID_INPUT` row would change **which
+>   bar-sets the detector rejects outright**, i.e. product behaviour, on evidence that does
+>   not exist. Measured across the corpus at 2026-07-28: **zero `input.csv` rows have an
+>   empty `low`**, so nothing in the committed evidence exercises either reading.
+> - **ESC-5(b) — DEFERRED, and deliberately.** *Should* §18 gain a fourth row for a missing
+>   `low`? That is a genuine product-definition question about input strictness, and it is
+>   **not answerable from synthetic fixtures** — it wants real vendor data, where absent
+>   `low` values actually occur. It is therefore deferred to the Phase-1 data-layer work
+>   (HD-06 and the ingestion ticket) and is recorded as **explicitly NON-BLOCKING** for the
+>   Phase-3 ticket's Definition of Ready: the ruled disposition (a) is complete and
+>   implementable on its own, and (b) can only relax it later, never silently change it now.
 
 > **Note — the two formation guards are `k`-INDEPENDENT parameters (D-TL-12,
 > approved 2026-07-25, HD-14; resolves OQ-TL-8).** Under HD-12 these guards became
@@ -1275,6 +1400,40 @@ unchanged. ∎
 > GX-07 reports `B* = (6, 94)` while its `expected_final_state` is `NONE`, because the line
 > expired but the event it carried is still the reportable one.
 
+> **OQ-P3-4 and OQ-P3-5 RULED (Product Steward, 2026-07-28) — the reported line is the
+> LATEST episode's `Λ^F`, and it survives every way an episode can end.**
+>
+> 1. **OQ-P3-4 — survival across `RESET_NEW_ATH`.** `Λ^F` **remains the reported line** after
+>    a new ATH retires it, exactly as it remains after `EXPIRED_POST_BREAKOUT`. The rule
+>    above is *"if a confirmed breakout occurred **anywhere** in the series"*, and the reason
+>    it gives — *"it is the line the market actually broke"* — is indifferent to **how** the
+>    episode ended. A reported line that vanished on reset would make the reportable answer
+>    depend on the exit route rather than on the event. **Unexercised by the corpus.**
+> 2. **OQ-P3-5 — which episode, when there is more than one.** The **LATEST** confirmed
+>    breakout in the series supplies both the reported `Λ^F` and the single-valued
+>    `confirmed_bar`; every earlier episode still emits its own `BREAKOUT_CONFIRMED` record
+>    and event in the transition sequence, and none of them is erased. **This overturns the
+>    Phase-3 plan's provisional "the first"** and the two consequences that hung off it — see
+>    the plan's dated correction block.
+>    **Reason.** 4UR4 is a **recurring daily scanner**: asked *"what is this name's line?"* it
+>    must answer with the structure now in force, not with a line broken years ago and
+>    superseded twice. Reporting the first breakout would make the answer **monotonically
+>    stale** — a name would get less current the longer it were followed, which inverts the
+>    product. It is also the only reading consistent with §17: on expiry the detector
+>    *"recomputes from scratch"*, and a recomputation whose result can never be reported is
+>    not a recomputation. The schema's single-valued `confirmed_bar` is preserved either way,
+>    so the schema does not choose between them; the product does.
+>    **Nothing moves on the corpus** — measured 2026-07-28: **zero fixtures carry more than
+>    one `BREAKOUT_CONFIRMED`**, so no committed expectation distinguishes first from latest.
+>    **Two consequences that a `first`-reading would have licensed are therefore
+>    normatively wrong** and must not be implemented: (i) treating a series' engine-derived
+>    **stop bar** as an alias for the reported `confirmed_bar` — true only while there is
+>    exactly one episode; and (ii) asserting that truncating the series at **any** `k ≥
+>    confirmed_bar` leaves the reported frozen line field-identical — false the moment a
+>    later episode exists, since truncating before its breakout reports the earlier `Λ^F`.
+>    The truncation invariant is sound only for `k ≥` the **latest** episode's
+>    `confirmed_bar`, and must be stated that way.
+
 ### 21.5 Freeze on confirmed breakout
 
 When bar `t` produces a confirmed breakout (§13.2), the detector MUST capture the
@@ -1294,13 +1453,18 @@ Binding consequences:
 - **§15 failure**, **§16 retest** and **§17 expiry** MUST be evaluated against `Λ^F`
   (`ŷ_F(u) = m^F·u + b^F`), because that is the line the market actually broke.
 - Anchor **re-selection is suspended** from bar `t` onward for that episode: while the
-  state is `BROKEN_OUT` or `RETESTED`, §21.2 step 4 does **not** run and no later high
-  may replace `B*`.
+  state is `BROKEN_OUT`, `RETESTED` **or `FAILED_BREAKOUT`** ([HD-25](human-decisions.md)),
+  §21.2 step 4 does **not** run and no later high may replace `B*`.
 - `Λ^F` MUST be emitted with the event so that downstream evidence is reproducible
   from the event record alone (§20.5).
-- The only exits are `RESET_NEW_ATH` (§21.7) and `EXPIRED_POST_BREAKOUT` (§17); both
-  return the detector to `NONE`, after which a **new** formation is subject to §21.3
-  and takes effect no earlier than the following bar.
+- The only exits **from the episode** are `RESET_NEW_ATH` (§21.7) and
+  `EXPIRED_POST_BREAKOUT` (§17); both return the detector to `NONE`, after which a **new**
+  formation is subject to §21.3 and takes effect no earlier than the following bar. **Both
+  are available from `FAILED_BREAKOUT` as well** ([HD-25](human-decisions.md), 2026-07-28):
+  that state is episode-terminal, not name-terminal.
+- Retiring `Λ^F` ends the **episode**; it does **not** end `Λ^F`'s life as the series'
+  **reported** line, which survives both exits until a **later** episode's freeze replaces
+  it (§21.4, OQ-P3-4/OQ-P3-5).
 
 ### 21.6 Re-selection before breakout (the pre-breakout roll)
 
@@ -1359,7 +1523,16 @@ If `H[t] > HA` of the anchor `A_t` in force:
 
 - The previous structure is invalidated immediately for bar `t`'s classification, with
   `RESET_NEW_ATH` (§10.3, §17 trigger 1). This applies whether the state was `ACTIVE`,
-  `BROKEN_OUT` or `RETESTED` — a new ATH overrides a frozen line.
+  `BROKEN_OUT`, `RETESTED` **or `FAILED_BREAKOUT`** — a new ATH overrides a frozen line.
+  **Amended by [HD-25](human-decisions.md) (Product Owner, 2026-07-28):** this enumeration
+  previously named exactly `ACTIVE`, `BROKEN_OUT` and `RETESTED`, and that three-state list
+  was **not exhaustive** for the reset. `FAILED_BREAKOUT` is added. **This is the amendment
+  ESC-4 asked for**, and it is the Product Owner's, not the Steward's, because it changes
+  behaviour: under the superseded literal reading the **first failed breakout in a name's
+  history silenced that name permanently**, and §18 names secular-decline-from-IPO-peak as a
+  supported case (GX-08, GX-09) — such a name may never make another ATH. 4UR4 is a recurring
+  daily scanner; only this reading keeps it one. **Unexercised:** no fixture has a
+  post-failure new ATH, so no committed expectation moves.
 - Bar `t` MUST NOT be classified as a breakout of the retired line by virtue of the same
   high: a close above a line whose high made a new ATH is a **reset**, not a breakout.
   (Rule 5 takes precedence over §21.2 step 3.)
@@ -1448,6 +1621,71 @@ b_20 = 4.6051702
 > a developing line from updating before any breakout). · Materiality: **high**
 > (determines which events fire and when). · Human-approval: yes — **granted
 > 2026-07-25 (HD-12).**
+
+---
+
+## 22. Amendment record — 2026-07-28 (Phase-3 dispositions)
+
+**This section is the normative record of a normative change.** **Ten rulings** land together:
+**nine** by the **Product Steward** under [GOV-004](../governance/definition-of-ready.md) and
+[HD-15](human-decisions.md) condition 3 — ESC-1, ESC-3, ESC-5(a) and OQ-P3-1…OQ-P3-6 — and
+**one, ESC-4, by the Product Owner**, recorded as **[HD-25](human-decisions.md)**. The table
+below also carries the two dispositions that are **not** new rulings: **ESC-2**, discharged
+earlier as a record-only correction, and **ESC-5(b)**, deferred. Together they close the
+specification escalations and
+Steward-owned open questions raised by
+[`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md)
+§11, and they are the reason ticket **(g)** can reach Ready
+([`planning/ticket-set.md`](planning/ticket-set.md)).
+
+| ID | Disposition | Decider | Section amended | Corpus effect |
+|---|---|---|---|---|
+| **ESC-1** | Expiry is **one** record, `EXPIRED_POST_BREAKOUT`; the `EXPIRED` enum member is reserved and **unreachable** | Product Steward | §11, §17 | none — GX-07 already encodes it |
+| **ESC-2** | Record-only: the six §15/§16/§17 parameters **are** carried by fixtures, at default values | Product Steward | none (ticket record) | none |
+| **ESC-3** | Window edges are normative: failure `(breakout_bar, breakout_bar + F_fail]`, return `(breakout_bar, breakout_bar + W_retest]`, hold `[r, r + h_hold]` | Product Steward | §15, §16 | none — max event gap is 4 against windows of 10 and 20 |
+| **ESC-4** | `FAILED_BREAKOUT` retains **both** exits: new-ATH reset and expiry | **Product Owner ([HD-25](human-decisions.md))** | §11, §17, §21.5, §21.7 | none — no post-failure ATH, no tail reaching `E_expiry` |
+| **ESC-5(a)** | No fourth §18 guard row; a missing `low` at a post-breakout predicate is a **caller defect**, not a reason code | Product Steward | §18 | none — zero corpus rows have an empty `low` |
+| **ESC-5(b)** | Whether §18 *should* gain that row — **DEFERRED** to the Phase-1 data layer; explicitly **non-blocking** | deferred | §18 | n/a |
+| **OQ-P3-1** | `ŷ_F` in the hold leg is evaluated at the **hold bar's** own index | Product Steward | §16 | none — no fixture separates the legs |
+| **OQ-P3-2** | `RETEST_HELD` is recorded at the **hold bar** | Product Steward | §16 | none — **no `return_bar` field exists corpus-wide** |
+| **OQ-P3-3** | No second `RETEST_HELD`; a fresh return leg **may** open inside `W_retest` | Product Steward | §16 | none |
+| **OQ-P3-4** | The reported `Λ^F` survives `RESET_NEW_ATH`, as it already survives expiry | Product Steward | §21.4 | none |
+| **OQ-P3-5** | The **latest** episode supplies the reported `Λ^F` and `confirmed_bar` | Product Steward | §21.4, §17 | none — zero fixtures carry two `BREAKOUT_CONFIRMED` records |
+| **OQ-P3-6** | Post-expiry re-formation re-derives `B*` over the **whole grown prefix** | Product Steward | §17 | none — GX-07's series ends at the expiry bar |
+
+**Every "corpus effect: none" above is a measured claim, not an inference.** The four
+measurements they rest on were taken by the Product Owner on 2026-07-28 and are stated where
+they are used: max event gap `bar − breakout_bar` = **4**; **no `return_bar` field in any
+event**; **zero** `input.csv` rows with an empty `low`; **zero** fixtures with more than one
+`BREAKOUT_CONFIRMED`. The Product Steward has no shell and measured none of them itself.
+
+**OQ-P3-7** (`flags` produced by no engine layer) is **out of Phase-3 scope** and is not a
+specification question: §13.3 and §13.4 place persistence and volume in the confidence layer.
+Its remedy is a **harness** obligation and lives on ticket (g) as an acceptance criterion.
+
+### 22.1 Versioning constraint on this amendment (OQ-J / OQ-P3-8 / M-34)
+
+**This section is normative specification content, so it must not land as a silent edit to an
+unversioned document.** That constraint is ruled here; the version **value** is not minted
+here. What it requires, stated so it is closable:
+
+1. **The amendment is dated and enumerated** — §22 above is that record. This is the minimum
+   the constraint demands and it is satisfied by this change.
+2. **A real `spec_version` must be minted before any engine pins one.** `SPEC_VERSION` is
+   still the placeholder `"UNVERSIONED-PENDING-OQ-J"`
+   ([`maintenance-backlog.md`](maintenance-backlog.md) **M-34**), §20.4 requires a real value,
+   and the value is the **Product Steward's** to set.
+3. **It cannot be minted in a document-only change.** The identifier must be identical in
+   three places that must move together — this specification's header, the engine's
+   `SPEC_VERSION`, and the value fixtures record — and the Product Steward may edit only the
+   first. Minting it here would create a version that nothing else carries, which is worse
+   than the placeholder because it would look satisfied.
+4. **Consolidated to ONE owed decision.** **OQ-P3-8**, **M-34** and the pre-existing **OQ-J**
+   are the same question asked in three registers. **OQ-J is the single owed decision**; the
+   other two are cross-references to it and are **not** separately owed.
+5. **Not blocking.** It blocks no Phase-3 behaviour: the placeholder is honest, the engine
+   correctly refuses to invent a value, and nothing in §22's twelve dispositions depends on
+   the identifier. It is owed **with** the first change that touches all three sites.
 
 ---
 
