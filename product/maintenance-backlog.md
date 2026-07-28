@@ -88,14 +88,39 @@ and **E2-AUTHOR-A is the authoritative independence criterion**.
 
 ## From the two PR #35 gate reviews (fixture-immutability guard hardening)
 
-> **Numbering — rewritten after the merge-forward, and the old text named rather than
-> silently replaced.** This note was written while
-> [PR #35](https://github.com/tomerYannay/4UR4/pull/35) was still open. It then said that
-> **M-36 … M-39 were *reserved*** for the rows landing with #35, and that *"at this commit the
-> guard still carries its pre-#35 form, so a reader who opens
+> **Numbering — corrected twice, and the second correction is the one that matters.** This
+> note originally said that **M-36 … M-39 were *reserved*** for the rows landing with
+> [PR #35](https://github.com/tomerYannay/4UR4/pull/35), and that *"at this commit the guard
+> still carries its pre-#35 form, so a reader who opens
 > `.github/workflows/governance-validation.yml` here will not find the lines M-43/M-45/M-49
-> discuss."* Both sentences were true when written. **#35 is merged and this branch has been
-> merge-forwarded onto it, and that is what falsified them** — they did not start out wrong.
+> discuss."*
+>
+> **Both sentences were false at the instant they were committed, and the first correction of
+> them got that wrong too.** Commit `913cfe2` replaced them while asserting *"Both sentences
+> were true when written … the merge-forward is what falsified them — they did not start out
+> wrong."* **That exculpation is itself false, and two independent measurements refute it:**
+>
+> 1. **The branch was cut from post-#35 history.** `git merge-base --is-ancestor 9bdc237
+>    6482a5d` → true, where `9bdc237` is #35's own commit and the one that introduced the M-36
+>    row. At the branch point `6482a5d` **and** at `207e91a` — the commit that *wrote* the note
+>    — `M-36 … M-39` were already populated (**4** rows, measured at both) and the workflow
+>    already carried the post-#35 guard (**8** marker hits for `--no-renames` / `unshallow` /
+>    `Hard-fail EVERYTHING`, measured at both). **There is no commit in this branch's ancestry
+>    at which either sentence was true.**
+> 2. **A zero-byte event cannot falsify anything.** `git diff 207e91a e767047` is **empty** —
+>    a fact this PR's own evidence section relies on. The merge-forward changed nothing, so it
+>    cannot be what turned a true sentence false.
+>
+> **`913cfe2`'s commit message carries the same false claim and is NOT amended.** Amending it
+> would require a force-push that discards the two head-specific gate verdicts already issued
+> against that SHA, to hide an error rather than record it. The message stands; this row is the
+> correction of record. Found by Code Review, at the head the first correction created.
+>
+> *Same shape as **M-36**, one level further up — that row reads "M-36's own defect reproduced
+> one layer up, justified by a false statement about git." This is the third layer, and the
+> pattern is now explicit: **each correction so far has been justified by a claim about git
+> history that nobody measured until the next reviewer did.** The measurements are in this row
+> so the fourth layer has nothing left to assume.*
 >
 > **As this commit stands:** **M-36 … M-39 are landed and populated in the table above**, not
 > reserved — holding numbers that are already occupied would create the very collision this
