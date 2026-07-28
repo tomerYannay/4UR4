@@ -15,8 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
-from .causal import CausalResult, Line
+from .causal import CausalResult
 from .envelope import Selection
+from .line import Line
 from .logspace import ln_price
 from .state import LineState
 
@@ -103,19 +104,28 @@ def active_line_at(
     eps: float,
     eps_break: float,
 ) -> ActiveLineEvidence:
-    """Evidence for one bar.
+    """Evidence for one bar: the line that GOVERNED it, and that bar's margins.
 
-    For a bar the engine evaluated, the line is ``Λ_bar``.  For a bar at or after
-    the stop the engine performs no evaluation, so the line reported is the
-    reported line and the two margins are **pure arithmetic on it** — which is
-    what ``expected_line_values`` at post-stop indices already requires, and
-    performs no state transition.
+    "Governing" is the whole content of this function, and the distinction is
+    the subtlest one in the Phase-3 harness.  ``SealedBar.state`` is gate
+    arithmetic over ``S_bar`` and says ``ACTIVE`` on post-breakout bars whose
+    three gates happen to pass — GX-04's own ``gate_trace_full_caveat`` says so
+    — while ``SealedBar.line`` is the rolled hull those gates produced.  Neither
+    is what judged the bar.  A bar the frozen line governs is judged against
+    ``Λ^F`` (§21.5), and the fixtures record exactly that: GX-04 at bar 20 and
+    bar 22, GX-05 at 22, GX-17 at 23 and GX-07 at 110 all carry
+    ``line_source: "frozen event line Λ^F"``.  Returning ``sealed.line`` there
+    would silently answer with the hull the engine was forbidden to roll.
+
+    So the line and the state both come from the fold's own per-bar record.  For
+    an index the fold never evaluated (``bar >= n``) the reported line and pure
+    arithmetic on it are returned, which is what ``expected_line_values`` at such
+    an index already requires; the state is deliberately not claimed.
     """
-    sealed = result.sealed_at(bar)
-    evaluated = sealed is not None and (result.stop is None or bar <= result.stop.bar)
-    if evaluated:
-        state = sealed.state
-        line = sealed.line
+    state_at_start = result.state_at(bar)
+    if state_at_start is not None:
+        state = state_at_start
+        line = result.governing_at(bar)
     else:
         # Beyond the engine's reach: report the reported line and pure
         # arithmetic on it.  The state is deliberately not claimed.

@@ -14,6 +14,13 @@ demonstrated to flip a selected anchor (fixture GX-14).  The pinned forms are:
 | compare    | ``lhs > y_hat + tol`` (RHS first)      | ``lhs - y_hat > tol``                  |
 | tie test   | exact ``==`` on the slope doubles      | any epsilon-tolerant "near tie"        |
 
+The four comparison forms below are one per specification glyph, and the glyph is
+copied rather than interpreted: §10.1/§13.1 write ``>`` (:func:`exceeds`), §15
+writes ``<`` (:func:`falls_below`), §16's return leg writes ``<=``
+(:func:`at_or_below`), §16's hold leg writes ``>=`` (:func:`at_or_above`), and
+§21.4's re-selection trigger writes ``>=`` against the line itself
+(:func:`reaches`).  Every one of them forms the right-hand side first.
+
 Spec refs: §3 (log transform), §7 (slope/intercept), §9 (tolerance), §18
 (``SUSPECTED_UNADJUSTED_SPLIT`` threshold), §19 (6 significant figures), §20
 (determinism).
@@ -33,6 +40,9 @@ __all__ = [
     "y_hat",
     "line_price",
     "exceeds",
+    "falls_below",
+    "at_or_below",
+    "at_or_above",
     "reaches",
     "sig6",
     "sig6_stable",
@@ -94,6 +104,36 @@ def exceeds(lhs: float, y_hat_value: float, tolerance: float) -> bool:
     exactly the boundary the inequality is NOT met (GX-15).
     """
     return lhs > y_hat_value + tolerance
+
+
+def falls_below(lhs: float, y_hat_value: float, tolerance: float) -> bool:
+    """``lhs < y_hat - tolerance`` — strict, right-hand side formed first.
+
+    The §15 failed-breakout predicate (``tolerance = eps_fail``).  §15 writes
+    ``<``; the strictness is copied from the glyph, not chosen.  Nothing in the
+    corpus sits on this boundary — the tightest recorded failure margin is
+    ``0.0492028`` — so a constructed unit test pins it instead.
+    """
+    return lhs < y_hat_value - tolerance
+
+
+def at_or_below(lhs: float, y_hat_value: float, tolerance: float) -> bool:
+    """``lhs <= y_hat + tolerance`` — NON-strict, right-hand side formed first.
+
+    The §16 retest **return** leg (``tolerance = eps_retest``): §16 condition 1
+    writes ``≤``, so a low that lands exactly on ``y_hat + eps_retest`` is a
+    return.
+    """
+    return lhs <= y_hat_value + tolerance
+
+
+def at_or_above(lhs: float, y_hat_value: float, tolerance: float) -> bool:
+    """``lhs >= y_hat - tolerance`` — NON-strict, right-hand side formed first.
+
+    The §16 retest **hold** leg (``tolerance = eps_retest``): §16 condition 2
+    writes ``≥``, so a close exactly on ``y_hat - eps_retest`` holds.
+    """
+    return lhs >= y_hat_value - tolerance
 
 
 def reaches(lhs: float, y_hat_value: float) -> bool:

@@ -8,26 +8,56 @@ Two deliberate omissions:
   which only ``engine/pivots.py`` consumes.  This makes architectural test A-1
   ("no geometry or formation module reads ``k``") true by construction rather
   than by inspection.
-* **There are no Phase-3 parameters.**  ``eps_fail``, ``eps_retest``,
-  ``W_retest``, ``h_hold``, ``F_fail``, ``E_expiry`` gate behaviour this build
-  does not implement.  Fixtures that carry them are read through
-  :meth:`DetectorParams.from_fixture_params`, which ignores unknown keys but
-  refuses to *default* any key that changes a Phase-2 outcome.
+* **The six §15/§16/§17 parameters have defaults; ``eps_break`` still does
+  not.**  These two cases look alike and are not.  ``eps_break`` is *unlocked by
+  ruling* — HD-03 and §13.5 say "no locked default" — so this module must keep
+  refusing to invent one.  ``eps_fail``, ``F_fail``, ``eps_retest``,
+  ``W_retest``, ``h_hold`` and ``E_expiry`` come from D-TL-08, D-TL-09 and
+  D-TL-10, each **`Human-approval: no` with a stated default**, so carrying that
+  default here is the specification's own instruction rather than an engine
+  choice.  Five of the ten fixture configurations with post-breakout behaviour
+  supply none of them, so they cannot come from the fixtures.
+
+  They are deliberately **not** added to :data:`REQUIRED_FIXTURE_PARAMS`: that
+  tuple names parameters a caller may never omit, and those five fixtures
+  legitimately do.  The safeguard is the other way round —
+  :meth:`DetectorParams.from_fixture_params` reads each of the six **when
+  present**, and a test asserts that every carried value equals the default here,
+  so a future fixture carrying a non-default value fails loudly instead of being
+  silently overridden.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 from .logspace import SPLIT_LOG_JUMP_THRESHOLD
 
-__all__ = ["DetectorParams", "PivotParams", "REQUIRED_FIXTURE_PARAMS"]
+__all__ = [
+    "DetectorParams",
+    "PivotParams",
+    "REQUIRED_FIXTURE_PARAMS",
+    "POST_BREAKOUT_FIXTURE_PARAMS",
+]
 
 
 #: Parameters that change a Phase-2 outcome and therefore may never be defaulted
 #: silently when a caller supplies a parameter block.
 REQUIRED_FIXTURE_PARAMS = ("eps", "eps_break", "min_formation_bars", "min_ath_age_bars")
+
+#: The six §15/§16/§17 parameters, named once so the harness can cross-check a
+#: fixture-carried value against this module's default without re-listing them.
+#: Read when a fixture carries one; defaulted when it does not (see the module
+#: docstring for why that is safe here and is not safe for ``eps_break``).
+POST_BREAKOUT_FIXTURE_PARAMS = (
+    "eps_fail",
+    "F_fail",
+    "eps_retest",
+    "W_retest",
+    "h_hold",
+    "E_expiry",
+)
 
 
 @dataclass(frozen=True)
@@ -48,8 +78,19 @@ class DetectorParams:
     #: §18 — the threshold is the specification's ``ln(1.5)``.
     split_log_jump_threshold: float = SPLIT_LOG_JUMP_THRESHOLD
     #: §9 — touch tolerance.  Carried for the record; §12 touch counting is a
-    #: confidence input and is out of Phase-2 scope, so nothing reads it.
+    #: confidence input and is out of Phase-3 scope, so nothing reads it.
     eps_touch: Optional[float] = None
+    #: §15, D-TL-08 — failed-breakout tolerance and window.  Carried by GX-04,
+    #: GX-05 and GX-17 at exactly these values; defaulted where omitted.
+    eps_fail: float = 0.01
+    F_fail: int = 10
+    #: §16, D-TL-09 — retest tolerance, return window and hold window.  Carried
+    #: by GX-04 and GX-17 at exactly these values.
+    eps_retest: float = 0.01
+    W_retest: int = 20
+    h_hold: int = 3
+    #: §17, D-TL-10 — post-breakout expiry horizon.  Carried by GX-07.
+    E_expiry: int = 100
 
     def __post_init__(self) -> None:
         if self.eps < 0:
@@ -60,31 +101,36 @@ class DetectorParams:
             raise ValueError("min_formation_bars must be >= 0")
         if self.min_ath_age_bars < 0:
             raise ValueError("min_ath_age_bars must be >= 0")
+        if self.eps_fail < 0:
+            raise ValueError("eps_fail must be >= 0")
+        if self.eps_retest < 0:
+            raise ValueError("eps_retest must be >= 0")
+        if self.F_fail < 0:
+            raise ValueError("F_fail must be >= 0")
+        if self.W_retest < 0:
+            raise ValueError("W_retest must be >= 0")
+        if self.h_hold < 0:
+            raise ValueError("h_hold must be >= 0")
+        if self.E_expiry < 1:
+            raise ValueError("E_expiry must be >= 1")
+
+    def _as_kwargs(self) -> Dict[str, Any]:
+        """Every field, DERIVED from the dataclass rather than re-listed.
+
+        Both copy constructors below built a hand-written kwarg dict, and a field
+        forgotten there does not fail — it silently resets to its default in
+        every sweep the tests run.  Deriving the dict makes that class of defect
+        impossible for the six parameters this build adds and for any added
+        later.
+        """
+        return {name: getattr(self, name) for name in self.__dataclass_fields__}
 
     def with_eps_break(self, eps_break: float) -> "DetectorParams":
         """A copy at a different breakout tolerance — used by the HD-13 sweep."""
-        return DetectorParams(
-            eps=self.eps,
-            eps_break=eps_break,
-            min_formation_bars=self.min_formation_bars,
-            min_ath_age_bars=self.min_ath_age_bars,
-            tolerance_version=self.tolerance_version,
-            spec_version=self.spec_version,
-            split_log_jump_threshold=self.split_log_jump_threshold,
-            eps_touch=self.eps_touch,
-        )
+        return self.replace(eps_break=eps_break)
 
     def replace(self, **changes: Any) -> "DetectorParams":
-        base = dict(
-            eps=self.eps,
-            eps_break=self.eps_break,
-            min_formation_bars=self.min_formation_bars,
-            min_ath_age_bars=self.min_ath_age_bars,
-            tolerance_version=self.tolerance_version,
-            spec_version=self.spec_version,
-            split_log_jump_threshold=self.split_log_jump_threshold,
-            eps_touch=self.eps_touch,
-        )
+        base = self._as_kwargs()
         base.update(changes)
         return DetectorParams(**base)
 
@@ -98,8 +144,10 @@ class DetectorParams:
     ) -> "DetectorParams":
         """Build from a fixture ``params`` block.
 
-        Raises if any outcome-affecting parameter is absent.  ``k`` and the
-        Phase-3 tolerances present in some fixtures are deliberately ignored.
+        Raises if any outcome-affecting parameter is absent.  ``k`` is
+        deliberately ignored (HD-11: non-authoritative).  Each of
+        :data:`POST_BREAKOUT_FIXTURE_PARAMS` is **read when the fixture carries
+        it** and defaulted when it does not — never silently overridden.
 
         ``split_log_jump_threshold`` is **not** taken from the fixture: fixtures
         print it to 6 significant figures (``0.405465``), which is a rendering of
@@ -112,6 +160,13 @@ class DetectorParams:
             raise ValueError(
                 "fixture params omit outcome-affecting parameter(s): " + ", ".join(missing)
             )
+        carried: Dict[str, Any] = {}
+        for key in POST_BREAKOUT_FIXTURE_PARAMS:
+            if key in params:
+                field = cls.__dataclass_fields__[key]
+                carried[key] = (
+                    int(params[key]) if field.type == "int" else float(params[key])
+                )
         return cls(
             eps=float(params["eps"]),
             eps_break=float(params["eps_break"]),
@@ -125,6 +180,7 @@ class DetectorParams:
                 else float(split_log_jump_threshold)
             ),
             eps_touch=(float(params["eps_touch"]) if "eps_touch" in params else None),
+            **carried,
         )
 
 

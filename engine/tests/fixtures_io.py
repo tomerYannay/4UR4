@@ -36,6 +36,9 @@ __all__ = [
     "parse_gate_trace_line",
     "parse_gate_fields",
     "as_decimal",
+    "KeyTracker",
+    "all_key_paths",
+    "tracked",
 ]
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -133,6 +136,132 @@ def as_decimal(value) -> Optional[Decimal]:
     if isinstance(value, int):
         return Decimal(value)
     return Decimal(repr(float(value)))
+
+
+# --------------------------------------------------------------------------
+# OQ-P3-7 — which recorded keys does the harness actually READ?
+#
+# "A key that is unasserted and a passing suite are indistinguishable without
+# this."  The census is therefore MECHANICAL rather than declared: the loaded
+# expectation is wrapped in containers that record every path a comparison
+# touches, and the read set is subtracted from the full key set of the corpus.
+# A hand-written list of "keys we assert" would be exactly the drift the
+# criterion exists to remove — it would keep passing after the assertion behind
+# it was deleted.
+# --------------------------------------------------------------------------
+
+#: Containers whose KEYS are data rather than field names.  Their paths collapse
+#: to ``{}`` so that ``expected_line_values.16`` and ``expected_line_values.110``
+#: are one path, not two, and adding a bar index to a fixture cannot silently
+#: enlarge the allow-list.
+_DATA_KEYED_MAPS = ("expected_line_values",)
+
+
+def _join(prefix: str, key: str) -> str:
+    if prefix in _DATA_KEYED_MAPS:
+        key = "{}"
+    return prefix + "." + key if prefix else key
+
+
+class KeyTracker:
+    """Accumulates the set of key paths a comparison actually read."""
+
+    def __init__(self) -> None:
+        self.read: set = set()
+
+    def note(self, path: str) -> None:
+        self.read.add(path)
+
+
+class _TrackedDict(dict):
+    """A ``dict`` that records the path of every value read from it.
+
+    Subclasses ``dict`` so that every existing comparison keeps working
+    unchanged — including ``json``-shaped code that does ``x["a"]["b"]``,
+    ``x.get("a") or {}`` and ``"a" in x``.  Iterating the *keys* deliberately
+    records nothing: naming a key is not reading its value, and
+    ``expected_line_values``' key list is itself asserted separately.
+    """
+
+    __slots__ = ("_path", "_tracker")
+
+    def __init__(self, data, path: str, tracker: KeyTracker) -> None:
+        super().__init__(data)
+        self._path = path
+        self._tracker = tracker
+
+    def _wrap(self, key, value):
+        path = _join(self._path, str(key))
+        self._tracker.note(path)
+        return _wrap(value, path, self._tracker)
+
+    def __getitem__(self, key):
+        return self._wrap(key, super().__getitem__(key))
+
+    def get(self, key, default=None):
+        if key not in self:
+            return default
+        return self[key]
+
+    def __contains__(self, key) -> bool:
+        present = super().__contains__(key)
+        if present:
+            self._tracker.note(_join(self._path, str(key)))
+        return present
+
+    def items(self):
+        return [(key, self[key]) for key in super().keys()]
+
+    def values(self):
+        return [self[key] for key in super().keys()]
+
+
+class _TrackedList(list):
+    """A ``list`` whose elements carry the parent path with ``[]`` appended."""
+
+    __slots__ = ("_path", "_tracker")
+
+    def __init__(self, data, path: str, tracker: KeyTracker) -> None:
+        super().__init__(data)
+        self._path = path
+        self._tracker = tracker
+
+    def __getitem__(self, index):
+        value = super().__getitem__(index)
+        if isinstance(index, slice):
+            return _TrackedList(value, self._path, self._tracker)
+        return _wrap(value, self._path + "[]", self._tracker)
+
+    def __iter__(self):
+        for index in range(len(self)):
+            yield self[index]
+
+
+def _wrap(value, path: str, tracker: KeyTracker):
+    if isinstance(value, dict):
+        return _TrackedDict(value, path, tracker)
+    if isinstance(value, list):
+        return _TrackedList(value, path, tracker)
+    return value
+
+
+def tracked(document: Dict[str, Any], tracker: KeyTracker) -> Dict[str, Any]:
+    """Wrap a loaded expectation so that every read is recorded."""
+    return _wrap(document, "", tracker)
+
+
+def all_key_paths(document: Any, prefix: str = "") -> set:
+    """Every key path in a document, under the same normalisation."""
+    out: set = set()
+    if isinstance(document, dict):
+        for key, value in document.items():
+            path = _join(prefix, str(key))
+            out.add(path)
+            out |= all_key_paths(value, path)
+    elif isinstance(document, list):
+        for value in document:
+            out |= all_key_paths(value, prefix + "[]")
+    return out
 
 
 # --------------------------------------------------------------------------
