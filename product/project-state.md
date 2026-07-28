@@ -10,11 +10,24 @@
 > [`roadmap.md`](roadmap.md) → merged fixture evidence → open PR proposals → agent summaries.
 
 - **Last updated:** 2026-07-28
-- **Last reviewed commit SHA (main):** `0b564a41dc77c07ade797632cf78bb5183e91825` — the merge
-  commit of [PR #38](https://github.com/tomerYannay/4UR4/pull/38). CI is **green on `main` at
-  this SHA** (post-merge job `90228331147`), and was green on the reviewed head `586a34e`
-  itself (job `90223085692`) rather than on an ancestor. The merged tree is byte-identical to
-  the reviewed head's tree.
+- **Last reviewed commit SHA (main):** `c66fd2947dfa98573f6d43bf53079aa7bb6304de` — the merge
+  commit of [PR #37](https://github.com/tomerYannay/4UR4/pull/37). CI is **green on `main` at
+  this SHA** (post-merge job `90238891750`), and was green on the reviewed head `4630564`
+  itself rather than on an ancestor. The merged tree is byte-identical to the reviewed head's
+  tree.
+
+  **[PR #38](https://github.com/tomerYannay/4UR4/pull/38) merged immediately before it** at
+  `0b564a41dc77c07ade797632cf78bb5183e91825` (post-merge job `90228331147`; reviewed head
+  `586a34e`, job `90223085692`). **Both were merged by Release & Ops**, each on three gate
+  verdicts taken at the exact head and posted as citable artifacts. **Release & Ops refused #38
+  once, correctly**, because no gate verdict existed on the PR as a repository artifact — GOV-006
+  rule 1 is that assertions are not evidence — and it merged only after the verdicts, a
+  head-current strategic review, and the HD-24 §2 re-anchor were all posted.
+
+  *An earlier draft of this line said PR #37's merge status was "NOT stated here, because it is
+  not determinable from the working tree". That was the correct disposition when written — the
+  Product Steward had no shell and refused to guess. It has since been determined and is stated
+  above.*
 
   **The governing decision is now [HD-24](human-decisions.md)**
   ([#39](https://github.com/tomerYannay/4UR4/issues/39), Product Owner, 2026-07-28). §2
@@ -585,14 +598,28 @@ PENDING PRODUCT OWNER CONFIRMATION** and is unaffected.
   ([`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md),
   design only). Authorized by **HD-24 §2**, re-anchored to head `586a34e` after the head moved
   four times under §2's own condition.
-- **[PR #37](https://github.com/tomerYannay/4UR4/pull/37) — ticket (h)'s engine hardening
-  (M-28/29/30/32), authorized by HD-24 §2 alongside #38.** §2's row for it carries the
-  condition *"new SHA after R1 — only after the R1 correction and a re-run of both gates at
-  the new head."* **Its merge status is NOT stated here**, because it is not determinable from
-  the working tree and this file does not assert what it did not check: `main` at this refresh
-  is #38's merge commit, and whether #37 has since landed is a question for the GitHub PR
-  list, which is authoritative. Ticket **(h)** remains recorded as **Ready and in progress**
-  in [`planning/ticket-set.md`](planning/ticket-set.md) on that basis.
+- **[PR #37](https://github.com/tomerYannay/4UR4/pull/37) — MERGED** at
+  `c66fd2947dfa98573f6d43bf53079aa7bb6304de`, delivering ticket (h)'s engine hardening
+  (M-28/M-29/M-30/M-32). Head `4630564`; 4 files, all `engine/`; **141 tests** (was 136).
+  Authorized by **HD-24 §2**, whose row named no fixed SHA — *"new SHA after R1"* — so the two
+  subsequent head moves fell **inside** its wording rather than beside it. Both moves were
+  compelled, not discretionary: `0a3c33d`→`5a2cec0` by branch protection (`strict: true`, the
+  branch was 16 behind `main`), and `5a2cec0`→`4630564` by a Code Review verdict.
+
+  **This is the first PR on which the HD-22 fixture-immutability guard did real work.** It
+  *engaged* (4 `engine/` files changed) and passed **on the merits** — the MDT set under
+  `product/fixtures/` was empty and the short-circuit branch was not taken, confirmed in the CI
+  job log, not only by local reproduction. On #38 the same step was **inert**. HD-22 calls this
+  the one control that cannot be recovered after the fact.
+
+  **Behaviour-neutrality was established by inspection, not only by sampling.** The gates argued
+  it empirically (145,904 base-vs-head comparisons across eight ε values including 0, plus a
+  byte-identical serialized corpus). Release & Ops went further and proved it structurally:
+  `domination_set(t, L)` returns `tuple(range(t + 1, length))`, exactly what the base expressed
+  inline at all three sites, and `logspace.exceeds(lhs, y_hat, tol)` is `lhs > y_hat + tol` with
+  the right-hand side formed first — identical **including floating-point association order**.
+  Worth recording precisely because the PR is *not* a no-op against `main`: `domination_set` is
+  newly extracted there.
 - **Recently merged:** **[#33](https://github.com/tomerYannay/4UR4/pull/33)** as `ed92bbb`
   (**the Phase 2 trendline engine** — `engine/`, 27 files, 136 tests, all 23 golden fixtures
   and RM-01 causal replay, the engine conformance step added to the required CI check, the
