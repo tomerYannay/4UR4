@@ -105,21 +105,44 @@ and **E2-AUTHOR-A is the authoritative independence criterion**.
 >    row. At the branch point `6482a5d` **and** at `207e91a` — the commit that *wrote* the note
 >    — `M-36 … M-39` were already populated (**4** rows, measured at both) and the workflow
 >    already carried the post-#35 guard (**8** marker hits for `--no-renames` / `unshallow` /
->    `Hard-fail EVERYTHING`, measured at both). **There is no commit in this branch's ancestry
->    at which either sentence was true.**
+>    `Hard-fail EVERYTHING`, measured at both). **There is no commit of this branch, from its
+>    cut point `6482a5d` forward, at which either sentence was true.** *(Scoped deliberately.
+>    An earlier draft said "no commit in this branch's ancestry", which is **false** under the
+>    whole-ancestry reading and was measured false: `ed92bbb`, the PR #33 merge, is an ancestor
+>    of `207e91a` and carries **0** M-36…M-39 rows and **0** guard markers, so both sentences
+>    would have been true there. It is irrelevant — the note did not exist at `ed92bbb`, so no
+>    reader can deploy it in defence of "true when written" — but an irrelevant overclaim inside
+>    a row correcting overclaims is the fourth layer this row exists to stop. Found by Code
+>    Review, measured, and narrowed rather than argued away.)*
 > 2. **A zero-byte event cannot falsify anything.** `git diff 207e91a e767047` is **empty** —
 >    a fact this PR's own evidence section relies on. The merge-forward changed nothing, so it
 >    cannot be what turned a true sentence false.
 >
-> **`913cfe2`'s commit message carries the same false claim and is NOT amended.** Amending it
-> would require a force-push that discards the two head-specific gate verdicts already issued
-> against that SHA, to hide an error rather than record it. The message stands; this row is the
-> correction of record. Found by Code Review, at the head the first correction created.
+> **`913cfe2`'s commit message carries the same false claim — in three places, not one — and is
+> NOT amended.** Its title (*"The merge-forward falsified three claims about the tree"*), its B2
+> paragraph (*"Both were TRUE WHEN WRITTEN and were falsified by the merge-forward itself"*) and
+> its B3 paragraph (*"The stale half is the merge-forward's doing"*) all carry it; Code Review
+> counted them when this row said "the same false claim" as though it were singular. Amending
+> would require a force-push — **possible on this branch, since protection covers `main` only,
+> so this is a judgement that it would be *wrong*, not a claim that it is impossible.** It would
+> discard the head-specific gate verdicts issued against that SHA in order to hide an error
+> rather than record it, in a corpus whose whole thesis is that records must not be fitted to
+> outcomes. *(Those verdicts are **session-internal and not posted**, so they are not citable
+> artifacts and their count is not verifiable from this repository — the [#21](https://github.com/tomerYannay/4UR4/issues/21)
+> condition again, in the same PR that marks HD-23 `Artifact: NONE` for exactly this reason. An
+> earlier draft of this row asserted "two", a number nothing here can check.)* The message
+> stands; this row is the correction of record. Found by Code Review, at the head the first
+> correction created.
 >
 > *Same shape as **M-36**, one level further up — that row reads "M-36's own defect reproduced
 > one layer up, justified by a false statement about git." This is the third layer, and the
-> pattern is now explicit: **each correction so far has been justified by a claim about git
-> history that nobody measured until the next reviewer did.** The measurements are in this row
+> pattern is now explicit: **each correction _of this note_ has been justified by a claim about
+> git history that nobody measured until the next reviewer did** — layer 1 by *"is a no-op on an
+> already-complete clone"* (false), layer 2 by *"true when written"* (false). **Scoped to this
+> note on purpose:** as "every correction in this PR" it would be false, and `913cfe2`'s own B1
+> correction is the counterexample — it carried its measurements inline (*"measured false at
+> this head"*, the ten HDs enumerated) and Code Review verified them entry-by-entry. The
+> measurements are in this row
 > so the fourth layer has nothing left to assume.*
 >
 > **As this commit stands:** **M-36 … M-39 are landed and populated in the table above**, not
