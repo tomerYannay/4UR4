@@ -9,63 +9,80 @@
 > [`human-decisions.md`](human-decisions.md) → [`requirements.md`](requirements.md) + specs →
 > [`roadmap.md`](roadmap.md) → merged fixture evidence → open PR proposals → agent summaries.
 
-- **Last updated:** 2026-07-27
-- **Last reviewed commit SHA (main):** `ed92bbb` — the merge commit of
-  [PR #33](https://github.com/tomerYannay/4UR4/pull/33). [PR #32](https://github.com/tomerYannay/4UR4/pull/32)
-  merged immediately before it at `758c0a0`, in that order deliberately: #32's commits are
-  ancestors of #33's, so merging #33 first would have landed the quarantine control on `main`
-  under the engine PR's number. CI is **green on `main` at `ed92bbb`**.
+- **Last updated:** 2026-07-28
+- **Last reviewed commit SHA (main):** `0b564a41dc77c07ade797632cf78bb5183e91825` — the merge
+  commit of [PR #38](https://github.com/tomerYannay/4UR4/pull/38). CI is **green on `main` at
+  this SHA** (post-merge job `90228331147`), and was green on the reviewed head `586a34e`
+  itself (job `90223085692`) rather than on an ancestor. The merged tree is byte-identical to
+  the reviewed head's tree.
 
-  **Both were merged by the Product Owner personally, through the GitHub UI**, and that is
-  the substance of the authorization rather than a procedural detail — see
-  [#34](https://github.com/tomerYannay/4UR4/issues/34). No agent can produce an approval
-  artifact distinguishable from one it wrote itself, so **the act of merging is the approval**.
-  **Deviation to record for the Auditor:** [GOV-005](../governance/definition-of-done.md) says
-  "merged by Release & Ops only", with no agent qualifier in the clause itself. **This file
-  does not reinterpret it.** An earlier draft said the clause "scopes *agents*" — that was an
-  interpretation presented as a statement of meaning, with no decision record, three screens
-  from a section quoting the Strategic Reviewer approvingly: *"a precondition that is quietly
-  reinterpreted is not a precondition."* The same standard applies here. **Recorded as a
-  deviation, for the Auditor and the Product Owner to dispose of.** What stands on its own:
-  the Release & Ops gate refused both merges precisely because no authorization channel
-  existed, and its refusals were correct each time.
+  **The governing decision is now [HD-24](human-decisions.md)**
+  ([#39](https://github.com/tomerYannay/4UR4/issues/39), Product Owner, 2026-07-28). §2
+  authorizes PR #38 and PR #37 **by number without waiving their gates**, and permits the
+  Orchestrator to **relay** a gate verdict where `ROLE_POLICY` blocks the gate role from
+  posting — each relay stating on its face that it is one, which makes a verdict **citable,
+  not independently attributable**. §2's original head `207e91a` was voided by four
+  gate-driven corrections and the authorization was **re-anchored** to `586a34e`.
+  **HD-24 is relayed under the single shared identity and written up by the Orchestrator, an
+  interested party**; [#21](https://github.com/tomerYannay/4UR4/issues/21) and
+  [#34](https://github.com/tomerYannay/4UR4/issues/34) **remain open** and HD-24 closes
+  neither. The standing [GOV-005](../governance/definition-of-done.md) *"merged by Release &
+  Ops only"* deviation is **not** re-narrated here — it lives in
+  [`human-decisions.md`](human-decisions.md) precisely so a refresh of this file cannot sweep
+  it.
 
-  **Provenance of "merged by the Product Owner personally":** the API confirms
-  `mergedBy.login = tomerYannay` for both, which is all it can confirm. Per
-  [#34](https://github.com/tomerYannay/4UR4/issues/34), no artifact under this single identity
-  distinguishes a Product Owner act from an agent act. This rests on the Product Owner's own
-  statement, and is recorded as such rather than as independently verified.
+  **The gate runs five checks:** `tools/validate.mjs` · `.claude/hooks/bash-guard.test.mjs`
+  (329 assertions) · `tools/fixture-replay.mjs --all` (23/23 golden + 1/1 real) ·
+  `tools/check-evidence.mjs` (74 markdown files, 0 broken cross-file links, 1651 body rows in
+  214 tables) · **`python3 -m engine.tests.run_all` (136 tests)** — plus a
+  **fixture-immutability guard** that hard-fails any PR touching `engine/` that also carries a
+  non-`*.md` change under `product/fixtures/`, **plus typechange** (broader than earlier prose
+  said — M-46). **What the gate did NOT do on PR #38, recorded because a green result hides
+  it:** no automated step provided substantive assurance for a documentation PR. The
+  fixture-immutability guard early-returned and contributed **nothing**; four gate steps were
+  unchanged-by-construction; only `check-evidence.mjs` read the changed files, and it validates
+  link and table *structure*, not factual content. The review chain found **five false
+  statements** across four rounds; **no automated step found any of them**.
+- **Build-freeze status:** **ON, with TWO scopes lifted — both inside `engine/`**
+  ([GOV-015](../governance/build-freeze.md)).
+  - **Phase 2 `engine/`** — Product Owner, 2026-07-26,
+    [#31](https://github.com/tomerYannay/4UR4/issues/31), recorded as **HD-22**: the
+    deterministic engine, fixture and RM-01 conformance tests, engine-local test
+    infrastructure, minimal shared types.
+  - **Phase 3 `engine/`** — Product Owner, **2026-07-28**,
+    [#39](https://github.com/tomerYannay/4UR4/issues/39) §3, recorded as **HD-24**: the
+    **`ACTIVE → BROKEN_OUT` transition**, **line freezing** (`Λ^F`, §21.5), **retest** (§16),
+    **failed breakout** (§15), **expiry and recompute** (§17).
 
-  **The gate now runs five checks**, not four: `tools/validate.mjs` ·
-  `.claude/hooks/bash-guard.test.mjs` (329 assertions) · `tools/fixture-replay.mjs --all` ·
-  `tools/check-evidence.mjs` · **`python3 -m engine.tests.run_all` (136 tests)** — plus a
-  **fixture-immutability guard** that fails any PR touching `engine/` that also modifies or
-  deletes committed fixture data.
-- **Build-freeze status:** **ON everywhere except Phase 2 `engine/` work**
-  ([GOV-015](../governance/build-freeze.md)). A **Product Owner ruling on
-  [#31](https://github.com/tomerYannay/4UR4/issues/31) (2026-07-26)** **LIFTS the freeze for
-  Phase 2 `engine/` work only**: the deterministic engine, fixture and RM-01 conformance
-  tests, engine-local test infrastructure, and minimal shared types. **Not authorized:**
-  provider integration, live data, API, database, scanner, worker, dashboard, alerts, SaaS
-  surfaces, and anything touching spend, licensing, privacy, billing or deployment. **For
-  everything else the freeze stays ON.** Conditions on the lifted scope: the engine is
-  **independently authored** from the reference model and must not import, execute or
-  mechanically translate it (HD-15 condition 2 / E2-AUTHOR); it must pass **23/23 golden +
-  RM-01**; it must preserve **HD-11…HD-20**; and it must be deterministic and free of
-  look-ahead bias. **Propagation is complete and is on `main`** (it landed with PR #31's ruling
-  record, not with the PR currently open — a deictic that outlived its PR, same class as M-01/M-02)**:** the ruling is recorded
-  as **HD-22** in [`human-decisions.md`](human-decisions.md), and
-  [`../governance/build-freeze.md`](../governance/build-freeze.md) carries the scoped-lift
-  section with `scope: ["engine/"]`, `autonomous_implementation: ENABLED_FOR_SCOPE` and a
-  named `lifted_by`. The scope is **machine-enforced**: `tools/validate.mjs` guards `engine`
-  alongside every other listed product-code directory and permits one **only** when the
-  marker names it, so deleting the scope entry re-freezes `engine/` on the next CI run.
-  **Full branch protection on `main` is required before any Phase 2 product code merges**
-  — *and 6 of its 7 parts are in force while part 3 (required exact-head reviews) is UNMET and
-  ruled a recorded deviation; Phase 2 product code merged at `ed92bbb` under that ruling. Read
-  with [`human-decisions.md`](human-decisions.md) → HD-22 part 3. The matching passage in the
-  register got this cross-reference; this one did not, in the same commit.*
-  (same ruling).
+  **Still frozen everywhere else**, per HD-24 §3's own list: provider integration, live
+  ingestion, `api`, `db`, `scanner`, `worker`, `dashboard`, `alerts`, `billing`, `providers`,
+  SaaS surfaces, spend, licensing, privacy/billing, external deployment. **E2-AUTHOR binds the
+  whole engine across both phases**, and the fixture-immutability condition carries over
+  unchanged.
+
+  **⚠ The machine check does NOT distinguish the two lifts, and that gap is stated rather than
+  hidden.** The freeze marker's `scope` is a list of **directory names**; it is still
+  `["engine/"]` **because the directory did not change**, and a lift that widens authorized
+  *behaviour inside* a directory is invisible to a directory-name check. So `tools/validate.mjs`
+  cannot tell Phase-2 work from Phase-3 work in `engine/`, and never could. What remains
+  mechanical is the outer boundary: `engine/` passes **only** because the marker names it, and
+  deleting the entry re-freezes it on the next CI run. The **inner** boundary — the roadmap's
+  behavioural Phase 2 / Phase 3 rule — is enforced by review and the Auditor, **not by CI**.
+  See [`../governance/build-freeze.md`](../governance/build-freeze.md).
+
+  **⚠ A lift is not permission to start.** [GOV-015](../governance/build-freeze.md) rule 4
+  ties a lift to a *specific **approved, Ready*** ticket. **HD-24 §3 asserted that attaching to
+  ticket (g) satisfied rule 4; it did not** — at that head (g) was `blocked: freeze` and
+  expressly not Ready. `blocked: freeze` is now removed from (g) because HD-24 §3 lifts it,
+  and (g)'s DoR was re-assessed **forward and dated, not backdated**: **it is still NOT
+  Ready** (element 7 — ESC-1/3/4/5 open, Phase-2 exit undetermined). **Rule 4 therefore
+  remains unsatisfied and Phase-3 implementation has not begun.** See
+  [`planning/ticket-set.md`](planning/ticket-set.md) ticket (g).
+
+  **Full branch protection on `main` remains a stated Product Owner precondition on Phase 2
+  product-code merges**, with **6 of its 7 parts in force**; part 3 (required exact-head
+  reviews) is **UNMET** and ruled a **recorded deviation** — read with
+  [`human-decisions.md`](human-decisions.md) → **HD-22 part 3**.
 
 ## Product objective
 - **Final:** a reliable commercial SaaS that detects ATH-anchored logarithmic descending
@@ -92,6 +109,15 @@ implementation remains **freeze-blocked**.
 **Phase 2 — the engine is BUILT and on `main`; the exit determination is OWED.** These are
 two different statements and this file keeps them apart deliberately.
 
+**Phase 3 — the freeze is LIFTED, the design is committed, and nothing is being built.**
+Three different statements, and keeping them apart is the point. [HD-24](human-decisions.md)
+§3 lifted GOV-015 for Phase 3 inside `engine/` on 2026-07-28; the Architect's plan is committed
+as design-only at
+[`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md);
+and ticket **(g)** is **not Ready**, so GOV-015 rule 4 is unsatisfied and no implementation has
+started. **The lift being granted while the ticket is not Ready is exactly the gap HD-24 §3
+asserted away**, and it is recorded rather than closed by assertion — see Blocked work.
+
 *What is delivered and mechanically enforced* (`engine/`, 27 files, merged at `ed92bbb`):
 the deterministic pre-breakout engine reproduces **all 23 golden fixtures and RM-01** —
 anchors, `sig6` slope/intercept, line values at every recorded index, formation traces with
@@ -107,9 +133,22 @@ Steward, on a gate assessment, not an inference from a green suite. **E2-AUTHOR 
 is MET** — [#20](https://github.com/tomerYannay/4UR4/issues/20) **CLOSED** at
 `2026-07-26T23:17:13Z`, `stateReason: COMPLETED`, by PR #32's merge, and the roadmap's own
 wording is *"until it closes this criterion is unmet"*. **Criterion 5 — the independence
-attestation — remains unmet**, and the roadmap states it is unsatisfiable while
-[#21](https://github.com/tomerYannay/4UR4/issues/21) is open; it is recorded as **disclosed
-rather than satisfied**. *(An earlier draft of this paragraph said "two … remain formally
+attestation — has changed state twice and neither change makes it cleanly met.** *(As of
+2026-07-27 this read simply "remains unmet".)* **(1) The artifact now exists**, committed by
+PR #38 at
+[`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md);
+the earlier statement that it *"does not exist as a file"* is false at this head. **(2)
+[HD-24](human-decisions.md) §4 ruled [#36](https://github.com/tomerYannay/4UR4/issues/36)
+Part B affirmatively**, and that ruling governs. **What the artifact does not carry**, on its
+own face: roadmap criterion 5 asks for **both** the A-check **and** the E2-AUTHOR-B record
+**plus the commit range**, and the attestation records the B-record for `7ab8075` as
+**"ABSENT — not weak, ABSENT"**, the commit range as **"NOT RECORDED … This is owed"**, and
+its own sign-off block (§8) as **"OWED. THIS BLOCK IS DELIBERATELY UNSIGNED."** §10 states its
+ceiling: *"it is not a Phase-2 gate pass, it is not a freeze lift, it authorizes nothing."*
+The roadmap's statement that criterion 5 is unsatisfiable while
+[#21](https://github.com/tomerYannay/4UR4/issues/21) is open is untouched, and #21 is open.
+**Both are recorded: the ruling stands, and the residue is not thereby discharged.**
+*(An earlier draft of this paragraph said "two … remain formally
 unmet" and named criterion 1 among them. False — it re-asserted the very stale reading this
 refresh exists to correct, two paragraphs before correcting it. Caught by Code Review.)*
 **At least one further criterion is not cleanly met and is not counted above:** criterion 2
@@ -231,17 +270,28 @@ entry enumerates as going beyond the escalated options:
   structure, control flow, naming and constant derivation that diverge from the reference model
   at every point where they could have converged.
 
-  **What is still owed, stated honestly:** criterion 5's independence *attestation* does not
-  exist as a file, and the roadmap says in its own words that it is unsatisfiable while #21 is
-  open. It is **disclosed, not treated as satisfied** — see M-35. And the E2-AUTHOR-B record
-  for commit `7ab8075` is **ABSENT, not weak**: the orchestrating session authored 6 executable
-  lines in `engine/` having read the reference model. The Auditor examined exactly those lines
-  and found they move *further* from the model than the code they replaced.
+  **What is still owed, stated honestly — and updated 2026-07-28.** *(This paragraph
+  previously opened "criterion 5's independence *attestation* does not exist as a file". **That
+  is false at this head** and is corrected rather than quietly dropped: PR #38 committed it at
+  [`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md),
+  discharging one half of M-35.)* The **ruling** half is now answered too —
+  [HD-24](human-decisions.md) §4 resolved [#36](https://github.com/tomerYannay/4UR4/issues/36)
+  Part B affirmatively. **What remains owed is what the artifact itself says it lacks:** the
+  **E2-AUTHOR-B record for commit `7ab8075` is ABSENT, not weak** — the orchestrating session
+  authored 6 executable lines in `engine/` having read the reference model (the Auditor
+  examined exactly those lines and found they move *further* from the model than the code they
+  replaced) — the **commit range is NOT RECORDED**, and the **sign-off block is deliberately
+  unsigned**. #36 Part B's question was conditioned on an attestation *"carrying your named
+  sign-off"*, so §4 answered it while dropping that precondition. The roadmap still says
+  criterion 5 is unsatisfiable while #21 is open. **The ruling governs; the residue is
+  disclosed, not treated as satisfied.**
 - **Issue [#21](https://github.com/tomerYannay/4UR4/issues/21)** — review verdicts cannot
   become citable artifacts, and review attribution collapses to a single account. **Required
-  before HD-06**, and a stated dependency of E2-AUTHOR **criterion 5** (the clean-room
-  attestation has nowhere to live until #21 is fixed; criterion 4 is authorship/verification
-  separation, and this line named it wrongly). It was also recorded as required
+  before HD-06**, and a stated dependency of E2-AUTHOR **criterion 5** (*corrected 2026-07-28:
+  this read "the clean-room attestation has nowhere to live until #21 is fixed" — the
+  attestation now exists as a committed file, so what #21 withholds is **attribution**, not a
+  place to put it; a same-identity artifact is citable and not independently attributable*;
+  criterion 4 is authorship/verification separation, and this line named it wrongly). It was also recorded as required
   before *any* freeze lift; **the #31 lift proceeded without it** — the Product Owner's
   prerogative, recorded here because the earlier condition should not silently disappear.
 - **Issue [#22](https://github.com/tomerYannay/4UR4/issues/22)** — evidence-tooling follow-ups.
@@ -253,14 +303,22 @@ entry enumerates as going beyond the escalated options:
   is an Orchestrator decision, not a Product Owner one.
 
 ## Next milestone
-**Determine Phase 2 exit, and resolve the attribution defect.** The engine is built, merged
-at `ed92bbb` and enforced by the required CI check, so the previous milestone — *"unblock
-Phase 2 entry and get the ticket to Ready"* — is spent. What actually remains:
-**(a)** the Product Steward's **Phase 2 exit determination** under GOV-002, on a gate
-assessment, which no agent may make; **(b)** [#21](https://github.com/tomerYannay/4UR4/issues/21)
+**Make ticket (g) genuinely Ready — which means determining Phase 2 exit and ruling four
+specification escalations — and resolve the attribution defect.** The Phase-3 freeze lift is
+no longer the constraint; **HD-24 §3 granted it, and nothing started, which is the correct
+outcome.** What actually remains:
+**(a)** the Product Steward **rules ESC-1, ESC-3, ESC-4 and ESC-5** (and gives the
+Steward-owned **OQ-P3** rows normative dispositions), **as a separate governed change** — the
+specification is authoritative and is **not** amended in the same change as the engine
+(HD-15 condition 3); **(b)** the Product Steward's **Phase 2 exit determination** under
+GOV-002, on a gate assessment, which no agent may make — it is also the roadmap's Phase 3
+**entry** criterion, so (a) and (b) together are what make (g) Ready and rule 4 true;
+**(c)** [#21](https://github.com/tomerYannay/4UR4/issues/21)
 and [#34](https://github.com/tomerYannay/4UR4/issues/34) — the single-identity attribution
-defect, which now blocks *every* merge and is the stated blocker on E2-AUTHOR criterion 5;
-**(c)** closing the HD-22 part 3 deviation, which requires a **second identity**.
+defect, which blocks *every* merge and is the stated blocker on E2-AUTHOR criterion 5;
+**(d)** closing the HD-22 part 3 deviation, which requires a **second identity**.
+**GOV-008 rule 1 constrains the ordering:** WIP is saturated at exactly **3**, so nothing new
+starts until a slot frees.
 *(Superseded and recorded: this paragraph previously asked to close #20 — CLOSED — rule M-09
 — CLOSED by SPR-D-03 — and get full branch protection in place — ruled, with the deviation
 recorded.)* In parallel, **complete the PR #12
@@ -316,8 +374,11 @@ Stated as **owed**, not done.
   scope**. Related to [#21](https://github.com/tomerYannay/4UR4/issues/21).
 - **[#21](https://github.com/tomerYannay/4UR4/issues/21) remains required before HD-06.**
   Every gate on PR #25 and PR #30 — **including the GOV-013 merge authorization** — was a
-  single-account relay, and the E2-AUTHOR clean-room attestation still has nowhere citable
-  to live.
+  single-account relay. *(Corrected 2026-07-28: this continued "and the E2-AUTHOR clean-room
+  attestation still has nowhere citable to live." It exists and is committed. **What #21
+  withholds is attribution, not a location** — and PR #38's own gate verdicts were relayed by
+  the Orchestrator under HD-24 §2, which makes them citable and, as those relays say on their
+  face, no more attributable than before.)*
 
 ## Blocked work
 - **#6** Market-data ingestion service (Phase 1 impl) — `blocked: freeze`. Outside the #31
@@ -331,7 +392,20 @@ Stated as **owed**, not done.
   protection is ruled with a recorded deviation; **#21/#34 remain** and gate E2-AUTHOR
   criterion 5. The RM-01 gate-value block is cleared by SPR-D-01 and the Phase 2 plan's S0
   dependency on HD-20 is satisfied.
-- All of Phases 3–9, and every Phase 2 surface outside `engine/` (API, database, scanner,
+- **Phase 3 — the freeze is LIFTED and the work is still NOT startable.** [HD-24](human-decisions.md)
+  §3 lifts GOV-015 for Phase 3 inside `engine/`, so ticket **(g)** in
+  [`planning/ticket-set.md`](planning/ticket-set.md) is no longer `blocked: freeze`. It is
+  **NOT Ready**: [GOV-004](../governance/definition-of-ready.md) element 7 fails on two
+  independent grounds — the four open specification escalations **ESC-1, ESC-3, ESC-4, ESC-5**
+  ([`maintenance-backlog.md`](maintenance-backlog.md) **M-50**), each of which decides
+  behaviour the implementer would otherwise choose alone; and the roadmap's own Phase 3 entry
+  criterion **"Phase 2 exit met"**, which is undetermined. The other seven DoR elements are
+  met. **What unblocks it:** the Steward rules the four escalations **as a separate governed
+  change** (HD-15 condition 3 forbids amending the spec in the same change as the engine), and
+  makes the Phase 2 exit determination. **(g) has not been backdated or cosmetically flipped
+  to Ready**, and must not be. **GOV-008 rule 1 note:** WIP is **saturated at exactly 3**
+  (c, d, h), so even once (g) is Ready it cannot be started until a slot frees.
+- All of Phases 4–9, and every Phase 2/3 surface outside `engine/` (API, database, scanner,
   worker, dashboard, alerts, SaaS) — behind the build-freeze and their entry criteria.
 
 ## Pending Product Owner decisions
@@ -371,6 +445,17 @@ HD-21**), **HD-18** (the self-computed **4UR4 US Large-Cap 500** universe), **HD
 below), and **HD-20**, which was **not** resolved by the Product Owner but by the delegated
 decision **SPR-D-01** under HD-21 — see the next section. **None of these lifts GOV-015,
 selects a provider, or authorizes spend or licensing.**
+
+*Ruled 2026-07-28 and no longer pending:* **[HD-24](human-decisions.md)**
+([#39](https://github.com/tomerYannay/4UR4/issues/39)) — the PR #38/#37 merge authorization
+with its gate-relay provision, the **Phase-3 `engine/` freeze lift**, and an affirmative ruling
+on [#36](https://github.com/tomerYannay/4UR4/issues/36) Part B. **It selects no provider and
+authorizes no spend; HD-06 is untouched.** **Two overreaches are recorded on the register entry
+rather than smoothed:** §3's claim that ticket (g) satisfied GOV-015 rule 4 was **false when
+written**, and §4's ruling rests on an attestation whose E2-AUTHOR-B record is **ABSENT**,
+whose commit range is **not recorded**, and whose sign-off block is **deliberately unsigned**.
+The rulings govern; the gaps are not thereby closed. **[HD-23](human-decisions.md) remains
+PENDING PRODUCT OWNER CONFIRMATION** and is unaffected.
 
 ## Delegated product decisions (HD-21) — a second decision channel
 
@@ -442,8 +527,18 @@ selects a provider, or authorizes spend or licensing.**
   ruled before the Phase 2 ticket meets its Definition of Ready** (E2-AUTHOR / #20 AC-9).
 
 ## Open issues / PRs (governed index)
-- **OPEN issues (13)** — verified against `gh issue list` at this refresh:
-  `[4, 5, 6, 7, 10, 21, 22, 23, 24, 27, 28, 31, 34]`. **#4**, **#5** (Phase 1 research) ·
+- **OPEN issues — the list below is CARRIED FORWARD from the 2026-07-27 refresh and was NOT
+  re-queried on 2026-07-28.** It read **13** — `[4, 5, 6, 7, 10, 21, 22, 23, 24, 27, 28, 31,
+  34]` — verified against `gh issue list` **at that refresh**, and the count is not restated as
+  current here because the Product Steward has no shell and did not measure it. **Known to
+  exist and absent from that list:** [#36](https://github.com/tomerYannay/4UR4/issues/36)
+  (Part A — the Phase-3 lift request, **answered**: HD-24 §3 granted it; Part B —
+  E2-AUTHOR criterion 5, **ruled** by HD-24 §4, on an attestation that carries less than
+  roadmap criterion 5 asks for) and
+  [#39](https://github.com/tomerYannay/4UR4/issues/39) (**HD-24** itself). **A live issue for
+  ticket (g) does not exist yet**; opening one is an Orchestrator action and **no number is
+  invented here**. The GitHub issue list is authoritative and this bullet is stale by
+  construction. **#4**, **#5** (Phase 1 research) ·
   **#6** (Phase 1 impl, `blocked: freeze`), **#7** (Phase 2 engine — freeze lifted for
   `engine/` by #31; the engine is built and merged, and what remains of the ticket is the
   exit determination, not the build) · **#10** (Agent Coordination Queue, permanent index) ·
@@ -477,11 +572,27 @@ selects a provider, or authorizes spend or licensing.**
   (RM-01 as-of-time divergence — the HD-20 evidence and options; **resolved by SPR-D-01**).
 - **Open PRs — a snapshot, not a claim of completeness; the GitHub PR list is authoritative
   and this line is stale the moment a PR is opened.** At this refresh: **#12** (Phase 1
-  research, draft, CI green, 0 reviews, awaiting strategic review) and
-  **[#35](https://github.com/tomerYannay/4UR4/pull/35)** (this refresh, the HD-22 part 3
-  deviation record, and the fixture-immutability guard hardening). **#29 is MERGED** and was
-  listed here as open — corrected.
+  research, draft, CI green, 0 reviews, awaiting strategic review). **#35 is MERGED** at
+  `8cdaffc` and was listed here as open — corrected.
   Coordination queue: [#10](https://github.com/tomerYannay/4UR4/issues/10).
+- **[PR #38](https://github.com/tomerYannay/4UR4/pull/38) MERGED** as
+  `0b564a41dc77c07ade797632cf78bb5183e91825` — five documentation artifacts, **no `engine/`,
+  fixture, tooling, `.github/` or `.claude/` change** (`git diff --name-only` over those paths
+  is empty). It delivered the **E2-AUTHOR independence attestation**
+  ([`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md)),
+  the **HD-23** record, the ticket-set repairs including the first statement of ticket **(g)**,
+  seven maintenance rows plus **ESC-1**, and the **Phase-3 implementation plan**
+  ([`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md),
+  design only). Authorized by **HD-24 §2**, re-anchored to head `586a34e` after the head moved
+  four times under §2's own condition.
+- **[PR #37](https://github.com/tomerYannay/4UR4/pull/37) — ticket (h)'s engine hardening
+  (M-28/29/30/32), authorized by HD-24 §2 alongside #38.** §2's row for it carries the
+  condition *"new SHA after R1 — only after the R1 correction and a re-run of both gates at
+  the new head."* **Its merge status is NOT stated here**, because it is not determinable from
+  the working tree and this file does not assert what it did not check: `main` at this refresh
+  is #38's merge commit, and whether #37 has since landed is a question for the GitHub PR
+  list, which is authoritative. Ticket **(h)** remains recorded as **Ready and in progress**
+  in [`planning/ticket-set.md`](planning/ticket-set.md) on that basis.
 - **Recently merged:** **[#33](https://github.com/tomerYannay/4UR4/pull/33)** as `ed92bbb`
   (**the Phase 2 trendline engine** — `engine/`, 27 files, 136 tests, all 23 golden fixtures
   and RM-01 causal replay, the engine conformance step added to the required CI check, the
@@ -503,8 +614,13 @@ selects a provider, or authorizes spend or licensing.**
 [`roadmap.md`](roadmap.md) · [`requirements.md`](requirements.md) · [`human-decisions.md`](human-decisions.md) ·
 [`trendline-specification.md`](trendline-specification.md) · [`confidence-specification.md`](confidence-specification.md) ·
 [`fixtures/README.md`](fixtures/README.md) · [`fixtures/VERIFICATION.md`](fixtures/VERIFICATION.md) ·
-[`maintenance-backlog.md`](maintenance-backlog.md) · [`../governance/build-freeze.md`](../governance/build-freeze.md) ·
+[`maintenance-backlog.md`](maintenance-backlog.md) · [`planning/ticket-set.md`](planning/ticket-set.md) ·
+[`../governance/build-freeze.md`](../governance/build-freeze.md) ·
+[`../governance/definition-of-ready.md`](../governance/definition-of-ready.md) ·
+[`../governance/ticket-hygiene.md`](../governance/ticket-hygiene.md) ·
 [`../docs/architecture/mvp-architecture.md`](../docs/architecture/mvp-architecture.md) ·
+[`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md) ·
+[`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md) ·
 [`../docs/architecture/universe-methodology.md`](../docs/architecture/universe-methodology.md) ·
 [`../docs/architecture/phase2-implementation-plan.md`](../docs/architecture/phase2-implementation-plan.md) ·
 [`../docs/architecture/phase2-independence-mechanism.md`](../docs/architecture/phase2-independence-mechanism.md) ·

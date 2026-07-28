@@ -35,6 +35,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-21 | high | Bounded autonomous product-decision authority delegated to the Strategic Product Reviewer | **APPROVED** |
 | HD-22 | high | GOV-015 scope lift — Phase 2 `engine/` only | **APPROVED** |
 | HD-23 | high | Autonomous-execution directive: finish the permitted work; product delivery outranks governance polish | **PENDING PRODUCT OWNER CONFIRMATION** |
+| HD-24 | high | Merge authorization for PR #38/#37, a **Phase-3** GOV-015 scope lift, and a ruling on #36 Part B | **APPROVED (relayed) — two overreaches recorded** |
 
 ---
 
@@ -1323,6 +1324,128 @@ It does not make **HD-06** decidable. It does not supersede HD-21 or HD-17. It d
 an artifact where #21 says none can exist. It is **not** a merge authorization
 (GOV-013 clause 4).
 
+## HD-24 — PR #38/#37 merge authorization · Phase-3 GOV-015 scope lift · #36 Part B · materiality: **high**
+
+- **Status:** **APPROVED** as a Product Owner decision — **relayed**, with **two places where
+  the decision asserts more than its own evidence supports, recorded below rather than
+  smoothed.**
+- **Decided by:** Product Owner, **2026-07-28**.
+- **Artifact:** [issue #39](https://github.com/tomerYannay/4UR4/issues/39). Unlike
+  [HD-23](#hd-23--autonomous-execution-directive--materiality-high), this decision **has** a
+  citable artifact; HD-24's own closing line directs that it be recorded here as **HD-24**,
+  which is what this entry does.
+- **⚠ Provenance, as HD-24 discloses it about itself.** It was **relayed in session under the
+  single shared identity**, and **written up by the Orchestrator, which is an interested
+  party** in the merges §2 authorizes. It is therefore **citable but not independently
+  attributable**: no artifact under one identity distinguishes a relayed Product Owner
+  decision from one the relaying agent composed.
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) and
+  [#34](https://github.com/tomerYannay/4UR4/issues/34) **remain open**, and HD-24 does not
+  close either.
+- **⚠ Provenance of *this record*, on the HD-13 pattern.** This entry was written by the
+  Product Steward from the decision as **relayed to the recording session**, corroborated
+  against the three gate relays and the PR #38 body, each of which quotes HD-24 §2 by
+  section. **The recording agent did not read the issue body itself.** Where this entry and
+  [#39](https://github.com/tomerYannay/4UR4/issues/39) disagree, **the issue governs.** Only
+  **§2, §3 and §4** — the parts this record propagates — are transcribed here; the remaining
+  sections are not, and their absence from this entry is not a statement about their content.
+
+### §2 — merge authorization and the gate-relay provision
+
+**Recorded as it operated, not as it was first written.** §2 authorizes PR
+[#38](https://github.com/tomerYannay/4UR4/pull/38) and PR
+[#37](https://github.com/tomerYannay/4UR4/pull/37) by number, on the condition *"Merge after
+#35; gates required first."* It states that **the gates themselves are NOT waived**; what it
+waives is the requirement that the Product Owner personally approve or perform each merge. It
+also permits the **Orchestrator to relay** a gate verdict where `ROLE_POLICY` blocks the `GH`
+category for the gate role, requiring each relay to state on its face that it is one — which
+*"does not repair the attribution weakness; it makes the verdict citable"*, a strictly weaker
+property.
+
+**The head it named is void, and the authorization was re-anchored.** §2's table named
+`207e91a`. PR #38's head then moved four times under §2's own condition — merge-forward onto
+`main`, then three rounds of gate-driven correction — and the authorization was re-anchored to
+`586a34e091591b69b35b596b01c4e848cc68e846`
+([artifact](https://github.com/tomerYannay/4UR4/issues/39#issuecomment-5101982897)), on the
+ground that §2's own #37 row already contemplates a new SHA produced by a gate correction. All
+three gates were re-run and posted at that exact head, every prior head-specific verdict
+explicitly discarded. **The re-anchoring comment is itself Orchestrator-authored and inherits
+HD-24's attribution weakness rather than curing it** — it says so on its face. PR #38 merged
+at `586a34e` as `0b564a41dc77c07ade797632cf78bb5183e91825`, post-merge CI green.
+
+### §3 — the Phase-3 GOV-015 scope lift
+
+**Granted, and enumerated.** §3 lifts [GOV-015](../governance/build-freeze.md) for **Phase 3
+work inside `engine/`**: the **`ACTIVE → BROKEN_OUT` transition**, **line freezing** (`Λ^F`,
+§21.5), **retest** (§16), **failed breakout** (§15), and **expiry/recompute** (§17). Still
+frozen, per §3's own list: **provider integration · live ingestion · `api` · `db` · `scanner`
+· `worker` · `dashboard` · `alerts` · `billing` · `providers` · SaaS surfaces · spend ·
+licensing · privacy/billing · external deployment.** **E2-AUTHOR continues to bind the whole
+engine.** Propagated to [`../governance/build-freeze.md`](../governance/build-freeze.md).
+
+**⚠ OVERREACH 1 — §3's claim that ticket (g) satisfies GOV-015 rule 4 was FALSE when
+written, and this PR repairs it FORWARD, not retroactively.** Rule 4 requires a lift to be
+*per-scope, tied to a specific **approved, Ready** ticket*. At head `586a34e` — the state §3
+was asserted against — ticket (g) in
+[`planning/ticket-set.md`](planning/ticket-set.md) read **`blocked: freeze`**, **"NOT Ready …
+and deliberately so"**, with **no live GitHub issue**. It satisfied **specific**. It failed
+**approved** and failed **Ready**. **Rule 4 was not satisfied at the moment HD-24 asserted it,
+and nothing in this register should be read as saying it was.** Found by the Strategic Product
+Reviewer in the PR #38 review, stated there without hedge.
+
+**The Product Owner's authority to lift is not in question** — a Product Owner decision
+outranks GOV-015, and §3 could simply have *waived* rule 4. It did not waive it; it
+**asserted** it, and the asserted mechanism did not exist. The repair is therefore **forward**:
+ticket (g)'s `blocked: freeze` is removed under this lift, its DoR is re-assessed **dated now**
+against [GOV-004](../governance/definition-of-ready.md), and a live issue is opened for it.
+**The repair is begun and is NOT complete.** On that re-assessment ticket (g) is **still not
+Ready** — [GOV-004](../governance/definition-of-ready.md)'s *"carries no unaddressed dependency
+or open scope question"* is genuinely unmet while **ESC-1, ESC-3, ESC-4 and ESC-5**
+([`maintenance-backlog.md`](maintenance-backlog.md) M-50) are open and while the **Phase 2 exit
+determination** the roadmap makes a Phase 3 entry criterion is still owed. **Rule 4 is
+therefore still unsatisfied at this head, now for a stated and closable reason rather than an
+unnoticed one, and Phase-3 implementation may not begin.**
+
+> **The trap, named so it is not walked into.** The Phase-2 attestation records that `engine/`
+> was authored before its ticket reached Ready and that ***"#7 has NOT been backdated to
+> Ready. Fitting the record to the outcome is the failure this corpus exists to catch."***
+> The identical defect was available here prospectively: flipping (g) to Ready would make §3
+> read true. **It was not done, and must not be.**
+
+### §4 — E2-AUTHOR criterion 5 and #36 Part B
+
+**§4 resolves [#36](https://github.com/tomerYannay/4UR4/issues/36) Part B affirmatively, on the
+Phase-2 independence attestation** committed by PR #38
+([`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md)).
+**That ruling stands as a Product Owner decision.**
+
+**⚠ OVERREACH 2 — the artifact §4 relies on does not carry what the roadmap criterion asks
+for, and both facts are true at once.** [`roadmap.md`](roadmap.md) criterion 5 requires the
+attestation to carry **both** the A-check **and** the E2-AUTHOR-B record **plus the commit
+range**. The attestation itself records the B-record for `7ab8075` as **"ABSENT — not weak,
+ABSENT"** and the commit range as **"NOT RECORDED … This is owed."** #36 Part B's question was
+conditioned on an attestation *"carrying your named sign-off"*, and attestation §8 is
+**"OWED. THIS BLOCK IS DELIBERATELY UNSIGNED."** Attestation §10 states its own ceiling: *"it
+is not a Phase-2 gate pass, it is not a freeze lift, it authorizes nothing."*
+
+**The artifact pre-emptively refused the claim now made of it.** What §4's *descriptive* clause
+says is accurate — the attester is the Product Steward, disclosed as a non-author of `engine/`;
+the artifact is committed and citable; §9.1 discloses the single-identity collapse on its face.
+What §4's *ruling* does is answer a question while dropping the precondition it was conditioned
+on. **Both are recorded. The ruling governs; the gap is not thereby closed**, and
+[`project-state.md`](project-state.md) continues to carry criterion 5's residue as owed.
+
+### What this decision does not do
+
+It does **not** touch **HD-06** — no provider is selected and no spend is authorized. It does
+**not** change the roadmap or its phase order ([GOV-002](../governance/roadmap-authority.md),
+[GOV-013](../governance/approval-gate.md)). It does **not** widen the lift beyond `engine/`.
+It does **not** close [#21](https://github.com/tomerYannay/4UR4/issues/21) or
+[#34](https://github.com/tomerYannay/4UR4/issues/34), and it creates no independent
+attribution. It does **not** confirm [HD-23](#hd-23--autonomous-execution-directive--materiality-high),
+which remains **PENDING**. It does **not** make ticket (g) Ready — only a
+[GOV-004](../governance/definition-of-ready.md) assessment can, and the current one says no.
+
 ## Decision log — 2026-07-28 (relayed, unconfirmed)
 
 - **2026-07-28 — HD-23 relayed, not ruled.** An autonomous-execution directive reached the
@@ -1336,6 +1459,27 @@ an artifact where #21 says none can exist. It is **not** a merge authorization
   entries — HD-01–HD-05, HD-07–HD-11 — name none either; they predate the practice and no
   ratification covers them.)* The absence is itself the disclosure
   [#21](https://github.com/tomerYannay/4UR4/issues/21) exists to fix.
+
+## Decision log — 2026-07-28 (Product Owner, HD-24)
+
+*Kept under its own heading rather than folded into the log above: HD-23 is relayed and
+**unconfirmed with no artifact**, HD-24 is relayed and **carries one**
+([#39](https://github.com/tomerYannay/4UR4/issues/39)). Merging the two headings would level a
+distinction this register exists to keep.*
+
+- **2026-07-28 — [HD-24](#hd-24--pr-3837-merge-authorization--phase-3-gov-015-scope-lift--36-part-b--materiality-high)
+  ruled, and recorded with its two overreaches.** §2 authorizes PR #38 and PR #37 by number
+  without waiving their gates, and permits Orchestrator **relay** of gate verdicts; the head it
+  named was voided by four gate-driven corrections and the authorization was **re-anchored** to
+  `586a34e`. §3 **lifts GOV-015 for Phase 3 inside `engine/`** — the `ACTIVE → BROKEN_OUT`
+  transition, `Λ^F` freezing, retest, failed breakout, expiry/recompute — everything else
+  still frozen, E2-AUTHOR still binding. §4 resolves
+  [#36](https://github.com/tomerYannay/4UR4/issues/36) Part B affirmatively.
+  **Two overreaches are recorded rather than smoothed:** §3's claim that ticket (g) satisfied
+  **GOV-015 rule 4 was false when written** — (g) was `blocked: freeze` and expressly not
+  Ready — and §4's ruling rests on an attestation that records its own E2-AUTHOR-B entry as
+  **ABSENT**, its commit range as **not recorded**, and its sign-off block as **deliberately
+  unsigned**. The rulings stand; the gaps stand with them.
 
 ---
 
