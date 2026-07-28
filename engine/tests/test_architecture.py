@@ -385,34 +385,71 @@ class A6OneStatementOfEachEnvelopeRule(unittest.TestCase):
         )
 
 
+#: The only modules allowed to name a post-breakout code or state.  ``state.py``
+#: declares the closed sets; ``frozen.py`` owns ``Λ^F`` and the §15/§16/§17
+#: predicates; ``causal.py`` is the fold that emits the records.
+POST_BREAKOUT_MODULES = ("state.py", "frozen.py", "causal.py")
+
+POST_BREAKOUT_TOKENS = (
+    "ReasonCode.BREAKOUT_CONFIRMED",
+    "ReasonCode.RETEST_HELD",
+    "ReasonCode.FAILED_BREAKOUT",
+    "ReasonCode.EXPIRED_POST_BREAKOUT",
+    "LineState.BROKEN_OUT",
+    "LineState.RETESTED",
+    "LineState.FAILED_BREAKOUT",
+    "LineState.EXPIRED",
+)
+
+
 class ScopeDiscipline(unittest.TestCase):
-    """Phase-3 scope creep, checked as a property of the source."""
+    """Layering, checked as a property of the source.
 
-    def test_no_phase_3_reason_code_is_ever_emitted(self) -> None:
+    Phase 2 forbade these tokens everywhere but ``state.py``, which is no longer
+    the right check — the engine now emits all four codes.  The check is
+    **narrowed rather than deleted**, because a scope test that is simply removed
+    leaves nothing behind, while a narrowed one still detects the real risk: a
+    post-breakout code emitted from the input guards, the envelope selector or
+    the formation gates, where it would mean the layering had collapsed.
+    """
+
+    def test_only_the_frozen_line_layer_names_a_post_breakout_token(self) -> None:
+        offenders = []
         for name in PRODUCT_MODULES:
-            if name == "state.py":
-                continue  # the closed set must NAME them; it must not emit them
+            if name in POST_BREAKOUT_MODULES:
+                continue
             source = _source(os.path.join(ENGINE_DIR, name))
-            for token in (
-                "ReasonCode.BREAKOUT_CONFIRMED",
-                "ReasonCode.RETEST_HELD",
-                "ReasonCode.FAILED_BREAKOUT",
-                "ReasonCode.EXPIRED_POST_BREAKOUT",
-            ):
-                self.assertNotIn(token, source, "%s emits a Phase-3 reason code" % name)
+            for token in POST_BREAKOUT_TOKENS:
+                if token in source:
+                    offenders.append((name, token))
+        self.assertEqual(
+            offenders,
+            [],
+            "a module outside the frozen-line layer names a post-breakout token: %r"
+            % (offenders,),
+        )
 
-    def test_no_phase_3_state_is_ever_assigned(self) -> None:
+    def test_the_containment_check_is_not_vacuous(self) -> None:
+        """If the tokens had been renamed the check above would pass while
+        asserting nothing.  Each must actually appear where it belongs."""
+        allowed_source = "".join(
+            _source(os.path.join(ENGINE_DIR, name)) for name in POST_BREAKOUT_MODULES
+        )
+        for token in POST_BREAKOUT_TOKENS:
+            self.assertIn(token, allowed_source, "%s appears nowhere at all" % token)
+        self.assertGreater(len(PRODUCT_MODULES), len(POST_BREAKOUT_MODULES))
+
+    def test_expired_is_named_only_where_it_is_declared_unreachable(self) -> None:
+        """ESC-1: ``LineState.EXPIRED`` is reserved and unreachable.  It may be
+        *named* only by the enum that declares it so, never assigned."""
         for name in PRODUCT_MODULES:
             if name == "state.py":
                 continue
-            source = _source(os.path.join(ENGINE_DIR, name))
-            for token in (
-                "LineState.BROKEN_OUT",
-                "LineState.RETESTED",
-                "LineState.FAILED_BREAKOUT",
+            self.assertNotIn(
                 "LineState.EXPIRED",
-            ):
-                self.assertNotIn(token, source, "%s assigns a Phase-3 state" % name)
+                _source(os.path.join(ENGINE_DIR, name)),
+                "%s names the reserved, unreachable EXPIRED state" % name,
+            )
 
     def test_engine_is_the_only_product_directory(self) -> None:
         product_like = {"src", "app", "lib", "server", "api", "worker", "scanner", "dashboard"}

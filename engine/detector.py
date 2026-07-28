@@ -12,9 +12,11 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
 from .bars import BarSeries, Prefix, Provenance
-from .causal import CausalResult, Line, run
+from .causal import CausalResult, run
 from .envelope import Selection, select_second_anchor
+from .frozen import Challenger, FrozenLine
 from .guards import GuardVerdict, run_guards
+from .line import Line
 from .logspace import ln_price
 from .params import DetectorParams
 from .state import LineState, PreconditionError, ReasonCode, TransitionRecord
@@ -36,9 +38,28 @@ class DetectionResult:
     final_state: Optional[LineState]
     ath_anchor: Optional[Tuple[int, float]]
     reported_line: Optional[Line]
-    #: Phase 2's equivalent of ``confirmed_bar``: the bar at which §13.1's
-    #: predicate first held.  ``None`` when it never did.
+    #: The bar at which §13.1's predicate FIRST held anywhere in the series —
+    #: the engine-derived stop RM-01's B-clause asserts against.  ``None`` when
+    #: it never did.
+    #:
+    #: **This is not an alias for** :attr:`confirmed_bar`, and the plan's §8.3
+    #: M4 was corrected on that point (OQ-P3-5, ruled 2026-07-28).  The alias
+    #: holds only while a series has exactly one episode, which is true of every
+    #: committed fixture and is not true in general: the reported
+    #: ``confirmed_bar`` moves to each new episode's freeze while this index does
+    #: not follow it.
     stop_bar: Optional[int]
+    #: The LATEST episode's freeze bar — the ``confirmed_bar`` §21.4 says a
+    #: detector reports (OQ-P3-5).  ``breakout_bar == confirmed_bar`` (HD-03).
+    confirmed_bar: Optional[int] = None
+    #: ``Λ^F`` of that same latest episode, retained after the episode ends by
+    #: either exit (OQ-P3-4).
+    frozen_line: Optional[FrozenLine] = None
+    #: Every episode's ``Λ^F`` in order; :attr:`frozen_line` is the last.
+    episodes: Tuple[FrozenLine, ...] = ()
+    #: Post-breakout highs a full-series hull would have re-selected and §21.5
+    #: forbade — the positive evidence that suspension held.
+    challengers: Tuple[Challenger, ...] = ()
     diagnostics: Dict[str, object] = field(default_factory=dict)
 
     @property
@@ -121,6 +142,10 @@ def detect(
         ath_anchor=causal.reported_anchor,
         reported_line=causal.reported_line,
         stop_bar=None if causal.stop is None else causal.stop.bar,
+        confirmed_bar=None if causal.frozen is None else causal.frozen.confirmed_bar,
+        frozen_line=causal.frozen,
+        episodes=causal.episodes,
+        challengers=causal.challengers,
         diagnostics=diagnostics,
     )
 

@@ -20,7 +20,7 @@ from typing import List, Tuple
 from ..bars import Bar, BarSeries
 from ..detector import detect
 from ..params import DetectorParams
-from ..state import LineState, ReasonCode
+from ..state import PHASE3_REASON_CODES, LineState, ReasonCode
 from .conformance import SPEC_VERSION
 from .fixtures_io import GOLDEN_DIR, golden_fixture_ids, load_expected, load_series
 from .support import default_params, make_series
@@ -100,6 +100,40 @@ class GeneratorQuality(unittest.TestCase):
         self.assertGreaterEqual(with_stop, 3, "too few stops")
         self.assertGreaterEqual(with_reset, 3, "too few new-ATH resets")
 
+    def test_the_corpus_contains_post_breakout_bars_inside_both_windows(self) -> None:
+        """The Phase-3 clauses below are about bars AFTER the breakout.
+
+        A random corpus whose breakouts all landed on the last bar would satisfy
+        every one of them vacuously.  So the corpus is required to contain
+        breakouts with bars inside the §15 failure window and inside the §16
+        return window, and to actually reach the post-breakout states.
+        """
+        rng = random.Random(SEED)
+        params = default_params()
+        in_failure_window = 0
+        in_return_window = 0
+        reached = {LineState.BROKEN_OUT: 0, LineState.RETESTED: 0, LineState.FAILED_BREAKOUT: 0}
+        for _ in range(SERIES_COUNT):
+            series = _random_series(rng)
+            result = detect(series, params)
+            if result.confirmed_bar is None:
+                continue
+            tail = len(series) - 1 - result.confirmed_bar
+            if tail >= 1:
+                in_failure_window += 1
+                in_return_window += 1
+            for state in reached:
+                if state in (result.causal.state_at_start if result.causal else ()):
+                    reached[state] += 1
+        self.assertGreaterEqual(in_failure_window, 3, "no breakout has a bar after it")
+        self.assertGreaterEqual(in_return_window, 3, "no breakout has a bar after it")
+        self.assertGreater(reached[LineState.BROKEN_OUT], 0, "no series reaches BROKEN_OUT")
+        self.assertGreater(
+            reached[LineState.RETESTED] + reached[LineState.FAILED_BREAKOUT],
+            0,
+            "no series ever leaves BROKEN_OUT, so the §15/§16 legs are untested here",
+        )
+
 
 class P1NoLookAhead(unittest.TestCase):
     """Mutating any bar at index > t leaves every record at bars <= t unchanged.
@@ -158,6 +192,67 @@ class P1NoLookAhead(unittest.TestCase):
             guard_rejections, 0, "the guard-interaction branch was never exercised"
         )
 
+    def test_a_mutation_after_a_breakout_cannot_move_that_breakouts_frozen_line(self) -> None:
+        """§21.5 and §21.9's bar-22 walkthrough, as a property.
+
+        Under a full-series hull a later high would be a shallower envelope-valid
+        vertex and the already-fired breakout could **vanish retroactively** —
+        the exact look-ahead §21 forbids.  Under §21 re-selection is suspended, so
+        mutating any bar after an episode's freeze must leave **that episode's**
+        ``Λ^F`` field-identical, and must rewrite no record at or before it.
+
+        Stated per-episode, and not as "the reported frozen line never moves",
+        because that stronger claim is **false and should be**: §21.8 rule 2 lets
+        a later bar *add* a new event, and a mutation can legitimately open a
+        **later** episode whose freeze then becomes the reported one (§21.4,
+        OQ-P3-5).  What may never happen is an earlier episode changing.  The
+        corpus below contains both cases, and the counts are asserted so neither
+        branch can go untested.
+        """
+        rng = random.Random(SEED + 5)
+        params = default_params()
+        unchanged = 0
+        new_episode = 0
+        for _ in range(SERIES_COUNT):
+            series = _random_series(rng)
+            baseline = detect(series, params)
+            if not baseline.episodes:
+                continue
+            first = baseline.episodes[0]
+            for index in range(first.breakout_bar + 1, len(series)):
+                mutated = detect(_mutate_suffix_bar(rng, series, index), params)
+                if mutated.rejected:
+                    continue  # the whole-series §18 pre-pass; see the test above
+                self.assertTrue(
+                    mutated.episodes and mutated.episodes[0] == first,
+                    "a bar at index %d moved the FIRST episode's Λ^F (§21.5)" % index,
+                )
+                self.assertEqual(
+                    [r for r in _records(mutated) if r[0] <= first.breakout_bar],
+                    [r for r in _records(baseline) if r[0] <= first.breakout_bar],
+                    "a bar at index %d rewrote a record at or before the breakout" % index,
+                )
+                if mutated.frozen_line == baseline.frozen_line:
+                    unchanged += 1
+                else:
+                    new_episode += 1
+                    self.assertGreater(
+                        mutated.confirmed_bar,
+                        baseline.confirmed_bar or -1,
+                        "the reported Λ^F moved to an EARLIER episode — that is "
+                        "look-ahead, not a new event (§21.8 rule 2)",
+                    )
+                    self.assertGreater(len(mutated.episodes), len(baseline.episodes) - 1)
+        self.assertGreater(
+            unchanged, 20, "too few post-breakout mutations: the property held vacuously"
+        )
+        self.assertGreater(
+            new_episode,
+            0,
+            "no mutation ever opened a later episode, so the OQ-P3-5 branch — "
+            "the reported Λ^F moving to a NEW episode — was never exercised",
+        )
+
 
 class P2PrefixTruncationInvariance(unittest.TestCase):
     """Running on ``bars[0..k]`` yields exactly the record prefix of the full run.
@@ -191,6 +286,23 @@ class P2PrefixTruncationInvariance(unittest.TestCase):
                 )
                 if full.stop_bar is not None and k >= full.stop_bar:
                     self.assertEqual(truncated.stop_bar, full.stop_bar, fixture_id)
+                # §21.5, and the clause the OQ-P3-5 ruling corrects: the frozen
+                # line is stable for every truncation at or after the **LATEST**
+                # episode's confirmed bar.  Stated that way rather than "any
+                # k >= confirmed_bar", which is false the moment a second episode
+                # exists — truncating between two breakouts reports the earlier
+                # Λ^F, so the two runs differ by construction.  Every committed
+                # fixture has at most one episode, so the two readings coincide
+                # here; the invariant is written in the form that survives.
+                if full.confirmed_bar is not None and k >= full.confirmed_bar:
+                    self.assertEqual(
+                        truncated.confirmed_bar, full.confirmed_bar, fixture_id
+                    )
+                    self.assertEqual(
+                        truncated.frozen_line,
+                        full.frozen_line,
+                        "%s: truncating after bar %d changed Λ^F" % (fixture_id, k),
+                    )
 
     def test_positive_control_the_guard_exemption_cannot_hide_a_defect(self) -> None:
         """A guard-rejected series legitimately breaks the property, because the
@@ -217,26 +329,86 @@ class P2PrefixTruncationInvariance(unittest.TestCase):
 
 
 class P3StopStability(unittest.TestCase):
-    """Once the predicate fires at ``t``, nothing later changes ``line_at_stop``.
+    """Once the predicate fires at ``t``, nothing later changes the frozen line.
 
-    **Near-vacuous in Phase 2 by construction** — the engine halts at ``t``, so
-    there are no later bars to change anything.  It is stated as such and kept
-    because it becomes load-bearing the moment Phase 3 continues past the stop,
-    where it will be asserted against the frozen line.
+    **Phase 2 described this as "near-vacuous by construction" — the engine
+    halted at ``t``, so there were no later bars to change anything — and kept it
+    because it "becomes load-bearing the moment Phase 3 continues past the
+    stop".  That moment is now**, and the property is rewritten to the live form:
+    the fold runs to the end of the series, and what must not move is ``Λ^F``.
     """
 
-    def test_no_record_is_emitted_after_the_stop(self) -> None:
+    def test_the_frozen_line_at_the_end_of_the_run_is_the_one_built_at_the_stop(self) -> None:
         rng = random.Random(SEED + 2)
         params = default_params()
         stops = 0
+        post_stop_bars = 0
+        multi_episode = 0
         for _ in range(SERIES_COUNT):
-            result = detect(_random_series(rng), params)
+            series = _random_series(rng)
+            result = detect(series, params)
             if result.stop_bar is None:
                 continue
             stops += 1
+            post_stop_bars += len(series) - 1 - result.stop_bar
+            self.assertTrue(result.episodes)
+            # Λ^F of the FIRST episode is the very object the stop recorded, not
+            # a recomputation: identity, so the quantity RM-01's B-clause asserts
+            # and the quantity the golden fixtures assert cannot drift apart.
+            self.assertIs(result.episodes[0].line, result.line_at_stop)
+            self.assertEqual(result.episodes[0].breakout_bar, result.stop_bar)
+            # The REPORTED Λ^F is the LATEST episode's (§21.4, OQ-P3-5) — which
+            # is a different bar the moment a series has two.
+            self.assertIs(result.frozen_line, result.episodes[-1])
+            self.assertEqual(result.confirmed_bar, result.episodes[-1].breakout_bar)
+            if len(result.episodes) > 1:
+                multi_episode += 1
+                self.assertGreater(result.confirmed_bar, result.stop_bar)
+            # No record before the breakout carries a post-breakout code, and the
+            # first that does is at exactly the engine-derived stop.
             for record in result.transitions:
-                self.assertLessEqual(record.bar, result.stop_bar)
+                if record.bar < result.stop_bar:
+                    self.assertNotIn(record.reason, PHASE3_REASON_CODES)
+            first_post = [
+                record.bar
+                for record in result.transitions
+                if record.reason in PHASE3_REASON_CODES
+            ]
+            self.assertEqual(
+                min(first_post), result.stop_bar,
+                "the first post-breakout emission is not at the engine-derived stop",
+            )
         self.assertGreater(stops, 0)
+        self.assertGreater(
+            post_stop_bars, 0, "every stop landed on the last bar; nothing was tested"
+        )
+        self.assertGreater(
+            multi_episode,
+            0,
+            "no generated series has two episodes, so the OQ-P3-5 distinction "
+            "between the engine-derived stop and the reported confirmed bar was "
+            "never exercised — and the committed corpus cannot exercise it",
+        )
+
+    def test_a_truncation_at_the_stop_freezes_the_same_line(self) -> None:
+        """The strongest available form: the line frozen when the series ends at
+        the breakout bar is field-identical to the one frozen when it does not.
+
+        Compared against the FIRST episode, because truncating at the stop can
+        only ever have produced that one."""
+        rng = random.Random(SEED + 6)
+        params = default_params()
+        checked = 0
+        for _ in range(SERIES_COUNT):
+            series = _random_series(rng)
+            result = detect(series, params)
+            if result.stop_bar is None or result.stop_bar >= len(series) - 1:
+                continue
+            head = BarSeries(list(series.bars)[: result.stop_bar + 1])
+            truncated = detect(head, params)
+            self.assertEqual(truncated.frozen_line, result.episodes[0])
+            checked += 1
+        self.assertGreater(checked, 0)
 
 
 class P4HullValidityAtEveryPrefix(unittest.TestCase):

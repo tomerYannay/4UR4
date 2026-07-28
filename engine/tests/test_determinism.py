@@ -28,6 +28,7 @@ from typing import Any, Dict, List
 from ..detector import DetectionResult, detect
 from ..logspace import sig6, sig6_stable
 from ..params import DetectorParams
+from ..state import LineState, ReasonCode
 from .conformance import SPEC_VERSION
 from .fixtures_io import (
     GOLDEN_DIR,
@@ -48,8 +49,15 @@ def _load(fixture_id: str):
 
 
 def serialize(result: DetectionResult) -> str:
-    """A canonical, fixed-key-order rendering of everything the engine reports."""
+    """A canonical, fixed-key-order rendering of everything the engine reports.
+
+    ``frozen_line``, ``confirmed_bar`` and ``state_at_start`` are in the digest
+    deliberately.  Without them D-3 and D-6 would certify a corpus in which every
+    quantity Phase 3 added was unobserved — the digest would be byte-identical
+    across two runs that disagreed about the frozen line.
+    """
     line = result.reported_line
+    frozen = result.frozen_line
     payload: Dict[str, Any] = {
         "spec_version": result.spec_version,
         "tolerance_version": result.tolerance_version,
@@ -66,7 +74,27 @@ def serialize(result: DetectionResult) -> str:
             "b": repr(line.b),
         },
         "stop_bar": result.stop_bar,
+        "confirmed_bar": result.confirmed_bar,
+        "frozen_line": None
+        if frozen is None
+        else {
+            "t_anchor": frozen.line.t_anchor,
+            "high_anchor": repr(frozen.line.high_anchor),
+            "t_b": frozen.line.t_b,
+            "high_b": repr(frozen.line.high_b),
+            "m": repr(frozen.line.m),
+            "b": repr(frozen.line.b),
+            "tolerance_version": frozen.tolerance_version,
+            "breakout_bar": frozen.breakout_bar,
+        },
+        "challengers": [
+            [item.bar, repr(item.high), repr(item.slope_if_selected)]
+            for item in result.challengers
+        ],
         "final_state": None if result.final_state is None else result.final_state.value,
+        "state_at_start": []
+        if result.causal is None
+        else [state.value for state in result.causal.state_at_start],
         "transitions": [list(record.as_tuple()) for record in result.transitions],
         "reason_codes": [code.value for code in result.reason_codes],
         "reselections": []
@@ -208,6 +236,23 @@ class C4TieProximityAudit(unittest.TestCase):
                 for candidate in selection.candidates:
                     out.append(("%s.slope@%d" % (fixture_id, sealed.t), candidate.slope))
                     out.append(("%s.gap@%d" % (fixture_id, sealed.t), candidate.worst_gap))
+            # The four post-breakout margin quantities the fixtures record, and
+            # the challenger slopes.  Without these the audit would certify a
+            # corpus in which every Phase-3 comparison was unexamined.
+            for event in result.causal.events:
+                for key in ("margin", "return_margin", "hold_margin", "y_hat",
+                            "y_hat_frozen", "line_value", "ln_close", "pierce",
+                            "close_margin", "ln_high"):
+                    value = event.detail.get(key)
+                    if isinstance(value, float):
+                        out.append(
+                            ("%s.%s.%s@%d" % (fixture_id, event.event.value, key, event.bar), value)
+                        )
+            for item in result.challengers:
+                out.append(("%s.challenger@%d" % (fixture_id, item.bar), item.slope_if_selected))
+            if result.frozen_line is not None:
+                out.append(("%s.frozen.m" % fixture_id, result.frozen_line.line.m))
+                out.append(("%s.frozen.b" % fixture_id, result.frozen_line.line.b))
         return out
 
     def test_no_compared_value_is_within_one_ulp_of_a_rounding_tie(self) -> None:
@@ -284,12 +329,15 @@ class HD13EpsBreakSweep(unittest.TestCase):
                     point["breakout_bar"],
                     "%s at scale %s: stop index" % (fixture_id, point["scale"]),
                 )
-                if point["breakout_bar"] is None:
-                    self.assertEqual(
-                        None if result.final_state is None else result.final_state.value,
-                        point["final_state"],
-                        "%s at scale %s: final_state" % (fixture_id, point["scale"]),
-                    )
+                # Compared at EVERY point.  The Phase-2 form guarded this on
+                # ``breakout_bar is None``, which left every post-breakout sweep
+                # outcome — GX-12 at 0.5x and GX-15 at 0.5x and 0.8x among them —
+                # unasserted.
+                self.assertEqual(
+                    None if result.final_state is None else result.final_state.value,
+                    point["final_state"],
+                    "%s at scale %s: final_state" % (fixture_id, point["scale"]),
+                )
                 compared += 1
             if fixture_id in self._non_invariant_fixtures():
                 movers += 1
@@ -329,24 +377,53 @@ class HD13EpsBreakSweep(unittest.TestCase):
 class ReasonCodeCoverage(unittest.TestCase):
     """Measured by EMISSION during the conformance run, never by grepping source."""
 
-    def test_every_phase_2_code_reachable_from_the_corpus_is_emitted(self) -> None:
+    def test_every_code_reachable_from_the_corpus_is_emitted(self) -> None:
+        """14 of the 15 closed-set codes, the four post-breakout ones included.
+
+        The fifteenth is ``INSUFFICIENT_BARS``, which §21.3 says must NOT be
+        recorded at the head of a series — it is reachable in the gate trace and
+        deliberately absent from the record, asserted by its own test below.
+        """
         emitted = set()
         for fixture_id in golden_fixture_ids():
             _expected, series, params = _load(fixture_id)
             emitted.update(code.value for code in detect(series, params).reason_codes)
-        expect = {
-            "LINE_ESTABLISHED",
-            "ENVELOPE_TIE_LATER",
-            "WICK_BREAK",
-            "INVALID_PIERCE",
-            "RESET_NEW_ATH",
-            "ATH_TOO_RECENT",
-            "NO_VALID_SECOND_ANCHOR",
-            "SUSPECTED_UNADJUSTED_SPLIT",
-            "INVALID_PRICE",
-            "INVALID_INPUT",
-        }
-        self.assertEqual(emitted, expect)
+        every_code = {code.value for code in ReasonCode}
+        self.assertEqual(
+            every_code - emitted,
+            {"INSUFFICIENT_BARS"},
+            "the set of closed-set codes NOT emitted anywhere on the corpus moved",
+        )
+        self.assertEqual(len(emitted), 14)
+        for code in ("BREAKOUT_CONFIRMED", "RETEST_HELD", "FAILED_BREAKOUT",
+                     "EXPIRED_POST_BREAKOUT"):
+            self.assertIn(code, emitted, "%s is emitted by no fixture" % code)
+
+    def test_the_expired_state_is_unreachable(self) -> None:
+        """ESC-1 — ``EXPIRED`` is a reserved member of the closed set that no
+        conforming detector enters.  Asserted by emission over the whole corpus,
+        including the one fixture that actually expires (GX-07): no bar is
+        assigned it and no record carries it as ``from`` or ``to``."""
+        seen = 0
+        expiries = 0
+        for fixture_id in golden_fixture_ids():
+            _expected, series, params = _load(fixture_id)
+            result = detect(series, params)
+            self.assertNotEqual(result.final_state, LineState.EXPIRED, fixture_id)
+            for record in result.transitions:
+                self.assertNotEqual(record.frm, LineState.EXPIRED, fixture_id)
+                self.assertNotEqual(record.to, LineState.EXPIRED, fixture_id)
+                if record.reason is ReasonCode.EXPIRED_POST_BREAKOUT:
+                    expiries += 1
+                seen += 1
+            if result.causal is not None:
+                for state in result.causal.state_at_start:
+                    self.assertNotEqual(state, LineState.EXPIRED, fixture_id)
+        self.assertGreater(seen, 0)
+        self.assertEqual(
+            expiries, 1, "GX-07 is the corpus's only expiry; the check is anti-vacuous"
+        )
+        self.assertIn("EXPIRED", {state.value for state in LineState})
 
     def test_insufficient_bars_is_reachable_but_deliberately_unrecorded(self) -> None:
         """§21.3: a head-of-series ``INSUFFICIENT_BARS`` run carries no

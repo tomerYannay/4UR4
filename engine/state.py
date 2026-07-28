@@ -5,10 +5,8 @@ Both sets mirror ``product/fixtures/schema/fixture.schema.json`` exactly; test
 drift.  Adding a member here is a product-definition change (§10, §18) and is
 not the engine author's to make.
 
-Phase 2 (this build) emits only ``NONE`` and ``ACTIVE`` and only the reason
-codes in :data:`PHASE2_REASON_CODES`.  The Phase-3 members are present because
-the *schema* is closed and the engine's set must equal it — not because any of
-them is reachable here.
+Every member of both sets is now reachable **except one**, and that one
+exception is deliberate — see :class:`LineState`.
 """
 
 from __future__ import annotations
@@ -28,7 +26,29 @@ __all__ = [
 
 class LineState(str, Enum):
     """§11 — the line state machine.  ``WICK_BREAK`` is deliberately absent: it
-    is a reason code, not a state (§11, §14)."""
+    is a reason code, not a state (§11, §14).
+
+    **``EXPIRED`` IS RESERVED AND UNREACHABLE.  DO NOT "FIX" IT.**  This is said
+    at the definition site because ESC-1 ruled it there, and because a later
+    reader who noticed an enum member no code assigns would otherwise repair the
+    gap by inserting an ``EXPIRED`` record — and break GX-07.
+
+    The history, in one paragraph so the ruling can be checked rather than
+    taken.  §11 originally drew expiry as **two** edges through a state of this
+    name (``BROKEN_OUT``/``RETESTED`` → ``EXPIRED`` → ``NONE``) while fixture
+    GX-07 records **one** transition, ``bar 110: BROKEN_OUT → NONE /
+    EXPIRED_POST_BREAKOUT``.  HD-22 forbids editing the fixture.  The Product
+    Steward ruled on 2026-07-28 (§11, §17, §22) that §11 draws **one** edge,
+    which is the reading GX-07 already encoded — a clarification, not a
+    behaviour change, and GX-07 is the only fixture in the corpus that expires.
+    The member stays because architectural test A-4 requires this set to
+    **equal** the committed schema's closed set, and the schema carries it.
+
+    So: no bar is ever assigned ``LineState.EXPIRED``, and no emitted record
+    carries it as ``from`` or as ``to``.  Both halves are asserted by the suite,
+    and an architectural test asserts that this docstring is the only place in
+    ``engine/`` that names the member at all.
+    """
 
     NONE = "NONE"
     ACTIVE = "ACTIVE"
@@ -58,9 +78,8 @@ class ReasonCode(str, Enum):
     INVALID_INPUT = "INVALID_INPUT"
 
 
-#: Codes Phase 2 owns — behaviour evaluated while the structure remains ACTIVE
-#: that performs no ACTIVE -> BROKEN_OUT transition (roadmap, Phase 2/3
-#: behavioural boundary rule), plus the §18 input guards.
+#: Codes the pre-breakout layer owns — behaviour evaluated while the structure
+#: is still ``ACTIVE``, plus the §18 input guards.
 PHASE2_REASON_CODES: FrozenSet[ReasonCode] = frozenset(
     {
         ReasonCode.LINE_ESTABLISHED,
@@ -77,7 +96,9 @@ PHASE2_REASON_CODES: FrozenSet[ReasonCode] = frozenset(
     }
 )
 
-#: Codes Phase 3 owns.  This engine must never emit one of these.
+#: Codes the frozen-line layer owns.  Nothing before ``confirmed_bar`` may emit
+#: one — asserted on RM-01 and on every golden fixture, where the first bar
+#: carrying one of these must be exactly the engine-derived stop.
 PHASE3_REASON_CODES: FrozenSet[ReasonCode] = frozenset(
     {
         ReasonCode.BREAKOUT_CONFIRMED,

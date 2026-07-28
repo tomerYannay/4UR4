@@ -29,10 +29,26 @@ Both halves are asserted, neither superseding the other:
   29-bar prefix returns ``B* = (25, 129.88)``, ``m = -0.0240143``,
   ``b = 5.46697``, 0 envelope violations.  Asserted at **unit level**, because a
   §21-conforming detector never reaches bar 25.
-* **B-clause** — as-of-time behaviour, **within Phase-2-owned behaviour only**:
+* **B-clause** — as-of-time behaviour, **within the scope this record claims**:
   the formation trace, the selection over bars 0-9, and ``line_at_stop`` at the
-  **engine-derived** stop.  ``line_at_stop``, not ``Λ^F``; no ``BROKEN_OUT``
-  state and no ``BREAKOUT_CONFIRMED`` reason code — those are Phase 3's.
+  **engine-derived** stop.
+
+  **The B-clause was RE-SCOPED for Phase 3, not weakened.**  It previously
+  asserted that the engine produced no ``BROKEN_OUT`` state, no
+  ``BREAKOUT_CONFIRMED`` code and no record after the stop.  SPR-D-01 limit 1
+  says the claim is made "within Phase-2-owned behaviour only" and that those
+  things are "Phase 3's to gate and are **not** claimed here" — a statement about
+  the **scope of the claim**, not a prediction that the engine cannot produce
+  them, and the record lists them under ``not_asserted``: *not asserted*, not
+  *forbidden*.  Phase 2 implemented "not asserted" as "must not occur", which was
+  a legitimate strengthening while the engine was incapable of it and is an
+  over-reading now.
+
+  The replacement is **stronger in the respect that matters**: instead of
+  asserting that no post-breakout emission exists anywhere, it asserts that none
+  exists strictly before the stop and that the **first** one is at exactly the
+  bar the engine derived for itself.  Nothing is asserted about RM-01's post-stop
+  behaviour, and a test asserts *that nothing is*.
 
 **The stop index is derived here, never read.**  ``detect()`` is called with the
 series and the parameters and nothing else; the fixture's ``stop_index`` is only
@@ -52,11 +68,31 @@ from ..anchor import anchor_of
 from ..envelope import envelope_violations
 from ..logspace import sig6, y_hat
 from ..params import DetectorParams
-from ..state import LineState, ReasonCode
+from ..state import PHASE3_REASON_CODES, LineState, ReasonCode
 from .conformance import SPEC_VERSION, Report
-from .fixtures_io import REAL_DIR, as_decimal, load_json, load_series, parse_gate_fields, real_fixture_ids
+from .fixtures_io import (
+    REAL_DIR,
+    KeyTracker,
+    all_key_paths,
+    as_decimal,
+    load_json,
+    load_series,
+    parse_gate_fields,
+    real_fixture_ids,
+    tracked,
+)
 
 RM01 = os.path.join(REAL_DIR, "RM-01")
+
+#: Records every key path the B-clause reads out of ``expected-causal.json``.
+#: Module-level and never reset, so :class:`RM01NotAssertedScope` can check the
+#: SPR-D-01 limit-1 scope as a *measured* property of this test module rather
+#: than as a hand-written list of "things we promise not to read".
+RECORD_TRACKER = KeyTracker()
+
+
+def _tracked_record():
+    return tracked(load_json(os.path.join(RM01, "expected-causal.json")), RECORD_TRACKER)
 
 
 def _params(expected_causal, **overrides) -> DetectorParams:
@@ -147,13 +183,18 @@ class RM01HalfA(unittest.TestCase):
         self.assertLess(result.stop_bar, 25)
         assert result.reported_line is not None
         self.assertNotEqual(result.reported_line.t_b, 25)
+        # Positive form of the same claim: §21 froze the line at bar 9, long
+        # before bar 25 — so the A-clause's answer is unreachable through the
+        # pipeline because the freeze happened, not merely because it is absent.
+        assert result.frozen_line is not None
+        self.assertEqual(result.frozen_line.line.t_b, 9)
 
 
 class RM01HalfB(unittest.TestCase):
     """As-of-time behaviour, within Phase-2-owned behaviour only."""
 
     def setUp(self) -> None:
-        self.expected = load_json(os.path.join(RM01, "expected-causal.json"))
+        self.expected = _tracked_record()
         self.series = load_series(os.path.join(RM01, "input.csv"))
         self.params = _params(self.expected)
         # Called with the series and the parameters only.  Nothing about the
@@ -288,19 +329,62 @@ class RM01HalfB(unittest.TestCase):
         )
         self.assertTrue(report.ok, "\n" + report.render())
 
-    def test_not_asserted_fields_are_genuinely_absent(self) -> None:
-        """SPR-D-01 limit 1, checked in both directions on the engine's side."""
-        forbidden = set(self.expected["not_asserted"]["fields"])
-        self.assertIn("frozen_line", forbidden)
-        self.assertIn("BREAKOUT_CONFIRMED", forbidden)
-        self.assertIsNone(self.result.final_state, "Phase 2 claims no final state at a stop")
-        self.assertNotIn(ReasonCode.BREAKOUT_CONFIRMED, self.result.reason_codes)
+    def test_nothing_post_breakout_is_emitted_before_the_engine_derived_stop(self) -> None:
+        """SPR-D-01 limit 1, re-scoped to the window the record actually claims.
+
+        Two assertions, and the second is the one that is *stronger* than what it
+        replaces: no post-breakout state or code appears strictly before the
+        engine-derived stop, **and** the first that appears is at exactly that
+        bar.  The engine must not merely avoid post-breakout behaviour early — it
+        must place the boundary at precisely the index it derived for itself,
+        from the series and the parameters alone.
+        """
+        stop_bar = self.result.stop_bar
+        self.assertIsNotNone(stop_bar)
+        post_breakout_states = (
+            LineState.BROKEN_OUT,
+            LineState.RETESTED,
+            LineState.FAILED_BREAKOUT,
+        )
         for record in self.result.transitions:
-            self.assertNotIn(record.to, (LineState.BROKEN_OUT, LineState.RETESTED))
-            self.assertNotIn(record.frm, (LineState.BROKEN_OUT, LineState.RETESTED))
-        # And no record beyond the stop bar.
-        for record in self.result.transitions:
-            self.assertLessEqual(record.bar, self.result.stop_bar)
+            if record.bar < stop_bar:
+                self.assertNotIn(record.to, post_breakout_states, record)
+                self.assertNotIn(record.frm, post_breakout_states, record)
+                self.assertNotIn(record.reason, PHASE3_REASON_CODES, record)
+        first_post_breakout = [
+            record.bar
+            for record in self.result.transitions
+            if record.reason in PHASE3_REASON_CODES
+        ]
+        self.assertTrue(first_post_breakout, "the engine emitted no breakout at all")
+        self.assertEqual(
+            min(first_post_breakout),
+            stop_bar,
+            "the first post-breakout emission is not at the engine-derived stop",
+        )
+
+    def test_the_frozen_line_is_the_line_at_stop(self) -> None:
+        """The Phase-2/Phase-3 bridge, converted from a risk into an assertion.
+
+        ``Λ^F`` is built by **wrapping** the object the stop already holds, so the
+        line this file asserts field-by-field in ``test_line_at_stop`` and the
+        line the golden fixtures assert as ``frozen_event_line`` are the same
+        object.  Computed independently they could drift, and both gates would
+        still pass — on different numbers.
+
+        Nothing here reads a ``frozen_line`` key from the record: RM-01 carries
+        none, and under HD-22 none may be added to accommodate the engine.  The
+        comparison is against ``line_at_stop``, which the record does assert.
+        """
+        self.assertIsNotNone(self.result.frozen_line)
+        assert self.result.frozen_line is not None
+        self.assertIs(self.result.frozen_line.line, self.result.line_at_stop)
+        self.assertEqual(self.result.frozen_line.breakout_bar, self.result.stop_bar)
+        self.assertEqual(self.result.frozen_line.confirmed_bar, self.result.stop_bar)
+        self.assertEqual(
+            self.result.frozen_line.tolerance_version, self.params.tolerance_version
+        )
+        self.assertEqual(len(self.result.episodes), 1)
 
     def test_robustness_sweeps(self) -> None:
         report = Report("RM-01 Half B / robustness")
@@ -337,6 +421,62 @@ class RM01HalfB(unittest.TestCase):
             report.equal(result.stop_bar, point["stop_index"], "%s: stop_index" % label)
 
         self.assertTrue(report.ok, "\n" + report.render())
+
+
+class RM01NotAssertedScope(unittest.TestCase):
+    """SPR-D-01 limit 1 as a **checkable property of this test module**.
+
+    The record names five fields under ``not_asserted``.  Phase 2 honoured that
+    by asserting the engine could not produce them, which was an over-reading.
+    Phase 3 honours it the way the record states it: **this module reads none of
+    those fields out of the record**, and the record carries none of them.  Both
+    halves are computed from the record itself rather than hand-listed, so
+    neither can drift.
+
+    The B-clause's own tests are re-run inside this one so that the measured read
+    set is complete regardless of the order the runner happens to choose.
+    """
+
+    def _read_paths(self) -> set:
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(RM01HalfB)
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(result.errors, [], result.errors)
+        self.assertEqual(result.failures, [], result.failures)
+        return set(RECORD_TRACKER.read)
+
+    def test_the_module_reads_no_field_the_record_declares_unasserted(self) -> None:
+        record = load_json(os.path.join(RM01, "expected-causal.json"))
+        not_asserted = list(record["not_asserted"]["fields"])
+        self.assertTrue(not_asserted, "the not_asserted list is empty; nothing is scoped")
+        read = self._read_paths()
+        self.assertTrue(read, "the tracker recorded nothing; the check is vacuous")
+        touched = sorted(
+            path
+            for path in read
+            for field_name in not_asserted
+            if path.split(".")[-1] == field_name
+        )
+        self.assertEqual(
+            touched,
+            [],
+            "the RM-01 suite reads a field the record declares NOT ASSERTED — "
+            "SPR-D-01 limit 1 scopes the claim, and reading one of these would "
+            "quietly widen it",
+        )
+
+    def test_the_record_carries_none_of_those_fields(self) -> None:
+        """The other direction, which is the record's own stated contract: it
+        fails if the fixture starts carrying a forbidden field.  Under HD-22 the
+        remedy would be an escalation, never an edit."""
+        record = load_json(os.path.join(RM01, "expected-causal.json"))
+        not_asserted = set(record["not_asserted"]["fields"])
+        present = {path.split(".")[-1] for path in all_key_paths(record)}
+        self.assertEqual(
+            sorted(present & not_asserted),
+            [],
+            "RM-01 now carries a field its own not_asserted list names",
+        )
 
 
 if __name__ == "__main__":  # pragma: no cover
