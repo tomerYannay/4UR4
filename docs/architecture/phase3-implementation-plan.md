@@ -22,6 +22,11 @@
 > does. **The lift is not by itself permission to start:** GOV-015 rule 4 ties a
 > lift to a specific approved, **Ready** ticket, and ticket (g) is **not Ready** —
 > see [`../../product/planning/ticket-set.md`](../../product/planning/ticket-set.md).
+> *(**Superseded later the same day**, and quoted rather than replaced because this
+> block is a dated correction record: **ticket (g) became READY on 2026-07-28**, once
+> the four specification escalations were ruled and the Phase 2 exit determination
+> was made. GOV-015 rule 4 is now satisfied. See the ticket, and the correction block
+> immediately below.)*
 >
 > **E2-AUTHOR-B declared read-abstention, declared on the artifact (M-53).** *Not a
 > clean room, and the earlier heading's word "clean-room" is withdrawn rather than
@@ -41,6 +46,49 @@
 > shown with its arithmetic so a reviewer can re-check it without the model.
 > Agreement with the reference model earns no credit (HD-15 condition 1); the
 > contract is the fixtures.
+
+---
+
+> ## Correction block — 2026-07-28: two clauses contradicted by the OQ-P3-5 ruling
+>
+> **Recorded on the M-52 / M-53 pattern: dated, in place, with the superseded text
+> quoted rather than deleted.** The plan's own §11 escalated **OQ-P3-5** and resolved
+> it *provisionally* as *"the **first**"* breakout episode supplying the reported
+> `Λ^F` and `confirmed_bar`. **The Product Steward has ruled it the LATEST**
+> ([`../../product/trendline-specification.md`](../../product/trendline-specification.md)
+> §21.4 and §22, 2026-07-28), and two clauses written on the `first` reading are
+> therefore **wrong and must not be implemented as written**. Both are the
+> Architect's to restate; they are named here so no implementer meets them silently.
+>
+> 1. **§8.3, milestone M4 — `stop_bar` as an alias for `confirmed_bar`.** The alias
+>    holds **only while a series has exactly one breakout episode**. Under the
+>    LATEST ruling the reported `confirmed_bar` moves to each new episode's freeze,
+>    while a series' engine-derived **stop bar** does not follow it. RM-01 is
+>    unaffected — it has one episode — so **no committed expectation changes**; what
+>    changes is that the alias may not be relied on in general, and an engine that
+>    encodes it will be wrong on the first two-episode series it meets.
+> 2. **§6 / EV-P3-10 — the prefix-truncation clause.** As written it asserts that
+>    *"for every `k ≥ confirmed_bar`, `frozen_line` is field-identical to the full
+>    run's"*. **False the moment a later episode exists:** truncating between the
+>    first and second breakouts reports the **earlier** `Λ^F`, so the two runs differ
+>    by construction. The invariant is sound only for **`k ≥` the LATEST episode's
+>    `confirmed_bar`**, and must be stated that way — otherwise a property test
+>    asserting it will either fail honestly on a two-episode generator or, worse,
+>    pass vacuously on a corpus that has none.
+>
+> **Neither correction moves a committed expectation.** Measured 2026-07-28: **zero
+> golden fixtures carry more than one `BREAKOUT_CONFIRMED`**, so nothing in the
+> corpus distinguishes the two readings — which is precisely why the ruling had to
+> be made by a decision-maker rather than discovered by a test.
+>
+> **No integrity evidence depends on this edit.** The plan's pinned digest was
+> already **superseded and re-recorded** at
+> [`../../product/maintenance-backlog.md`](../../product/maintenance-backlog.md)
+> **M-51** when M-52 and M-53 were fixed in place, on the ruling that *"'we cannot
+> fix the error because we hashed the error' must not become precedent."* The same
+> disposition applies here: this block changes the file, and **M-51's digest is stale
+> by design again**. Whoever next computes it should re-record it there; the Product
+> Steward has no shell and computes none.
 
 ---
 
@@ -1019,6 +1067,25 @@ fail at all, and says so on its face rather than being counted.
 Escalations are disagreements or gaps a **decision-maker** must close. Open
 questions are under-determinations the plan resolves provisionally and flags.
 Neither is closed by the Architect.
+
+> **STATUS, 2026-07-28 — ALL FIVE ESCALATIONS AND THE SIX STEWARD-OWNED OPEN QUESTIONS
+> ARE NOW CLOSED BY A DECISION-MAKER.** The text below is retained **as raised**,
+> because the record of what was escalated is evidence (GOV-006); it is **no longer
+> the current disposition**. The rulings are at
+> [`../../product/trendline-specification.md`](../../product/trendline-specification.md)
+> **§22** (the amendment record, with the section each ruling amended):
+> **ESC-1**, **ESC-3**, **ESC-5(a)** and **OQ-P3-1 … OQ-P3-6** ruled by the **Product
+> Steward**; **ESC-4** ruled by the **Product Owner** as
+> **[HD-25](../../product/human-decisions.md)** — option **C**, `FAILED_BREAKOUT`
+> retains **both** exits, which resolves this plan's own §7.6-vs-§11 contradiction in
+> favour of **§7.6**. **ESC-2** was discharged as a record-only correction.
+> **ESC-5(b)** — whether §18 gains a fourth guard row — is **deferred** and explicitly
+> non-blocking. **OQ-P3-7**'s remedy is an acceptance criterion of ticket (g).
+> **OQ-P3-8** is consolidated into **OQ-J** and is not blocking.
+> **Where a ruling differs from the provisional resolution below, the ruling
+> governs** — that is the case for **OQ-P3-5** (**latest**, not first), and the two
+> clauses it invalidates are named in the dated correction block at the head of this
+> file.
 
 ### Escalations
 

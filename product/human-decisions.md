@@ -36,6 +36,7 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-22 | high | GOV-015 scope lift — Phase 2 `engine/` only | **APPROVED** |
 | HD-23 | high | Autonomous-execution directive: finish the permitted work; product delivery outranks governance polish | **PENDING PRODUCT OWNER CONFIRMATION** |
 | HD-24 | high | Merge authorization for PR #38/#37, a **Phase-3** GOV-015 scope lift, and a ruling on #36 Part B | **APPROVED (relayed) — two overreaches recorded** |
+| HD-25 | high | `FAILED_BREAKOUT` retains **both** exits — new-ATH reset and expiry (resolves ESC-4) | **APPROVED (relayed, no citable artifact)** |
 
 ---
 
@@ -1645,6 +1646,86 @@ distinction this register exists to keep.*
   Ready — and §4's ruling rests on an attestation that records its own E2-AUTHOR-B entry as
   **ABSENT**, its commit range as **not recorded**, and its sign-off block as **deliberately
   unsigned**. The rulings stand; the gaps stand with them.
+
+## HD-25 — `FAILED_BREAKOUT` retains BOTH exits (resolves ESC-4) · materiality: **high**
+
+- **Status:** **APPROVED** — **Decided by: Product Owner, 2026-07-28.** Resolves **ESC-4**,
+  the fourth of the specification escalations lodged by
+  [`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md)
+  §11 and carried at [`maintenance-backlog.md`](maintenance-backlog.md) **M-50**.
+- **⚠ Provenance — the same disclosure form as
+  [HD-23](#hd-23--autonomous-execution-directive--materiality-high) and
+  [HD-24](#hd-24--pr-3837-merge-authorization--phase-3-gov-015-scope-lift--36-part-b--materiality-high),
+  stated plainly rather than by reference.** This ruling was **relayed in session**, under the
+  **single shared identity**, and there is **no citable external artifact** for it — no issue,
+  no comment, no commit by a second party. It is therefore **citable within this register and
+  not independently attributable**: nothing here distinguishes a relayed Product Owner decision
+  from one the recording agent composed. This entry was written by the **Product Steward**,
+  which is the party that raised ESC-4's options, so it is **not** a disinterested record.
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) and
+  [#34](https://github.com/tomerYannay/4UR4/issues/34) remain open and HD-25 closes neither.
+- **Decision:** §11 gave `FAILED_BREAKOUT` **no outgoing edge**, and §21.7 enumerated exactly
+  `ACTIVE`, `BROKEN_OUT` and `RETESTED` as the states a new all-time high invalidates. Read
+  literally, `FAILED_BREAKOUT` was **terminal for the whole series**. Is it?
+- **Ruling — option C: `FAILED_BREAKOUT` retains BOTH exits.**
+  1. **A new ATH resets it** — §10.3 / §17 trigger 1, which is **unqualified by state**.
+  2. **Expiry retires it** at `t − breakout_bar ≥ E_expiry`, emitting
+     `EXPIRED_POST_BREAKOUT → NONE` and a recompute (§17, §21.5).
+  3. Both exits return the detector to `NONE`, after which a new formation is subject to
+     §21.3 and takes effect no earlier than the following bar.
+- **The decisive product reason, recorded because it is the ratio.** Under the rejected
+  readings, **the first failed breakout in a name's history silences that name permanently**.
+  §18 names **secular decline from an IPO peak** as a supported case — fixtures **GX-08** and
+  **GX-09** are exactly that — and such a name **may never make another all-time high**. 4UR4
+  is a **recurring daily scanner**; a rule that can retire a name forever on one failed break
+  makes it a one-shot one. Only option C keeps it a scanner.
+- **What this resolves that was previously a self-contradiction.** The Phase-3 plan contained
+  both readings: §7.6 applied the **frozen regime** to `FAILED_BREAKOUT`, while §11's ESC-4
+  took the literal three-state reading. **This ruling resolves it in favour of §7.6** — the
+  frozen regime **does** extend to `FAILED_BREAKOUT`, which fixture **GX-17 bar 23** already
+  records (`state_at_start: FAILED_BREAKOUT`, `line_source: frozen event line Λ^F (§21.5)`).
+- **§21.7's three-state enumeration is therefore NOT exhaustive for the reset**, and is
+  amended to include `FAILED_BREAKOUT`. That amendment is a **behaviour change**, which is why
+  it is the Product Owner's and not the Product Steward's.
+- **The Product Steward's settled part stands, unchanged.** **Within an episode**, once
+  `FAILED_BREAKOUT` is recorded, **§15 and §16 are not re-evaluated for that episode** — no
+  second failure, no later retest of the same broken line. That part is **fixture-forced** by
+  **GX-12 at the 0.5× sweep scale**. Option C adds **episode-ending** exits; it does **not**
+  reopen §15/§16 within the episode. `FAILED_BREAKOUT` is **episode-terminal, not
+  name-terminal**, and the two must not be collapsed.
+- **Alternatives, both REJECTED.** **(A)** `FAILED_BREAKOUT` is fully terminal — rejected for
+  the reason above. **(B)** A new ATH resets it but expiry does not — rejected as arbitrary:
+  it leaves a state that can be held open indefinitely by a name that never makes another
+  high, which is the same defect in slower form.
+- **Nothing moves on the corpus.** **No fixture has a post-failure new ATH**, and **none has a
+  tail reaching `E_expiry`** from a failed breakout. Both exits are therefore **unexercised by
+  committed evidence** and owe **constructed unit tests**, not fixtures. This framing is
+  confirmed rather than assumed: the Product Steward has no shell and measured nothing here.
+- **Cost of delaying:** n/a — ruled 2026-07-28. While open it was one of the four escalations
+  holding ticket **(g)** below [GOV-004](../governance/definition-of-ready.md) element 7.
+- **Safe default (now superseded by the ruling):** implement neither exit and escalate on
+  first contact — which is what the Phase-3 plan proposed, and what this ruling replaces.
+- **Cross-references:** [`trendline-specification.md`](trendline-specification.md) §11, §17,
+  §21.5, §21.7 and the amendment record §22 · ESC-4 in
+  [`../docs/architecture/phase3-implementation-plan.md`](../docs/architecture/phase3-implementation-plan.md)
+  §11 · [`maintenance-backlog.md`](maintenance-backlog.md) M-50 ·
+  [`planning/ticket-set.md`](planning/ticket-set.md) ticket (g).
+
+## Decision log — 2026-07-28 (Product Owner, HD-25)
+
+*Under its own heading, on the HD-24 precedent: HD-24 carries an artifact
+([#39](https://github.com/tomerYannay/4UR4/issues/39)) and **HD-25 carries none**. Folding
+them together would level exactly the distinction these headings exist to keep.*
+
+- **2026-07-28 — [HD-25](#hd-25--failed_breakout-retains-both-exits-resolves-esc-4--materiality-high)
+  ruled (resolves ESC-4):** `FAILED_BREAKOUT` retains **both** exits — a new ATH resets it
+  (§10.3 / §17 trigger 1, unqualified) and expiry retires it at
+  `t − breakout_bar ≥ E_expiry` with `EXPIRED_POST_BREAKOUT → NONE` and recompute. It is
+  **episode-terminal, not name-terminal**: §15/§16 are still not re-evaluated within the
+  episode (fixture-forced by GX-12 @0.5×). §21.7's three-state enumeration is amended to
+  include it, and the Phase-3 plan's §7.6-vs-§11 contradiction is resolved **in favour of
+  §7.6**. **Relayed in session under the single shared identity, with no citable external
+  artifact** — the same disclosure form as HD-23/HD-24. **Nothing moves on the corpus.**
 
 ---
 

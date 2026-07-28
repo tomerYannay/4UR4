@@ -46,13 +46,18 @@ definition record; **the issues are authoritative** where the two disagree.
 | d | Survivorship-free constituents + corporate-actions research | market-data-foundation | 1 | research-only (freeze-permitted) | **Ready** ([#5](https://github.com/tomerYannay/4UR4/issues/5)) |
 | e | Market-data ingestion & storage service | market-data-foundation | 1 | blocked (build-freeze) | blocked: freeze |
 | f | Deterministic trendline detection engine | trendline-detection-engine | 2 | implementation (HD-22 `engine/` lift) | **NOT Ready** — entry criteria; built anyway, see the deviation |
-| g | Breakout, freeze, retest, failure & expiry engine | trendline-detection-engine | 3 | implementation (HD-24 §3 Phase-3 `engine/` lift) | **NOT Ready** — freeze lifted 2026-07-28; DoR element 7 unmet (ESC-1/3/4/5 open; Phase-2 exit undetermined) |
-| h | Phase-2 engine hardening (M-28/29/30/32) | trendline-detection-engine | 2 | implementation (HD-22 `engine/` lift) | **Ready** and in progress |
+| g | Breakout, freeze, retest, failure & expiry engine | trendline-detection-engine | 3 | implementation (HD-24 §3 Phase-3 `engine/` lift) | **READY** ([#40](https://github.com/tomerYannay/4UR4/issues/40)) — 2026-07-28, all 8 DoR elements met; unstarted |
+| h | Phase-2 engine hardening (M-28/29/30/32) | trendline-detection-engine | 2 | implementation (HD-22 `engine/` lift) | **Delivered and merged** ([PR #37](https://github.com/tomerYannay/4UR4/pull/37), `c66fd294`) — no longer In Progress |
 
-**Totals (recounted 2026-07-28):** 8 tickets defined · **2 delivered** (a, b — Phase 0) ·
-**3 Ready and in progress** (c, d — Phase 1 research; h — engine hardening) · **1 blocked:
-freeze** (e) · **2 not Ready** (f, g). HD-06 remains **PENDING**: (c) may recommend a provider
-and may not select one, commit spend, or accept licensing terms.
+**Totals (recounted 2026-07-28, after ticket (g) reached Ready and ticket (h) merged):** 8
+tickets defined · **3 delivered** (a, b — Phase 0; h — engine hardening, merged at
+`c66fd294`) · **2 Ready and in progress** (c, d — Phase 1 research) · **1 Ready and unstarted**
+(g — Phase 3) · **1 blocked: freeze** (e) · **1 not Ready** (f). HD-06 remains **PENDING**: (c)
+may recommend a provider and may not select one, commit spend, or accept licensing terms.
+*(Superseded: "**3 Ready and in progress** (c, d, h) · **2 not Ready** (f, g)". **(h) is
+delivered**, so it no longer consumes WIP; whether it is **Done** under
+[GOV-005](../../governance/definition-of-done.md) is Verification's and Release & Ops' call,
+not the Product Steward's, and is not asserted here.)*
 
 **All three [GOV-008](../../governance/ticket-hygiene.md) budgets, stated — WIP was unstated
 before this change (M-55) and the idea budget was still unstated in the first form of this
@@ -69,17 +74,22 @@ under a third budget's number. Both are stated below. Found by Code Review.
 
 | Rule | Limit | Count now | Verdict |
 |---|---|---|---|
-| 1 — WIP `In Progress` | ≤ 3 | **3** (c, d, h) | **compliant and SATURATED** |
-| 2 — open **unstarted** Ready | ≤ 5 | **0** | compliant |
+| 1 — WIP `In Progress` | ≤ 3 | **2** (c, d) — restated 2026-07-28; **(h) is delivered and merged** ([PR #37](https://github.com/tomerYannay/4UR4/pull/37), `c66fd294`) and no longer counts | **compliant, one slot FREE** |
+| 2 — open **unstarted** Ready | ≤ 5 | **1** (g) | compliant |
 | 3 — **idea budget**: new idea cards per cycle | ≤ 3 | **3** in the last cycle in which any were submitted — IDEA-0002/0003/0004, 2026-07-24, all still *awaiting triage* ([`../../ideas/inbox.md`](../../ideas/inbox.md)) — and **0** since | compliant, and saturated for that cycle |
 | 4 — one ticket = one verifiable outcome; no umbrella/epic tickets | 3 epic **labels**, no umbrella issues | 3 | compliant |
 
 **No budget is breached by this change, and the reason is worth stating rather than
 asserting.** Making a ticket **Ready** consumes the rule-2 budget, not the rule-1 WIP limit;
-only *starting* it consumes WIP. **(g) is not made Ready by this change** — see its DoR
-assessment below — so rule 2 stays at 0 either way. **But rule 1 is at its limit right now:
-WIP is exactly 3.** Whenever (g) does become Ready, **it cannot be started until a WIP slot
-frees**, and starting it while c, d and h are all in progress would breach GOV-008 rule 1.
+only *starting* it consumes WIP. **(g) IS made Ready by this change**, so rule 2 moves from
+**0 to 1** against a limit of 5 — comfortably compliant. **Rule 1 was at its limit and is no
+longer:** WIP read **3 (c, d, h)** while (h) was in flight, and **(h) has since been delivered
+and merged** ([PR #37](https://github.com/tomerYannay/4UR4/pull/37), `c66fd294` —
+[`../project-state.md`](../project-state.md) records the merge), so it no longer counts as In
+Progress and **WIP is 2 of 3**. **One slot is free, so (g) may be started** without breaching
+rule 1. *(Superseded, quoted rather than deleted: "**But rule 1 is at its limit right now: WIP
+is exactly 3.** Whenever (g) does become Ready, it cannot be started until a WIP slot frees."
+True when written; the slot freed by (h) merging, not by any reinterpretation of the rule.)*
 Recorded here because a totals line that checked two of GOV-008's rules read as a full check,
 and one of the unstated rules was the one at its limit.
 
@@ -96,17 +106,30 @@ and one of the unstated rules was the one at its limit.
    Ready ticket.~~ **Superseded 2026-07-28 by [HD-24](../human-decisions.md) §3
    ([#39](https://github.com/tomerYannay/4UR4/issues/39)), which lifts GOV-015 for **Phase 3**
    inside `engine/`. (g) is no longer `blocked: freeze`.** The struck sentence's second half
-   nevertheless still bites, in the opposite direction from how HD-24 §3 read it: rule 4 ties
-   a lift to a specific **approved, Ready** ticket, and **(g) is not Ready** — so the lift
-   exists and rule 4 is still unsatisfied. See (g)'s DoR assessment.
+   nevertheless still bit, in the opposite direction from how HD-24 §3 read it: rule 4 ties
+   a lift to a specific **approved, Ready** ticket, and **(g) was not Ready** — so the lift
+   existed and rule 4 was still unsatisfied. **Closed 2026-07-28: (g) is now READY**, on a DoR
+   re-assessed forward after the four escalations were ruled and Phase 2 exit was determined,
+   so **rule 4 is satisfied by a ticket that meets it** rather than by assertion. See (g)'s
+   DoR assessment.
 2. **(g) is now a live issue; (h) is still a definition only.** (a)–(f) map to issues and
    *"the issues are authoritative where the two disagree"*.
    **(g) → [#40](https://github.com/tomerYannay/4UR4/issues/40)**, filed 2026-07-28 by the
-   Orchestrator from the Product Steward's draft. **Filing it supplies *specific* — one of
-   [GOV-015](../../governance/build-freeze.md) rule 4's three words — and supplies nothing
-   toward *approved* or *Ready*.** The issue says so on its own face, leads with
+   Orchestrator from the Product Steward's draft. **Filing it supplied *specific* — one of
+   [GOV-015](../../governance/build-freeze.md) rule 4's three words — and supplied nothing
+   toward *approved* or *Ready***; those came later the same day, from the rulings and the
+   exit determination, not from the filing. The issue says so on its own face, leads with
    **"Status: NOT READY. Do not start."**, and instructs the filer not to apply a Ready label
-   and not to apply `blocked: freeze` (HD-24 §3 lifted it). **(h) has no issue number yet**;
+   and not to apply `blocked: freeze` (HD-24 §3 lifted it).
+   **⚠ [#40](https://github.com/tomerYannay/4UR4/issues/40)'s body is now STALE and an
+   Orchestrator action is owed.** As of **2026-07-28** (g) **is Ready** — see its DoR
+   assessment below — so the issue's leading line and its no-Ready-label instruction are both
+   superseded. **The Product Steward does not edit GitHub issues**; the update is the
+   Orchestrator's, and until it lands *"the issues are authoritative where the two disagree"*
+   would point a reader at the **wrong** answer for this one field. **This file is the
+   authority on (g)'s Ready status until #40 is updated**, and that exception is stated here
+   rather than left to be discovered.
+   **(h) has no issue number yet**;
    creating it remains an Orchestrator action. Neither adds roadmap scope:
    **(g)** is the already-approved **Phase 3** roadmap item and **(h)** is corrective work
    inside the already-approved **Phase 2** item, so neither requires a new
@@ -384,10 +407,25 @@ and one of the unstated rules was the one at its limit.
   - **Only a human may dispose of this deviation.** An agent may record it; none may waive
     it (GOV-013).
 
-## Ticket (g) — Breakout, freeze, retest, failure & expiry engine  ·  **NOT Ready** (freeze lifted for Phase 3; DoR element 7 open)
+## Ticket (g) — Breakout, freeze, retest, failure & expiry engine  ·  **READY** (2026-07-28)
 
-> **THE PHASE-3 FREEZE LIFT NOW EXISTS, AND THIS TICKET IS STILL NOT READY. Both halves
-> matter; neither may be read without the other.**
+> **THE PHASE-3 FREEZE LIFT EXISTS AND THIS TICKET IS NOW READY — in that order, and the
+> order is the whole point.**
+>
+> **Ready as of 2026-07-28, on a DoR re-assessed FORWARD.** Element 7 failed on two
+> independent grounds and **both were closed on their merits before this line was written**:
+> the four specification escalations are **ruled** — ESC-1, ESC-3 and ESC-5(a) by the Product
+> Steward, **ESC-4 by the Product Owner as [HD-25](../human-decisions.md)** — together with
+> normative dispositions for the six Steward-owned OQ-P3 rows, all recorded at
+> [`../trendline-specification.md`](../trendline-specification.md) **§22**; and the **Phase 2
+> exit determination** is made at [`../project-state.md`](../project-state.md)
+> (`CLOSED_ON_AUTHORITY`, `clean_gate_pass: false`). **Nothing was backdated and nothing was
+> flipped to make an external record read true** — which was the live risk here, named in the
+> superseded banner below and still worth naming.
+>
+> **Superseded, retained: this banner previously read "THE PHASE-3 FREEZE LIFT NOW EXISTS, AND
+> THIS TICKET IS STILL NOT READY."** True when written; superseded by the two closures above,
+> not by a reassessment of the same evidence.
 >
 > **Superseded, and kept legible rather than deleted.** This banner previously read: *"THIS
 > TICKET IS NOT A FREEZE LIFT AND MUST NOT BE READ AS ONE. It is `blocked: freeze` … and no
@@ -402,12 +440,13 @@ and one of the unstated rules was the one at its limit.
 > failed *approved* and *Ready*. The repair is **forward**: the DoR below is re-assessed
 > **dated 2026-07-28**, element by element, against the state that exists now.
 >
-> **This ticket is NOT BACKDATED to Ready, and must not be.** The Phase-2 record already
-> carries the identical failure as a deviation — *"**#7 has NOT been backdated to Ready.**
-> Fitting the record to the outcome is the failure this corpus exists to catch"* — and
-> flipping this ticket to Ready would make HD-24 §3 read true by editing the ticket instead of
-> by finishing the work. **On the assessment below it is not Ready**, and it is left not
-> Ready. **Phase-3 implementation does not begin.**
+> **This ticket was NOT BACKDATED to Ready.** The Phase-2 record carries the identical failure
+> as a deviation — *"**#7 has NOT been backdated to Ready.** Fitting the record to the outcome
+> is the failure this corpus exists to catch"* — and flipping this ticket to Ready would have
+> made HD-24 §3 read true by editing the ticket instead of by finishing the work. **The work
+> was finished instead**, in a change that touches no `engine/` file, and the assessment
+> below is dated **2026-07-28 forward**. The Ready date is the date of the assessment, **not**
+> the date of HD-24 §3, and rule 4 became true on the later date.
 
 - **Title:** Deterministic trendline engine — confirmed breakout, line freezing (`Λ^F`),
   retest, failed breakout, expiry/recompute (implementation)
@@ -476,9 +515,37 @@ and one of the unstated rules was the one at its limit.
         bar identical; the determinism digest covers the frozen line.
   - [ ] Full state machine and reason codes verified against the schema's **closed** code
         set; CI green.
-- **Escalations lodged by the Architect's plan — five (ESC-1…ESC-5) and eight open
-  questions, each with a named owner. NONE is resolved by this ticket.** The one with
-  governance weight:
+  - [ ] **Explicitly-unasserted fixture keys are recorded against a declared allow-list —
+        the OQ-P3-7 remedy.** The conformance harness MUST enumerate, for every fixture, each
+        key present in the committed expectation that **no assertion reads**, and compare that
+        set against an **allow-list declared alongside the harness**. **`flags`
+        (`LOW_VOLUME`, `NOT_RETESTED`) is ON that list** — as an explicitly unasserted
+        confidence-layer key (§13.3, §13.4), **not** as a key passed over in silence. A key
+        that is unasserted and **not** on the allow-list **fails the run**. A key on the
+        allow-list that has since become asserted, or that no longer appears in any fixture,
+        **also fails**, so the list cannot rot into a blanket exemption. *Silence is the
+        failure mode this criterion exists to remove: an unread key and a passing suite are
+        indistinguishable without it.*
+- **Escalations lodged by the Architect's plan — five (ESC-1…ESC-5) and eight open questions.
+  ALL FIVE ARE NOW CLOSED, and the closing artifacts are named so a reader can check the
+  claim rather than take it.** *(This heading previously read "**NONE is resolved by this
+  ticket**", which remains true of *this ticket* — none was resolved **by** it; they were
+  resolved **for** it, in a separate governed change, which is what HD-15 condition 3
+  requires.)*
+
+  | Escalation | Disposition | Closing artifact |
+  |---|---|---|
+  | **ESC-1** — §11 draws two expiry edges, GX-07 records one | **RULED** — one record, `EXPIRED_POST_BREAKOUT`; the `EXPIRED` enum member is reserved and unreachable | Product Steward, 2026-07-28 — [`../trendline-specification.md`](../trendline-specification.md) §11, §17, §22 |
+  | **ESC-2** — the brief's parameter premise was wrong | **DISCHARGED, record-only** — corrected in this ticket's CORRECTION paragraph below | this file (pre-existing) |
+  | **ESC-3** — the §15/§16 window right edges | **RULED** — half-open with inclusive right edges, and the reason no fixture can contradict is measured | Product Steward, 2026-07-28 — §15, §16, §22 |
+  | **ESC-4** — is `FAILED_BREAKOUT` terminal against a new ATH | **RULED by the PRODUCT OWNER** — option C, both exits retained | **[HD-25](../human-decisions.md)**, 2026-07-28 — §11, §17, §21.5, §21.7, §22 |
+  | **ESC-5(a)** — §16 needs `low`, §18 does not guard it | **RULED** — no fourth guard row; a missing `low` at a post-breakout predicate is a caller defect, not a reason code | Product Steward, 2026-07-28 — §18, §22 |
+  | **ESC-5(b)** — *should* §18 gain that row | **DEFERRED**, and explicitly **NON-BLOCKING for DoR element 7** — it is not answerable from synthetic fixtures and belongs with the Phase-1 data layer | §18, §22 |
+  | **OQ-P3-1 … OQ-P3-6** | **RULED** — normative dispositions, all six Steward-owned | Product Steward, 2026-07-28 — §16, §17, §21.4, §22 |
+  | **OQ-P3-7** — `flags` produced by no engine layer | **Out of Phase-3 scope**; its remedy is an acceptance criterion of this ticket, above | this ticket |
+  | **OQ-P3-8** — the `SPEC_VERSION` placeholder | **Consolidated into OQ-J** and **not blocking** — see the Dependencies below | §22.1 |
+
+  The one with governance weight, retained in full because its disposition is the precedent:
   - **ESC-1 — a genuine specification/fixture divergence on expiry. This is a SPEC-DEFECT
     REPORT owed to the Product Steward, and it is recorded, not resolved.** Specification
     §11 draws expiry as **two** edges through a state named `EXPIRED`
@@ -492,11 +559,16 @@ and one of the unstated rules was the one at its limit.
     **specification is authoritative**, and a divergence is *"a spec-defect report or a
     model bug — never resolved by copying the model"*. Therefore: **the specification is
     not amended in the same change as the engine**, and it is **not amended by this PR** —
-    a spec amendment is a separate governed change. Two closes are available and both are
-    a human's or the Steward's to choose: amend §11 to draw **one** edge labelled
-    `EXPIRED_POST_BREAKOUT`, **or** rule that `EXPIRED` is a transient state a conforming
-    detector must record — in which case **GX-07 disagrees with the specification, and that
-    disagreement is the escalation**, not something the engine may settle.
+    a spec amendment is a separate governed change. Two closes were available: amend §11 to
+    draw **one** edge labelled `EXPIRED_POST_BREAKOUT`, **or** rule that `EXPIRED` is a
+    transient state a conforming detector must record — in which case **GX-07 disagrees with
+    the specification, and that disagreement is the escalation**, not something the engine may
+    settle. **CLOSED 2026-07-28 on the FIRST**, by the Product Steward, in a change that
+    touches no `engine/` file: §11 draws one edge, and `EXPIRED` stays in the schema's closed
+    enum as a **reserved, unreachable** member that an implementation must name as such. The
+    second was rejected because it would have put the specification in conflict with a fixture
+    [HD-22](../human-decisions.md) forbids editing. **No behaviour change, so no Product Owner
+    escalation was required** — the condition this ticket set for itself.
   - **ESC-2 … ESC-5 and OQ-P3-1 … OQ-P3-8** are carried in the plan with their owners
     (ESC-3 window right-edges, ESC-4 `FAILED_BREAKOUT` terminality against a new ATH,
     ESC-5 §16's `low` unguarded by §18 — Product Steward; ESC-2 a record-only correction).
@@ -505,10 +577,11 @@ and one of the unstated rules was the one at its limit.
     open** ([HD-24](../human-decisions.md) §3). This was an agent recommendation, not a
     condition anyone could impose on the Product Owner, and it is struck as a recommendation
     rather than restated as a breach. **Its reason survives the grant intact:** each of the
-    four decides behaviour this ticket would otherwise choose by itself, so they now block the
+    four decides behaviour this ticket would otherwise choose by itself, so they blocked the
     ticket's **Definition of Ready** (element 7) instead of blocking the lift — and since rule
-    4 wants a *Ready* ticket, the practical effect is the same. **Implementation still does
-    not begin.**
+    4 wants a *Ready* ticket, the practical effect was the same. **All four are now ruled**
+    (2026-07-28, table above), so the reason is discharged on its own terms rather than
+    waived, and **implementation may begin.**
 - **CORRECTION carried into this ticket rather than repeated as an error.** An earlier brief
   stated the six §15/§16/§17 parameters are *"not carried in any fixture's `params` block"*.
   **That was wrong** — it was generalised from a single fixture. Measured across the
@@ -525,61 +598,105 @@ and one of the unstated rules was the one at its limit.
     ([#39](https://github.com/tomerYannay/4UR4/issues/39)) grants it for `engine/`:
     `ACTIVE → BROKEN_OUT`, `Λ^F` freezing (§21.5), retest (§16), failed breakout (§15),
     expiry/recompute (§17). *(Previously read: "A Phase-3 freeze lift, which does not exist".)*
-  - **Phase 2 exit met — OPEN, and it is a roadmap entry criterion for this phase.** The
-    Phase-2 exit determination **has not been made**, and **no agent other than the Product
-    Steward may make it**: it is a [GOV-002](../../governance/roadmap-authority.md) call for
-    the Steward, on a gate assessment. *(Previously: "No agent has made the Phase-2 exit
-    determination and none may; it is a GOV-002 call for the Product Steward" — which forbids
-    to every agent what it then assigns to one of them. The Steward is an agent; the
-    restriction is that no **other** agent may.)* **What the Product Owner has already
-    removed** is the *approval* step, not the determination:
-    [HD-24](../human-decisions.md) §4 rules that *"Phase 2 exit is authorized to close on its
-    acceptance criteria without further Product Owner approval."* The determination itself is
-    still owed and is **not made in this change**. E2-AUTHOR **criterion 5** is disclosed-not-satisfied, and **criterion 2** is
-    genuinely UNMET (ticket (f)'s recorded deviation). **This is not a formality:** starting
-    Phase 3 before Phase 2's exit is determined would build the second storey on an
-    undetermined first.
-  - **The four open specification escalations — OPEN.** ESC-1, ESC-3, ESC-4, ESC-5, carried at
-    [`../maintenance-backlog.md`](../maintenance-backlog.md) **M-50**, each decides behaviour
-    this ticket would otherwise choose by itself.
-  - **Unchanged and satisfied:** **HD-03**; **HD-12**; trendline spec §11, §13–§18, §21.
-    Phase-2 **E2-AUTHOR** continues to bind for the whole engine.
+  - **Phase 2 exit met — DISCHARGED 2026-07-28.** The determination is made by the Product
+    Steward at [`../project-state.md`](../project-state.md): **`phase_2_exit:
+    CLOSED_ON_AUTHORITY`, `exit_criteria: MET`, `unmet_at_closure: [E2-AUTHOR-2]`,
+    `met_by_ruling: [E2-AUTHOR-5]`, `clean_gate_pass: false`**, on the authority of
+    [HD-24](../human-decisions.md) §4. **No agent other than the Product Steward may make it**
+    — a [GOV-002](../../governance/roadmap-authority.md) call, on a gate assessment.
+    *(Previously: "No agent has made the Phase-2 exit determination and none may; it is a
+    GOV-002 call for the Product Steward" — which forbids to every agent what it then assigns
+    to one of them. The Steward is an agent; the restriction is that no **other** agent may.)*
+    **What is discharged is the determination, not the residue it discloses:** the phase closes
+    **on authority, not on a clean gate pass**, E2-AUTHOR **criterion 2 is genuinely UNMET**
+    (ticket (f)'s recorded deviation) and **criterion 5 is met by ruling** on an attestation
+    that discloses its own gaps. **This entry must never be restated as "all criteria met."**
+  - **The four specification escalations — DISCHARGED 2026-07-28.** ESC-1, ESC-3, ESC-4 and
+    ESC-5, carried at [`../maintenance-backlog.md`](../maintenance-backlog.md) **M-50**, are
+    ruled — see the table above and
+    [`../trendline-specification.md`](../trendline-specification.md) §22. **ESC-5(b)** remains
+    **deferred and is explicitly non-blocking for element 7.**
+  - **D5 differential-probe custody — OPEN, owner VERIFICATION, and NOT Ready-blocking.** The
+    Phase-2 independence attestation
+    ([`../../docs/architecture/phase2-independence-attestation.md`](../../docs/architecture/phase2-independence-attestation.md)
+    §5) records D5 as *"NOT APPLICABLE AT PHASE 2 — by design, not by omission"* and states
+    that it **becomes a real signal at the Phase-3 gate**, in one specific form — **sealed,
+    spec-derived, verifier-held differential probes** — which
+    [`../../docs/architecture/phase2-independence-mechanism.md`](../../docs/architecture/phase2-independence-mechanism.md)
+    **AC-7** assigns to **Verification**. **No such probe is in custody today**, and the
+    attestation itself names that a **Phase-3 entry gap**, recorded there so it is not
+    discovered at the gate. **Why it does not block element 7, ruled explicitly:** it is a
+    **gate obligation on Verification**, not an open scope question the implementer would
+    otherwise settle alone — the implementer builds nothing differently whether the probes
+    exist or not, and cannot build them, since a probe held by the party it tests is not a
+    probe. It is therefore an **addressed** dependency — named, owned, and dated to the gate —
+    which is what element 7 asks, and it is **not discharged**. **Verification must hold the
+    probes before the Phase-3 exit gate can pass**, and this ticket's Done evidence cannot be
+    complete without them.
+  - **OQ-J — the `SPEC_VERSION` value — OPEN, owner Product Steward, NOT blocking.**
+    **OQ-P3-8** and [`../maintenance-backlog.md`](../maintenance-backlog.md) **M-34** are the
+    same question in two other registers and are **consolidated into OQ-J**; they are
+    cross-references, not separately owed decisions. **The versioning constraint is ruled**
+    at [`../trendline-specification.md`](../trendline-specification.md) **§22.1**: the §22
+    amendment is normative specification content, so it **must not land as a silent edit to an
+    unversioned document** — which requires (i) the dated, enumerated amendment record §22 is,
+    and (ii) a real `spec_version` minted **before any engine pins one**, in a change that can
+    move the specification header, the engine's `SPEC_VERSION` and the value fixtures record
+    **together**. A document-only change cannot mint it, which is why it is not minted here.
+    **Not blocking:** no Phase-3 behaviour depends on the identifier, and the placeholder
+    `"UNVERSIONED-PENDING-OQ-J"` is honest about being one.
+  - **Unchanged and satisfied:** **HD-03**; **HD-12**; **[HD-25](../human-decisions.md)**;
+    trendline spec §11, §13–§18, §21 **and the §22 amendment record**. Phase-2 **E2-AUTHOR**
+    continues to bind for the whole engine.
 - **Evidence plan (GOV-006):** Ticket branch + PR linked to the issue; the full-corpus
   conformance run with every fixture compared in full and in both directions; the sweep
   `final_state` comparison at every recorded scale; determinism and no-look-ahead runs;
   a reason-code coverage report counted **by emission, not by grepping source**; CI green;
   Verification verdict + Code Review approval.
 - **Autonomy level:** implementation, inside the **HD-24 §3 Phase-3 `engine/` lift**. **No new
-  or widened GOV-015 scope is requested or implied**, and the lift is not by itself permission
-  to start — rule 4 still wants a Ready ticket. *(Previously: "blocked (build-freeze)".)*
+  or widened GOV-015 scope is requested or implied**, and the lift was never by itself
+  permission to start — rule 4 wants a Ready ticket, and **as of 2026-07-28 it has one**.
+  *(Previously: "blocked (build-freeze)", then "rule 4 still wants a Ready ticket".)*
 - **Responsible agent type:** Implementation Engineer, supported by the Architect. *(The
   Engineer is no longer inactive for this scope; [GOV-015](../../governance/build-freeze.md)
   rule 3's inactivity attaches to frozen scopes, and this one is lifted.)*
-- **DoR note — RE-ASSESSED FORWARD, 2026-07-28. VERDICT: NOT READY (7 of 8 elements met;
-  element 7 unmet).** Assessed against
+- **DoR note — RE-ASSESSED FORWARD, 2026-07-28 (second assessment of that date). VERDICT:
+  READY (8 of 8 elements met).** Assessed against
   [GOV-004](../../governance/definition-of-ready.md) element by element, against the state of
-  the repository on this date. **Nothing here is backdated**, and the previous note is quoted
-  below rather than overwritten.
+  the repository **after** the ten Phase-3 dispositions and the Phase 2 exit determination
+  landed. **Nothing here is backdated**, and the earlier assessment — the one that returned
+  **NOT READY** on the same date, before those two closures — is quoted below rather than
+  overwritten. **Two assessments, two different states of the repository, in that order.**
 
   | # | [GOV-004](../../governance/definition-of-ready.md) element | Verdict | How it was checked |
   |---|---|---|---|
   | 1 | Traces to an approved roadmap item (GOV-002) | **MET** | [`roadmap.md`](../roadmap.md) **Phase 3 — Breakout & retest engine** is an existing phase of the Phase 0–9 baseline **approved** under GOV-013 as **HD-16** ([#23](https://github.com/tomerYannay/4UR4/issues/23)). This ticket adds no scope to it; the roadmap is not edited by this change |
   | 2 | States user/business value and a success measure | **MET** | **Value:** Phase 2 stops the engine at the §13.1 predicate and calls the stop a *stop*; this ticket turns it into a transition and adds the four post-breakout behaviours — i.e. it is what makes the product *fire and then follow* rather than only draw. **Success measure:** the derived Phase-3 exit gate, plus the sweep comparison that raises asserted Phase-3 outcomes from **7** to **10** at the committed corpus. Both are counted from artifacts, not asserted |
-  | 3 | Explicit, testable acceptance criteria | **MET** | Seven criteria above, each either mechanically checked or stated by **deferral to a derived source** rather than by a restated list — the [#19](https://github.com/tomerYannay/4UR4/issues/19) remedy. E2-AUTHOR-A carries its own anti-vacuity assertion |
+  | 3 | Explicit, testable acceptance criteria | **MET** | **Eight** criteria above — seven, plus the **OQ-P3-7 remedy** added 2026-07-28 *(the cell read "Seven" before that criterion existed; recounted, not restated)* — each either mechanically checked or stated by **deferral to a derived source** rather than by a restated list, the [#19](https://github.com/tomerYannay/4UR4/issues/19) remedy. E2-AUTHOR-A carries its own anti-vacuity assertion, and the OQ-P3-7 criterion carries its own: an allow-list that has gone stale in either direction fails the run |
   | 4 | Bounded — completable and verifiable in one flow | **MET, with the reservation stated and now heavier** | The Architect's plan bounds the delta at **one new module (`engine/frozen.py`, ~120 lines) plus edits to twelve existing files** — counted from the plan's own delta table ([`../../docs/architecture/phase3-implementation-plan.md`](../../docs/architecture/phase3-implementation-plan.md) §0), whose **ten** `edit` rows name **twelve** files because one row carries three test modules. *(This cell previously read **"plus edits to five existing ones"** — not the plan's number, and understated the very quantity this element assesses. Corrected 2026-07-28; found by Code Review.)* It is still **one verifiable outcome** — the Phase-3 exit gate — and splitting it would split that gate, which is the thing GOV-008 rule 4 exists to keep whole. **The reservation, restated against the true number:** five behaviours across thirteen files is the largest unit this file has ever called bounded, and if the flow does not complete in one pass the Steward splits it rather than letting it expand |
   | 5 | Uses defined glossary terms; new terms added | **MET** | Checked term by term against [`../glossary.md`](../glossary.md): *Confirmed breakout*, *Breakout bar / confirmed bar*, *Failed breakout*, *Retest hold*, *Line expiry / reset*, *Line state machine*, *Frozen event line (`Λ^F`)*, *As-of-time (rolling causal) evaluation*, *Available prefix (`S_t`)*, *Active line at bar `t`*. **All present. No new term is introduced by this ticket**, so none needs adding |
   | 6 | Names required evidence for Done (GOV-006) | **MET** | The evidence plan above names the full-corpus conformance run compared in both directions, the sweep `final_state` comparison at every recorded scale, determinism and no-look-ahead runs, a reason-code report counted **by emission rather than by grepping source**, CI green, and both gate verdicts |
-  | 7 | **No unaddressed dependency or open scope question** | **UNMET — this is the whole verdict** | Two independent failures, either one sufficient. **(a) Four open specification escalations** — **ESC-1** (§11 draws expiry as two edges, GX-07 records one), **ESC-3** (the §15/§16 window right edges are evidenced by no fixture), **ESC-4** (is `FAILED_BREAKOUT` terminal against a new ATH), **ESC-5** (§16 requires `low`, §18 does not guard it) — plus **OQ-P3-1…OQ-P3-8**, six of them owned by the Product Steward. Each decides behaviour the implementer would otherwise choose alone, which is the one disposition **HD-15 condition 3** forbids. **(b) The roadmap's own Phase 3 entry criterion — "Phase 2 exit met" — is undetermined**, and E2-AUTHOR criteria 2 and 5 are why |
+  | 7 | **No unaddressed dependency or open scope question** | **MET — both grounds closed 2026-07-28, and this is the element that changed** | **(a) The four specification escalations are RULED**, in a separate governed change touching no `engine/` file (**HD-15** condition 3): **ESC-1** and **ESC-3** and **ESC-5(a)** by the Product Steward, **ESC-4** by the Product Owner as **[HD-25](../human-decisions.md)**, plus normative dispositions for the six Steward-owned **OQ-P3** rows — [`../trendline-specification.md`](../trendline-specification.md) **§22**. **(b) The Phase 2 exit determination is MADE** — [`../project-state.md`](../project-state.md), `CLOSED_ON_AUTHORITY`, `clean_gate_pass: false` — which satisfies the roadmap's Phase 3 entry criterion. **Three items remain open and each is ruled non-blocking on its own stated ground, not by omission:** **ESC-5(b)** (deferred; not answerable from synthetic fixtures, and (a) is complete without it) · **D5 probe custody** (a gate obligation on **Verification**, addressed and dated, not a scope question the implementer would settle) · **OQ-J** (the `SPEC_VERSION` value; no Phase-3 behaviour depends on it and a document-only change cannot mint it). See Dependencies |
   | 8 | Respects the build-freeze (GOV-015) | **MET — newly, and this is the element HD-24 §3 changed** | `blocked: freeze` is removed **because [HD-24](../human-decisions.md) §3 lifts GOV-015 for Phase 3 inside `engine/`**, and for no other reason. The freeze marker's `scope` stays `["engine/"]` because the directory is unchanged; the phase distinction lives in `build-freeze.md`'s prose and **not** in the machine check |
 
-  **What must happen before this ticket can become Ready** — stated so the path is closable
-  rather than indefinite: **(i)** the Product Steward rules **ESC-1, ESC-3, ESC-4 and ESC-5**,
-  escalating ESC-1 to the Product Owner if the chosen close is a behaviour change, and gives
-  the Steward-owned **OQ-P3** rows normative dispositions instead of provisional ones —
-  **as a separate governed change; HD-15 condition 3 forbids amending the specification in the
-  same change as the engine**; and **(ii)** the Product Steward makes the **Phase 2 exit
-  determination** under GOV-002, on a gate assessment. Neither is done here, and neither is
-  the kind of thing that should be done quickly to unblock something.
+  **What had to happen before this ticket could become Ready — both done, 2026-07-28, and the
+  path is recorded as it was actually walked:** **(i)** the Product Steward ruled **ESC-1,
+  ESC-3 and ESC-5(a)** and gave the six Steward-owned **OQ-P3** rows normative dispositions,
+  **escalating ESC-4 to the Product Owner because its close IS a behaviour change** — ruled as
+  **[HD-25](../human-decisions.md)** — all **as a separate governed change**, since HD-15
+  condition 3 forbids amending the specification in the same change as the engine; and
+  **(ii)** the Product Steward made the **Phase 2 exit determination** under GOV-002.
+  **Neither was done quickly to unblock something**: ESC-1 and ESC-5(a) were closed on the
+  reading that moves no committed expectation, ESC-3 and the OQ-P3 rows on measurements that
+  show the corpus cannot distinguish the readings, ESC-4 by the only party who may change
+  behaviour, and the exit determination with `clean_gate_pass: false` on its face.
+
+  **What Ready does NOT mean here, stated because this ticket's history invites the
+  misreading:** it does not mean Phase 2 was clean (it closed **on authority**), it does not
+  mean the escalation residue is empty (ESC-5(b), D5 custody and OQ-J are open and each is
+  ruled non-blocking for a stated reason), and it does not mean the work has started —
+  [GOV-008](../../governance/ticket-hygiene.md) rule 1 governs that, and the WIP table at the
+  top of this file is where it is assessed.
 
   **Superseded note, retained verbatim.** *"**NOT Ready. `blocked: freeze`, and deliberately
   so.** [GOV-015](../../governance/build-freeze.md) **rule 4** requires a lift to be
@@ -589,11 +706,12 @@ and one of the unstated rules was the one at its limit.
   among them). This ticket exists so that a Phase-3 lift **has a specific ticket to attach
   to** rather than being granted as a directory-wide blank cheque — that is **Part A of
   [#36](https://github.com/tomerYannay/4UR4/issues/36)**. It also does not yet meet GOV-004 on
-  its own terms: four open escalations are unaddressed scope questions."* **The first half is
-  superseded by HD-24 §3; the last sentence is not, and it is the reason this ticket is still
-  not Ready. #36 Part A is answered — the lift was granted.**
+  its own terms: four open escalations are unaddressed scope questions."* **The first half was
+  superseded by HD-24 §3 on 2026-07-28; the last sentence was superseded later the same day,
+  by the four escalations being ruled — see the escalation table above. #36 Part A is
+  answered — the lift was granted.**
 
-## Ticket (h) — Phase-2 engine hardening: close the measured vacuous-test gap  ·  **Ready**
+## Ticket (h) — Phase-2 engine hardening: close the measured vacuous-test gap  ·  **Delivered and merged**
 
 - **Title:** Engine hardening — unify the domination range, restore the pinned comparison,
   close the M-28 coverage gap (implementation)
@@ -658,8 +776,14 @@ and one of the unstated rules was the one at its limit.
   bounded — one module plus its tests ✓ · uses defined glossary terms ✓ · names its Done
   evidence ✓ · **no unaddressed dependency or open scope question** ✓ · respects
   GOV-015 — the scope is already lifted, so nothing here is `blocked: freeze` ✓.
-  **It is Ready and in progress, so it consumes none of the GOV-008 "open unstarted Ready"
-  budget.**
+  **Superseded by delivery, 2026-07-28:** this read *"It is Ready and in progress, so it
+  consumes none of the GOV-008 'open unstarted Ready' budget."* **It is now delivered and
+  merged** — [PR #37](https://github.com/tomerYannay/4UR4/pull/37) at `c66fd294`, 4 files, all
+  `engine/`, 141 tests ([`../project-state.md`](../project-state.md)) — so it consumes
+  **neither** budget: not rule 2 (never unstarted-Ready) and **no longer rule 1**, which is
+  what frees the slot ticket (g) needs. **Whether it is DONE under
+  [GOV-005](../../governance/definition-of-done.md) is not stated here**: that is Verification's
+  and Release & Ops' determination, and the Product Steward does not make it.
 
 ---
 
@@ -669,10 +793,13 @@ scopes lifted, both inside `engine/` — **Phase 2** (HD-22, 2026-07-26) and **P
 both, because the directory is the same one; **the validator cannot tell the two apart**, and
 `build-freeze.md` says so rather than leaving it to be discovered. Implementation ticket
 **(e)** stays `blocked: freeze` — no lift covers ingestion. **(g)** is **no longer
-freeze-blocked and is still NOT Ready**: DoR element 7 is unmet while ESC-1/3/4/5 are open and
-the Phase-2 exit determination is owed, so **rule 4 is still unsatisfied and Phase-3
-implementation does not begin**. **(f)** is not freeze-blocked and is not Ready either: its
+freeze-blocked and, as of 2026-07-28, is READY**: DoR element 7's two grounds are closed —
+ESC-1/3/4/5 ruled (ESC-4 by the Product Owner as [HD-25](../human-decisions.md)) and the
+Phase-2 exit determination made — so **rule 4 is satisfied and Phase-3 implementation may
+begin**, WIP permitting. **(f)** is not freeze-blocked and is not Ready either: its
 Phase-2 entry criteria are open, and the deviation recorded under it — the engine was built
 before the ticket reached Ready — stands unresolved and has **not** been backdated away.
-**(h)** is Ready inside the Phase-2 lift and asks for no new scope. **Neither (f) nor (g) has
-been made Ready to make an external record read true.***
+**(h)** was Ready inside the Phase-2 lift, asked for no new scope, and is **delivered and
+merged**. **(g) was not made Ready to make an external record read true** — the two grounds
+were closed first, on their merits, in a change that touches no `engine/` file; **and (f) has
+not been made Ready at all.***
