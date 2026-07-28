@@ -54,14 +54,25 @@ definition record; **the issues are authoritative** where the two disagree.
 freeze** (e) · **2 not Ready** (f, g). HD-06 remains **PENDING**: (c) may recommend a provider
 and may not select one, commit spend, or accept licensing terms.
 
-**All three [GOV-008](../../governance/ticket-hygiene.md) budgets, stated — the third was
-previously unstated (M-55).**
+**All three [GOV-008](../../governance/ticket-hygiene.md) budgets, stated — WIP was unstated
+before this change (M-55) and the idea budget was still unstated in the first form of this
+table — plus rule 4, whose row was mislabelled as rule 3.**
+
+*Corrected 2026-07-28, with the wrong label quoted rather than replaced in silence.* This block
+read *"All three GOV-008 budgets, stated — the third was previously unstated (M-55)"* over a
+table whose last row was headed **"3 — epics"**. **The epic constraint is
+[GOV-008](../../governance/ticket-hygiene.md) rule 4** — *"One ticket = one verifiable outcome.
+No umbrella/epic tickets"* — and **rule 3 is the idea budget**, *"at most **3** new idea cards
+per cycle"*. Rule 3 was therefore the budget still unstated, and the *"all three budgets"* claim
+was **false at the moment it was made**: the table stated two budgets and one non-budget rule
+under a third budget's number. Both are stated below. Found by Code Review.
 
 | Rule | Limit | Count now | Verdict |
 |---|---|---|---|
 | 1 — WIP `In Progress` | ≤ 3 | **3** (c, d, h) | **compliant and SATURATED** |
 | 2 — open **unstarted** Ready | ≤ 5 | **0** | compliant |
-| 3 — epics | 3 labels, no umbrella issues | 3 | compliant |
+| 3 — **idea budget**: new idea cards per cycle | ≤ 3 | **3** in the last cycle in which any were submitted — IDEA-0002/0003/0004, 2026-07-24, all still *awaiting triage* ([`../../ideas/inbox.md`](../../ideas/inbox.md)) — and **0** since | compliant, and saturated for that cycle |
+| 4 — one ticket = one verifiable outcome; no umbrella/epic tickets | 3 epic **labels**, no umbrella issues | 3 | compliant |
 
 **No budget is breached by this change, and the reason is worth stating rather than
 asserting.** Making a ticket **Ready** consumes the rule-2 budget, not the rule-1 WIP limit;
@@ -69,8 +80,8 @@ only *starting* it consumes WIP. **(g) is not made Ready by this change** — se
 assessment below — so rule 2 stays at 0 either way. **But rule 1 is at its limit right now:
 WIP is exactly 3.** Whenever (g) does become Ready, **it cannot be started until a WIP slot
 frees**, and starting it while c, d and h are all in progress would breach GOV-008 rule 1.
-Recorded here because a totals line that checked two rules of three read as a full check, and
-the unstated rule was the one at its limit.
+Recorded here because a totals line that checked two of GOV-008's rules read as a full check,
+and one of the unstated rules was the one at its limit.
 
 **Two corrections to the framing above, because it went stale rather than wrong-headed.**
 
@@ -514,10 +525,17 @@ the unstated rule was the one at its limit.
     ([#39](https://github.com/tomerYannay/4UR4/issues/39)) grants it for `engine/`:
     `ACTIVE → BROKEN_OUT`, `Λ^F` freezing (§21.5), retest (§16), failed breakout (§15),
     expiry/recompute (§17). *(Previously read: "A Phase-3 freeze lift, which does not exist".)*
-  - **Phase 2 exit met — OPEN, and it is a roadmap entry criterion for this phase.** No agent
-    has made the Phase-2 exit determination and none may; it is a
-    [GOV-002](../../governance/roadmap-authority.md) call for the Product Steward on a gate
-    assessment. E2-AUTHOR **criterion 5** is disclosed-not-satisfied, and **criterion 2** is
+  - **Phase 2 exit met — OPEN, and it is a roadmap entry criterion for this phase.** The
+    Phase-2 exit determination **has not been made**, and **no agent other than the Product
+    Steward may make it**: it is a [GOV-002](../../governance/roadmap-authority.md) call for
+    the Steward, on a gate assessment. *(Previously: "No agent has made the Phase-2 exit
+    determination and none may; it is a GOV-002 call for the Product Steward" — which forbids
+    to every agent what it then assigns to one of them. The Steward is an agent; the
+    restriction is that no **other** agent may.)* **What the Product Owner has already
+    removed** is the *approval* step, not the determination:
+    [HD-24](../human-decisions.md) §4 rules that *"Phase 2 exit is authorized to close on its
+    acceptance criteria without further Product Owner approval."* The determination itself is
+    still owed and is **not made in this change**. E2-AUTHOR **criterion 5** is disclosed-not-satisfied, and **criterion 2** is
     genuinely UNMET (ticket (f)'s recorded deviation). **This is not a formality:** starting
     Phase 3 before Phase 2's exit is determined would build the second storey on an
     undetermined first.
@@ -548,7 +566,7 @@ the unstated rule was the one at its limit.
   | 1 | Traces to an approved roadmap item (GOV-002) | **MET** | [`roadmap.md`](../roadmap.md) **Phase 3 — Breakout & retest engine** is an existing phase of the Phase 0–9 baseline **approved** under GOV-013 as **HD-16** ([#23](https://github.com/tomerYannay/4UR4/issues/23)). This ticket adds no scope to it; the roadmap is not edited by this change |
   | 2 | States user/business value and a success measure | **MET** | **Value:** Phase 2 stops the engine at the §13.1 predicate and calls the stop a *stop*; this ticket turns it into a transition and adds the four post-breakout behaviours — i.e. it is what makes the product *fire and then follow* rather than only draw. **Success measure:** the derived Phase-3 exit gate, plus the sweep comparison that raises asserted Phase-3 outcomes from **7** to **10** at the committed corpus. Both are counted from artifacts, not asserted |
   | 3 | Explicit, testable acceptance criteria | **MET** | Seven criteria above, each either mechanically checked or stated by **deferral to a derived source** rather than by a restated list — the [#19](https://github.com/tomerYannay/4UR4/issues/19) remedy. E2-AUTHOR-A carries its own anti-vacuity assertion |
-  | 4 | Bounded — completable and verifiable in one flow | **MET, with the reservation stated** | The Architect's plan bounds the delta at **one new module (~120 lines) plus edits to five existing ones**. It is **one verifiable outcome** — the Phase-3 exit gate — and splitting it would split that gate, which is the thing GOV-008 rule 4 exists to keep whole. **The reservation:** five behaviours in one ticket is the largest unit this file has ever called bounded, and if the flow does not complete in one pass the Steward splits it rather than letting it expand |
+  | 4 | Bounded — completable and verifiable in one flow | **MET, with the reservation stated and now heavier** | The Architect's plan bounds the delta at **one new module (`engine/frozen.py`, ~120 lines) plus edits to twelve existing files** — counted from the plan's own delta table ([`../../docs/architecture/phase3-implementation-plan.md`](../../docs/architecture/phase3-implementation-plan.md) §0), whose **ten** `edit` rows name **twelve** files because one row carries three test modules. *(This cell previously read **"plus edits to five existing ones"** — not the plan's number, and understated the very quantity this element assesses. Corrected 2026-07-28; found by Code Review.)* It is still **one verifiable outcome** — the Phase-3 exit gate — and splitting it would split that gate, which is the thing GOV-008 rule 4 exists to keep whole. **The reservation, restated against the true number:** five behaviours across thirteen files is the largest unit this file has ever called bounded, and if the flow does not complete in one pass the Steward splits it rather than letting it expand |
   | 5 | Uses defined glossary terms; new terms added | **MET** | Checked term by term against [`../glossary.md`](../glossary.md): *Confirmed breakout*, *Breakout bar / confirmed bar*, *Failed breakout*, *Retest hold*, *Line expiry / reset*, *Line state machine*, *Frozen event line (`Λ^F`)*, *As-of-time (rolling causal) evaluation*, *Available prefix (`S_t`)*, *Active line at bar `t`*. **All present. No new term is introduced by this ticket**, so none needs adding |
   | 6 | Names required evidence for Done (GOV-006) | **MET** | The evidence plan above names the full-corpus conformance run compared in both directions, the sweep `final_state` comparison at every recorded scale, determinism and no-look-ahead runs, a reason-code report counted **by emission rather than by grepping source**, CI green, and both gate verdicts |
   | 7 | **No unaddressed dependency or open scope question** | **UNMET — this is the whole verdict** | Two independent failures, either one sufficient. **(a) Four open specification escalations** — **ESC-1** (§11 draws expiry as two edges, GX-07 records one), **ESC-3** (the §15/§16 window right edges are evidenced by no fixture), **ESC-4** (is `FAILED_BREAKOUT` terminal against a new ATH), **ESC-5** (§16 requires `low`, §18 does not guard it) — plus **OQ-P3-1…OQ-P3-8**, six of them owned by the Product Steward. Each decides behaviour the implementer would otherwise choose alone, which is the one disposition **HD-15 condition 3** forbids. **(b) The roadmap's own Phase 3 entry criterion — "Phase 2 exit met" — is undetermined**, and E2-AUTHOR criteria 2 and 5 are why |

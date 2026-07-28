@@ -44,13 +44,20 @@
   [`human-decisions.md`](human-decisions.md) precisely so a refresh of this file cannot sweep
   it.
 
-  **The gate runs five checks:** `tools/validate.mjs` · `.claude/hooks/bash-guard.test.mjs`
+  **The gate runs five checks** — *every figure below is as measured at `c66fd294`, this
+  file's declared reference SHA, and is **not** restated as current: the `check-evidence`
+  census moves with every documentation commit, including this one*: `tools/validate.mjs` ·
+  `.claude/hooks/bash-guard.test.mjs`
   (329 assertions) · `tools/fixture-replay.mjs --all` (23/23 golden + 1/1 real) ·
   `tools/check-evidence.mjs` (74 markdown files, 0 broken cross-file links, 1651 body rows in
-  214 tables) · **`python3 -m engine.tests.run_all` (136 tests)** — plus a
+  214 tables) · **`python3 -m engine.tests.run_all` (141 tests)** — plus a
   **fixture-immutability guard** that hard-fails any PR touching `engine/` that also carries a
   non-`*.md` change under `product/fixtures/`, **plus typechange** (broader than earlier prose
-  said — M-46). **What the gate did NOT do on PR #38, recorded because a green result hides
+  said — M-46). *(**Corrected 2026-07-28:** the engine count read **"136 tests"** here while
+  the PR #37 entry under **Open issues / PRs** below said **"141 tests (was 136)"** — one file,
+  two counts. **141** is the count at `c66fd294`; **136** was carried over from the `586a34e`
+  measurement, taken before PR #37's engine hardening merged. The other four figures in this
+  sentence were exact at `c66fd294`. Found by Code Review.)* **What the gate did NOT do on PR #38, recorded because a green result hides
   it:** no automated step provided substantive assurance for a documentation PR. The
   fixture-immutability guard early-returned and contributed **nothing**; four gate steps were
   unchanged-by-construction; only `check-evidence.mjs` read the changed files, and it validates
@@ -120,7 +127,12 @@ complete and Phase 1 (market-data foundation) is in its **research** stage; Phas
 implementation remains **freeze-blocked**.
 
 **Phase 2 — the engine is BUILT and on `main`; the exit determination is OWED.** These are
-two different statements and this file keeps them apart deliberately.
+two different statements and this file keeps them apart deliberately. **What is owed is the
+determination, not a Product Owner approval of it:** [HD-24](human-decisions.md) §4 rules that
+*"Phase 2 exit is authorized to close on its acceptance criteria without further Product Owner
+approval."* The approval requirement is **already removed**; the
+[GOV-002](../governance/roadmap-authority.md) determination against the acceptance criteria is
+what has not been made, and **it is not made in this change**.
 
 **Phase 3 — the freeze is LIFTED, the design is committed, and nothing is being built.**
 Three different statements, and keeping them apart is the point. [HD-24](human-decisions.md)
@@ -140,9 +152,12 @@ both RM-01 clauses with the stop index **derived by the engine, never read from 
 across varied `PYTHONHASHSEED` in a child process. Look-ahead is structurally prevented: the
 `Prefix` value object is exactly `t` bars long and geometry never receives the series.
 
-*What is NOT thereby true.* **No agent has declared Phase 2 exit met, and none may** — that
-is a [GOV-002](../governance/roadmap-authority.md) roadmap determination owned by the Product
-Steward, on a gate assessment, not an inference from a green suite. **E2-AUTHOR criterion 1
+*What is NOT thereby true.* **No agent has declared Phase 2 exit met, and no agent other than
+the Product Steward may** — that is a
+[GOV-002](../governance/roadmap-authority.md) roadmap determination owned by the Steward, on a
+gate assessment, not an inference from a green suite. *(Previously "and none may", in the same
+sentence that assigns it to the Steward, who is an agent. The restriction is on every **other**
+agent.)* **E2-AUTHOR criterion 1
 is MET** — [#20](https://github.com/tomerYannay/4UR4/issues/20) **CLOSED** at
 `2026-07-26T23:17:13Z`, `stateReason: COMPLETED`, by PR #32's merge, and the roadmap's own
 wording is *"until it closes this criterion is unmet"*. **Criterion 5 — the independence
@@ -158,8 +173,20 @@ own face: roadmap criterion 5 asks for **both** the A-check **and** the E2-AUTHO
 **"ABSENT — not weak, ABSENT"**, the commit range as **"NOT RECORDED … This is owed"**, and
 its own sign-off block (§8) as **"OWED. THIS BLOCK IS DELIBERATELY UNSIGNED."** §10 states its
 ceiling: *"it is not a Phase-2 gate pass, it is not a freeze lift, it authorizes nothing."*
-The roadmap's statement that criterion 5 is unsatisfiable while
-[#21](https://github.com/tomerYannay/4UR4/issues/21) is open is untouched, and #21 is open.
+**The roadmap's own sentence — file versus authority, and they now differ.** The **file** is
+untouched: [`roadmap.md`](roadmap.md) still reads *"Criterion 5 is not satisfiable until
+#21 … is resolved, so **Phase 2 entry is blocked on #20 and #21 in addition to the per-scope
+freeze lift**"*, and **no byte of it is edited by this change** — a roadmap edit is
+[GOV-002](../governance/roadmap-authority.md) / [GOV-013](../governance/approval-gate.md)
+territory and the Product Steward does not restate a Product Owner scope decision there. The
+**authority** of that sentence is another matter: **[HD-24](human-decisions.md) §4 supersedes
+it in writing**, *"rather than leaving it reinterpreted"*, and a superseding Product Owner
+decision outranks the sentence it supersedes. So: **the sentence is live in the file, and it no
+longer governs.** #21 **is still open** and is still the attribution defect it always was —
+what HD-24 §4 removes is the sentence's *blocking effect on criterion 5*, not the defect.
+*(An earlier form of this passage said the roadmap statement "is untouched, and #21 is open"
+with no further qualification. True of the file, **false of the sentence's authority**, and the
+two were being read as one. Found by Code Review.)*
 **Both are recorded: the ruling stands, and the residue is not thereby discharged.**
 *(An earlier draft of this paragraph said "two … remain formally
 unmet" and named criterion 1 among them. False — it re-asserted the very stale reading this
@@ -295,9 +322,12 @@ entry enumerates as going beyond the escalated options:
   examined exactly those lines and found they move *further* from the model than the code they
   replaced) — the **commit range is NOT RECORDED**, and the **sign-off block is deliberately
   unsigned**. #36 Part B's question was conditioned on an attestation *"carrying your named
-  sign-off"*, so §4 answered it while dropping that precondition. The roadmap still says
-  criterion 5 is unsatisfiable while #21 is open. **The ruling governs; the residue is
-  disclosed, not treated as satisfied.**
+  sign-off"*, so §4 answered it while dropping that precondition. **The roadmap's file still says
+  criterion 5 is unsatisfiable while #21 is open; that sentence no longer governs** —
+  [HD-24](human-decisions.md) §4 supersedes it in writing, and **no roadmap byte is edited**
+  (GOV-002/GOV-013). *(Corrected 2026-07-28: this read "The roadmap still says criterion 5 is
+  unsatisfiable while #21 is open" with nothing distinguishing the file's text from its
+  authority.)* **The ruling governs; the residue is disclosed, not treated as satisfied.**
 - **Issue [#21](https://github.com/tomerYannay/4UR4/issues/21)** — review verdicts cannot
   become citable artifacts, and review attribution collapses to a single account. **Required
   before HD-06**, and a stated dependency of E2-AUTHOR **criterion 5** (*corrected 2026-07-28:
@@ -324,8 +354,10 @@ outcome.** What actually remains:
 Steward-owned **OQ-P3** rows normative dispositions), **as a separate governed change** — the
 specification is authoritative and is **not** amended in the same change as the engine
 (HD-15 condition 3); **(b)** the Product Steward's **Phase 2 exit determination** under
-GOV-002, on a gate assessment, which no agent may make — it is also the roadmap's Phase 3
-**entry** criterion, so (a) and (b) together are what make (g) Ready and rule 4 true;
+GOV-002, on a gate assessment, which **no agent other than the Steward** may make and which
+**needs no further Product Owner approval** ([HD-24](human-decisions.md) §4) — it is also the
+roadmap's Phase 3 **entry** criterion, so (a) and (b) together are what make (g) Ready and
+rule 4 true;
 **(c)** [#21](https://github.com/tomerYannay/4UR4/issues/21)
 and [#34](https://github.com/tomerYannay/4UR4/issues/34) — the single-identity attribution
 defect, which blocks *every* merge and is the stated blocker on E2-AUTHOR criterion 5;
@@ -547,11 +579,18 @@ PENDING PRODUCT OWNER CONFIRMATION** and is unaffected.
   exist and absent from that list:** [#36](https://github.com/tomerYannay/4UR4/issues/36)
   (Part A — the Phase-3 lift request, **answered**: HD-24 §3 granted it; Part B —
   E2-AUTHOR criterion 5, **ruled** by HD-24 §4, on an attestation that carries less than
-  roadmap criterion 5 asks for) and
-  [#39](https://github.com/tomerYannay/4UR4/issues/39) (**HD-24** itself). **A live issue for
-  ticket (g) does not exist yet**; opening one is an Orchestrator action and **no number is
-  invented here**. The GitHub issue list is authoritative and this bullet is stale by
-  construction. **#4**, **#5** (Phase 1 research) ·
+  roadmap criterion 5 asks for),
+  [#39](https://github.com/tomerYannay/4UR4/issues/39) (**HD-24** itself), and
+  **[#40](https://github.com/tomerYannay/4UR4/issues/40)** — **ticket (g)'s live issue**, filed
+  2026-07-28 by the Orchestrator from the Product Steward's draft, leading with *"Status: NOT
+  READY. Do not start."* *(**Corrected 2026-07-28, and the superseded sentence is quoted rather
+  than deleted, because this PR's standard is to quote what it supersedes:** this bullet read
+  **"A live issue for ticket (g) does not exist yet; opening one is an Orchestrator action and
+  no number is invented here."** That was **false at this head** — #40 exists, and
+  [`planning/ticket-set.md`](planning/ticket-set.md) records **`(g) → #40`** in this same
+  commit. One commit asserted both. The enumeration above also omitted #40 — the one issue this
+  change created — while naming #36 and #39. Found by Code Review.)* The GitHub issue list is
+  authoritative and this bullet is stale by construction. **#4**, **#5** (Phase 1 research) ·
   **#6** (Phase 1 impl, `blocked: freeze`), **#7** (Phase 2 engine — freeze lifted for
   `engine/` by #31; the engine is built and merged, and what remains of the ticket is the
   exit determination, not the build) · **#10** (Agent Coordination Queue, permanent index) ·

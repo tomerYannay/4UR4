@@ -1333,7 +1333,9 @@ an artifact where #21 says none can exist. It is **not** a merge authorization
 - **Artifact:** [issue #39](https://github.com/tomerYannay/4UR4/issues/39). Unlike
   [HD-23](#hd-23--autonomous-execution-directive--materiality-high), this decision **has** a
   citable artifact; HD-24's own closing line directs that it be recorded here as **HD-24**,
-  which is what this entry does.
+  which is what this entry does. **That closing line has a second half — a directive to widen
+  the freeze marker's `scope` — which is NOT executed**, and is quoted with its reasons under
+  *"HD-24's closing recording directive"* below.
 - **⚠ Provenance, as HD-24 discloses it about itself.** It was **relayed in session under the
   single shared identity**, and **written up by the Orchestrator, which is an interested
   party** in the merges §2 authorizes. It is therefore **citable but not independently
@@ -1346,16 +1348,49 @@ an artifact where #21 says none can exist. It is **not** a merge authorization
   Product Steward from the decision as **relayed to the recording session**, corroborated
   against the three gate relays and the PR #38 body, each of which quotes HD-24 §2 by
   section. **The recording agent did not read the issue body itself.** Where this entry and
-  [#39](https://github.com/tomerYannay/4UR4/issues/39) disagree, **the issue governs.** Only
-  **§2, §3 and §4** — the parts this record propagates — are transcribed here; the remaining
-  sections are not, and their absence from this entry is not a statement about their content.
+  [#39](https://github.com/tomerYannay/4UR4/issues/39) disagree, **the issue governs.**
+- **⚠ What this entry transcribes — narrowed and corrected 2026-07-28, because the first form
+  of the claim was too wide.** It said: *"Only **§2, §3 and §4** — the parts this record
+  propagates — are transcribed here; the remaining sections are not."* That reads as **§2, §3
+  and §4 entire**, and they were not: **§2's #35 and #37 rows**, **§3's ruling on HD-22
+  requirement 3**, **§4's Phase-2-exit authorization**, and **the freeze-marker half of #39's
+  closing recording line** were all absent. A disclaimer covering §1, §5 and §6 licenses
+  nothing about the three sections this entry says it *does* transcribe. All four omissions
+  are repaired below, and the claim is now stated by part rather than by section number.
+  **Transcribed here:** §2's three-row authorization table and its gate-relay provision · §3's
+  enumerated grant, its still-frozen list, its rule-4 assertion and its HD-22-requirement-3
+  ruling · §4's #36 Part B ruling and its Phase-2-exit authorization · **#39's closing
+  recording line**, which sits outside all three sections and is transcribed with the half of
+  it that was **declined**. **Not transcribed:** §1, §5, §6, and anything within §2/§3/§4 not
+  named in that list — their absence is **not** a statement about their content.
+- **⚠ Provenance of the newly transcribed passages.** They were **relayed verbatim by the Code
+  Review gate**, which read [#39](https://github.com/tomerYannay/4UR4/issues/39) and confirmed
+  each against the issue body and against the working tree. **The recording agent still has not
+  read #39's body**, so these quotations inherit the same relay weakness as the rest of this
+  entry: they are citable, not independently attributable. Where they and the issue disagree,
+  **the issue governs.**
 
 ### §2 — merge authorization and the gate-relay provision
 
-**Recorded as it operated, not as it was first written.** §2 authorizes PR
-[#38](https://github.com/tomerYannay/4UR4/pull/38) and PR
-[#37](https://github.com/tomerYannay/4UR4/pull/37) by number, on the condition *"Merge after
-#35; gates required first."* It states that **the gates themselves are NOT waived**; what it
+**Recorded as it operated, not as it was first written.** §2's authorization table has
+**three** rows, each carrying **its own** condition and its own authorized head. All three are
+transcribed here, because collapsing them loses exactly the distinction the last row was
+written to make:
+
+| PR | Head authorized, in §2's own wording | Condition, verbatim |
+|---|---|---|
+| [#35](https://github.com/tomerYannay/4UR4/pull/35) | `6482a5db7f66dc1a8c0bd44d4ade39718f0a8ef0` | *"Both gates already green at this head"* |
+| [#38](https://github.com/tomerYannay/4UR4/pull/38) | `207e91a4c315ffa01475a9b79ccb69dd18657502` | *"Merge **after** #35; gates required first"* |
+| [#37](https://github.com/tomerYannay/4UR4/pull/37) | *"**new SHA after R1**"* — no fixed SHA is named | *"Only **after** the R1 correction and a **re-run of both gates at the new head**"* |
+
+**Corrected 2026-07-28, with the superseded sentence quoted.** This paragraph read: *"§2
+authorizes PR #38 and PR #37 by number, on the condition 'Merge after #35; gates required
+first.'"* That condition is **#38's row alone**. **#37's row carries a different condition** —
+the one the re-anchoring immediately below actually relies on — and **#35's row was omitted
+entirely**, which is how a three-row authorization came to be narrated as a one-condition one.
+Found by Code Review.
+
+§2 states that **the gates themselves are NOT waived**; what it
 waives is the requirement that the Product Owner personally approve or perform each merge. It
 also permits the **Orchestrator to relay** a gate verdict where `ROLE_POLICY` blocks the `GH`
 category for the gate role, requiring each relay to state on its face that it is one — which
@@ -1383,6 +1418,41 @@ frozen, per §3's own list: **provider integration · live ingestion · `api` ·
 licensing · privacy/billing · external deployment.** **E2-AUTHOR continues to bind the whole
 engine.** Propagated to [`../governance/build-freeze.md`](../governance/build-freeze.md).
 
+**§3 also RULES on HD-22 requirement 3, and the first form of this entry omitted the ruling
+entirely.** Verbatim, as relayed by Code Review:
+
+> **"HD-22 requirement 3 is hereby read as reading (i)** — it was **Phase-2-scoped** and is
+> satisfied by the engine merged at `ed92bbb`. **No governance finding against `ed92bbb`
+> arises.** Phase 3's own gate is the roadmap's Phase 3 exit criteria: every fixture
+> reproduced in full."
+
+**What it decides, and why leaving it out mattered.** [HD-22](#hd-22--gov-015-scope-lift-phase-2-engine-only--materiality-high)'s
+binding requirement 3 on the engine is *"passes **all 23 golden fixtures and RM-01 causal
+replay**"*. Read as a demand that the committed engine reproduce every fixture **in full**, the
+Phase-2 engine does not meet it and never could: it stops at the §13.1 predicate and implements
+no Phase-3 behaviour by design. That reading would put the engine **already merged at
+`ed92bbb`** in breach of the very lift that authorized it. **§3 forecloses that**: requirement 3
+was Phase-2-scoped, it is satisfied, and **no governance finding against `ed92bbb` arises** —
+while the full-reproduction reading is relocated to where it belongs, the roadmap's **Phase 3
+exit criteria**. This is a ruling **about a commit already on `main`**, which is why its
+omission was the most consequential of the four: an entry that records the lift but not the
+ruling leaves a live, unanswered breach question against `main`.
+
+**It answers [#36](https://github.com/tomerYannay/4UR4/issues/36) Part A's second question.**
+Part A asked the Product Owner to *"state which you intended"* between two labelled readings of
+requirement 3; §3 answers **reading (i)**. **The labels are #36's, not this register's**, and
+**the recording agent has not read #36's body either** — so this entry does not restate #36's
+wording of the two readings beyond §3's own gloss (*"Phase-2-scoped"*, against *"every fixture
+reproduced in full"*). Elsewhere this file and
+[`project-state.md`](project-state.md) describe #36 Part A as the Phase-3 lift request; that is
+Part A's **first** question, and it remains accurate — Part A carried both.
+
+**What this ruling does NOT do.** It does **not** make the **Phase 2 exit determination** —
+that is a separate [GOV-002](../governance/roadmap-authority.md) call, still owed, and **not
+made here** (see §4). It does not convert `ed92bbb` into a Phase-2 gate pass; it rules that no
+**finding** arises against it under requirement 3, which is a narrower thing and is recorded as
+the narrower thing.
+
 **⚠ OVERREACH 1 — §3's claim that ticket (g) satisfies GOV-015 rule 4 was FALSE when
 written, and this PR repairs it FORWARD, not retroactively.** Rule 4 requires a lift to be
 *per-scope, tied to a specific **approved, Ready** ticket*. At head `586a34e` — the state §3
@@ -1397,7 +1467,10 @@ Reviewer in the PR #38 review, stated there without hedge.
 outranks GOV-015, and §3 could simply have *waived* rule 4. It did not waive it; it
 **asserted** it, and the asserted mechanism did not exist. The repair is therefore **forward**:
 ticket (g)'s `blocked: freeze` is removed under this lift, its DoR is re-assessed **dated now**
-against [GOV-004](../governance/definition-of-ready.md), and a live issue is opened for it.
+against [GOV-004](../governance/definition-of-ready.md), and a live issue is opened for it —
+**[#40](https://github.com/tomerYannay/4UR4/issues/40)**, filed 2026-07-28, leading with
+*"Status: NOT READY. Do not start."*, which supplies **specific** and supplies nothing toward
+**approved** or **Ready**.
 **The repair is begun and is NOT complete.** On that re-assessment ticket (g) is **still not
 Ready** — [GOV-004](../governance/definition-of-ready.md)'s *"carries no unaddressed dependency
 or open scope question"* is genuinely unmet while **ESC-1, ESC-3, ESC-4 and ESC-5**
@@ -1419,6 +1492,40 @@ Phase-2 independence attestation** committed by PR #38
 ([`../docs/architecture/phase2-independence-attestation.md`](../docs/architecture/phase2-independence-attestation.md)).
 **That ruling stands as a Product Owner decision.**
 
+**§4 also AUTHORIZES the Phase 2 exit to close, and the first form of this entry omitted that
+as well.** Verbatim, as relayed by Code Review:
+
+> "Phase 2 exit is authorized to close on its acceptance criteria **without further Product
+> Owner approval**."
+
+**What it changes, stated precisely, because two things were being carried as one.** *(a)* **Who
+may determine Phase 2 exit** is **unchanged**: a [GOV-002](../governance/roadmap-authority.md)
+determination owned by the **Product Steward**, on a gate assessment, and no other agent may
+make it. *(b)* **Whether that determination then needs a further Product Owner approval before
+the phase can close** is what §4 answers: **it does not.** The approval requirement is
+**already removed**. **The determination itself is still owed, is NOT made by §4, and is NOT
+made in this change** — it lands separately, on its own evidence.
+
+**Why the omission was load-bearing.** [`project-state.md`](project-state.md),
+[`planning/ticket-set.md`](planning/ticket-set.md) and this entry all carried the Phase-2 exit
+as *owed* with **no indication that the Product Owner had already removed the approval step**.
+A reader planning the path to Ready would have budgeted for a Product Owner round that §4 had
+deleted — and, worse, could have read the silence as the approval still being outstanding. All
+three files now say which half is outstanding.
+
+**§4 supersedes a live roadmap sentence — in authority, not in the file, and the distinction is
+the whole point.** §4 supersedes the roadmap's *"Criterion 5 is not satisfiable until
+[#21](https://github.com/tomerYannay/4UR4/issues/21) … is resolved, so **Phase 2 entry is
+blocked on #20 and #21 in addition to the per-scope freeze lift**"* — in HD-24's own terms,
+*"in writing, rather than leaving it reinterpreted."* **The sentence is still in
+[`roadmap.md`](roadmap.md), and this change edits no byte of that file**: roadmap edits are
+[GOV-002](../governance/roadmap-authority.md) / [GOV-013](../governance/approval-gate.md)
+territory, and the Product Steward does not restate a Product Owner scope decision there even
+to make it current — the same disposition already taken for **M-56**. So **the sentence is live
+in the file and no longer governs**, and those two facts must not be collapsed into either one
+of them. **#21 remains open**; what §4 removes is that sentence's blocking effect on criterion
+5, not the attribution defect #21 records.
+
 **⚠ OVERREACH 2 — the artifact §4 relies on does not carry what the roadmap criterion asks
 for, and both facts are true at once.** [`roadmap.md`](roadmap.md) criterion 5 requires the
 attestation to carry **both** the A-check **and** the E2-AUTHOR-B record **plus the commit
@@ -1435,11 +1542,50 @@ What §4's *ruling* does is answer a question while dropping the precondition it
 on. **Both are recorded. The ruling governs; the gap is not thereby closed**, and
 [`project-state.md`](project-state.md) continues to carry criterion 5's residue as owed.
 
+### HD-24's closing recording directive — half executed, half DECLINED on engineering grounds
+
+**The directive, verbatim, as relayed by Code Review:**
+
+> "To be recorded in `product/human-decisions.md` as **HD-24**, and in
+> `governance/build-freeze.md`'s machine-readable marker as **a widened `scope`**."
+
+**First half — EXECUTED.** This entry is that record, filed as **HD-24**.
+
+**Second half — NOT EXECUTED, and recorded as declined rather than quietly dropped.** The
+freeze marker's `scope` is **not** widened, and it must not be. **`scope` is a list of
+directory names**, matched by [`../tools/validate.mjs`](../tools/validate.mjs) against its
+guarded-directory list; it is not a list of behaviours, phases or permissions. `engine/` — the
+only directory §3's grant reaches — **is already in it**. There is therefore **no widening
+available that expresses this lift**: the sole mechanical effect of adding a name would be to
+un-guard **some other** directory, and every candidate (`api`, `db`, `scanner`, `worker`,
+`dashboard`, `alerts`, `billing`, `providers`) appears on **§3's own still-frozen list**.
+**Executing the directive literally would authorize the opposite of what §3 ruled.** What was
+done instead: `lifted_by` records the Phase-3 extension in prose, the marker's own comment says
+why `scope` did not move, and
+[`../governance/build-freeze.md`](../governance/build-freeze.md) states in terms that the
+validator **cannot** tell Phase-2 work from Phase-3 work inside `engine/` — a gap named rather
+than closed, because a directory-name check cannot close it.
+
+**This is a Product Owner instruction declined by an agent, which is exactly the thing this
+register exists to make visible.** It is recorded here, quoted, with its reason, and it is
+**reversible by the Product Owner alone**: if a *directory* was intended, naming that directory
+is all that is required, and it would then be added to `scope` **and** to
+`PRODUCT_CODE_DIRS`/the guarded list together — the pairing `build-freeze.md` already warns is
+mandatory, *"or the ban is decorative."* No agent may widen `scope` on its own reading of this
+directive, and none has.
+
 ### What this decision does not do
 
-It does **not** touch **HD-06** — no provider is selected and no spend is authorized. It does
-**not** change the roadmap or its phase order ([GOV-002](../governance/roadmap-authority.md),
-[GOV-013](../governance/approval-gate.md)). It does **not** widen the lift beyond `engine/`.
+It does **not** touch **HD-06** — no provider is selected and no spend is authorized. It
+changes **no byte of [`roadmap.md`](roadmap.md) and no phase order**
+([GOV-002](../governance/roadmap-authority.md), [GOV-013](../governance/approval-gate.md)) —
+**it does not leave every roadmap sentence authoritative**, and the earlier form of this
+line implied it did. It read: *"It does **not** change the roadmap or its phase order."*
+**§4 expressly supersedes the roadmap sentence** *"Criterion 5 is not satisfiable until #21 …
+is resolved"* — in writing, rather than by reinterpretation. The **file** is untouched; that
+**sentence's authority** is not. This register keeps the two apart from here on. Found by Code
+Review.
+It does **not** widen the lift beyond `engine/`.
 It does **not** close [#21](https://github.com/tomerYannay/4UR4/issues/21) or
 [#34](https://github.com/tomerYannay/4UR4/issues/34), and it creates no independent
 attribution. It does **not** confirm [HD-23](#hd-23--autonomous-execution-directive--materiality-high),
@@ -1468,13 +1614,23 @@ which remains **PENDING**. It does **not** make ticket (g) Ready — only a
 distinction this register exists to keep.*
 
 - **2026-07-28 — [HD-24](#hd-24--pr-3837-merge-authorization--phase-3-gov-015-scope-lift--36-part-b--materiality-high)
-  ruled, and recorded with its two overreaches.** §2 authorizes PR #38 and PR #37 by number
-  without waiving their gates, and permits Orchestrator **relay** of gate verdicts; the head it
-  named was voided by four gate-driven corrections and the authorization was **re-anchored** to
+  ruled, and recorded with its two overreaches.** §2 authorizes **PR #35, PR #38 and PR #37** —
+  three rows, each with its own head and **its own condition** — without waiving their gates,
+  and permits Orchestrator **relay** of gate verdicts; #38's named head was voided by four
+  gate-driven corrections and the authorization was **re-anchored** to
   `586a34e`. §3 **lifts GOV-015 for Phase 3 inside `engine/`** — the `ACTIVE → BROKEN_OUT`
   transition, `Λ^F` freezing, retest, failed breakout, expiry/recompute — everything else
-  still frozen, E2-AUTHOR still binding. §4 resolves
-  [#36](https://github.com/tomerYannay/4UR4/issues/36) Part B affirmatively.
+  still frozen, E2-AUTHOR still binding — and **rules HD-22 requirement 3 to have been
+  Phase-2-scoped**, satisfied by the engine merged at `ed92bbb`, so **no governance finding
+  arises against that commit**. §4 resolves
+  [#36](https://github.com/tomerYannay/4UR4/issues/36) Part B affirmatively **and authorizes
+  Phase 2 exit to close on its acceptance criteria without further Product Owner approval** —
+  the determination itself is still owed, is the Product Steward's under GOV-002, and is **not
+  made here** — which **supersedes the roadmap's "criterion 5 is not satisfiable until #21"
+  sentence in authority while editing no roadmap byte**. **HD-24's closing directive to record
+  the lift as a widened marker `scope` is DECLINED, and recorded as declined:** `scope` is a
+  directory-name list, `engine/` is already in it, and the only widening available would
+  un-guard a directory §3 itself lists as still frozen.
   **Two overreaches are recorded rather than smoothed:** §3's claim that ticket (g) satisfied
   **GOV-015 rule 4 was false when written** — (g) was `blocked: freeze` and expressly not
   Ready — and §4's ruling rests on an attestation that records its own E2-AUTHOR-B entry as

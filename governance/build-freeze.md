@@ -178,6 +178,25 @@ file already uses for its other unguarded gaps: *the prose forbids it, the valid
 not*. Anyone relying on CI to catch Phase-3 behaviour committed under a Phase-2-only
 authorization will not be caught by CI.
 
+**HD-24's closing directive asked for a widened `scope`, and that half of it was DECLINED.**
+Quoted so the departure is legible rather than invisible:
+
+> "To be recorded in `product/human-decisions.md` as **HD-24**, and in
+> `governance/build-freeze.md`'s machine-readable marker as **a widened `scope`**."
+
+The record was filed as HD-24. **The marker's `scope` was not widened**, for the reason the
+section above already states: `scope` is a **list of directory names**, `engine/` is **already
+in it**, and this lift widens authorized *behaviour inside* that directory. **No widening
+available in this field expresses this grant** — adding a name could only un-guard a *different*
+directory, and every candidate (`api`, `db`, `scanner`, `worker`, `dashboard`, `alerts`,
+`billing`, `providers`) is on **§3's own still-frozen list**, so the literal instruction would
+have authorized the opposite of what §3 ruled. **A Product Owner instruction declined on
+engineering grounds is written down, not absorbed:** see
+[`../product/human-decisions.md`](../product/human-decisions.md) HD-24, *"HD-24's closing
+recording directive."* **Reversible by the Product Owner alone** — if a *directory* was
+intended, name it, and it is added here **and** to `PRODUCT_CODE_DIRS` together, per the
+pairing rule above. **No agent may widen `scope` on its own reading of that directive.**
+
 **This lift does not touch HD-06.** No provider is selected and no spend is authorized. It
 does not widen the lift beyond `engine/`, and it changes no roadmap phase order.
 
