@@ -28,65 +28,104 @@ jobs:
       - name: Fixture immutability — a fixture may not be edited to make the engine pass
         # HD-22 calls this "the one control that cannot be recovered after the fact: a
         # fixture edited to accommodate an engine looks identical to a fixture that was
-        # always right." Until now it was the only HD-22 binding condition with NO
-        # mechanical guard -- it rested on a human running `git diff` and transcribing the
-        # result into a review. Recommended by the Project Auditor, which could not verify
-        # that negative from file contents alone.
+        # always right." It was the only HD-22 binding condition with NO mechanical guard --
+        # it rested on a human running `git diff` and transcribing the result into a review.
         #
-        # The rule is NOT "fixtures never change" -- adding a fixture tightens the gate and
-        # is welcome. The rule is that a change to engine/ may not travel with a
-        # MODIFICATION or DELETION of an existing fixture. Those must land separately, so
-        # the edit is reviewed on its own merits rather than as a detail of an engine PR.
+        # WHAT THIS GUARD DOES NOT DO, disclosed by the same standard this file applies to
+        # M-36 and M-38. **This step is removable by the pull request it judges.** For
+        # `pull_request` events GitHub runs the workflow from the PR's own ref, and the
+        # required status context is the JOB name -- unaffected by deleting a step. So a PR
+        # that edits a fixture to match a wrong engine AND deletes this step in the same
+        # commit produces a green required check under the correct context name, mergeable at
+        # `required_approving_review_count: 0`, with no repository artifact recording it.
+        # `tools/validate.mjs` now asserts this step's exact lines, which converts a silent
+        # one-hunk deletion into a deliberate two-file edit -- but that assertion lives in the
+        # same repository and the same PR can delete it too, and it pins LINES rather than
+        # BEHAVIOUR: inverting the `-n`/`-z` test, or appending `changed=""` after the pinned
+        # diff, leaves every pinned line intact and this step inert. It raises the cost; it
+        # does not close the hole. Real closure is a required reviewer or a second identity
+        # (#21, #34, HD-22 part 3), none of which exists yet. Found by the Verification gate.
+        #
+        # The rule is NOT "fixtures never change": ADDING a fixture tightens the gate
+        # automatically and is permitted. A change to engine/ may not travel with a
+        # MODIFICATION, DELETION or TYPE-CHANGE of an existing committed fixture artifact.
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
           set -euo pipefail
-          base="origin/${{ github.base_ref }}"
-          git fetch --no-tags --depth=0 origin "${{ github.base_ref }}" >/dev/null 2>&1 || true
-          merge_base="$(git merge-base "$base" HEAD)"
+          base="origin/$BASE_REF"
 
-          engine_changed="$(git diff --name-only "$merge_base" HEAD -- engine/ | head -1)"
-          if [ -z "$engine_changed" ]; then
+          # `actions/checkout` above sets `fetch-depth: 0`, so the clone is already complete
+          # and `origin/$BASE_REF` already exists -- the plain fetch is the branch that runs.
+          # `--unshallow` is the FALLBACK, not the primary, and it is here only as
+          # defence-in-depth if `fetch-depth` is ever changed to a positive number.
+          #
+          # An earlier version had this backwards, with `--unshallow` first and a comment
+          # claiming it "is a no-op on an already-complete clone rather than an error". That
+          # is FALSE -- git dies with `--unshallow on a complete repository does not make
+          # sense`, so the primary branch could never run. That is M-36's own defect (a line
+          # written to make the guard robust, doing nothing) reproduced one layer up.
+          git fetch --no-tags origin "$BASE_REF" >/dev/null 2>&1 \
+            || git fetch --no-tags --unshallow origin "$BASE_REF" >/dev/null 2>&1 || true
+
+          # No `|| true`: if the base ref cannot be resolved, FAIL LOUDLY rather than
+          # silently comparing against nothing.
+          merge_base="$(git merge-base "$base" HEAD)"
+          echo "merge base with $BASE_REF: $merge_base"
+
+          if [ -z "$(git diff --name-only "$merge_base" HEAD -- engine/)" ]; then
             echo "No engine/ changes in this PR — fixture-immutability guard not engaged."
             exit 0
           fi
 
-          # M = modified, D = deleted, R = renamed. A = added is deliberately permitted:
-          # adding a fixture TIGHTENS the gate automatically and is welcome.
-          changed="$(git diff --name-only --diff-filter=MDR "$merge_base" HEAD -- product/fixtures/)"
+          # `--no-renames` is load-bearing. With rename detection ON, `--diff-filter=R` prints
+          # only the DESTINATION path, so `git mv .../expected.json .../expected.json.bak`
+          # reported a name that matched no rule and the guard PASSED while the fixture was
+          # effectively gone. With `--no-renames` a rename decomposes into `D` on the old path
+          # (caught) plus `A` on the new (correctly permitted). `T` catches replacing a
+          # fixture with a symlink, which is in none of M/D/R.
+          changed="$(git diff --no-renames --name-only --diff-filter=MDT "$merge_base" HEAD -- product/fixtures/)"
 
-          # Fixture DATA -- the artifacts HD-22 names, and the ones that cannot be
-          # recovered after the fact. Hard failure.
-          data="$(echo "$changed" | grep -E '(input\.csv|expected\.json|expected-causal\.json|annotation\.json)$' || true)"
+          # Hard-fail EVERYTHING under product/fixtures/ that is not prose. An earlier version
+          # hard-failed only the four data filenames and merely warned on the rest, which was
+          # wrong twice over:
+          #   1. `::warning::` does not fail the check. It presumes a reviewer whose look is
+          #      required -- and this repository records `required_approving_review_count: 0`
+          #      (HD-22 part 3, UNMET). Warn-only therefore reduces to exactly the attestation
+          #      HD-22 says is insufficient.
+          #   2. The warn set was described as "schemas and READMEs" but also contained
+          #      `real/RM-01/alphavantage-source.json` (the raw vendor payload input.csv was
+          #      derived from) and `real/RM-01/source-chart.png` (RM-01's independent visual
+          #      evidence). Those are PROVENANCE, and unrecoverable in exactly HD-22's sense.
+          # Prose (*.md) stays warn-only so a doc typo never blocks an engine PR.
+          blocking="$(echo "$changed" | grep -vE '\.md$' || true)"
+          prose="$(echo "$changed" | grep -E '\.md$' || true)"
 
-          # Everything else under product/fixtures/ (schemas, READMEs). Surfaced loudly,
-          # not failed. SCOPE DISCLOSED, because narrowing a guard to fit the PR that
-          # introduces it is the exact failure this guard exists to catch:
-          #   The PR that added this step modifies product/fixtures/schema/real-causal.schema.json
-          #   -- one `description` field, propagating SPR-D-03. That is a governance record,
-          #   not a fixture bent to make the engine pass, and it is what surfaced the
-          #   distinction. A schema edit CAN still weaken a gate, so it is printed for a
-          #   reviewer rather than silently permitted. If a reviewer thinks this should be a
-          #   hard failure too, that is a one-word change to the block below and I will not
-          #   argue for the looser reading.
-          other="$(echo "$changed" | grep -vE '(input\.csv|expected\.json|expected-causal\.json|annotation\.json)$' || true)"
-
-          if [ -n "$other" ]; then
-            echo "::warning::This PR changes engine/ and also touches non-data files under product/fixtures/. Review these on their own merits:"
-            echo "$other" | sed 's/^/  /'
+          if [ -n "$prose" ]; then
+            echo "::warning::Prose under product/fixtures/ changed alongside engine/ (not blocking):"
+            echo "$prose" | sed 's/^/  /'
           fi
 
-          if [ -n "$data" ]; then
-            echo "::error::HD-22 fixture immutability: this PR changes engine/ AND modifies or deletes committed FIXTURE DATA."
-            echo "$data" | sed 's/^/  /'
+          if [ -n "$blocking" ]; then
+            echo "::error::HD-22 fixture immutability: this PR changes engine/ AND modifies, deletes or retypes committed fixture artifacts."
+            echo "$blocking" | sed 's/^/  /'
             echo ""
             echo "A disagreement between the engine and a committed fixture is ESCALATED, never reconciled."
-            echo "If the fixture is genuinely wrong, land that correction in its own PR, reviewed on its own merits."
+            echo "If the artifact genuinely needs to change, land it in its own PR, reviewed on its own merits."
             echo "HD-22: 'a fixture edited to accommodate an engine looks identical to a fixture that was always right.'"
             exit 1
           fi
-          echo "PASS — engine/ changed; no committed fixture data was modified or deleted."
+          echo "PASS — engine/ changed; no committed fixture artifact was modified, deleted or retyped."
 
       - name: Set up Node.js
+        # RESTORED. This step was silently deleted by the commit that rewrote the
+        # fixture-immutability guard: the rewrite spliced on the NEXT step's header as its
+        # end boundary, and this step sat in between. It has been here since the bootstrap
+        # commit 2949a8f, and four of the five required checks run on it. Caught by Code
+        # Review. The same file pins Python "so a runner image change is a DECISION rather
+        # than an event" -- leaving Node unpinned in the same job contradicted that, and it
+        # would have landed as a side effect of a guard fix rather than as a decision.
         uses: actions/setup-node@v4
         with:
           node-version: '20'

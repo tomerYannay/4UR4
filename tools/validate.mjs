@@ -308,6 +308,97 @@ if (existsSync(freezeFile)) {
 
 // ---- required infrastructure ------------------------------------------------
 if (!existsSync(join(ROOT, CI_WORKFLOW))) err(`missing CI workflow: ${CI_WORKFLOW}`);
+else {
+  // The workflow's PRESENCE was asserted; its CONTENT was not. That gap let a step be
+  // deleted silently: a commit rewriting the fixture-immutability guard spliced on the next
+  // step's header as its end boundary and swallowed `actions/setup-node@v4`, on which four
+  // of the five required checks run. CI stayed green, because the runner's default Node was
+  // adequate -- which is precisely the failure mode the pinning exists to prevent.
+  //
+  // HONEST LIMIT, stated because the alternative is a control that overstates itself:
+  // this check lives in the same repository as the workflow, so a single PR can delete the
+  // step AND this assertion together. It does not make the gate tamper-proof. What it does
+  // is convert a SILENT one-hunk deletion into a deliberate two-file edit that shows up in
+  // the diff as an assertion being removed. Real closure is a required reviewer or a second
+  // identity (#21, #34, HD-22 part 3), neither of which exists yet.
+  // Needles are matched against WHOLE TRIMMED LINES, not as free substrings.
+  //
+  // This check has now been wrong three times in the same shape, and each fix closed the
+  // instance while leaving the class open:
+  //   1. whole-file scan       -- `--no-renames` was already in two comments: dead on arrival;
+  //   2. full command pinned   -- but `-- product/fixtures/` is a SUBSTRING of
+  //                               `-- product/fixtures/schema/`, so the pathspec could be
+  //                               narrowed to a subdirectory and still pass;
+  //   3. full-line comments stripped -- but only lines STARTING with `#`. A TRAILING comment
+  //                               survived, so `uses: actions/setup-python@v5  # engine.tests.run_all`
+  //                               satisfied the engine-suite needle while the suite was deleted.
+  // Each of (2) and (3) was introduced by the commit that announced the previous one fixed.
+  //
+  // Whole-line equality ends the SUBSTRING class -- a trailing comment, an appended
+  // `&& false`, or any other suffix changes the line and fails the match -- and that is ALL
+  // it ends. The CARRIER class survives, measured: neuter the guard's failure path to
+  // `exit 0` and put a bare `exit 1` line in any other step's `run:` block, and this check
+  // passes. `exit 1` is the weakest needle for exactly that reason. Defeating it now takes
+  // deliberate evasion rather than good-faith prose, which is a real improvement and is not
+  // the same thing as closure.
+  //
+  // WHAT THIS STILL DOES NOT DO -- stated because the last three attempts overclaimed:
+  // it pins the presence of exact lines, NOT the behaviour of the step. Adding a line
+  // (`changed=""` after the diff) leaves every pinned line intact and the guard inert. So
+  // does inverting the TRIGGER test (`-z`->`-n` on the engine/ diff), which early-exits 0
+  // exactly when engine/ changed. Inverting the BLOCKING test is different and must not be
+  // described the same way: it lets the attacking PR through but hard-fails every engine PR
+  // with a clean fixture tree, so it is loud, not inert. `continue-on-error` is forbidden below as a YAML KEY IN ANY
+  // SPELLINGS ENUMERATED AND TESTED BELOW -- and NOT in any spelling, which is a claim no
+  // line-anchored regex can support over YAML. Caught, each measured: bare, "double-quoted",
+  // 'single-quoted', space-before-colon, and DASH-LED (`- continue-on-error: true`, the key
+  // leading a step). That last one is ordinary Actions YAML -- every step here happens to be
+  // written `- name:`, so leading with this key instead is idiomatic, not exotic -- and it
+  // evaded the previous regex while leaving the engine suite's pinned `run:` line intact,
+  // making the 136-test HD-22 exit gate advisory in one added line.
+  //
+  // NOT caught, and this list is the honest boundary rather than a to-do: flow-style step
+  // mappings (`- {name: X, continue-on-error: true}`), the explicit-key indicator
+  // (`? continue-on-error`), and escape sequences in double-quoted scalars
+  // (`"continue-on-err\u006Fr"`). All resolve to the same key. Closing them requires PARSING
+  // the workflow as YAML and testing the object graph; this repository carries no YAML parser
+  // and adding one is an architectural change, not a fix. The structural point, which cost
+  // several rounds to reach: widening the regex again while keeping absolute wording would be
+  // wrong for the same reason it was wrong before. Either parse, or scope the claim. This
+  // scopes the claim. The ban is here not because it is the cheapest neutering (a one-character `-z`->`-n` on the
+  // trigger is cheaper) but because it is a whole-step off switch. The gap is real: M-39.
+
+  const wfLines = readFileSync(join(ROOT, CI_WORKFLOW), 'utf8')
+    .split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+  const hasLine = (needle) => wfLines.includes(needle);
+
+  const requiredLines = [
+    ['uses: actions/setup-node@v4', 'the pinned Node toolchain four required checks run on'],
+    ['uses: actions/setup-python@v5', 'the pinned Python the engine conformance suite runs on'],
+    ['- name: Fixture immutability — a fixture may not be edited to make the engine pass',
+     'the HD-22 fixture-immutability guard step'],
+    ["if: github.event_name == 'pull_request'",
+     "the fixture guard's trigger (`if: false`, or an appended `&& false`, neuters it silently)"],
+    ['changed="$(git diff --no-renames --name-only --diff-filter=MDT "$merge_base" HEAD -- product/fixtures/)"',
+     "the guard's rename/typechange fix AND its full pathspec"],
+    ['exit 1', "the fixture guard's failure path (`exit 0` neuters it silently)"],
+    ['run: python3 -m engine.tests.run_all', 'the Phase 2 engine conformance suite'],
+  ];
+  for (const [line, why] of requiredLines) {
+    if (!hasLine(line)) err(`${CI_WORKFLOW} no longer contains the exact line \`${line}\` — ${why}`);
+  }
+  // Negative assertion: one line anywhere in this job makes any failing step non-fatal.
+  // Matched as a YAML KEY in any spelling, not by string prefix. The first version was
+  // `l.startsWith('continue-on-error')`, which a QUOTED key defeats -- `"continue-on-error":
+  // true` trims to a line starting with `"`. Code Review's eleventh mutation, and the same
+  // defect once more: the word in the record was "forbidden outright" while the code tested
+  // one spelling. Widening the test is preferred over narrowing the claim here, because it
+  // makes the sentence true regardless of how GitHub's YAML parser treats quoted keys --
+  // which Code Review explicitly declined to assert, having no parser available to measure it.
+  if (wfLines.some((l) => /^(-\s+)?["']?continue-on-error["']?\s*:/.test(l))) {
+    err(`${CI_WORKFLOW}: \`continue-on-error\` makes a failing gate non-fatal — it has no legitimate use here`);
+  }
+}
 if (!existsSync(join(ROOT, SPECIALIST_GOV))) err(`missing temporary-specialist governance: ${SPECIALIST_GOV}`);
 if (!govIds.has('GOV-016')) err('GOV-016 (temporary specialists) is not defined');
 
@@ -340,7 +431,7 @@ console.log(`Build-freeze:  ${freezeOn
     ? `ON — lifted scope: ${freezeScope.map((d) => `${d}/`).join(', ')} (all other product dirs frozen)`
     : 'ON (autonomous implementation disabled)')
   : 'UNKNOWN'}`);
-console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present' : 'MISSING'}`);
+console.log(`CI workflow:   ${existsSync(join(ROOT, CI_WORKFLOW)) ? 'present, content asserted' : 'MISSING'}`);
 console.log(`Bash hook:     ${hookOk ? 'configured (PreToolUse → bash-guard.mjs)' : 'MISSING/INVALID'}`);
 console.log('─'.repeat(58));
 for (const w of warns) console.log(`  ⚠︎  ${w}`);
