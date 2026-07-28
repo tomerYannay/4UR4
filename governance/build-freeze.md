@@ -188,9 +188,26 @@ The record was filed as HD-24. **The marker's `scope` was not widened**, for the
 section above already states: `scope` is a **list of directory names**, `engine/` is **already
 in it**, and this lift widens authorized *behaviour inside* that directory. **No widening
 available in this field expresses this grant** — adding a name could only un-guard a *different*
-directory, and every candidate (`api`, `db`, `scanner`, `worker`, `dashboard`, `alerts`,
-`billing`, `providers`) is on **§3's own still-frozen list**, so the literal instruction would
-have authorized the opposite of what §3 ruled. **A Product Owner instruction declined on
+directory, and there are **18** such candidates (the 19 guarded names above, minus `engine`).
+They split in two, and **both halves point the same way**:
+
+- **Eight are on §3's own still-frozen list** — `api`, `db`, `scanner`, `worker`, `dashboard`,
+  `alerts`, `billing`, `providers`. Adding any of them would un-guard a directory §3 expressly
+  froze: **the literal opposite of what §3 ruled.**
+- **Ten appear on no list at all** — `src`, `lib`, `app`, `server`, `client`, `packages`,
+  `services`, `web`, `backend`, `frontend`. §3 neither authorized nor froze them. Adding any of
+  them would un-guard a directory **no decision addresses**, which is not what §3 ruled either.
+
+*Corrected 2026-07-28, and the correction matters more than the sentence.* This passage first
+read *"every candidate (`api`, `db`, … `providers`) is on §3's own still-frozen list"* — **false
+for ten of the eighteen**, measured. That is the **same conflation of the guarded list with §3's
+NOT-authorized list** that [`../tools/validate.mjs`](../tools/validate.mjs)'s own INVARIANT
+comment exists to record: *"685b65a's prose said the list 'was extended to cover the surfaces the
+NOT-authorized list above names' while `alerts`, `billing` and provider integration were named as
+forbidden and left unguarded."* The two lists are **not** the same list and never were. It
+recurred here in the one sentence carrying the entire evidentiary weight of an agent declining a
+Product Owner instruction — which is exactly where an over-claim must not sit. Found by Code
+Review. **A Product Owner instruction declined on
 engineering grounds is written down, not absorbed:** see
 [`../product/human-decisions.md`](../product/human-decisions.md) HD-24, *"HD-24's closing
 recording directive."* **Reversible by the Product Owner alone** — if a *directory* was

@@ -1557,9 +1557,18 @@ directory names**, matched by [`../tools/validate.mjs`](../tools/validate.mjs) a
 guarded-directory list; it is not a list of behaviours, phases or permissions. `engine/` — the
 only directory §3's grant reaches — **is already in it**. There is therefore **no widening
 available that expresses this lift**: the sole mechanical effect of adding a name would be to
-un-guard **some other** directory, and every candidate (`api`, `db`, `scanner`, `worker`,
-`dashboard`, `alerts`, `billing`, `providers`) appears on **§3's own still-frozen list**.
-**Executing the directive literally would authorize the opposite of what §3 ruled.** What was
+un-guard **some other** directory. There are **18** such candidates (the guarded list minus
+`engine`), and they split in two: **eight** — `api`, `db`, `scanner`, `worker`, `dashboard`,
+`alerts`, `billing`, `providers` — are on **§3's own still-frozen list**, so adding one would
+un-guard what §3 expressly froze; the other **ten** — `src`, `lib`, `app`, `server`, `client`,
+`packages`, `services`, `web`, `backend`, `frontend` — appear on **no list at all**, so adding
+one would un-guard a directory **no decision addresses**. **Executing the directive literally
+would authorize the opposite of what §3 ruled, or something §3 never considered.**
+*(Corrected 2026-07-28: this read "every candidate … is on §3's own still-frozen list", **false
+for ten of eighteen**. It is the same conflation of the guarded list with §3's NOT-authorized
+list that `tools/validate.mjs`'s INVARIANT comment records against commit `685b65a` — and it
+recurred in the one sentence carrying the whole evidentiary weight of declining a Product Owner
+instruction. Found by Code Review; the conclusion survives, the reasoning is now measured.)* What was
 done instead: `lifted_by` records the Phase-3 extension in prose, the marker's own comment says
 why `scope` did not move, and
 [`../governance/build-freeze.md`](../governance/build-freeze.md) states in terms that the
