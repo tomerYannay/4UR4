@@ -35,10 +35,38 @@ __all__ = ["GuardVerdict", "GuardRejection", "GuardObservation",
 
 @dataclass(frozen=True)
 class CorporateActions:
-    """Split-event evidence for one symbol (HD-27).
+    """Split-event evidence for one symbol (HD-27, HD-29).
 
     ``splits`` maps a **bar index** to the split coefficient effective at that
-    bar — 4.0 for a 4:1, 0.1 for a 1:10 reverse. Absent keys mean "no split".
+    bar — 4.0 for a 4:1, 0.1 for a 1:10 reverse.
+
+    ``complete_history`` is what an absent key MEANS, and it has to be declared
+    because the key's absence cannot carry it (HD-29 (ii), backlog M-65):
+
+    * ``True`` — *"this feed is complete for the range these bars cover, so a bar
+      with no entry genuinely had no split."*  An absent key is then **positive
+      evidence of no split** and a large jump at that bar is real market
+      movement.  This is AAPL 2000-09-29.
+    * ``False`` (the default) — *"I hold no split history for this bar, or none
+      at all."*  An absent key is then **absent evidence**, and a supra-threshold
+      jump at that bar is rejected on the same reasoning as no feed at all.
+
+    **Why a bare ``{}`` cannot mean "complete, and no split here".**  Before
+    HD-29, ``None`` and ``CorporateActions(sym, {})`` were two spellings of the
+    same fact — *"I hold no split data"* — that produced **opposite** verdicts:
+    ``None`` rejected conservatively, ``{}`` was believed and ACCEPTED, emitting
+    a diagnostic that affirmatively denied a split had occurred.  M-65 measured
+    that on real raw NVDA (an unadjusted 10:1 admitted, then read as a 90%
+    drawdown).  The conflation was not merely latent, it had become
+    **load-bearing in a test's own name**: ``test_with_a_split_feed_showing_no_
+    split_the_series_is_ACCEPTED`` passed ``{}`` — a feed showing nothing — and
+    called it a feed *showing no split*.  A field is the only way to say which
+    of the two a caller means, because the empty dict is identical in both.
+
+    The default is ``False`` because that is the safe direction: a caller that
+    forgets to declare coverage gets the conservative rejection, not a silent
+    promotion of ignorance into a positive claim.  Every caller that genuinely
+    does hold complete history says so explicitly.
 
     The presence of this object is itself evidence: with it the guard can tell a
     crash from an adjustment defect, and without it it cannot. That distinction
@@ -47,12 +75,29 @@ class CorporateActions:
 
     symbol: str
     splits: Dict[int, float]
+    complete_history: bool = False
+
+    def covers(self, bar_index: int) -> bool:
+        """Whether this feed can speak about ``bar_index`` **at all** (HD-29).
+
+        True when the feed recorded something at that bar — whatever it recorded,
+        including an unusable value, which :meth:`coefficient_at` then judges —
+        or when the feed declares its history complete, in which case silence at
+        a bar is itself the record.  False otherwise, and False is *absent
+        evidence*, not evidence of absence.
+        """
+        return self.complete_history or bar_index in self.splits
 
     def recorded_at(self, bar_index: int) -> Any:
         """The value the feed actually recorded, uncoerced — ``1.0`` if absent.
 
         Kept separate from :meth:`coefficient_at` so a rejection can name what
         the feed said (``'n/a'``, ``None``) rather than the ``nan`` it became.
+
+        The ``1.0`` default is only sound once :meth:`covers` has said the feed
+        can speak about this bar; the adjudicator checks that first, so a bar the
+        feed knows nothing about never reaches this default and is never read as
+        "no split here".
         """
         return self.splits.get(bar_index, 1.0)
 
@@ -221,11 +266,22 @@ def _adjudicate_jump(
     move is evidence and discarding it lets an up-move "match" a forward split.
     The magnitude is what the caller records; only this function needs the sign.
 
-    HD-27's separation, in five cases:
+    HD-27's separation, as amended by HD-29, in six cases.  Three of them —
+    no feed, no coverage, unusable coefficient — are the *same* judgement:
+    where the evidence does not separate the hypotheses, reject.  HD-29 (i)
+    added the fourth member of that family, the direction mismatch, which
+    previously reasoned from that identical premise to the opposite verdict.
 
     * **No split feed** — the two hypotheses are indistinguishable from prices
       alone, so the bar-set is rejected conservatively. This is the pre-HD-27
       behaviour and it is what keeps GX-10 (a synthetic 2:1 with no feed) green.
+    * **Feed present but silent about this bar, and not declaring complete
+      history** — *absent evidence* (HD-29 (ii)). ``CorporateActions(sym, {})``
+      is a feed holding nothing, not a feed reporting nothing; reading its
+      silence as "no split occurred here" turns ignorance into a positive claim.
+      Rejected on the same reasoning as no feed at all. A feed that declares
+      ``complete_history=True`` is *not* silent — its silence is a record — and
+      falls through to the "no split at this bar" ACCEPT below.
     * **Feed present, coefficient unusable** — non-finite, non-positive,
       non-numeric, **a boolean**, or **an integer too large to be a float** —
       is *absent evidence*, not a mismatch:
@@ -239,16 +295,21 @@ def _adjudicate_jump(
       only because ``float()`` raises ``OverflowError`` on it. Both words read
       against the RECORDED value, not the coerced coefficient. See
       ``coefficient_at``.)*
-    * **Feed present, no split at this bar** — a real market event. **ACCEPT.**
-      This is AAPL 2000-09-29: −51.9% on a profit warning, split coefficient 1.0.
+    * **Feed covers this bar and records no split at it** — a real market event.
+      **ACCEPT.** This is AAPL 2000-09-29: −51.9% on a profit warning, split
+      coefficient 1.0, on a feed whose history is complete.
     * **Feed present, split here, and the move matches the split in BOTH
       direction and magnitude** — a confirmed adjustment defect. **REJECT.**
-    * **Feed present, split here, but the move does NOT match** — **ACCEPT**,
-      because re-adjusting on an unmatched split would adjust twice. What is
-      established is the mismatch itself; the cause of the move is not, and the
-      evidence is worded to claim only the former. See the disclosure at the
-      direction gate below: this accept-on-mismatch is what leaves an
-      over-adjusted series undetected.
+    * **Feed present, split here, but the move is in the WRONG DIRECTION for an
+      unadjusted series** — **REJECT** (HD-29 (i)). Nothing about the cause is
+      established, and the evidence says exactly that: a supra-threshold move
+      whose direction is inconsistent with the recorded split sits at a split
+      bar, and prices alone cannot say why. This branch previously ACCEPTED from
+      that same premise while its two neighbours rejected from it.
+    * **Feed present, split here, right direction, but the MAGNITUDE does not
+      match** — **ACCEPT**, because re-adjusting on an unmatched split would
+      adjust twice. What is established is the mismatch itself; the cause of the
+      move is not, and the evidence is worded to claim only the former.
 
     This is still §18's single split condition, adjudicated; it is not a fourth
     whole-bar-set guard and it mints no new ``ReasonCode``.
@@ -260,6 +321,24 @@ def _adjudicate_jump(
             "no corporate-action feed supplied; a crash and an unadjusted split "
             "are indistinguishable from prices alone, so the bar-set is rejected "
             "conservatively (HD-27)",
+        )
+
+    if not corporate_actions.covers(bar_index):
+        # ABSENT EVIDENCE, not evidence of absence (HD-29 (ii)).  The feed holds
+        # no entry for this bar and does not declare its history complete, so its
+        # silence records nothing.  Before HD-29 this fell through to the
+        # ``coefficient == 1.0`` ACCEPT below — the ``1.0`` being a DEFAULT, not
+        # a reading — and the guard then emitted evidence affirmatively denying a
+        # split had occurred.  ``None`` and ``{}`` are the same fact and now get
+        # the same verdict.
+        return (
+            "REJECT",
+            None,
+            f"the split feed for this symbol holds no entry at this bar and does "
+            f"not declare complete coverage, so its silence is absent evidence "
+            f"rather than a record that no split occurred; a crash and an "
+            f"unadjusted split are indistinguishable from prices alone, so the "
+            f"bar-set is rejected conservatively (HD-29)",
         )
 
     coefficient = corporate_actions.coefficient_at(bar_index)
@@ -286,10 +365,13 @@ def _adjudicate_jump(
         )
 
     if coefficient == 1.0:
+        # Reached only once ``covers()`` has said the feed can speak about this
+        # bar, so this is the feed REPORTING no split, not the feed being silent.
         return (
             "ACCEPT",
             coefficient,
-            "no split at this bar; genuine market movement preserved (HD-27)",
+            "no split at this bar on a feed that covers it; genuine market "
+            "movement preserved (HD-27)",
         )
 
     jump = abs(signed_jump)
@@ -301,66 +383,68 @@ def _adjudicate_jump(
     # from their opposites, and 48 -> 96 on a 2:1 is not that split.
     expected_signed = -math.log(coefficient)
     #
-    # **Which way this errs, stated rather than left to be discovered.**
+    # **HD-29 (i): this gate REJECTS. It used to ACCEPT, from the same premise
+    # its two neighbours reject from.**
     #
-    # This gate ACCEPTS every same-magnitude opposite-direction move at a split
-    # bar.  The consequence, named rather than left to be found: an
-    # OVER-ADJUSTED series is no longer detected at all.  Over-adjustment is the
-    # mirror vendor defect — prices that were already adjusted get adjusted
-    # again, so every bar before the split is divided by ``c`` a second time and
-    # the split bar carries a ``+ln(c)`` discontinuity instead of ``-ln(c)``.
-    # That is exactly the shape this branch waves through.  Measured, on
-    # ``[48, 47.5, 48, 48, 96, 97, 95, 96]`` with feed ``{4: 2.0}``: before this
-    # gate the guard REJECTED it as "unadjusted for this split"; after it, the
-    # guard ACCEPTS.
+    # The premise, unchanged: a supra-threshold move whose direction is
+    # inconsistent with the recorded split is genuinely ambiguous.  An
+    # OVER-ADJUSTED series carries exactly this shape — prices that were already
+    # adjusted get adjusted again, every bar before the split is divided by ``c``
+    # a second time, and the split bar is left with ``+ln(c)`` instead of
+    # ``-ln(c)`` — and so does a real c-times move on the day.  Prices alone
+    # cannot separate them.
     #
-    # ``c=10.0`` and the reverse mirror ``c=0.1`` behave the same way — and the
-    # CONSTRUCTION has to be named, because the answer depends on it and two
-    # successive versions of this comment each got it wrong by leaving it out:
+    # The old verdict was ACCEPT, on the reasoning that closing the gap would
+    # need a distinct over-adjustment hypothesis and no ruling supplied one.  The
+    # Strategic Product Reviewer found two things wrong with that.  First, the
+    # no-feed and unusable-coefficient branches twenty and sixty lines above
+    # reason from the IDENTICAL premise — "the two hypotheses cannot be
+    # separated" — to REJECT, and this module cannot hold both readings at once.
+    # Second, the missing-hypothesis argument is true for DETECTING
+    # over-adjustment and false for REJECTING an ambiguous bar-set: rejecting
+    # needs no hypothesis about the cause at all, only the honest report that
+    # none was established.  That third option is what HD-29 took.
     #
-    # * **Coefficient-matched** (each ``c`` with ITS OWN over-adjusted series, so
-    #   the jump is ``+ln c``: ``c=10`` with ``[48 ... 480]``, ``c=0.1`` with
-    #   ``[100 ... 10]``).  This is what over-adjustment ACTUALLY IS for those
-    #   coefficients, and it is the construction
-    #   ``test_the_gap_is_the_same_at_other_coefficients_and_in_the_mirror``
-    #   uses.  Measured: ``|jump - |ln c||`` is 0.000000 for all three, all three
-    #   REJECTED before this gate and ACCEPT after.  **The gate flips all three.**
-    # * **Fixed series, swapped coefficient** (keep ``[48 ... 96]`` and change
-    #   only ``c``).  Then ``|jump - |ln c||`` is 1.609438 for ``c=10`` and
-    #   ``c=0.1``, outside the 0.15 tolerance, so the magnitude test alone
-    #   already accepted them and the gate changes nothing — it flips only
-    #   ``c=2.0``.  But ``[48 ... 96]`` is not an over-adjusted series for
-    #   ``c=10`` at all, so this construction does not exhibit the phenomenon.
+    # So this branch now rejects, and its evidence claims ONLY what was measured:
+    # a move at a split bar in the wrong direction for that split, cause not
+    # established.  It does not say the series is over-adjusted, and it does not
+    # say the prices are already adjusted; both would be hypotheses this branch
+    # never tested, which is the same wording rule the unusable-coefficient
+    # branch above already obeys.  No new ``ReasonCode`` is minted and §18 still
+    # has exactly three whole-bar-set guards — this is a verdict change inside
+    # the existing split condition, not a fourth guard.
     #
-    # An earlier wording said "same for ``c=10.0`` and ``c=0.1``" without naming
-    # a construction; a later one "corrected" it to "the gate flipped exactly one
-    # of the three", which is true only of the construction that does not
-    # exhibit over-adjustment. The first was right about the phenomenon and the
-    # second was right about its own arithmetic. Naming the construction is the
-    # fix; M-71 logs the pattern.
+    # Note the gate is on SIGN ALONE and runs BEFORE the magnitude test, so it
+    # also catches wrong-direction moves of quite unrelated size — an absurd
+    # ``c=1e-12`` on a downward jump arrives here, not at the magnitude branch
+    # below.  The evidence is therefore worded not to claim the magnitude
+    # matched, because in that case it does not.
     #
-    # This is a DETECTION GAP ACCEPTED DELIBERATELY, not an oversight.  A
-    # ``+ln(c)`` step at a split bar is genuinely ambiguous — over-adjustment
-    # and a real c-times move on the day produce an identical series — and HD-27
-    # clause 2 plus the "err toward accepting" discipline behind
-    # ``SPLIT_MATCH_TOLERANCE`` both point at accepting where the two hypotheses
-    # cannot be separated.  Closing the gap would require a DISTINCT
-    # over-adjustment hypothesis (its own evidence, its own verdict, plausibly
-    # its own reason code), and no ruling has supplied one.  Inventing one here
-    # would be a product-definition change, so it is escalated rather than
-    # taken.  ``AnOverAdjustedSeriesIsAcceptedAndTheGapIsDisclosed`` in
-    # ``test_split_guard_hd27.py`` pins the gap so it stays visible.
+    # Measured on the coefficient-matched over-adjusted shapes (each ``c`` with
+    # ITS OWN ``+ln c`` series; the construction has to be named because two
+    # earlier versions of this comment got the arithmetic right about the wrong
+    # construction, and M-71 logs that pattern):
+    #
+    # * ``c=2.0`` with ``[48, 47.5, 48, 48, 96, 97, 95, 96]``,
+    # * ``c=10.0`` with ``[48, 47.5, 48, 48, 480, 485, 475, 480]``,
+    # * ``c=0.1`` with ``[100, 99, 101, 100, 10, 10.1, 9.9, 10]``.
+    #
+    # ``|jump - |ln c||`` is 0.000000 for all three.  All three ACCEPTED before
+    # HD-29 and REJECT after.  ``AnOverAdjustedSeriesIsRejectedAsUnexplained`` in
+    # ``test_split_guard_hd27.py`` pins them, including that the evidence still
+    # asserts no cause.
     if signed_jump * expected_signed <= 0.0:
         direction = "fall" if expected_signed < 0 else "rise"
         return (
-            "ACCEPT",
+            "REJECT",
             coefficient,
-            f"a split of {coefficient} occurred here but the move is in the wrong "
-            f"direction for an unadjusted series: unadjusted prices would "
-            f"{direction} by {expected_signed:+.6f} in log space and the observed "
-            f"change is {signed_jump:+.6f}. That direction mismatch is all that "
-            f"was measured and no cause for the move is established; an "
-            f"over-adjusted series carries this same shape (HD-27)",
+            f"a split of {coefficient} is recorded at this bar and the observed "
+            f"move is in the wrong direction for an unadjusted series: unadjusted "
+            f"prices would {direction} by {expected_signed:+.6f} in log space and "
+            f"the observed change is {signed_jump:+.6f}. That direction mismatch "
+            f"is all that was measured and no cause for the move is established; "
+            f"the hypotheses cannot be separated from prices alone, so the "
+            f"bar-set is rejected conservatively (HD-29)",
         )
 
     if abs(jump - expected) <= SPLIT_MATCH_TOLERANCE:
@@ -378,7 +462,8 @@ def _adjudicate_jump(
     # adjusted is no better established than it was for the ``nan`` case B2
     # fixed.  WHICH absurd coefficient reaches here depends on the SIGN of the
     # jump, not on how large ``|ln c|`` is: on a downward jump ``1e12`` arrives
-    # here while ``1e-12`` and ``5e-324`` exit at the direction gate above; on an
+    # here and is ACCEPTED, while ``1e-12`` and ``5e-324`` are REJECTED at the
+    # direction gate above (they were accepted there too before HD-29); on an
     # upward jump that inverts exactly.  ``|ln 1e-12|`` and ``|ln 1e12|`` are the
     # same number (27.631021), so magnitude cannot be what separates them.  So the evidence reports the mismatch and stops.
     # No plausibility threshold is applied: bounding what counts as a credible
@@ -410,7 +495,10 @@ def run_guards(
     ``corporate_actions`` supplies the split-event evidence HD-27 requires. When
     it is ``None`` the split guard falls back to the pre-HD-27 jump-only rule —
     not as a convenience, but because without a feed the two hypotheses are
-    genuinely indistinguishable and rejecting is the safe direction.
+    genuinely indistinguishable and rejecting is the safe direction.  A feed that
+    is present but says nothing about the jumping bar, and does not declare
+    ``complete_history``, is in the same position and gets the same verdict
+    (HD-29 (ii)).
     """
     records: List[TransitionRecord] = []
     codes: List[ReasonCode] = []

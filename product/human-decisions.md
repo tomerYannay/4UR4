@@ -1928,6 +1928,56 @@ because a missed defect surfaces later as anomalous geometry, whereas a wrongly 
 produces nothing at all and looks indistinguishable from an absence of signal — which is the
 failure HD-27 exists to end.
 
+## HD-29 — Unseparable split evidence REJECTS, and silence is not a record · materiality: **high**
+
+**Ruled by the Product Owner, 2026-07-29.** Escalated by the Strategic Product Reviewer as
+`STRATEGIC_HUMAN_DECISION_REQUIRED` on PR #44.
+
+**What the Reviewer found, and it is the reason this ruling exists.** `_adjudicate_jump` reasoned
+from **one premise to two opposite verdicts**. The unusable-coefficient branch held that where the
+two hypotheses cannot be separated *"the safe direction is to reject"*; sixty lines later the
+wrong-direction branch began from the identical premise — *"genuinely ambiguous … the two
+hypotheses cannot be separated"* — and **accepted**, citing HD-27 as if the ruling had determined
+it. HD-27 determined no such thing. It was an agent's choice presented as a derivation, and three
+code reviews and two verifications passed it, because each was asking whether the code was correct
+rather than whether the decision was the agent's to make.
+
+**The Reviewer also found the option nobody had considered.** The engine argued that closing the
+gap *"would require a distinct over-adjustment hypothesis, and no ruling has supplied one."* True
+for **detecting** over-adjustment — and false for **rejecting an ambiguous bar-set**. A rejection
+that says only *"a move of split magnitude in the wrong direction sits at a split bar; the cause is
+not established"* invents no hypothesis, satisfies HD-27 clauses 5 and 6, and is how every other
+unseparable-hypothesis branch already behaves.
+
+**RULING (i) — direction.** A supra-threshold move whose direction is inconsistent with the recorded
+split **REJECTS**, with a structured reason claiming **only the direction mismatch**. It must not
+claim over-adjustment and must not claim the prices are already adjusted. Over-adjustment is still
+not *detected*; it is no longer *admitted*.
+
+**RULING (ii) — silence.** A feed holding no split data is **absent evidence**.
+`CorporateActions(sym, {})` may not be read as *"I have complete history and there is no split
+here."* `None` and `{}` were two spellings of the same thing producing opposite verdicts, and the
+conflation had become load-bearing in a test's own name.
+
+**How (ii) is implemented without re-breaking AAPL, which is the whole point of HD-27.** Coverage is
+made **explicit and per-bar**: `CorporateActions` carries `complete_history`, defaulting to the safe
+direction, and `covers(bar)` is true when the feed declares completeness **or** carries an entry at
+that bar. A caller that genuinely holds the full history says so. The pilot's `run_symbol` does —
+the vendor payload is complete for the range its bars cover — so **AAPL 2000-09-29 is still
+ACCEPTED and still produces its breakouts**, verified end-to-end through the harness, while a bare
+`{}` now rejects as unexplained. This is backlog row **M-65**, ruled rather than deferred.
+
+**The one rule, statable in a sentence, which it was not before:** *unseparable hypotheses reject,
+and the reason says only what was measured.*
+
+**Not changed.** §18 still defines exactly three whole-bar-set guards; no `ReasonCode` was minted;
+GX-10's no-feed contract is byte-identical; `detect()` still defaults `corporate_actions=None`, so
+all 23 golden fixtures and RM-01 take the no-feed branch and cannot move.
+
+**Consequence for the pilot's published numbers.** The 40-symbol figures were produced while the
+wrong-direction ACCEPT was active. The run is repeated under this ruling and the numbers are
+reported as measured under it, not carried forward.
+
 # Delegated product decisions (HD-21)
 
 > **Sequencing rule, learned from SPR-D-01:** a delegated decision's status line is written

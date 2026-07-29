@@ -221,6 +221,17 @@ def run_symbol(symbol: str, series, params: DetectorParams) -> SymbolReport:
         splits={
             index_of[d]: c for d, c in getattr(series, "splits_applied", ()) if d in index_of
         },
+        # HD-29 (ii): an empty or sparse `splits` dict is *absent evidence* by
+        # default, because `None` and `{}` were two spellings of "I hold no split
+        # data" that produced opposite verdicts. This feed is different and must
+        # say so: the vendor payload carries the complete split history for the
+        # range these bars cover, so a bar with no entry genuinely had no split.
+        #
+        # Without this flag every symbol whose supra-threshold jump lands on a
+        # non-split bar would reject as unexplained — including AAPL 2000-09-29,
+        # the case HD-27 exists to preserve. The default is the safe direction;
+        # this is the caller that has the evidence to override it.
+        complete_history=True,
     )
     report.splits = len(actions.splits)
     try:

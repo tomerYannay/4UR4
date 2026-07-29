@@ -7,10 +7,19 @@ and the §18 guard read it as ``SUSPECTED_UNADJUSTED_SPLIT`` and rejected the
 NONE``, zero breakouts, and no diagnostic that said why.
 
 The four cases the Product Owner named are each a test below (the engine now
-implements five — the unusable-coefficient and direction branches were added later), and the real
+implements six — the unusable-coefficient and direction branches were added
+later, and HD-29 (ii) added the absent-coverage one), and the real
 numbers are used rather than invented ones — a synthetic 50% drop would prove
 the arithmetic but not that the guard behaves correctly on the event that
 actually broke it.
+
+**HD-29 (2026-07-29) moved two verdicts and this file records both.** (i) A
+supra-threshold move whose direction is inconsistent with the recorded split now
+REJECTS instead of accepting, so ``AnOverAdjustedSeriesIsRejectedAsUnexplained``
+is the inversion of a class that used to pin the opposite. (ii) A feed holding no
+split data is absent evidence, so ``CorporateActions`` carries an explicit
+``complete_history`` flag and the AAPL cases declare it rather than relying on an
+empty dict to mean two different things.
 """
 
 from __future__ import annotations
@@ -47,12 +56,25 @@ def series_from(closes, highs=None):
 
 
 class AaplCrashIsRealMarketData(unittest.TestCase):
-    """Case 1 — AAPL 2000-09-29: a genuine >50% decline must be ACCEPTED."""
+    """Case 1 — AAPL 2000-09-29: a genuine >50% decline must be ACCEPTED.
+
+    Every feed here declares ``complete_history=True``, which is the fact these
+    cases always relied on and, before HD-29, expressed only by accident. The
+    vendor payload the pilot fetches carries the whole split history for the
+    range it returns, so "no entry at bar 7" is a **record** that no split
+    happened, not a silence. HD-29 (ii) made the difference sayable; it did not
+    change what is true of AAPL.
+    """
 
     # The vendor's own as-traded closes across the event, split coefficient 1.0
     # on every one of them.
     CLOSES = [61.05, 56.69, 52.19, 53.50, 51.44, 48.94, 53.50, 25.75, 24.25, 22.31,
               23.62, 22.06, 22.19, 21.75, 20.62, 19.75, 20.12, 19.25, 18.94, 19.50]
+
+    @staticmethod
+    def feed():
+        """The complete-history feed these cases have always meant."""
+        return CorporateActions(symbol="AAPL", splits={}, complete_history=True)
 
     def test_the_jump_really_does_exceed_the_threshold(self):
         # If it did not, the rest of this class would pass vacuously.
@@ -60,10 +82,13 @@ class AaplCrashIsRealMarketData(unittest.TestCase):
         self.assertGreater(jump, PARAMS.split_log_jump_threshold)
         self.assertAlmostEqual(jump, 0.7312, places=3)
 
-    def test_with_a_split_feed_showing_no_split_the_series_is_ACCEPTED(self):
+    def test_with_a_COMPLETE_feed_showing_no_split_the_series_is_ACCEPTED(self):
+        # Renamed from ...with_a_split_feed_showing_no_split...: it passed ``{}``,
+        # which is a feed showing NOTHING, and the name said "showing no split".
+        # The conflation HD-29 (ii) removes had become load-bearing in the name
+        # of the test that pins the whole point of HD-27.
         s = series_from(self.CLOSES)
-        actions = CorporateActions(symbol="AAPL", splits={})  # no split anywhere
-        verdict = run_guards(s, PARAMS, actions)
+        verdict = run_guards(s, PARAMS, self.feed())
         self.assertFalse(verdict.rejected, "a real crash was rejected as a split defect")
         self.assertEqual(verdict.rejections, ())
         self.assertNotIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
@@ -72,7 +97,7 @@ class AaplCrashIsRealMarketData(unittest.TestCase):
         # Requirement 5: never fail silently. An accepted jump and an untested
         # one must not look identical.
         s = series_from(self.CLOSES)
-        verdict = run_guards(s, PARAMS, CorporateActions("AAPL", {}))
+        verdict = run_guards(s, PARAMS, self.feed())
         self.assertEqual(len(verdict.observations), 1)
         obs = verdict.observations[0]
         self.assertEqual(obs.bar, 7)
@@ -82,7 +107,7 @@ class AaplCrashIsRealMarketData(unittest.TestCase):
 
     def test_the_engine_now_runs_geometry_instead_of_returning_NONE(self):
         s = series_from(self.CLOSES)
-        result = detect(s, PARAMS, corporate_actions=CorporateActions("AAPL", {}))
+        result = detect(s, PARAMS, corporate_actions=self.feed())
         self.assertFalse(result.guard.rejected)
         # The whole point: the series reaches the causal fold at all.
         self.assertIsNotNone(result.causal)
@@ -95,6 +120,95 @@ class AaplCrashIsRealMarketData(unittest.TestCase):
         self.assertTrue(verdict.rejected)
         self.assertEqual(len(verdict.rejections), 1)
         self.assertIn("no corporate-action feed", verdict.rejections[0].evidence)
+
+
+class AnEmptyFeedIsAbsentEvidenceNotEvidenceOfAbsence(unittest.TestCase):
+    """HD-29 (ii) / M-65 — ``{}`` is a feed holding nothing, not reporting nothing.
+
+    Before HD-29, ``None`` and ``CorporateActions(sym, {})`` were two spellings of
+    *"I hold no split data"* that produced **opposite** verdicts: ``None``
+    rejected conservatively, ``{}`` was believed and ACCEPTED, emitting an
+    observation that affirmatively denied a split had occurred. M-65 measured
+    that on real raw NVDA — an unadjusted 10:1 admitted, then read by the engine
+    as a 90% drawdown, which is exactly the false-ATH failure HD-01 names.
+
+    The fix is a declared coverage field, not a rule that empty means unknown:
+    the distinction lives on the *bar*, so a complete feed's silence at a bar is
+    still a record. Both halves are pinned here, because getting only the first
+    half re-breaks AAPL.
+    """
+
+    AAPL = AaplCrashIsRealMarketData.CLOSES
+
+    def test_a_bare_empty_feed_REJECTS_the_supra_threshold_jump(self):
+        # Was: rejected=False, observation "no split at this bar".
+        verdict = run_guards(series_from(self.AAPL), PARAMS,
+                             CorporateActions("AAPL", {}))
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertEqual(verdict.observations, ())
+        self.assertEqual(verdict.rejections[0].bar, 7)
+
+    def test_the_default_is_the_SAFE_direction(self):
+        # A caller that forgets to declare coverage must not have its ignorance
+        # promoted into a positive claim.
+        self.assertFalse(CorporateActions("AAPL", {}).complete_history)
+        self.assertFalse(CorporateActions("AAPL", {}).covers(7))
+        self.assertTrue(CorporateActions("AAPL", {}, True).covers(7))
+
+    def test_the_evidence_claims_only_that_the_feed_is_silent(self):
+        evidence = run_guards(series_from(self.AAPL), PARAMS,
+                              CorporateActions("AAPL", {})).rejections[0].evidence
+        self.assertIn("holds no entry at this bar", evidence)
+        self.assertIn("absent evidence", evidence)
+        # It must assert nothing about the cause, in either direction.
+        self.assertNotIn("already adjusted", evidence)
+        self.assertNotIn("unadjusted for this split", evidence)
+        self.assertNotIn("no split at this bar", evidence)
+
+    def test_a_feed_DECLARING_complete_coverage_still_ACCEPTS_the_AAPL_crash(self):
+        # The regression guard for the trap: if an empty dict alone came to mean
+        # "no data", AAPL 2000-09-29 would be rejected again and HD-27's whole
+        # point would be undone by its own fix.
+        verdict = run_guards(series_from(self.AAPL), PARAMS,
+                             CorporateActions("AAPL", {}, complete_history=True))
+        self.assertFalse(verdict.rejected, "HD-27's own case was rejected again")
+        self.assertEqual(verdict.rejections, ())
+        self.assertEqual(len(verdict.observations), 1)
+        self.assertAlmostEqual(verdict.observations[0].split_coefficient, 1.0)
+
+    def test_coverage_is_read_per_BAR_not_per_feed(self):
+        # A feed with an entry elsewhere is still silent about bar 7, so the
+        # non-emptiness of the dict must not be mistaken for coverage of it.
+        verdict = run_guards(series_from(self.AAPL), PARAMS,
+                             CorporateActions("AAPL", {2: 2.0}))
+        self.assertTrue(verdict.rejected)
+        self.assertIn("holds no entry at this bar", verdict.rejections[0].evidence)
+
+    def test_an_entry_AT_the_bar_is_coverage_even_without_the_declaration(self):
+        # The feed recorded something here, so it is not silent, and the existing
+        # branches judge what it recorded. Coverage does not gate that.
+        verdict = run_guards(
+            series_from([99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]),
+            PARAMS, CorporateActions("X", {4: 2.0}))
+        self.assertTrue(verdict.rejected)
+        self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+
+    def test_a_subthreshold_series_is_untouched_by_coverage(self):
+        # Coverage is consulted only where a jump triggered inspection, so an
+        # undeclared feed does not reject a quiet series.
+        verdict = run_guards(
+            series_from([99.0, 97.0, 99.0, 96.0, 97.5, 98.0, 96.5, 97.0]),
+            PARAMS, CorporateActions("X", {}))
+        self.assertFalse(verdict.rejected)
+        self.assertEqual(verdict.observations, ())
+
+    def test_it_reaches_the_public_detect_entry_point(self):
+        result = detect(series_from(self.AAPL), PARAMS,
+                        corporate_actions=CorporateActions("AAPL", {}))
+        self.assertTrue(result.guard.rejected)
+        self.assertEqual(result.final_state, LineState.NONE)
+        self.assertTrue(result.diagnostics["guard_rejections"])
 
 
 class TrulyUnadjustedSplitIsRejected(unittest.TestCase):
@@ -282,144 +396,186 @@ class ADirectionMismatchIsNotThatSplit(unittest.TestCase):
     Comparing magnitudes alone let 48 -> 96 "match" a 2:1 and produce evidence
     asserting "the series is unadjusted for this split" — a statement that is
     simply false, since an unadjusted 2:1 halves prices.
+
+    **N1's claim survives HD-29 (i); only the verdict moved.** The false
+    *reason* — "the series is unadjusted for this split" — is still forbidden
+    here, because it is still false. What HD-29 changed is that the bar-set is
+    now REJECTED for the honest reason (the direction is inconsistent with the
+    recorded split and the cause is not established) instead of ACCEPTED for
+    want of a hypothesis. So these cases assert the same thing about the
+    evidence and the opposite thing about ``rejected``.
     """
 
-    def test_a_doubling_on_a_2_to_1_split_bar_is_not_rejected_as_that_split(self):
-        # Was: rejected=True, evidence "implies a log jump of 0.693147 and the
-        # observed jump is 0.693147; the series is unadjusted for this split".
+    def test_a_doubling_on_a_2_to_1_split_bar_is_not_called_that_split(self):
+        # Renamed from ..._is_not_rejected_as_that_split: it now IS rejected,
+        # just not AS that split. Was rejected=True with the false reason before
+        # N1, ACCEPT after N1, and rejected=True with an honest reason after
+        # HD-29 — the reason is what N1 was ever about.
         closes = [48.0, 47.5, 48.0, 48.0, 96.0, 97.0, 95.0, 96.0]
         verdict = run_guards(series_from(closes), PARAMS,
                              CorporateActions("X", {4: 2.0}))
-        self.assertFalse(verdict.rejected)
-        self.assertNotIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
-        self.assertEqual(verdict.rejections, ())
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertEqual(verdict.observations, ())
+        self.assertNotIn("unadjusted for this split", verdict.rejections[0].evidence)
 
     def test_the_evidence_names_the_direction_and_makes_no_false_claim(self):
         closes = [48.0, 47.5, 48.0, 48.0, 96.0, 97.0, 95.0, 96.0]
         verdict = run_guards(series_from(closes), PARAMS,
                              CorporateActions("X", {4: 2.0}))
-        self.assertEqual(len(verdict.observations), 1)
-        evidence = verdict.observations[0].verdict
+        self.assertEqual(len(verdict.rejections), 1)
+        evidence = verdict.rejections[0].evidence
         self.assertIn("wrong direction", evidence)
         self.assertNotIn("unadjusted for this split", evidence)
 
     def test_a_reverse_split_still_rejects_on_the_RISE_it_actually_produces(self):
         # Positive control for the direction rule's other half: an unadjusted
         # 1:10 makes prices rise tenfold, so |ln(0.1)| = 2.303 UP is the match.
-        # Over-correcting the sign test would silently break this.
+        # Over-correcting the sign test would silently break this — and now that
+        # BOTH directions reject, the control is about the REASON: only this one
+        # may say "unadjusted for this split".
         closes = [10.0, 10.1, 9.9, 10.0, 100.0, 99.0, 101.0, 100.0]
         verdict = run_guards(series_from(closes), PARAMS,
                              CorporateActions("X", {4: 0.1}))
         self.assertTrue(verdict.rejected)
         self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
         self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+        self.assertNotIn("wrong direction", verdict.rejections[0].evidence)
 
     def test_a_crash_on_a_reverse_split_bar_is_a_direction_mismatch(self):
         # The mirror of the 48 -> 96 case: a 1:10 reverse cannot explain a FALL.
         closes = [100.0, 99.0, 101.0, 100.0, 10.0, 10.1, 9.9, 10.0]
         verdict = run_guards(series_from(closes), PARAMS,
                              CorporateActions("X", {4: 0.1}))
-        self.assertFalse(verdict.rejected)
-        self.assertIn("wrong direction", verdict.observations[0].verdict)
+        self.assertTrue(verdict.rejected)
+        self.assertIn("wrong direction", verdict.rejections[0].evidence)
 
 
-class AnOverAdjustedSeriesIsAcceptedAndTheGapIsDisclosed(unittest.TestCase):
-    """B6 — the direction gate's cost, pinned so it cannot go back to silent.
+class AnOverAdjustedSeriesIsRejectedAsUnexplained(unittest.TestCase):
+    """B6 / HD-29 (i) — the wrong-direction shape REJECTS, claiming no cause.
 
-    **This ACCEPT is not a desired outcome.** It is a detection gap the direction
-    gate introduced, accepted deliberately and disclosed. Nothing here endorses
-    it, and a reader must not take these assertions as saying an over-adjusted
-    series *should* pass.
+    **This class inverts.** It used to be
+    ``AnOverAdjustedSeriesIsAcceptedAndTheGapIsDisclosed`` and pinned an ACCEPT
+    as a "detection gap accepted deliberately". It is no longer a gap and no
+    longer an accept: HD-29 (i) rules that a supra-threshold move whose direction
+    is inconsistent with the recorded split REJECTS the bar-set.
 
-    Over-adjustment is the mirror vendor defect: a spurious split coefficient is
-    reported, ``normalize()`` divides every earlier bar by it, and the split bar
-    is left carrying ``+ln(c)`` instead of the ``-ln(c)`` an unadjusted series
-    would show. Before the direction gate the guard REJECTED that shape as "the
-    series is unadjusted for this split"; after it, the guard ACCEPTS. That
-    change shipped undisclosed, which is what B6 was raised about.
+    Why the old reasoning failed. The ACCEPT rested on "the two hypotheses cannot
+    be separated, and closing the gap would need a distinct over-adjustment
+    hypothesis that no ruling supplies". The Strategic Product Reviewer found the
+    guard reasoning from that *identical* premise to the *opposite* verdict sixty
+    lines earlier — the unusable-coefficient branch says that where the
+    hypotheses cannot be separated "the safe direction is to reject" — and that
+    the missing-hypothesis argument is true for DETECTING over-adjustment and
+    false for REJECTING an ambiguous bar-set. Rejecting needs no hypothesis about
+    the cause; it needs only the honest report that none was established.
 
-    It is left as an ACCEPT because a ``+ln(c)`` step at a split bar genuinely
-    cannot be separated from a real c-times move on the day, and HD-27 clause 2
-    errs toward accepting where the hypotheses are indistinguishable. Separating
-    them needs a distinct over-adjustment hypothesis that no ruling has supplied,
-    so forcing a verdict here would be a product-definition change (GOV-007).
-
-    What these tests do enforce is the honesty of the evidence: the guard may not
-    claim the jump is unrelated to the split, because in the over-adjusted case
-    the jump IS that split's adjustment, applied twice.
+    So what is pinned here is a rejection whose evidence claims **only the
+    direction mismatch**. It must not say the series is over-adjusted and it must
+    not say the prices are already adjusted: those remain untested hypotheses,
+    and asserting either would be the wording defect B6 and B2 both attacked.
+    Over-adjustment is still the shape that motivates the case — a spurious
+    coefficient makes ``normalize()`` divide every EARLIER bar by ``c``, leaving
+    ``+ln(c)`` at the split bar instead of ``-ln(c)`` — but it remains a
+    hypothesis about the world, not a finding of this guard.
     """
 
     # +ln(2) at the split bar: every bar before it divided by 2 a second time.
     OVER_ADJUSTED = [48.0, 47.5, 48.0, 48.0, 96.0, 97.0, 95.0, 96.0]
 
     def test_the_over_adjusted_shape_really_is_plus_ln_c_at_the_split_bar(self):
-        # Non-vacuity: if this were not a same-magnitude opposite-direction move
-        # it would not reach the direction gate and would pin nothing.
+        # Non-vacuity, kept verbatim in intent: if this were not a same-magnitude
+        # opposite-direction move it would not reach the direction gate and would
+        # pin nothing.
         signed = math.log(self.OVER_ADJUSTED[4]) - math.log(self.OVER_ADJUSTED[3])
         self.assertAlmostEqual(signed, +math.log(2.0), places=9)
         self.assertGreater(abs(signed), PARAMS.split_log_jump_threshold)
 
-    def test_an_over_adjusted_series_is_ACCEPTED_a_disclosed_detection_gap(self):
-        # Before the direction gate this was REJECT "unadjusted for this split".
-        # Pinned as the current, disclosed behaviour — NOT as a desired one.
+    def test_an_over_adjusted_series_is_REJECTED(self):
+        # Was ACCEPTED (rejected=False, one observation) before HD-29.
         verdict = run_guards(series_from(self.OVER_ADJUSTED), PARAMS,
                              CorporateActions("X", {4: 2.0}))
-        self.assertFalse(verdict.rejected)
-        self.assertEqual(verdict.rejections, ())
-        self.assertNotIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertEqual(verdict.observations, ())
+        self.assertEqual(verdict.rejections[0].bar, 4)
 
-    def test_the_verdict_does_not_claim_the_jump_is_not_that_split(self):
-        # The false claim this replaces: "...so this jump is not that split".
-        # In the over-adjusted case the jump IS that split's adjustment, applied
-        # twice, so asserting otherwise states as fact something never measured —
-        # the rule test_the_evidence_names_the_unusable_value_and_claims_nothing
-        # _else already enforces on the neighbouring branch.
+    def test_the_rejection_claims_ONLY_the_direction_mismatch(self):
+        # HD-29 forbids this branch from claiming over-adjustment just as firmly
+        # as it forbade it from claiming the jump was unrelated to the split. The
+        # verdict changed; the wording rule did not.
         verdict = run_guards(series_from(self.OVER_ADJUSTED), PARAMS,
                              CorporateActions("X", {4: 2.0}))
-        self.assertEqual(len(verdict.observations), 1)
-        evidence = verdict.observations[0].verdict
+        self.assertEqual(len(verdict.rejections), 1)
+        evidence = verdict.rejections[0].evidence
         for false_claim in ("not that split", "is not the split",
-                            "unrelated to the split", "already adjusted"):
+                            "unrelated to the split", "already adjusted",
+                            "unadjusted for this split", "over-adjusted",
+                            "over-adjustment"):
             self.assertNotIn(
                 false_claim, evidence,
                 f"the wrong-direction evidence asserts {false_claim!r}, which it "
-                f"never established and which is false when the series is "
-                f"over-adjusted: {evidence}",
+                f"never established: {evidence}",
             )
+        self.assertIn("no cause for the move is established", evidence)
 
-    def test_the_verdict_still_reports_the_numbers_it_measured(self):
-        # Restating the claim must not cost the evidence: the implied and
+    def test_the_rejection_still_reports_the_numbers_it_measured(self):
+        # Changing the verdict must not cost the evidence: the implied and
         # observed signed moves are what a reader needs to see the mismatch.
         verdict = run_guards(series_from(self.OVER_ADJUSTED), PARAMS,
                              CorporateActions("X", {4: 2.0}))
-        evidence = verdict.observations[0].verdict
-        self.assertIn("wrong direction", evidence)
-        self.assertIn(f"{-math.log(2.0):+.6f}", evidence)   # implied  -0.693147
-        self.assertIn(f"{+math.log(2.0):+.6f}", evidence)   # observed +0.693147
-        self.assertAlmostEqual(verdict.observations[0].split_coefficient, 2.0)
+        r = verdict.rejections[0]
+        self.assertIn("wrong direction", r.evidence)
+        self.assertIn(f"{-math.log(2.0):+.6f}", r.evidence)   # implied  -0.693147
+        self.assertIn(f"{+math.log(2.0):+.6f}", r.evidence)   # observed +0.693147
+        self.assertAlmostEqual(r.split_coefficient, 2.0)
+        self.assertGreater(r.log_jump, r.threshold)
 
-    def test_the_gap_is_the_same_at_other_coefficients_and_in_the_mirror(self):
-        # c=10.0 and the reverse-split mirror c=0.1 behave identically, so the
-        # gap is a property of the gate and not of one arithmetic accident.
+    def test_it_is_the_same_at_other_coefficients_and_in_the_mirror(self):
+        # c=10.0 and the reverse-split mirror c=0.1 behave identically, so this
+        # is a property of the gate and not of one arithmetic accident. Both were
+        # ACCEPTED before HD-29. The construction is coefficient-matched: each c
+        # gets ITS OWN +ln(c) series, which is what over-adjustment actually is
+        # for that c.
         cases = (
             (10.0, [48.0, 47.5, 48.0, 48.0, 480.0, 485.0, 475.0, 480.0]),
             (0.1, [100.0, 99.0, 101.0, 100.0, 10.0, 10.1, 9.9, 10.0]),
         )
         for coefficient, closes in cases:
             with self.subTest(coefficient=coefficient):
+                # Non-vacuity per case: the jump really is +/-ln(c) exactly.
+                signed = math.log(closes[4]) - math.log(closes[3])
+                self.assertAlmostEqual(abs(signed), abs(math.log(coefficient)),
+                                       places=9)
                 verdict = run_guards(series_from(closes), PARAMS,
                                      CorporateActions("X", {4: coefficient}))
-                self.assertFalse(verdict.rejected)
-                self.assertNotIn("not that split", verdict.observations[0].verdict)
+                self.assertTrue(verdict.rejected)
+                self.assertEqual(verdict.observations, ())
+                evidence = verdict.rejections[0].evidence
+                self.assertIn("wrong direction", evidence)
+                self.assertNotIn("not that split", evidence)
+                self.assertNotIn("unadjusted for this split", evidence)
 
-    def test_the_gap_is_confined_to_the_wrong_direction_shape(self):
-        # Control: the RIGHT-direction unadjusted 2:1 is still rejected, so this
-        # class pins a gap rather than documenting a general failure to detect.
+    def test_the_RIGHT_direction_shape_keeps_its_own_distinct_reason(self):
+        # Positive control, retained: now that both directions reject, the thing
+        # to protect is that they do NOT collapse into one reason. Only a
+        # genuinely unadjusted 2:1 may be called unadjusted for that split.
         verdict = run_guards(
             series_from([99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]),
             PARAMS, CorporateActions("X", {4: 2.0}))
         self.assertTrue(verdict.rejected)
         self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+        self.assertNotIn("wrong direction", verdict.rejections[0].evidence)
+
+    def test_a_real_move_that_does_not_match_the_split_is_still_ACCEPTED(self):
+        # Second control, against over-correction: HD-29 rejects on DIRECTION,
+        # not on "anything at a split bar". A right-direction magnitude mismatch
+        # is untouched, so HD-27's core accept still stands.
+        verdict = run_guards(
+            series_from([99.0, 97.0, 99.0, 96.0, 30.0, 29.0, 31.0, 30.5]),
+            PARAMS, CorporateActions("X", {4: 2.0}))
+        self.assertFalse(verdict.rejected)
+        self.assertEqual(len(verdict.observations), 1)
 
 
 class ANonNumericCoefficientRejectsInsteadOfRaising(unittest.TestCase):
@@ -470,40 +626,99 @@ class ANonNumericCoefficientRejectsInsteadOfRaising(unittest.TestCase):
 
 
 class AnAbsurdCoefficientAssertsNoCauseItDidNotEstablish(unittest.TestCase):
-    """Finite but absurd ratios reach ACCEPT and must not claim a reason.
+    """Finite but absurd ratios must not claim a reason — magnitude branch.
 
     1e-12, 1e12 and 5e-324 are finite and positive, so they pass the usability
-    guard and are accepted. On this class's DOWNWARD series only ``1e12`` reaches
-    the magnitude-mismatch ACCEPT that asserted "prices are already adjusted, so
-    this is market movement" — an assertion no better established than it was for
-    the ``nan`` case B2 fixed. ``1e-12`` and ``5e-324`` exit at the direction gate
-    instead. That split is a property of the jump's SIGN, not of ``|ln c|``:
-    ``|ln 1e-12| == |ln 1e12| == 27.631021``, and on an upward series the
-    assignment inverts.
+    guard, and this class used to assert one verdict for all three. It cannot any
+    more, because they do not reach the same branch and HD-29 moved one of those
+    branches. **Which one an absurd coefficient reaches is a property of the
+    jump's SIGN, not of** ``|ln c|``: ``|ln 1e-12| == |ln 1e12| == 27.631021``,
+    and on an upward series the assignment inverts.
+
+    On this class's DOWNWARD series only ``1e12`` has the right direction, so
+    only it reaches the magnitude-mismatch ACCEPT — the branch that asserted
+    "prices are already adjusted, so this is market movement", an assertion no
+    better established than it was for the ``nan`` case B2 fixed. Its verdict is
+    unchanged by HD-29; only the claim was ever at issue. ``1e-12`` and
+    ``5e-324`` are the sibling class below.
 
     No plausibility threshold is added: bounding what counts as a credible
-    coefficient would be a product-definition change, out of scope here. The
-    verdict is unchanged; only the claim is.
+    coefficient would be a product-definition change, out of scope here.
     """
 
     CLOSES = [99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]
+    #: Same sign as the implied move, so the direction gate passes it through.
+    RIGHT_DIRECTION = 1e12
 
-    def test_they_are_still_ACCEPTED_no_threshold_was_smuggled_in(self):
-        for coefficient in (1e-12, 1e12, 5e-324):
-            with self.subTest(coefficient=coefficient):
-                verdict = run_guards(series_from(self.CLOSES), PARAMS,
-                                     CorporateActions("X", {4: coefficient}))
-                self.assertFalse(verdict.rejected)
-                self.assertEqual(len(verdict.observations), 1)
+    def test_the_series_really_falls_so_only_a_c_above_one_reaches_this_branch(self):
+        # Non-vacuity: pins the premise that splits this class from the next.
+        signed = math.log(self.CLOSES[4]) - math.log(self.CLOSES[3])
+        self.assertLess(signed, 0.0)
+        self.assertLess(-math.log(self.RIGHT_DIRECTION), 0.0)
+
+    def test_it_is_still_ACCEPTED_no_threshold_was_smuggled_in(self):
+        verdict = run_guards(series_from(self.CLOSES), PARAMS,
+                             CorporateActions("X", {4: self.RIGHT_DIRECTION}))
+        self.assertFalse(verdict.rejected)
+        self.assertEqual(len(verdict.observations), 1)
 
     def test_the_evidence_asserts_no_cause_for_the_move(self):
-        for coefficient in (1e-12, 1e12, 5e-324):
+        verdict = run_guards(series_from(self.CLOSES), PARAMS,
+                             CorporateActions("X", {4: self.RIGHT_DIRECTION}))
+        evidence = verdict.observations[0].verdict
+        self.assertIn("no cause for the move is established", evidence)
+        self.assertNotIn("so this is market movement", evidence)
+        # It reached the MAGNITUDE branch, not the direction gate.
+        self.assertNotIn("wrong direction", evidence)
+
+
+class AnAbsurdCoefficientInTheWrongDirectionNowRejects(unittest.TestCase):
+    """The other half of the split — ``1e-12`` and ``5e-324`` on a FALLING series.
+
+    A coefficient below 1 implies a RISE in an unadjusted series, so on this
+    downward jump both land at the direction gate rather than the magnitude one.
+    Before HD-29 that gate accepted and they were indistinguishable in outcome
+    from ``1e12``; after HD-29 it rejects, and the old class's single
+    all-three assertion would have been half true. Each assertion here is about
+    the branch it actually reaches.
+
+    Still no plausibility threshold: these reject because their DIRECTION is
+    inconsistent with the observed move, exactly as ``c=2.0`` does on the
+    over-adjusted shape — not because 5e-324 is an implausible ratio.
+    """
+
+    CLOSES = [99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]
+    WRONG_DIRECTION = (1e-12, 5e-324)
+
+    def test_they_really_do_reach_the_direction_gate(self):
+        # Non-vacuity: sign disagreement, on a series that falls.
+        signed = math.log(self.CLOSES[4]) - math.log(self.CLOSES[3])
+        for coefficient in self.WRONG_DIRECTION:
+            with self.subTest(coefficient=coefficient):
+                self.assertLess(signed * -math.log(coefficient), 0.0)
+
+    def test_they_are_REJECTED_at_the_direction_gate(self):
+        for coefficient in self.WRONG_DIRECTION:
             with self.subTest(coefficient=coefficient):
                 verdict = run_guards(series_from(self.CLOSES), PARAMS,
                                      CorporateActions("X", {4: coefficient}))
-                evidence = verdict.observations[0].verdict
+                self.assertTrue(verdict.rejected)
+                self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+                self.assertEqual(verdict.observations, ())
+
+    def test_the_evidence_asserts_no_cause_and_does_not_claim_the_magnitude(self):
+        for coefficient in self.WRONG_DIRECTION:
+            with self.subTest(coefficient=coefficient):
+                verdict = run_guards(series_from(self.CLOSES), PARAMS,
+                                     CorporateActions("X", {4: coefficient}))
+                evidence = verdict.rejections[0].evidence
+                self.assertIn("wrong direction", evidence)
                 self.assertIn("no cause for the move is established", evidence)
-                self.assertNotIn("so this is market movement", evidence)
+                self.assertNotIn("already adjusted", evidence)
+                self.assertNotIn("unadjusted for this split", evidence)
+                # The magnitudes here differ by ~27 in log space, so the reason
+                # must not assert the move matched the split in size.
+                self.assertNotIn("split magnitude", evidence)
 
 
 class RecordedJumpFieldsKeepTheirMeaning(unittest.TestCase):
