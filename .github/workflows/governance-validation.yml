@@ -179,9 +179,20 @@ jobs:
         run: python3 -m engine.tests.run_all
 
       - name: Research harness — the pilot's measurement arithmetic
-        # These 30 tests pin the provider's split-adjustment direction, the
-        # dividend-close exclusion, the API-key redaction contract, and
-        # None-not-zero on truncated forward horizons. `engine.tests.run_all`
+        # These 36 tests (24 provider + 12 backtest) pin the split-adjustment
+        # direction, the dividend-close exclusion, the API-key redaction
+        # contract, and None-not-zero on truncated forward horizons.
+        #
+        # The floor below is 30 — SIX UNDER the current count, deliberately.
+        # It catches broken DISCOVERY (a rename, a re-home, a lost __init__.py),
+        # not a deleted test: five harness tests could be removed with this gate
+        # still green. Said explicitly because the comment previously read "these
+        # 30 tests" while the suite was 36, which invited exactly the opposite
+        # reading — that the floor was coincident with the suite and so caught
+        # any loss. The numeral was right when written and went stale two commits
+        # later; the emitter is on the line below and returns 36.
+        #
+        # `engine.tests.run_all`
         # discovers only `engine/tests`, so until this step existed no gate ran
         # them and they were decorative: a broken measurement layer would have
         # shipped green and quietly produced wrong pilot numbers.

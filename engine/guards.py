@@ -227,14 +227,18 @@ def _adjudicate_jump(
       alone, so the bar-set is rejected conservatively. This is the pre-HD-27
       behaviour and it is what keeps GX-10 (a synthetic 2:1 with no feed) green.
     * **Feed present, coefficient unusable** — non-finite, non-positive,
-      non-numeric, **or a boolean** — is *absent evidence*, not a mismatch:
+      non-numeric, **a boolean**, or **an integer too large to be a float** —
+      is *absent evidence*, not a mismatch:
       ``ln`` is undefined on it and there is nothing to compare the jump
       against. Rejected on the same reasoning as no feed at all, and the
       evidence says so rather than claiming anything about adjustment.
-      *(The boolean is named separately because the other three words do not
-      cover it: ``True`` is finite, positive and numeric — ``bool`` subclasses
-      ``int`` — so this list previously described a branch its own code did not
-      have. See ``coefficient_at`` for why a boolean is unusable.)*
+      *(The last two are named separately because the first three words do not
+      cover them, and this list twice described a branch its own code did not
+      have. ``True`` is finite, positive and numeric — ``bool`` subclasses
+      ``int``. ``10**400`` is finite, positive and numeric too; it is unusable
+      only because ``float()`` raises ``OverflowError`` on it. Both words read
+      against the RECORDED value, not the coerced coefficient. See
+      ``coefficient_at``.)*
     * **Feed present, no split at this bar** — a real market event. **ACCEPT.**
       This is AAPL 2000-09-29: −51.9% on a profit warning, split coefficient 1.0.
     * **Feed present, split here, and the move matches the split in BOTH
@@ -308,8 +312,16 @@ def _adjudicate_jump(
     # That is exactly the shape this branch waves through.  Measured, on
     # ``[48, 47.5, 48, 48, 96, 97, 95, 96]`` with feed ``{4: 2.0}``: before this
     # gate the guard REJECTED it as "unadjusted for this split"; after it, the
-    # guard ACCEPTS.  Same for ``c=10.0`` and for the reverse-split mirror
-    # ``c=0.1``.
+    # guard ACCEPTS.
+    #
+    # ``c=10.0`` and the reverse mirror ``c=0.1`` are ALSO accepted here, but
+    # they are not the same measurement and an earlier wording said "same for":
+    # on this series ``|jump - |ln c||`` is 1.609438 for both, far outside the
+    # 0.15 tolerance, so the magnitude test alone already accepted them and this
+    # gate changed nothing.  The gate flipped exactly one of the three, ``c=2.0``,
+    # where the magnitudes match to 0.000000.  "Same" was true of the outcome and
+    # false of the transition, which is the kind of blanket extension past the
+    # measurement that M-71 exists to log.
     #
     # This is a DETECTION GAP ACCEPTED DELIBERATELY, not an oversight.  A
     # ``+ln(c)`` step at a split bar is genuinely ambiguous — over-adjustment
