@@ -37,6 +37,9 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-23 | high | Autonomous-execution directive: finish the permitted work; product delivery outranks governance polish | **PENDING PRODUCT OWNER CONFIRMATION** |
 | HD-24 | high | Merge authorization for PR #38/#37, a **Phase-3** GOV-015 scope lift, and a ruling on #36 Part B | **APPROVED (relayed) — two overreaches recorded** |
 | HD-25 | high | `FAILED_BREAKOUT` retains **both** exits — new-ATH reset and expiry (resolves ESC-4) | **APPROVED (relayed, no citable artifact)** |
+| HD-26 | high | Exploratory Alpha Vantage pilot: **NO** GOV-015 lift, NOT HD-06 | **APPROVED (relayed, no citable artifact)** |
+| HD-27 | high | A crash is not an adjustment defect: §18's split guard requires split evidence | **APPROVED (relayed, no citable artifact)** |
+| HD-29 | high | Unseparable split evidence REJECTS with an honest reason; an empty feed is absent evidence, not evidence of absence | **APPROVED (relayed, no citable artifact)** |
 
 ---
 
@@ -1848,19 +1851,26 @@ ruled content, and the ruling is the authority an operator or the next agent rea
    magnitude** → **REJECT**. Confirmed adjustment defect. *Direction is part of the test: an
    unadjusted forward split makes prices fall and an unadjusted reverse split makes them rise, so
    a same-magnitude move the other way is not that split.*
-5. **Split at the bar, but direction or magnitude does not match** → **ACCEPT**. The mismatch is
+5. **Split at the bar, right direction, magnitude does not match** → **ACCEPT**. The mismatch is
    all that was measured; **no cause for the move is established**. Accepted because re-adjusting
-   on an unmatched split would adjust twice. *(This clause read "prices are already adjusted and
+   on an unmatched split would adjust twice.
+6. **Split at the bar, WRONG direction** → **REJECT**, since
+   **[HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
+   (i)**. *(This clause read "direction **or** magnitude does not match → ACCEPT" and the engine had
+   six branches, not five. HD-29 reversed the direction half and this enumeration was not updated —
+   the third time this entry has been corrected for describing a branch set its own code does not
+   have, and the standard it was missing is stated four paragraphs above it.)* *(This clause read "prices are already adjusted and
    something else moved the stock" — verbatim the claim B6 had just required the **engine** to stop
    making, left standing in the **ruling** that governs it. It is also contradicted six lines below
    by this document's own statement that an over-adjusted series lands in case 5: there, prices are
    not already adjusted, they are adjusted twice. The B6 defect class surviving inside the B5 fix.)*
 
-**Which way the DIRECTION test errs, stated with the same discipline as the tolerance.** It errs
-toward accepting, and the cost is specific and worth naming: an **over-adjusted** series — where a
-vendor reports a spurious coefficient and normalization divides already-adjusted prices *again*,
-producing a `+ln(c)` jump at the split bar — now lands in case 5 and is **ACCEPTED**. Over-adjustment
-is therefore **not detected at all**. That is a deliberate, disclosed gap rather than an oversight:
+**SUPERSEDED BY [HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
+(i), and retained because the reasoning is what the ruling overturned.** This paragraph read: the
+direction test *"errs toward accepting"*, an over-adjusted series *"now lands in case 5 and is
+**ACCEPTED**"*, and *"over-adjustment is therefore **not detected at all**"*. **All three are false
+at this head.** The wrong-direction shape now REJECTS. Over-adjustment is still not *detected* — it
+is no longer *admitted*. That is a deliberate, disclosed gap rather than an oversight:
 `+ln(c)` at a split bar is genuinely ambiguous between over-adjustment and a real `c`× move, and
 separating them needs a distinct over-adjustment hypothesis that **no ruling has supplied**. Logged
 as **M-68**. Forcing a verdict there would be a product-definition change and is reserved.
@@ -1930,6 +1940,11 @@ failure HD-27 exists to end.
 
 ## HD-29 — Unseparable split evidence REJECTS, and silence is not a record · materiality: **high**
 
+**Status: APPROVED (relayed). Artifact: NONE** — no issue comment, no PR review, no commit
+trailer. Recorded in the same disclosed posture as HD-23/24/25/26/27, and **the gap is larger here**
+than for those: this ruling authorizes a behavioural engine change *and* a behavioural edit inside a
+quarantined directory. [#21](https://github.com/tomerYannay/4UR4/issues/21) remains the ceiling.
+
 **Ruled by the Product Owner, 2026-07-29.** Escalated by the Strategic Product Reviewer as
 `STRATEGIC_HUMAN_DECISION_REQUIRED` on PR #44.
 
@@ -1980,19 +1995,29 @@ not carried forward:
 
 - **40 attempted · 40 COMPLETE · 0 rejected · 0 timed out · 0 insufficient · 0 provider errors.**
 - **306 raw breakouts · 255 non-overlapping · 6 excluded** for an incomplete forward window.
-- **AAPL preserved end-to-end**: COMPLETE, **3 breakouts**, **1 inspected-and-accepted** extreme
-  jump (bar 231, 2000-09-29, log jump `0.618163` on the adjusted **high** series, coefficient
-  `1.0`), `final_state RETESTED`, **no silent rejection** — the verdict text now reads *"no split
+- **AAPL preserved end-to-end, on the declared 1000-bar causal prefix**: COMPLETE, **3 breakouts**,
+  **1 inspected-and-accepted** extreme jump (bar 231, 2000-09-29, log jump `0.618163` on the
+  adjusted **high** series — the raw-**close** jump for the same event is `0.731247`, which is the
+  figure the regression test carries, and the two are not interchangeable), coefficient `1.0`,
+  `final_state RETESTED`, **no silent rejection**. *The window is load-bearing and is named because
+  the record previously omitted it: on the **full 6,724-bar** series the same call yields **68
+  breakouts** and `final_state NONE`.* — the verdict text now reads *"no split
   at this bar **on a feed that covers it**"*, so HD-29's coverage requirement is visible in the
   emitted evidence rather than only in the code.
 - **Zero ambiguous-evidence rejections**, and that is a finding rather than an absence: no symbol in
   this universe reached the wrong-direction or uncovered-bar branch. All **four** accepted extreme
-  jumps sat on feeds explicitly covering the bar at coefficient `1.0` — *confirmed evidence of no
-  split*, which this ruling keeps categorically distinct from silence. **The pilot supplies no
+  jumps sat on feeds whose coverage came from the caller's `complete_history=True` **declaration**,
+  with `coefficient_at` returning its `1.0` default rather than a per-bar recorded entry. That is
+  still *confirmed evidence of no split* under this ruling — a complete feed silent at a bar has
+  said there was no split — but the distinction matters and the first wording blurred it. **The pilot supplies no
   real-market instance of over-adjustment**; those branches are exercised by the engine suite only.
 
 *Labelled before/after diagnostic, and the only comparison drawn:* HD-29 changed **no** pilot
-outcome — identical status table, identical 306/255, identical statistics. Expected, since the new
+outcome — identical status table, identical 306/255, identical statistics. **This half is an
+author-run claim**: it requires the pre-HD-29 pass for comparison, which lives in gitignored
+`.cache/` and no repository gate can re-derive. What *is* independently verified is the mechanism
+behind it — across all 40 symbols the wrong-direction and uncovered-bar branches are unreached under
+the shipped configuration, which is consistent with the claim without establishing it. Expected, since the new
 branches are unreached here. The earlier figures were therefore not wrong; they were **unverified
 against a ruling that had not been made**, and now they are measured under it.
 

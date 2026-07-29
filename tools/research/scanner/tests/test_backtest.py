@@ -8,10 +8,18 @@ prove nothing.
 
 from __future__ import annotations
 
+import inspect
 import unittest
 from dataclasses import dataclass
 
+from engine.params import DetectorParams
 from tools.research.scanner import backtest
+
+#: Minimal params for the call-site pin; the geometry is irrelevant to it.
+_PARAMS_FOR_PIN = DetectorParams(
+    eps=0.02, eps_break=0.01, min_formation_bars=8, min_ath_age_bars=3,
+    tolerance_version="tol-2026.07-illustrative", spec_version="UNVERSIONED-PENDING-OQ-J",
+)
 
 
 @dataclass(frozen=True)
@@ -183,3 +191,60 @@ class EpisodeOutcomeIsReadFromTheEngineNotDefaulted(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             backtest._episode_outcome(FakeResult(transitions=(RecordWithoutReason(12),)), 10)
+
+
+class TheCompletenessDeclarationIsPinned(unittest.TestCase):
+    """`complete_history=True` had no test, and deleting it stayed green.
+
+    Code Review measured it at `43282fd`: the argument at `run_symbol`'s
+    `CorporateActions` construction is what preserves AAPL 2000-09-29 under
+    HD-29 (ii), and removing it left BOTH the engine suite and this suite
+    passing while silently reverting that preservation and moving the published
+    306/255 event counts. A silent measurement defect is exactly what the CI
+    harness step exists to catch, so it is caught here rather than logged.
+
+    This asserts the call site, not the engine's behaviour — the engine's half
+    is pinned by `AnEmptyFeedIsAbsentEvidenceNotEvidenceOfAbsence`.
+    """
+
+    def test_run_symbol_declares_the_feed_complete(self):
+        import inspect
+
+        from engine.guards import CorporateActions
+
+        captured = {}
+        real = backtest.CorporateActions
+
+        def spy(*args, **kwargs):
+            captured.update(kwargs)
+            return real(*args, **kwargs)
+
+        backtest.CorporateActions = spy
+        try:
+            bars = [FakeBar(f"d{i:03d}", 10.0, 10.0, 9.0, 10.0, 100) for i in range(30)]
+
+            @dataclass
+            class FakeSeries:
+                bars: list
+                splits_applied: tuple = ()
+
+            backtest.run_symbol("X", FakeSeries(bars=bars), _PARAMS_FOR_PIN)
+        finally:
+            backtest.CorporateActions = real
+
+        self.assertIn(
+            "complete_history", captured,
+            "run_symbol no longer declares feed completeness — HD-29 (ii) makes an "
+            "undeclared feed absent evidence, so every symbol whose supra-threshold "
+            "jump lands on a non-split bar silently reverts to REJECT, AAPL included",
+        )
+        self.assertTrue(captured["complete_history"])
+
+    def test_the_declaration_is_what_the_provider_actually_supports(self):
+        # The flag is only honest because normalize() derives splits_applied from
+        # the same payload rows it builds bars from. If that ever stops being
+        # true the declaration becomes false and fails OPEN (M-74).
+        from tools.research.providers import alphavantage as av
+
+        source = inspect.getsource(av.normalize)
+        self.assertIn("split", source.lower())

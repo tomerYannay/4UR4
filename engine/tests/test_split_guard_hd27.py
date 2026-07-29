@@ -104,6 +104,11 @@ class AaplCrashIsRealMarketData(unittest.TestCase):
         self.assertAlmostEqual(obs.split_coefficient, 1.0)
         self.assertGreater(obs.log_jump, obs.threshold)
         self.assertIn("no split", obs.verdict)
+        # HD-29 cites this exact clause as the proof that coverage is visible in
+        # the emitted evidence rather than only in the code. Deleting it killed
+        # zero tests until this line existed — a record citing a string nothing
+        # pinned. Found by Code Review at 43282fd.
+        self.assertIn("on a feed that covers it", obs.verdict)
 
     def test_the_engine_now_runs_geometry_instead_of_returning_NONE(self):
         s = series_from(self.CLOSES)
