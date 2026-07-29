@@ -187,5 +187,23 @@ jobs:
         # shipped green and quietly produced wrong pilot numbers.
         #
         # This is a RESEARCH harness, not product code. It gates its own
-        # correctness; it does not gate any phase.
-        run: python3 -m unittest discover -s tools/research -t . -p "test_*.py"
+        # correctness and it gates NO PHASE — but say the other half too: there
+        # is one job here, and its name is the required status context, so this
+        # step gates EVERY MERGE. A defect in a disposable research harness can
+        # block an engine PR that never touched it. That fails safe, and it is
+        # why the step is deliberately NOT in tools/validate.mjs's requiredLines:
+        # a permanent gate should be pinned, a disposable one should be
+        # removable. (This file has been corrected once already for exactly this
+        # shape of half-statement — see the "Dependency-free" note above.)
+        #
+        # The floor is not decoration: `unittest discover` exits 0 on "Ran 0
+        # tests", so a rename, a re-home or a lost __init__.py would turn this
+        # green while asserting nothing — the very failure the step exists to
+        # end, one layer up, and indistinguishable from a real pass.
+        run: |
+          python3 -m unittest discover -s tools/research -t . -p "test_*.py" 2>&1 | tee /tmp/research.log
+          count=$(grep -oE '^Ran [0-9]+ test' /tmp/research.log | grep -oE '[0-9]+')
+          if [ -z "$count" ] || [ "$count" -lt 30 ]; then
+            echo "::error::research harness discovered ${count:-0} tests, expected >= 30 — discovery is broken, not the suite"
+            exit 1
+          fi

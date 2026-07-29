@@ -84,6 +84,16 @@ def main(argv):
     out.append(status_table(b))
 
     out.append("\n## Disclosure\n")
+    # The scope rider travels with the NUMBERS, not just with the evidence file.
+    # HD-26 requires the limits to accompany every figure the pilot produces; an
+    # earlier version wrote the rider into the JSON and printed only the seven
+    # quantitative items, so the report a person actually reads carried none of
+    # it. A caveat that stays in a file nobody opens is not a caveat.
+    out.append(f"> **Scope:** {b['run']['scope']}\n")
+    out.append(f"> Per-symbol compute budget: {b['run']['budget_seconds']}s"
+               + (f" · causal prefix: first {b['run']['max_bars']} bars"
+                  if b["run"].get("max_bars") else " · full delivered history")
+               + "\n")
     for k, v in d.items():
         out.append(f"- **{k.replace('_', ' ')}**: {v}")
 

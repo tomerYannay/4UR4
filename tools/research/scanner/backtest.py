@@ -133,6 +133,11 @@ def to_bar_series(symbol_bars: Sequence, ) -> BarSeries:
     )
 
 
+#: The four §21 terminal transitions an episode can reach after its breakout.
+#: Anything else leaves the episode open.
+TERMINAL_OUTCOMES = ("RETEST_HELD", "FAILED_BREAKOUT", "EXPIRED_POST_BREAKOUT", "RESET_NEW_ATH")
+
+
 def _episode_outcome(result: DetectionResult, breakout_bar: int) -> str:
     """Name what the engine did to the episode that froze at ``breakout_bar``.
 
@@ -140,14 +145,23 @@ def _episode_outcome(result: DetectionResult, breakout_bar: int) -> str:
     engine's own and not this module's opinion. The first post-breakout
     transition is the episode's fate; if none exists the episode was still open
     when the series ended.
+
+    **This function was silently vacuous and a whole pilot pass was run on it.**
+    It read ``record.reason_code``; ``TransitionRecord``'s field is ``reason``.
+    ``getattr(record, "reason_code", None)`` therefore returned ``None`` on every
+    record, every iteration hit ``continue``, and all 306 measured breakouts came
+    back ``OPEN_AT_SERIES_END`` — a uniform answer that is arithmetically
+    impossible across 40 independent symbols, which is the only reason it was
+    caught. Attribute access is direct now: a future rename raises
+    ``AttributeError`` here instead of quietly turning this into a constant
+    function. Defaulted ``getattr`` on a field you require is not defensive, it
+    is a silenced error.
     """
     for record in result.transitions:
-        bar = getattr(record, "bar", None)
-        code = getattr(record, "reason_code", None)
-        if bar is None or code is None or bar <= breakout_bar:
+        if record.bar <= breakout_bar:
             continue
-        name = getattr(code, "name", str(code))
-        if name in ("RETEST_HELD", "FAILED_BREAKOUT", "EXPIRED_POST_BREAKOUT", "RESET_NEW_ATH"):
+        name = record.reason.name
+        if name in TERMINAL_OUTCOMES:
             return name
     return "OPEN_AT_SERIES_END"
 

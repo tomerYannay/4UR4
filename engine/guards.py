@@ -48,8 +48,36 @@ class CorporateActions:
     symbol: str
     splits: Dict[int, float]
 
+    def recorded_at(self, bar_index: int) -> Any:
+        """The value the feed actually recorded, uncoerced — ``1.0`` if absent.
+
+        Kept separate from :meth:`coefficient_at` so a rejection can name what
+        the feed said (``'n/a'``, ``None``) rather than the ``nan`` it became.
+        """
+        return self.splits.get(bar_index, 1.0)
+
     def coefficient_at(self, bar_index: int) -> float:
-        return float(self.splits.get(bar_index, 1.0))
+        """The recorded value as a float, or ``nan`` when it is not one.
+
+        A feed is a parsed vendor file, and vendor files carry ``None`` for a
+        blank cell and ``'n/a'`` for an unknown one.  ``float()`` raises on both
+        — ``TypeError`` and ``ValueError`` respectively — and that exception
+        escaped ``detect()`` entirely, which is the same escape class as B2 one
+        layer earlier: bad input crashing the caller instead of becoming a
+        structured rejection.
+
+        Uncoercible values become ``nan`` so they land on the "not a usable
+        ratio" REJECT alongside 0, negatives and ``nan`` itself.  That is the
+        same judgement for the same reason: ``ln`` is undefined on them, so
+        there is no implied jump to compare against and no ground for saying
+        the prices are already adjusted.  Coercion is *attempted* rather than
+        type-checked, so a feed recording ``'2.0'`` still adjudicates as 2.0
+        exactly as before — this widens no verdict, it only stops the crash.
+        """
+        try:
+            return float(self.recorded_at(bar_index))
+        except (TypeError, ValueError):
+            return float("nan")
 
 
 @dataclass(frozen=True)
@@ -164,18 +192,21 @@ def _adjudicate_jump(
     * **No split feed** — the two hypotheses are indistinguishable from prices
       alone, so the bar-set is rejected conservatively. This is the pre-HD-27
       behaviour and it is what keeps GX-10 (a synthetic 2:1 with no feed) green.
-    * **Feed present, coefficient unusable** — a non-finite or non-positive
-      coefficient is *absent evidence*, not a mismatch: ``ln`` is undefined on it
-      and there is nothing to compare the jump against. Rejected on the same
-      reasoning as no feed at all, and the evidence says so rather than claiming
-      anything about adjustment.
+    * **Feed present, coefficient unusable** — a non-finite, non-positive or
+      non-numeric coefficient is *absent evidence*, not a mismatch: ``ln`` is
+      undefined on it and there is nothing to compare the jump against. Rejected
+      on the same reasoning as no feed at all, and the evidence says so rather
+      than claiming anything about adjustment.
     * **Feed present, no split at this bar** — a real market event. **ACCEPT.**
       This is AAPL 2000-09-29: −51.9% on a profit warning, split coefficient 1.0.
     * **Feed present, split here, and the move matches the split in BOTH
       direction and magnitude** — a confirmed adjustment defect. **REJECT.**
-    * **Feed present, split here, but the move does NOT match** — the prices are
-      already adjusted and something else moved the stock. **ACCEPT**, because
-      re-adjusting would be adjusting twice.
+    * **Feed present, split here, but the move does NOT match** — **ACCEPT**,
+      because re-adjusting on an unmatched split would adjust twice. What is
+      established is the mismatch itself; the cause of the move is not, and the
+      evidence is worded to claim only the former. See the disclosure at the
+      direction gate below: this accept-on-mismatch is what leaves an
+      over-adjusted series undetected.
 
     This is still §18's single split condition, adjudicated; it is not a fourth
     whole-bar-set guard and it mints no new ``ReasonCode``.
@@ -192,17 +223,20 @@ def _adjudicate_jump(
     coefficient = corporate_actions.coefficient_at(bar_index)
     if not math.isfinite(coefficient) or coefficient <= 0.0:
         # UNUSABLE EVIDENCE, not a mismatch.  A feed encoding "unknown" as 0, a
-        # blank cell parsed to NaN, or a sign error yields a number ``ln`` is not
+        # blank cell parsed to NaN or to ``None``, an unknown one recorded as
+        # ``'n/a'`` (both of the latter arrive here as NaN from
+        # ``coefficient_at``), or a sign error yields something ``ln`` is not
         # defined on — so there is no implied jump to compare against and no
         # ground whatsoever for saying the prices are already adjusted.  Treating
         # it as a mismatch would ACCEPT a genuinely unadjusted split *and* assert
         # a reason that was never established.  HD-27 rules that where the
         # evidence is genuinely unavailable the safe direction is to reject, so
         # this lands in the same place as no feed at all.
+        recorded = corporate_actions.recorded_at(bar_index)
         return (
             "REJECT",
             coefficient,
-            f"the split coefficient recorded at this bar is {coefficient}, which "
+            f"the split coefficient recorded at this bar is {recorded!r}, which "
             f"is not a usable ratio (a coefficient must be finite and strictly "
             f"positive); with no usable coefficient a crash and an unadjusted "
             f"split are indistinguishable from prices alone, so the bar-set is "
@@ -224,15 +258,43 @@ def _adjudicate_jump(
     # unadjusted prices rise tenfold).  Magnitude alone cannot tell those apart
     # from their opposites, and 48 -> 96 on a 2:1 is not that split.
     expected_signed = -math.log(coefficient)
+    #
+    # **Which way this errs, stated rather than left to be discovered.**
+    #
+    # This gate ACCEPTS every same-magnitude opposite-direction move at a split
+    # bar.  The consequence, named rather than left to be found: an
+    # OVER-ADJUSTED series is no longer detected at all.  Over-adjustment is the
+    # mirror vendor defect — prices that were already adjusted get adjusted
+    # again, so every bar before the split is divided by ``c`` a second time and
+    # the split bar carries a ``+ln(c)`` discontinuity instead of ``-ln(c)``.
+    # That is exactly the shape this branch waves through.  Measured, on
+    # ``[48, 47.5, 48, 48, 96, 97, 95, 96]`` with feed ``{4: 2.0}``: before this
+    # gate the guard REJECTED it as "unadjusted for this split"; after it, the
+    # guard ACCEPTS.  Same for ``c=10.0`` and for the reverse-split mirror
+    # ``c=0.1``.
+    #
+    # This is a DETECTION GAP ACCEPTED DELIBERATELY, not an oversight.  A
+    # ``+ln(c)`` step at a split bar is genuinely ambiguous — over-adjustment
+    # and a real c-times move on the day produce an identical series — and HD-27
+    # clause 2 plus the "err toward accepting" discipline behind
+    # ``SPLIT_MATCH_TOLERANCE`` both point at accepting where the two hypotheses
+    # cannot be separated.  Closing the gap would require a DISTINCT
+    # over-adjustment hypothesis (its own evidence, its own verdict, plausibly
+    # its own reason code), and no ruling has supplied one.  Inventing one here
+    # would be a product-definition change, so it is escalated rather than
+    # taken.  ``AnOverAdjustedSeriesIsAcceptedAndTheGapIsDisclosed`` in
+    # ``test_split_guard_hd27.py`` pins the gap so it stays visible.
     if signed_jump * expected_signed <= 0.0:
         direction = "fall" if expected_signed < 0 else "rise"
         return (
             "ACCEPT",
             coefficient,
             f"a split of {coefficient} occurred here but the move is in the wrong "
-            f"direction: an unadjusted series would {direction} by "
-            f"{expected_signed:+.6f} in log space and the observed change is "
-            f"{signed_jump:+.6f}, so this jump is not that split (HD-27)",
+            f"direction for an unadjusted series: unadjusted prices would "
+            f"{direction} by {expected_signed:+.6f} in log space and the observed "
+            f"change is {signed_jump:+.6f}. That direction mismatch is all that "
+            f"was measured and no cause for the move is established; an "
+            f"over-adjusted series carries this same shape (HD-27)",
         )
 
     if abs(jump - expected) <= SPLIT_MATCH_TOLERANCE:
@@ -243,12 +305,23 @@ def _adjudicate_jump(
             f"and the observed jump is {jump:.6f}; the series is unadjusted for "
             f"this split (HD-27)",
         )
+    # The mismatch is measured; the CAUSE of it is not.  "Already adjusted" is
+    # the ordinary explanation and is worth naming, but it is a hypothesis this
+    # branch never tested — and a finite-but-absurd coefficient (1e-12, 1e12,
+    # 5e-324) reaches here and mismatches by construction, where asserting the
+    # prices are already adjusted is no better established than it was for the
+    # ``nan`` case B2 fixed.  So the evidence reports the mismatch and stops.
+    # No plausibility threshold is applied: bounding what counts as a credible
+    # coefficient would be a product-definition change, not a wording fix.
     return (
         "ACCEPT",
         coefficient,
         f"a split of {coefficient} occurred here but the observed jump "
-        f"{jump:.6f} does not match its implied {expected:.6f}; prices are "
-        f"already adjusted, so this is market movement (HD-27)",
+        f"{jump:.6f} does not match its implied {expected:.6f}; a mismatch of "
+        f"this size is what already adjusted prices look like, but the mismatch "
+        f"is all that was measured and no cause for the move is established. "
+        f"Accepted because re-adjusting on an unmatched split would adjust "
+        f"twice (HD-27)",
     )
 
 

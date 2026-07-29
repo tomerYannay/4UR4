@@ -322,6 +322,185 @@ class ADirectionMismatchIsNotThatSplit(unittest.TestCase):
         self.assertIn("wrong direction", verdict.observations[0].verdict)
 
 
+class AnOverAdjustedSeriesIsAcceptedAndTheGapIsDisclosed(unittest.TestCase):
+    """B6 — the direction gate's cost, pinned so it cannot go back to silent.
+
+    **This ACCEPT is not a desired outcome.** It is a detection gap the direction
+    gate introduced, accepted deliberately and disclosed. Nothing here endorses
+    it, and a reader must not take these assertions as saying an over-adjusted
+    series *should* pass.
+
+    Over-adjustment is the mirror vendor defect: a spurious split coefficient is
+    reported, ``normalize()`` divides every earlier bar by it, and the split bar
+    is left carrying ``+ln(c)`` instead of the ``-ln(c)`` an unadjusted series
+    would show. Before the direction gate the guard REJECTED that shape as "the
+    series is unadjusted for this split"; after it, the guard ACCEPTS. That
+    change shipped undisclosed, which is what B6 was raised about.
+
+    It is left as an ACCEPT because a ``+ln(c)`` step at a split bar genuinely
+    cannot be separated from a real c-times move on the day, and HD-27 clause 2
+    errs toward accepting where the hypotheses are indistinguishable. Separating
+    them needs a distinct over-adjustment hypothesis that no ruling has supplied,
+    so forcing a verdict here would be a product-definition change (GOV-007).
+
+    What these tests do enforce is the honesty of the evidence: the guard may not
+    claim the jump is unrelated to the split, because in the over-adjusted case
+    the jump IS that split's adjustment, applied twice.
+    """
+
+    # +ln(2) at the split bar: every bar before it divided by 2 a second time.
+    OVER_ADJUSTED = [48.0, 47.5, 48.0, 48.0, 96.0, 97.0, 95.0, 96.0]
+
+    def test_the_over_adjusted_shape_really_is_plus_ln_c_at_the_split_bar(self):
+        # Non-vacuity: if this were not a same-magnitude opposite-direction move
+        # it would not reach the direction gate and would pin nothing.
+        signed = math.log(self.OVER_ADJUSTED[4]) - math.log(self.OVER_ADJUSTED[3])
+        self.assertAlmostEqual(signed, +math.log(2.0), places=9)
+        self.assertGreater(abs(signed), PARAMS.split_log_jump_threshold)
+
+    def test_an_over_adjusted_series_is_ACCEPTED_a_disclosed_detection_gap(self):
+        # Before the direction gate this was REJECT "unadjusted for this split".
+        # Pinned as the current, disclosed behaviour — NOT as a desired one.
+        verdict = run_guards(series_from(self.OVER_ADJUSTED), PARAMS,
+                             CorporateActions("X", {4: 2.0}))
+        self.assertFalse(verdict.rejected)
+        self.assertEqual(verdict.rejections, ())
+        self.assertNotIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+
+    def test_the_verdict_does_not_claim_the_jump_is_not_that_split(self):
+        # The false claim this replaces: "...so this jump is not that split".
+        # In the over-adjusted case the jump IS that split's adjustment, applied
+        # twice, so asserting otherwise states as fact something never measured —
+        # the rule test_the_evidence_names_the_unusable_value_and_claims_nothing
+        # _else already enforces on the neighbouring branch.
+        verdict = run_guards(series_from(self.OVER_ADJUSTED), PARAMS,
+                             CorporateActions("X", {4: 2.0}))
+        self.assertEqual(len(verdict.observations), 1)
+        evidence = verdict.observations[0].verdict
+        for false_claim in ("not that split", "is not the split",
+                            "unrelated to the split", "already adjusted"):
+            self.assertNotIn(
+                false_claim, evidence,
+                f"the wrong-direction evidence asserts {false_claim!r}, which it "
+                f"never established and which is false when the series is "
+                f"over-adjusted: {evidence}",
+            )
+
+    def test_the_verdict_still_reports_the_numbers_it_measured(self):
+        # Restating the claim must not cost the evidence: the implied and
+        # observed signed moves are what a reader needs to see the mismatch.
+        verdict = run_guards(series_from(self.OVER_ADJUSTED), PARAMS,
+                             CorporateActions("X", {4: 2.0}))
+        evidence = verdict.observations[0].verdict
+        self.assertIn("wrong direction", evidence)
+        self.assertIn(f"{-math.log(2.0):+.6f}", evidence)   # implied  -0.693147
+        self.assertIn(f"{+math.log(2.0):+.6f}", evidence)   # observed +0.693147
+        self.assertAlmostEqual(verdict.observations[0].split_coefficient, 2.0)
+
+    def test_the_gap_is_the_same_at_other_coefficients_and_in_the_mirror(self):
+        # c=10.0 and the reverse-split mirror c=0.1 behave identically, so the
+        # gap is a property of the gate and not of one arithmetic accident.
+        cases = (
+            (10.0, [48.0, 47.5, 48.0, 48.0, 480.0, 485.0, 475.0, 480.0]),
+            (0.1, [100.0, 99.0, 101.0, 100.0, 10.0, 10.1, 9.9, 10.0]),
+        )
+        for coefficient, closes in cases:
+            with self.subTest(coefficient=coefficient):
+                verdict = run_guards(series_from(closes), PARAMS,
+                                     CorporateActions("X", {4: coefficient}))
+                self.assertFalse(verdict.rejected)
+                self.assertNotIn("not that split", verdict.observations[0].verdict)
+
+    def test_the_gap_is_confined_to_the_wrong_direction_shape(self):
+        # Control: the RIGHT-direction unadjusted 2:1 is still rejected, so this
+        # class pins a gap rather than documenting a general failure to detect.
+        verdict = run_guards(
+            series_from([99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]),
+            PARAMS, CorporateActions("X", {4: 2.0}))
+        self.assertTrue(verdict.rejected)
+        self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+
+
+class ANonNumericCoefficientRejectsInsteadOfRaising(unittest.TestCase):
+    """B2's escape class, one layer earlier: in ``coefficient_at`` itself.
+
+    ``float(self.splits.get(...))` ran BEFORE the ``isfinite`` guard could see
+    the value, so a feed recording ``None`` for a blank cell raised ``TypeError``
+    and ``'n/a'`` for an unknown one raised ``ValueError`` — both escaping
+    ``detect()`` instead of becoming the structured rejection §18 owes.
+    """
+
+    CLOSES = [99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]
+
+    def _verdict(self, coefficient):
+        return run_guards(series_from(self.CLOSES), PARAMS,
+                          CorporateActions("X", {4: coefficient}))
+
+    def test_none_and_a_string_reach_the_unusable_ratio_rejection(self):
+        for coefficient in (None, "n/a", "", [], {}):
+            with self.subTest(coefficient=coefficient):
+                verdict = self._verdict(coefficient)  # was: TypeError/ValueError
+                self.assertTrue(verdict.rejected)
+                self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+                self.assertEqual(verdict.observations, ())
+
+    def test_the_rejection_names_what_the_feed_RECORDED_not_the_nan_it_became(self):
+        for coefficient in (None, "n/a"):
+            with self.subTest(coefficient=coefficient):
+                evidence = self._verdict(coefficient).rejections[0].evidence
+                self.assertIn("not a usable ratio", evidence)
+                self.assertIn(repr(coefficient), evidence)
+                self.assertNotIn("already adjusted", evidence)
+                self.assertNotIn("unadjusted for this split", evidence)
+
+    def test_it_escapes_neither_run_guards_nor_the_public_detect_entry_point(self):
+        result = detect(series_from(self.CLOSES), PARAMS,
+                        corporate_actions=CorporateActions("X", {4: None}))
+        self.assertTrue(result.guard.rejected)
+        self.assertEqual(result.final_state, LineState.NONE)
+        self.assertTrue(result.diagnostics["guard_rejections"])
+
+    def test_a_NUMERIC_STRING_still_adjudicates_as_that_number(self):
+        # Coercion is attempted, not type-checked: '2.0' was already handled and
+        # must keep its verdict, so this fix widens nothing.
+        verdict = self._verdict("2.0")
+        self.assertTrue(verdict.rejected)
+        self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+
+
+class AnAbsurdCoefficientAssertsNoCauseItDidNotEstablish(unittest.TestCase):
+    """Finite but absurd ratios reach ACCEPT and must not claim a reason.
+
+    1e-12, 1e12 and 5e-324 are finite and positive, so they pass the usability
+    guard and mismatch by construction. The ACCEPT they landed on asserted
+    "prices are already adjusted, so this is market movement" — an assertion no
+    better established than it was for the ``nan`` case B2 fixed.
+
+    No plausibility threshold is added: bounding what counts as a credible
+    coefficient would be a product-definition change, out of scope here. The
+    verdict is unchanged; only the claim is.
+    """
+
+    CLOSES = [99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]
+
+    def test_they_are_still_ACCEPTED_no_threshold_was_smuggled_in(self):
+        for coefficient in (1e-12, 1e12, 5e-324):
+            with self.subTest(coefficient=coefficient):
+                verdict = run_guards(series_from(self.CLOSES), PARAMS,
+                                     CorporateActions("X", {4: coefficient}))
+                self.assertFalse(verdict.rejected)
+                self.assertEqual(len(verdict.observations), 1)
+
+    def test_the_evidence_asserts_no_cause_for_the_move(self):
+        for coefficient in (1e-12, 1e12, 5e-324):
+            with self.subTest(coefficient=coefficient):
+                verdict = run_guards(series_from(self.CLOSES), PARAMS,
+                                     CorporateActions("X", {4: coefficient}))
+                evidence = verdict.observations[0].verdict
+                self.assertIn("no cause for the move is established", evidence)
+                self.assertNotIn("so this is market movement", evidence)
+
+
 class RecordedJumpFieldsKeepTheirMeaning(unittest.TestCase):
     """Carrying the sign into adjudication must not change what is REPORTED."""
 

@@ -123,3 +123,63 @@ class Aggregation(unittest.TestCase):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
+
+
+class EpisodeOutcomeIsReadFromTheEngineNotDefaulted(unittest.TestCase):
+    """The classifier was silently vacuous; these tests exist so it cannot be again.
+
+    It read ``record.reason_code`` while ``TransitionRecord``'s field is
+    ``reason``, so a defaulted ``getattr`` turned every episode into
+    ``OPEN_AT_SERIES_END``. A whole 40-symbol pass was measured on it and
+    reported 306 of 306 events open at the series end — impossible across 40
+    independent symbols, and the only reason it surfaced.
+
+    Real ``ReasonCode`` and ``TransitionRecord`` objects are used rather than
+    fakes: the defect was precisely a mismatch between this module's assumption
+    and the engine's actual field name, and a fake carrying whatever field the
+    test author imagined would reproduce the bug rather than catch it.
+    """
+
+    def _result(self, *records):
+        from engine.state import LineState, ReasonCode, TransitionRecord
+
+        return FakeResult(transitions=tuple(
+            TransitionRecord(bar, LineState.BROKEN_OUT, LineState.NONE, ReasonCode[name])
+            for bar, name in records
+        ))
+
+    def test_every_terminal_outcome_name_exists_on_the_engines_ReasonCode(self):
+        # If the engine renames one, this fails here rather than degrading the
+        # classifier to a constant.
+        from engine.state import ReasonCode
+
+        for name in backtest.TERMINAL_OUTCOMES:
+            self.assertTrue(hasattr(ReasonCode, name), f"{name} is not a ReasonCode")
+
+    def test_a_post_breakout_terminal_transition_is_returned(self):
+        for name in backtest.TERMINAL_OUTCOMES:
+            with self.subTest(outcome=name):
+                result = self._result((12, name))
+                self.assertEqual(backtest._episode_outcome(result, 10), name)
+
+    def test_a_transition_at_or_before_the_breakout_bar_is_not_this_episodes_fate(self):
+        result = self._result((10, "RETEST_HELD"), (8, "FAILED_BREAKOUT"))
+        self.assertEqual(backtest._episode_outcome(result, 10), "OPEN_AT_SERIES_END")
+
+    def test_the_FIRST_post_breakout_terminal_transition_wins(self):
+        result = self._result((12, "RETEST_HELD"), (15, "FAILED_BREAKOUT"))
+        self.assertEqual(backtest._episode_outcome(result, 10), "RETEST_HELD")
+
+    def test_a_non_terminal_post_breakout_transition_leaves_the_episode_open(self):
+        result = self._result((12, "WICK_BREAK"))
+        self.assertEqual(backtest._episode_outcome(result, 10), "OPEN_AT_SERIES_END")
+
+    def test_it_raises_rather_than_defaulting_when_the_record_shape_is_wrong(self):
+        # The regression itself: a record lacking `reason` must be an error, not
+        # a silent OPEN_AT_SERIES_END.
+        @dataclass(frozen=True)
+        class RecordWithoutReason:
+            bar: int
+
+        with self.assertRaises(AttributeError):
+            backtest._episode_outcome(FakeResult(transitions=(RecordWithoutReason(12),)), 10)

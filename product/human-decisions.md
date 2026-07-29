@@ -1823,11 +1823,33 @@ why**. It failed closed and silently.
 6. Every rejection must return a **structured, observable** reason carrying symbol, date, detected
    jump, threshold, relevant split coefficient and rejection reason.
 
-**How it is implemented, in four cases.** With a feed: no split at the bar → **ACCEPT** (real
-movement); split whose implied `ln(coefficient)` **matches** the observed jump → **REJECT**
-(confirmed defect); split whose implied jump **does not match** → **ACCEPT** (already adjusted —
-adjusting twice would be the error). **Without a feed → reject conservatively**, because the two
-hypotheses are genuinely indistinguishable from prices alone.
+**How it is implemented, in FIVE cases.** *(This read "four cases" and enumerated only the original
+four while the engine had already grown to five. Code Review caught it. The enumeration is not
+decoration: this document states four lines below that what HD-27 changed is **when**
+`SUSPECTED_UNADJUSTED_SPLIT` fires — so an enumeration that omits two branches omits exactly the
+ruled content, and the ruling is the authority an operator or the next agent reads.)*
+
+1. **No feed** → **REJECT** conservatively. The two hypotheses are genuinely indistinguishable
+   from prices alone. This is the branch GX-10 lands in.
+2. **Coefficient unusable** — non-finite, zero, or negative → **REJECT**. Absent evidence, not a
+   mismatch; the rejection names the value and asserts nothing about adjustment.
+3. **No split at the bar** (coefficient 1.0) → **ACCEPT**. Real market movement. This is AAPL
+   2000-09-29.
+4. **Split at the bar, and the observed move matches `ln(coefficient)` in BOTH direction and
+   magnitude** → **REJECT**. Confirmed adjustment defect. *Direction is part of the test: an
+   unadjusted forward split makes prices fall and an unadjusted reverse split makes them rise, so
+   a same-magnitude move the other way is not that split.*
+5. **Split at the bar, but direction or magnitude does not match** → **ACCEPT**. Prices are
+   already adjusted and something else moved the stock; re-adjusting would be adjusting twice.
+
+**Which way the DIRECTION test errs, stated with the same discipline as the tolerance.** It errs
+toward accepting, and the cost is specific and worth naming: an **over-adjusted** series — where a
+vendor reports a spurious coefficient and normalization divides already-adjusted prices *again*,
+producing a `+ln(c)` jump at the split bar — now lands in case 5 and is **ACCEPTED**. Over-adjustment
+is therefore **not detected at all**. That is a deliberate, disclosed gap rather than an oversight:
+`+ln(c)` at a split bar is genuinely ambiguous between over-adjustment and a real `c`× move, and
+separating them needs a distinct over-adjustment hypothesis that **no ruling has supplied**. Logged
+as **M-68**. Forcing a verdict there would be a product-definition change and is reserved.
 
 **GX-10 disposition — RULED by the Product Owner, 2026-07-29, and no longer an open question.**
 
@@ -1870,7 +1892,18 @@ directly. Re-measured by mutating the constant against the full suite: green at 
 against *widening* — the direction of the HD-27 defect — but only loosely against narrowing: the
 suite is still green at 0.031, because the tightest lower pin is
 `test_a_2_to_1_unadjusted_split_is_rejected_when_the_feed_confirms_it`, whose discrepancy is
-0.0298. A constant bracketed on one side is not a constant bracketed.
+**0.030772** = `|ln(96/49.5) − ln 2|`. A constant bracketed on one side is not a constant
+bracketed.
+
+*Corrected: this read `0.0298`, and Verification FAILED the head on it — rightly. The number was
+not a rounding slip but a falsifiable claim of downward slack that does not exist: setting the
+constant to 0.0298 turns the suite **red**, including the very test named here as the pin.
+Measured: 0.0298 FAIL · 0.0300 FAIL · 0.030772 PASS · 0.031 PASS. *(The failure **count** at 0.0298
+differs by injection method — Verification observed 4, a re-measurement via module attribute
+observed 2 — so no count is asserted here. The pass/fail boundary is what the pin claims and it
+reproduces both ways.)* Written into the
+paragraph whose subject is asserting numbers one has not measured, and caught independently by two
+gates. Logged as **M-71**, because the third instance of a pattern is no longer an incident.*
 
 The tolerance **errs toward accepting**,
 because a missed defect surfaces later as anomalous geometry, whereas a wrongly rejected symbol
