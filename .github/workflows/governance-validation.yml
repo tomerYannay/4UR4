@@ -209,11 +209,18 @@ jobs:
           # swallows the failure it sits above is strictly worse than no floor.
           set -o pipefail
           python3 -m unittest discover -s tools/research -t . -p "test_*.py" 2>&1 | tee /tmp/research.log
-          # `|| true` keeps the assignment off the `set -e` path. Without it, an
-          # import error produces no "Ran N" line, grep exits 1, `set -e` aborts
-          # the step HERE, and the ::error:: annotation below never prints — the
-          # right exit code with the diagnostic thrown away, which is the one
-          # thing this block exists to provide.
+          # `|| true` is defence in depth and is currently UNREACHABLE: pipefail
+          # aborts at the pipeline above on any non-zero unittest exit, so this
+          # line runs only after a clean exit, and a clean exit always emits a
+          # "Ran N" line (including "Ran 0 tests"). It guards the one shape that
+          # would otherwise slip past — a green run with no such line.
+          #
+          # An earlier version of this comment claimed the `|| true` was what
+          # made the ::error:: annotation print on an import error. Code Review
+          # measured the step with and without it across six scenarios and got
+          # identical results in all six; the annotation's absence on a missing
+          # `__init__.py` is unchanged either way. Corrected rather than left
+          # standing five lines under "Measured, not theorised."
           count=$(grep -oE '^Ran [0-9]+ test' /tmp/research.log | grep -oE '[0-9]+') || true
           if [ -z "$count" ] || [ "$count" -lt 30 ]; then
             echo "::error::research harness discovered ${count:-0} tests, expected >= 30 — discovery is broken, not the suite"

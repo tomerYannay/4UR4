@@ -526,8 +526,6 @@ class Gx10ContractIsPreserved(unittest.TestCase):
         self.assertEqual(verdict.rejections[0].bar, 4)
 
 
-if __name__ == "__main__":  # pragma: no cover
-    unittest.main()
 
 
 class UncoercibleIsUnusableIncludingTheTypesThatCoerceTooWell(unittest.TestCase):
@@ -574,3 +572,7 @@ class UncoercibleIsUnusableIncludingTheTypesThatCoerceTooWell(unittest.TestCase)
         verdict = self._verdict("2.0")
         self.assertTrue(verdict.rejected)
         self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    unittest.main()

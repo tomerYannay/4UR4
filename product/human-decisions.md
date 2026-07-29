@@ -1831,9 +1831,17 @@ ruled content, and the ruling is the authority an operator or the next agent rea
 
 1. **No feed** → **REJECT** conservatively. The two hypotheses are genuinely indistinguishable
    from prices alone. This is the branch GX-10 lands in.
-2. **Coefficient unusable** — non-finite, zero, negative, **or not coercible to a number at all**
-   (`None`, `"n/a"`, a list) → **REJECT**. Absent evidence, not a mismatch; the rejection names
-   what the feed *recorded*, not the `NaN` it became, and asserts nothing about adjustment.
+2. **Coefficient unusable** → **REJECT**. Four kinds: non-finite · zero or negative · not
+   coercible to a number at all (`None`, `"n/a"`, a list, an integer too large for a float) ·
+   **a boolean**. Absent evidence, not a mismatch; the rejection names what the feed *recorded*,
+   not the `NaN` it became, and asserts nothing about adjustment.
+   *(The boolean is listed explicitly because it is what this enumeration previously mis-routed.
+   `True` is finite, positive, non-zero and coerces cleanly to `1.0`, so under the earlier wording
+   it fell into **case 3** — "no split at this bar, ACCEPT" — while the engine rejects it. An
+   operator reading the ruling would have concluded the engine was misbehaving, and the next agent
+   would have read case 3 and reverted the check as a bug. The same defect as the case-5 correction
+   above with the sides swapped: there the ruling claimed more than the code, here it claimed
+   less.)*
 3. **No split at the bar** (coefficient 1.0) → **ACCEPT**. Real market movement. This is AAPL
    2000-09-29.
 4. **Split at the bar, and the observed move matches `ln(coefficient)` in BOTH direction and
@@ -1890,9 +1898,13 @@ whose discrepancy is 0.47, which passes at every tolerance below it. The claim w
 the one place this repository is least entitled to make one — asserting test coverage for the
 single tuned constant the change introduces. `ToleranceIsPinnedAtTheRulingsOwnCase` now supplies
 it: the 2.34× drop measures `jump = 0.850151` and `|jump − ln 2| = 0.157004`, and
-`test_the_constant_cannot_be_widened_past_this_case` asserts `SPLIT_MATCH_TOLERANCE < 0.157`
-directly. Re-measured by mutating the constant against the full suite: green at 0.15, **FAILED at
-0.25, 0.3, 0.4 and 0.47**.
+`test_the_constant_cannot_be_widened_past_this_case` asserts the constant against the **computed**
+discrepancy `0.157004` rather than against a literal — so the suite is green at exactly `0.157`
+and fails from `0.158`. Re-measured by mutating the constant against the full suite: green at 0.15
+and 0.157, **FAILED at 0.158, 0.25, 0.3, 0.4 and 0.47**. *(This sentence read "asserts
+`SPLIT_MATCH_TOLERANCE < 0.157` directly", which misnames its own emitter and is wrong at exactly
+one measured value — written, again, in the paragraph whose subject is asserting numbers one has
+not measured. Found by Code Review.)*
 
 **The pin is one-sided, and that is recorded rather than left to be assumed.** It binds hard
 against *widening* — the direction of the HD-27 defect — but only loosely against narrowing: the

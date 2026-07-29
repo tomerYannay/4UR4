@@ -79,18 +79,31 @@ class CorporateActions:
         ``ValueError``, so ``{bar: 10**400}`` still escaped ``detect()`` after
         the first two were handled.  A JSON payload with a bare integer literal
         and no decimal point decodes to an arbitrary-precision ``int``, and
-        ``float()`` on a large enough one raises.  Not reachable through the
-        pilot's provider, which coerces the raw string first — latent, not live,
-        and fixed rather than documented as a caveat because the docstring above
-        it promised unconditionally that uncoercible values become ``nan``.
+        ``float()`` on a large enough one raises.  **Reachable**: the pilot's
+        provider coerces on the *fetch* path but its cache reader passes
+        ``splits_applied`` straight out of JSON with no coercion, so a cache
+        file carrying ``true`` or a 400-digit integer delivers exactly these
+        values.  A first version of this docstring called it "latent, not live"
+        on the strength of the fetch path alone; Code Review reproduced it
+        through the cache path.  Fixed rather than documented as a caveat,
+        because the paragraph above promised unconditionally that uncoercible
+        values become ``nan``.
 
         A ``bool`` is deliberately treated as unusable rather than coerced.
         ``float(True)`` is ``1.0``, which the guard reads as *"no split at this
         bar"* and then emits evidence affirmatively denying a split occurred —
         a malformed feed value silently becoming a positive claim.  ``bool`` is
-        not a ratio, and it is the one type where successful coercion is worse
-        than failure.  It is checked by type because that is the only way to
-        catch it: unlike ``'n/a'``, it coerces cleanly.
+        not a ratio, and it is a type where successful coercion is worse than
+        failure.  It is checked by type because that is the only way to catch
+        it: unlike ``'n/a'``, it coerces cleanly.
+
+        Not *the* one such type, which an earlier wording claimed: **any** object
+        whose ``__float__`` returns 1.0 produces the same false "no split at
+        this bar" claim and is not caught here.  Nothing in-product can supply
+        one — A-2 restricts engine imports to a stdlib subset — so the check is
+        deliberately narrow rather than a general "is this a plausible ratio"
+        test, which would be the product-definition call this module keeps
+        declining to take.
         """
         recorded = self.recorded_at(bar_index)
         if isinstance(recorded, bool):
@@ -213,11 +226,15 @@ def _adjudicate_jump(
     * **No split feed** — the two hypotheses are indistinguishable from prices
       alone, so the bar-set is rejected conservatively. This is the pre-HD-27
       behaviour and it is what keeps GX-10 (a synthetic 2:1 with no feed) green.
-    * **Feed present, coefficient unusable** — a non-finite, non-positive or
-      non-numeric coefficient is *absent evidence*, not a mismatch: ``ln`` is
-      undefined on it and there is nothing to compare the jump against. Rejected
-      on the same reasoning as no feed at all, and the evidence says so rather
-      than claiming anything about adjustment.
+    * **Feed present, coefficient unusable** — non-finite, non-positive,
+      non-numeric, **or a boolean** — is *absent evidence*, not a mismatch:
+      ``ln`` is undefined on it and there is nothing to compare the jump
+      against. Rejected on the same reasoning as no feed at all, and the
+      evidence says so rather than claiming anything about adjustment.
+      *(The boolean is named separately because the other three words do not
+      cover it: ``True`` is finite, positive and numeric — ``bool`` subclasses
+      ``int`` — so this list previously described a branch its own code did not
+      have. See ``coefficient_at`` for why a boolean is unusable.)*
     * **Feed present, no split at this bar** — a real market event. **ACCEPT.**
       This is AAPL 2000-09-29: −51.9% on a profit warning, split coefficient 1.0.
     * **Feed present, split here, and the move matches the split in BOTH
