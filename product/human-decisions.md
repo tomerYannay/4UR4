@@ -1974,9 +1974,27 @@ and the reason says only what was measured.*
 GX-10's no-feed contract is byte-identical; `detect()` still defaults `corporate_actions=None`, so
 all 23 golden fixtures and RM-01 take the no-feed branch and cannot move.
 
-**Consequence for the pilot's published numbers.** The 40-symbol figures were produced while the
-wrong-direction ACCEPT was active. The run is repeated under this ruling and the numbers are
-reported as measured under it, not carried forward.
+**Consequence for the pilot's published numbers — RERUN COMPLETE, measured under this ruling.**
+The 40-symbol run was repeated at commit `6a873ab` and every figure below is measured under HD-29,
+not carried forward:
+
+- **40 attempted · 40 COMPLETE · 0 rejected · 0 timed out · 0 insufficient · 0 provider errors.**
+- **306 raw breakouts · 255 non-overlapping · 6 excluded** for an incomplete forward window.
+- **AAPL preserved end-to-end**: COMPLETE, **3 breakouts**, **1 inspected-and-accepted** extreme
+  jump (bar 231, 2000-09-29, log jump `0.618163` on the adjusted **high** series, coefficient
+  `1.0`), `final_state RETESTED`, **no silent rejection** — the verdict text now reads *"no split
+  at this bar **on a feed that covers it**"*, so HD-29's coverage requirement is visible in the
+  emitted evidence rather than only in the code.
+- **Zero ambiguous-evidence rejections**, and that is a finding rather than an absence: no symbol in
+  this universe reached the wrong-direction or uncovered-bar branch. All **four** accepted extreme
+  jumps sat on feeds explicitly covering the bar at coefficient `1.0` — *confirmed evidence of no
+  split*, which this ruling keeps categorically distinct from silence. **The pilot supplies no
+  real-market instance of over-adjustment**; those branches are exercised by the engine suite only.
+
+*Labelled before/after diagnostic, and the only comparison drawn:* HD-29 changed **no** pilot
+outcome — identical status table, identical 306/255, identical statistics. Expected, since the new
+branches are unreached here. The earlier figures were therefore not wrong; they were **unverified
+against a ruling that had not been made**, and now they are measured under it.
 
 # Delegated product decisions (HD-21)
 
