@@ -314,14 +314,30 @@ def _adjudicate_jump(
     # gate the guard REJECTED it as "unadjusted for this split"; after it, the
     # guard ACCEPTS.
     #
-    # ``c=10.0`` and the reverse mirror ``c=0.1`` are ALSO accepted here, but
-    # they are not the same measurement and an earlier wording said "same for":
-    # on this series ``|jump - |ln c||`` is 1.609438 for both, far outside the
-    # 0.15 tolerance, so the magnitude test alone already accepted them and this
-    # gate changed nothing.  The gate flipped exactly one of the three, ``c=2.0``,
-    # where the magnitudes match to 0.000000.  "Same" was true of the outcome and
-    # false of the transition, which is the kind of blanket extension past the
-    # measurement that M-71 exists to log.
+    # ``c=10.0`` and the reverse mirror ``c=0.1`` behave the same way — and the
+    # CONSTRUCTION has to be named, because the answer depends on it and two
+    # successive versions of this comment each got it wrong by leaving it out:
+    #
+    # * **Coefficient-matched** (each ``c`` with ITS OWN over-adjusted series, so
+    #   the jump is ``+ln c``: ``c=10`` with ``[48 ... 480]``, ``c=0.1`` with
+    #   ``[100 ... 10]``).  This is what over-adjustment ACTUALLY IS for those
+    #   coefficients, and it is the construction
+    #   ``test_the_gap_is_the_same_at_other_coefficients_and_in_the_mirror``
+    #   uses.  Measured: ``|jump - |ln c||`` is 0.000000 for all three, all three
+    #   REJECTED before this gate and ACCEPT after.  **The gate flips all three.**
+    # * **Fixed series, swapped coefficient** (keep ``[48 ... 96]`` and change
+    #   only ``c``).  Then ``|jump - |ln c||`` is 1.609438 for ``c=10`` and
+    #   ``c=0.1``, outside the 0.15 tolerance, so the magnitude test alone
+    #   already accepted them and the gate changes nothing — it flips only
+    #   ``c=2.0``.  But ``[48 ... 96]`` is not an over-adjusted series for
+    #   ``c=10`` at all, so this construction does not exhibit the phenomenon.
+    #
+    # An earlier wording said "same for ``c=10.0`` and ``c=0.1``" without naming
+    # a construction; a later one "corrected" it to "the gate flipped exactly one
+    # of the three", which is true only of the construction that does not
+    # exhibit over-adjustment. The first was right about the phenomenon and the
+    # second was right about its own arithmetic. Naming the construction is the
+    # fix; M-71 logs the pattern.
     #
     # This is a DETECTION GAP ACCEPTED DELIBERATELY, not an oversight.  A
     # ``+ln(c)`` step at a split bar is genuinely ambiguous — over-adjustment
@@ -357,10 +373,14 @@ def _adjudicate_jump(
         )
     # The mismatch is measured; the CAUSE of it is not.  "Already adjusted" is
     # the ordinary explanation and is worth naming, but it is a hypothesis this
-    # branch never tested — and a finite-but-absurd coefficient (1e-12, 1e12,
-    # 5e-324) reaches here and mismatches by construction, where asserting the
-    # prices are already adjusted is no better established than it was for the
-    # ``nan`` case B2 fixed.  So the evidence reports the mismatch and stops.
+    # branch never tested — and a finite-but-absurd coefficient can reach here
+    # and mismatch by construction, where asserting the prices are already
+    # adjusted is no better established than it was for the ``nan`` case B2
+    # fixed.  WHICH absurd coefficient reaches here depends on the SIGN of the
+    # jump, not on how large ``|ln c|`` is: on a downward jump ``1e12`` arrives
+    # here while ``1e-12`` and ``5e-324`` exit at the direction gate above; on an
+    # upward jump that inverts exactly.  ``|ln 1e-12|`` and ``|ln 1e12|`` are the
+    # same number (27.631021), so magnitude cannot be what separates them.  So the evidence reports the mismatch and stops.
     # No plausibility threshold is applied: bounding what counts as a credible
     # coefficient would be a product-definition change, not a wording fix.
     return (

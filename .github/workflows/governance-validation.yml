@@ -185,12 +185,16 @@ jobs:
         #
         # The floor below is 30 — SIX UNDER the current count, deliberately.
         # It catches broken DISCOVERY (a rename, a re-home, a lost __init__.py),
-        # not a deleted test: five harness tests could be removed with this gate
-        # still green. Said explicitly because the comment previously read "these
+        # not a deleted test: SIX harness tests could be removed with this gate
+        # still green -- the check is `-lt 30`, so count=30 still passes.
+        # Measured: count=31 GREEN, count=30 GREEN, count=29 RED. An earlier
+        # wording said five, contradicting the "SIX UNDER" two lines above it
+        # and making the gate look tighter than it is. Said explicitly because the comment previously read "these
         # 30 tests" while the suite was 36, which invited exactly the opposite
         # reading — that the floor was coincident with the suite and so caught
         # any loss. The numeral was right when written and went stale two commits
-        # later; the emitter is on the line below and returns 36.
+        # later. The emitter is the `unittest discover` in this step's `run:`
+        # block below, which reports "Ran 36 tests".
         #
         # `engine.tests.run_all`
         # discovers only `engine/tests`, so until this step existed no gate ran

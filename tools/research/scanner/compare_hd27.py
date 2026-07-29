@@ -67,7 +67,7 @@ def _breakouts_before(complete_rows):
 
     The derivation, so it can be checked rather than trusted: adjudication runs
     **only** when a jump exceeds the threshold. A symbol with
-    ``before_rejected == False`` had no such jump, so HD-27's four-case logic is
+    ``before_rejected == False`` had no such jump, so HD-27's adjudication logic is
     never reached and the guard verdict is bit-identical under both rules —
     therefore so is the geometry, and its breakout count carries over unchanged.
     A symbol with ``before_rejected == True`` had its whole bar-set rejected by

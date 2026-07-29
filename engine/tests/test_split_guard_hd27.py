@@ -6,7 +6,8 @@ and the §18 guard read it as ``SUSPECTED_UNADJUSTED_SPLIT`` and rejected the
 **entire 26-year bar-set**. The engine emitted nothing for AAPL: ``final_state
 NONE``, zero breakouts, and no diagnostic that said why.
 
-The four cases the Product Owner named are each a test below, and the real
+The four cases the Product Owner named are each a test below (the engine now
+implements five — the unusable-coefficient and direction branches were added later), and the real
 numbers are used rather than invented ones — a synthetic 50% drop would prove
 the arithmetic but not that the guard behaves correctly on the event that
 actually broke it.
@@ -472,9 +473,13 @@ class AnAbsurdCoefficientAssertsNoCauseItDidNotEstablish(unittest.TestCase):
     """Finite but absurd ratios reach ACCEPT and must not claim a reason.
 
     1e-12, 1e12 and 5e-324 are finite and positive, so they pass the usability
-    guard and mismatch by construction. The ACCEPT they landed on asserted
-    "prices are already adjusted, so this is market movement" — an assertion no
-    better established than it was for the ``nan`` case B2 fixed.
+    guard and are accepted. On this class's DOWNWARD series only ``1e12`` reaches
+    the magnitude-mismatch ACCEPT that asserted "prices are already adjusted, so
+    this is market movement" — an assertion no better established than it was for
+    the ``nan`` case B2 fixed. ``1e-12`` and ``5e-324`` exit at the direction gate
+    instead. That split is a property of the jump's SIGN, not of ``|ln c|``:
+    ``|ln 1e-12| == |ln 1e12| == 27.631021``, and on an upward series the
+    assignment inverts.
 
     No plausibility threshold is added: bounding what counts as a credible
     coefficient would be a product-definition change, out of scope here. The
