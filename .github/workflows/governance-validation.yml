@@ -201,6 +201,13 @@ jobs:
         # green while asserting nothing — the very failure the step exists to
         # end, one layer up, and indistinguishable from a real pass.
         run: |
+          # `set -o pipefail` is load-bearing, not boilerplate. A pipeline's exit
+          # status is its LAST command's, so `unittest ... | tee` reports tee's
+          # success and `set -e` never fires: the first version of this step
+          # exited GREEN on a suite with 3 failures, because the count check
+          # passed and nothing else looked. Measured, not theorised. A floor that
+          # swallows the failure it sits above is strictly worse than no floor.
+          set -o pipefail
           python3 -m unittest discover -s tools/research -t . -p "test_*.py" 2>&1 | tee /tmp/research.log
           count=$(grep -oE '^Ran [0-9]+ test' /tmp/research.log | grep -oE '[0-9]+')
           if [ -z "$count" ] || [ "$count" -lt 30 ]; then
