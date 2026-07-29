@@ -15,7 +15,7 @@ from .bars import BarSeries, Prefix, Provenance
 from .causal import CausalResult, run
 from .envelope import Selection, select_second_anchor
 from .frozen import Challenger, FrozenLine
-from .guards import GuardVerdict, run_guards
+from .guards import CorporateActions, GuardVerdict, run_guards
 from .line import Line
 from .logspace import ln_price
 from .params import DetectorParams

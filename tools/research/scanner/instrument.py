@@ -1,8 +1,13 @@
 """Lightweight profiling for the pilot — counters, not a sampling profiler.
 
 Wraps the engine's hot functions **from outside**; no engine module is modified
-and nothing here is imported by the engine (architecture test A-3 forbids the
-reverse direction and is what keeps this honest).
+and nothing here is imported by the engine. What actually keeps that honest is
+``A2Purity.test_the_only_dependency_is_a_narrow_standard_library_subset``, whose
+allowlist is ``{math, decimal, dataclasses, enum, typing, __future__}`` — a root
+``tools`` import fails it. (An earlier version of this docstring credited A-3;
+two reviewers independently found that A-3's substring checks for ``"tools/"``
+and ``'"tools"'`` miss a dotted ``from tools.research… import``, so the
+attribution was wrong even though the guarantee holds.)
 
 What it measures, and why these:
 
@@ -37,8 +42,10 @@ _TARGETS = (
     ("select_second_anchor", ("engine.envelope", "engine.detector", "engine.formation")),
     ("_worst_gap", ("engine.envelope",)),
     ("domination_set", ("engine.envelope",)),
-    ("y_hat", ("engine.logspace", "engine.envelope", "engine.causal",
-               "engine.trace", "engine.line", "engine.frozen")),
+    # `engine.causal`, `engine.trace` and `engine.frozen` reference `y_hat`
+    # only in prose, not by import, so listing them was inert. Verified by the
+    # `is not real` skip never firing for them.
+    ("y_hat", ("engine.logspace", "engine.envelope", "engine.line")),
 )
 
 
@@ -81,8 +88,6 @@ class Instrumented:
         self._saved: list = []
 
     def __enter__(self) -> "Instrumented":
-        import importlib
-
         c = self.counters
 
         def make(attr, real):
@@ -108,7 +113,21 @@ class Instrumented:
                     return real(*a, **k)
             return wrapper
 
-        for attr, module_names in _TARGETS:
+        try:
+            self._install(_TARGETS, make)
+        except BaseException:
+            # A partial __enter__ never gets a matching __exit__, so already
+            # patched bindings would stay installed for the life of the process
+            # and every later symbol's profile would be silently misattributed
+            # to a dead Counters. Unwind what we managed to install.
+            self.__exit__()
+            raise
+        return self
+
+    def _install(self, targets, make) -> None:
+        import importlib
+
+        for attr, module_names in targets:
             # One shared wrapper per attribute so a call through any binding
             # increments the same counter exactly once.
             real = getattr(importlib.import_module(module_names[0]), attr)
@@ -119,7 +138,6 @@ class Instrumented:
                     continue  # not bound here, or already wrapped
                 setattr(mod, attr, wrapper)
                 self._saved.append((mod, attr, real))
-        return self
 
     def __exit__(self, *_exc) -> None:
         for mod, name, real in self._saved:

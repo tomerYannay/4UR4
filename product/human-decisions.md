@@ -1729,7 +1729,7 @@ them together would level exactly the distinction these headings exist to keep.*
 
 ---
 
-## HD-26 — Exploratory Alpha Vantage pilot: scoped GOV-015 lift, NOT HD-06 · materiality: **high**
+## HD-26 — Exploratory Alpha Vantage pilot: NO GOV-015 lift, NOT HD-06 · materiality: **high**
 
 - **Status:** **APPROVED — Product Owner, 2026-07-29.** Relayed in session.
 - **Artifact:** **NONE.** No issue comment, no PR review, no commit trailer. Same disclosure
@@ -1748,17 +1748,29 @@ enforcement mechanism to authorize the thing the mechanism exists to stop. **HD-
 `scanner` frozen and this ruling does not disturb that.**
 
 **Where it actually lives: `tools/research/`.** `tools` is **not** in `PRODUCT_CODE_DIRS`, so no
-scope change is needed or made. Better, the separation is enforced **by an existing test rather
-than by prose**: architecture test **A-3** permits engine modules to reference only the `engine`
-and `product` siblings, so an engine module importing anything under `tools/` fails the suite.
-Requirement 3 — production/runtime engine code must not depend on the pipeline — is therefore
-mechanical, not a convention. Verified at this head: no `engine/` module references
-`tools.research` in any form.
+scope change is needed or made. Requirement 3 — production/runtime engine code must not depend on
+the pipeline — is **mechanical, not a convention**, but by a different test than first claimed:
+`A2Purity.test_the_only_dependency_is_a_narrow_standard_library_subset` allows engine production
+modules to import only `{math, decimal, dataclasses, enum, typing, __future__}`, so a root `tools`
+import fails the suite.
+
+**Attribution corrected, because the first version of this paragraph credited the wrong test and
+two reviewers caught it independently.** It said architecture test **A-3** enforced this. A-3's
+assertions are substring checks — `assertNotIn("tools/", source)` and `assertNotIn('"tools"',
+source)` — and a dotted `from tools.research.providers import alphavantage` contains neither, so
+A-3 would pass it. The conclusion was right and the mechanism named for it was wrong.
+
+**The residual gap, stated rather than left implicit.** A-2's allowlist iterates `PRODUCT_MODULES`
+(top-level `engine/*.py`), which is exactly the production surface Requirement 3 names. Test
+modules under `engine/tests/` are covered only by A-3's substring check and could therefore import
+`tools.research` undetected. Verified at this head: no `engine/` module, test or production,
+references `tools.research` in any form.
 
 **This is expressly NOT [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high).**
 No provider is selected for production, **no recurring spend is authorized**, and no licence is
-accepted. HD-06 remains **PENDING**. The lift is **revocable**: deleting the two entries from the
-marker re-freezes both directories on the next CI run.
+accepted. HD-06 remains **PENDING**. There is **no lift to revoke**: the marker stands at
+`scope: ["engine/"]`, and revocation of this pilot means deleting `tools/research/`, not editing
+the marker.
 
 **The licence position, recorded because it constrains the output and was not waived.**
 [`data-provider-findings.md`](data-provider-findings.md) §E records, **VERIFIED against the Terms
@@ -1839,9 +1851,28 @@ changed is **when** `SUSPECTED_UNADJUSTED_SPLIT` fires, not the code set.
 
 **The match tolerance, and which way it errs.** A split of ratio `c` on unadjusted prices implies
 an observed jump of `|ln(c) − ln(1+r)|` for that day's genuine move `r`, so the tolerance bounds
-`|ln(1+r)|`. It is **0.15** (~±16% same-day movement). *An initial 0.25 was wrong and a regression
-test caught it: at 0.25 a 2:1 split "matched" anything from 1.56× to 2.57×, and a genuine 2.34×
-crash on a split date was misattributed as a defect.* The tolerance **errs toward accepting**,
+`|ln(1+r)|`. It is **0.15** (~±16% same-day movement). At an initial 0.25 a 2:1 split "matched"
+anything from 1.56× to 2.57×, so a genuine **2.34× crash landing on a split date** was
+misattributed as an adjustment defect.
+
+**Correction of record — this paragraph previously claimed "a regression test caught it," and no
+such test existed.** A code review mutated the constant and measured the suite green at 0.031,
+0.15, 0.3, 0.4 **and 0.47**: nothing failed at 0.25. The only case in that region used a 3.2× drop
+whose discrepancy is 0.47, which passes at every tolerance below it. The claim was false, and in
+the one place this repository is least entitled to make one — asserting test coverage for the
+single tuned constant the change introduces. `ToleranceIsPinnedAtTheRulingsOwnCase` now supplies
+it: the 2.34× drop measures `jump = 0.850151` and `|jump − ln 2| = 0.157004`, and
+`test_the_constant_cannot_be_widened_past_this_case` asserts `SPLIT_MATCH_TOLERANCE < 0.157`
+directly. Re-measured by mutating the constant against the full suite: green at 0.15, **FAILED at
+0.25, 0.3, 0.4 and 0.47**.
+
+**The pin is one-sided, and that is recorded rather than left to be assumed.** It binds hard
+against *widening* — the direction of the HD-27 defect — but only loosely against narrowing: the
+suite is still green at 0.031, because the tightest lower pin is
+`test_a_2_to_1_unadjusted_split_is_rejected_when_the_feed_confirms_it`, whose discrepancy is
+0.0298. A constant bracketed on one side is not a constant bracketed.
+
+The tolerance **errs toward accepting**,
 because a missed defect surfaces later as anomalous geometry, whereas a wrongly rejected symbol
 produces nothing at all and looks indistinguishable from an absence of signal — which is the
 failure HD-27 exists to end.

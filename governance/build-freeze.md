@@ -167,7 +167,7 @@ rule 4 remains unsatisfied and Phase-3 implementation does not begin.** See
 
 **The marker's `scope` is UNCHANGED, and the reason is a limit rather than a reassurance.**
 Phase 3 work is inside `engine/`, the directory the Phase-2 lift already names, so
-`scope` was `["engine/"]` at the time of that ruling and **did not change for it** — *superseded 2026-07-29 by HD-26, which adds `providers/` and `scanner/` for the exploratory pilot; the reasoning below still holds for HD-24 §3 itself, which added no directory* : the marker is a list of directory
+`scope` was `["engine/"]` at the time of that ruling and **did not change for it** — *HD-26 (2026-07-29) likewise added no directory: its first revision did, and that widening was reverted on Product Owner ruling* : the marker is a list of directory
 names checked against the validator's guarded list, and this lift widens **authorized
 behaviour within** a directory, not the directory list. The consequence must be stated:
 **`tools/validate.mjs` CANNOT DISTINGUISH Phase-2 work from Phase-3 work inside `engine/`.**
@@ -233,10 +233,13 @@ lifted_at: "2026-07-28"
 # HD-22 (Phase 2) and HD-24 §3 (Phase 3) are BOTH inside `engine/`, so the validator
 # cannot tell Phase-2 work from Phase-3 work — that gap is stated in the Phase 3
 # section above rather than left to be discovered.
-# HD-26 (2026-07-29) adds `providers/` and `scanner/` for the EXPLORATORY pilot only.
-# That lift is REVOCABLE and is not HD-06: no provider is selected for production and
-# no recurring spend is authorized.  Deleting those two entries re-freezes both
-# directories on the next CI run, which is what keeps the boundary mechanical.
+# HD-26 (2026-07-29) adds NOTHING here, deliberately.  An earlier revision widened this
+# list to ["engine/", "providers/", "scanner/"] so an exploratory pilot would pass, and
+# the Product Owner reverted it: "a freeze marker is an enforcement mechanism, not a
+# source of authorization."  The pilot lives in `tools/research/`, and `tools` is not in
+# the validator's PRODUCT_CODE_DIRS, so no entry is needed.  If you are here because some
+# record told you `providers/` and `scanner/` belong in this list: they do not, and that
+# record is the residue of the reverted attempt.
 scope: ["engine/"]
 ```
 

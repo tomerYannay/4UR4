@@ -1,6 +1,6 @@
 """Run the exploratory, survivor-biased pilot and write a JSON result blob.
 
-    python3 -m scanner.run_pilot [--limit N] [--cache DIR] [--out FILE]
+    python3 -m tools.research.scanner.run_pilot [--limit N] [--cache DIR] [--out FILE]
 
 Requires ``ALPHA_VANTAGE_API_KEY`` in the environment. Nothing here prints,
 stores or commits the key.

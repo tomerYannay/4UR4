@@ -19,7 +19,7 @@ import unittest
 
 from engine.bars import Bar, BarSeries
 from engine.detector import detect
-from engine.guards import CorporateActions, run_guards
+from engine.guards import SPLIT_MATCH_TOLERANCE, CorporateActions, run_guards
 from engine.params import DetectorParams
 from engine.state import LineState, ReasonCode
 
@@ -149,6 +149,191 @@ class AlreadyAdjustedIsNotAdjustedTwice(unittest.TestCase):
         self.assertFalse(verdict.rejected, "a real move on a split date was misattributed")
         self.assertEqual(len(verdict.observations), 1)
         self.assertIn("already adjusted", verdict.observations[0].verdict)
+
+
+class ToleranceIsPinnedAtTheRulingsOwnCase(unittest.TestCase):
+    """``SPLIT_MATCH_TOLERANCE`` is pinned by measurement, not by prose.
+
+    HD-27 records that a regression test caught an initial tolerance of 0.25 by
+    misattributing a genuine crash on a split date.  No test actually did: the
+    suite was green at 0.031, 0.15, 0.3, 0.4 **and 0.47**, because the only case
+    in that region (``test_a_crash_that_lands_on_a_split_date_is_not_misattributed``)
+    has a discrepancy of 0.47 and so passes at every tolerance below it.
+
+    This class supplies the missing pin, at the case the ruling reasons about:
+
+    * a **2.34x drop** at a bar whose feed carries ``{4: 2.0}``,
+    * observed log jump ``0.8502``, implied ``ln 2 = 0.6931``,
+    * **discrepancy 0.157**.
+
+    That discriminates exactly the two tolerances in the ruling: at **0.15** the
+    move is ACCEPTED as real market movement (0.157 > 0.15), at **0.25** it is
+    REJECTED as an adjustment defect (0.157 <= 0.25) — the misattribution HD-27
+    was written to stop.  The constant therefore cannot be widened past 0.157
+    without failing here.
+    """
+
+    # A 2.34x drop landing exactly on the 2:1 split bar.
+    PRE = 96.0
+    CLOSES = [99.0, 97.0, 99.0, PRE, PRE / 2.34, 41.0, 42.0, 41.5]
+
+    def test_the_discrepancy_really_is_0_157(self):
+        # Non-vacuity: if the arithmetic drifted, the pin below would stop
+        # discriminating 0.15 from 0.25 and would silently pin nothing.
+        jump = abs(math.log(self.CLOSES[4]) - math.log(self.CLOSES[3]))
+        self.assertAlmostEqual(jump, 0.8502, places=4)
+        self.assertGreater(jump, PARAMS.split_log_jump_threshold)
+        self.assertAlmostEqual(abs(jump - math.log(2.0)), 0.157, places=3)
+
+    def test_a_2_34x_drop_on_a_2_to_1_split_bar_is_ACCEPTED_at_this_tolerance(self):
+        # Fails at 0.25 (and at 0.3, 0.4, 0.47): the guard would reject.
+        verdict = run_guards(series_from(self.CLOSES), PARAMS,
+                             CorporateActions("X", {4: 2.0}))
+        self.assertFalse(
+            verdict.rejected,
+            "a 2.34x crash on a split date was misattributed as an adjustment "
+            "defect — the HD-27 defect itself, at a wider tolerance",
+        )
+        self.assertNotIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertEqual(len(verdict.observations), 1)
+        self.assertIn("already adjusted", verdict.observations[0].verdict)
+
+    def test_the_constant_cannot_be_widened_past_this_case(self):
+        # Stated against the measured discrepancy rather than a literal, so the
+        # bound tracks the case instead of drifting away from it.
+        discrepancy = abs(
+            abs(math.log(self.CLOSES[4]) - math.log(self.CLOSES[3])) - math.log(2.0)
+        )
+        self.assertLess(
+            SPLIT_MATCH_TOLERANCE, discrepancy,
+            f"SPLIT_MATCH_TOLERANCE={SPLIT_MATCH_TOLERANCE} is wide enough to "
+            f"swallow a {discrepancy:.3f} discrepancy, so a genuine 2.34x crash "
+            f"on a split date would be rejected as an adjustment defect (HD-27)",
+        )
+
+
+class AnUnusableCoefficientIsAbsentEvidenceNotAMismatch(unittest.TestCase):
+    """B2 — 0, negative and NaN coefficients must not crash or be waved through.
+
+    ``ln`` is undefined on all three, so there is no implied jump to compare the
+    observation against.  The §18 guard's job is to turn bad input into a
+    *structured rejection*; raising out of ``detect()`` fails that, and so does
+    falling through to ACCEPT with evidence positively asserting that the prices
+    are already adjusted — a claim nothing established.
+    """
+
+    # The 2:1 unadjusted shape, so a genuine defect is present to be missed.
+    CLOSES = [99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]
+
+    def _verdict(self, coefficient):
+        return run_guards(series_from(self.CLOSES), PARAMS,
+                          CorporateActions("X", {4: coefficient}))
+
+    def test_a_zero_coefficient_rejects_instead_of_raising(self):
+        # Was: ValueError('math domain error') escaping detect().
+        verdict = self._verdict(0.0)
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+
+    def test_a_negative_coefficient_rejects_instead_of_raising(self):
+        verdict = self._verdict(-2.0)
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+
+    def test_a_nan_coefficient_is_REJECTED_not_accepted_as_market_movement(self):
+        # Was: rejected=False. A genuinely unadjusted 2:1 admitted as market
+        # movement, because abs(jump - nan) <= tol is False and control fell
+        # through to ACCEPT.
+        verdict = self._verdict(float("nan"))
+        self.assertTrue(verdict.rejected)
+        self.assertEqual(verdict.observations, ())
+
+    def test_the_evidence_names_the_unusable_value_and_claims_nothing_else(self):
+        for coefficient, token in ((0.0, "0.0"), (-2.0, "-2.0"), (float("nan"), "nan")):
+            with self.subTest(coefficient=coefficient):
+                evidence = self._verdict(coefficient).rejections[0].evidence
+                self.assertIn("not a usable ratio", evidence)
+                self.assertIn(token, evidence)
+                # It must not assert a reason it never established.
+                self.assertNotIn("already adjusted", evidence)
+                self.assertNotIn("unadjusted for this split", evidence)
+
+    def test_it_escapes_neither_run_guards_nor_the_public_detect_entry_point(self):
+        result = detect(series_from(self.CLOSES), PARAMS,
+                        corporate_actions=CorporateActions("X", {4: 0.0}))
+        self.assertTrue(result.guard.rejected)
+        self.assertEqual(result.final_state, LineState.NONE)
+        self.assertTrue(result.diagnostics["guard_rejections"])
+
+    def test_the_same_series_with_a_USABLE_coefficient_adjudicates_normally(self):
+        # Control: the new branch intercepts only unusable values, and this
+        # series really does carry the defect the NaN case was admitting.
+        verdict = self._verdict(2.0)
+        self.assertTrue(verdict.rejected)
+        self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+
+
+class ADirectionMismatchIsNotThatSplit(unittest.TestCase):
+    """N1 — an UP-move cannot be a forward split, whatever its magnitude.
+
+    An unadjusted series moves by exactly ``1/c`` across the split bar: a forward
+    split (c > 1) makes prices FALL, a reverse split (c < 1) makes them RISE.
+    Comparing magnitudes alone let 48 -> 96 "match" a 2:1 and produce evidence
+    asserting "the series is unadjusted for this split" — a statement that is
+    simply false, since an unadjusted 2:1 halves prices.
+    """
+
+    def test_a_doubling_on_a_2_to_1_split_bar_is_not_rejected_as_that_split(self):
+        # Was: rejected=True, evidence "implies a log jump of 0.693147 and the
+        # observed jump is 0.693147; the series is unadjusted for this split".
+        closes = [48.0, 47.5, 48.0, 48.0, 96.0, 97.0, 95.0, 96.0]
+        verdict = run_guards(series_from(closes), PARAMS,
+                             CorporateActions("X", {4: 2.0}))
+        self.assertFalse(verdict.rejected)
+        self.assertNotIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertEqual(verdict.rejections, ())
+
+    def test_the_evidence_names_the_direction_and_makes_no_false_claim(self):
+        closes = [48.0, 47.5, 48.0, 48.0, 96.0, 97.0, 95.0, 96.0]
+        verdict = run_guards(series_from(closes), PARAMS,
+                             CorporateActions("X", {4: 2.0}))
+        self.assertEqual(len(verdict.observations), 1)
+        evidence = verdict.observations[0].verdict
+        self.assertIn("wrong direction", evidence)
+        self.assertNotIn("unadjusted for this split", evidence)
+
+    def test_a_reverse_split_still_rejects_on_the_RISE_it_actually_produces(self):
+        # Positive control for the direction rule's other half: an unadjusted
+        # 1:10 makes prices rise tenfold, so |ln(0.1)| = 2.303 UP is the match.
+        # Over-correcting the sign test would silently break this.
+        closes = [10.0, 10.1, 9.9, 10.0, 100.0, 99.0, 101.0, 100.0]
+        verdict = run_guards(series_from(closes), PARAMS,
+                             CorporateActions("X", {4: 0.1}))
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)
+
+    def test_a_crash_on_a_reverse_split_bar_is_a_direction_mismatch(self):
+        # The mirror of the 48 -> 96 case: a 1:10 reverse cannot explain a FALL.
+        closes = [100.0, 99.0, 101.0, 100.0, 10.0, 10.1, 9.9, 10.0]
+        verdict = run_guards(series_from(closes), PARAMS,
+                             CorporateActions("X", {4: 0.1}))
+        self.assertFalse(verdict.rejected)
+        self.assertIn("wrong direction", verdict.observations[0].verdict)
+
+
+class RecordedJumpFieldsKeepTheirMeaning(unittest.TestCase):
+    """Carrying the sign into adjudication must not change what is REPORTED."""
+
+    def test_log_jump_stays_a_magnitude_on_both_rejections_and_observations(self):
+        rejected = run_guards(
+            series_from([99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]),
+            PARAMS, CorporateActions("X", {4: 2.0}))
+        self.assertGreater(rejected.rejections[0].log_jump, 0.0)
+        accepted = run_guards(
+            series_from([99.0, 97.0, 99.0, 96.0, 30.0, 29.0, 31.0, 30.5]),
+            PARAMS, CorporateActions("X", {4: 2.0}))
+        self.assertGreater(accepted.observations[0].log_jump, 0.0)
 
 
 class Gx10ContractIsPreserved(unittest.TestCase):

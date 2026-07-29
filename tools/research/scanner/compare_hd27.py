@@ -55,6 +55,29 @@ def _alarm(_signum, _frame):
     raise _Budget()
 
 
+def _breakouts_before(complete_rows):
+    """Breakouts the PRE-HD-27 engine would have produced, **measured**.
+
+    This was a hardcoded ``0`` and a code review caught it. It is the headline
+    number that justifies HD-27, and asserting it rather than measuring it
+    attributes 100% of the signal to the change under evaluation — the exact
+    error a before/after comparison exists to avoid. KO, PG, JNJ and WMT have no
+    supra-threshold single-day high-to-high jump in 26 years; the pre-HD-27
+    engine ran their geometry identically and produced their breakouts.
+
+    The derivation, so it can be checked rather than trusted: adjudication runs
+    **only** when a jump exceeds the threshold. A symbol with
+    ``before_rejected == False`` had no such jump, so HD-27's four-case logic is
+    never reached and the guard verdict is bit-identical under both rules —
+    therefore so is the geometry, and its breakout count carries over unchanged.
+    A symbol with ``before_rejected == True`` had its whole bar-set rejected by
+    the old rule and produced nothing. HD-27 only ever converts REJECT into
+    ACCEPT, never the reverse, so no symbol is lost in the other direction.
+    """
+    return sum(r.get("after_breakouts") or 0 for r in complete_rows
+               if not r.get("before_rejected"))
+
+
 def _overlap_filter(outcomes):
     """Keep only breakouts whose 20-bar window does not overlap a kept one.
 
@@ -244,7 +267,7 @@ def main(argv=None) -> int:
             "symbols": len(complete),
             "symbols_contributing_at_least_one_breakout": len(contributing),
             "contributing": contributing,
-            "breakouts_before_hd27": 0,
+            "breakouts_before_hd27": _breakouts_before(complete),
             "breakouts_after_hd27": sum(r.get("after_breakouts") or 0 for r in complete),
             "including_overlapping": _bucket(all_outcomes, "all breakouts (windows may overlap)"),
             "excluding_overlapping": _bucket(

@@ -20,6 +20,7 @@ explicit positive control for it rather than exempting it.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -138,29 +139,46 @@ def _is_missing(value: Optional[float]) -> bool:
 #: must remain valid market data, so this errs toward **accepting**: a missed
 #: defect surfaces later as anomalous geometry, whereas a wrongly rejected symbol
 #: produces nothing at all and looks like an absence of signal.
+#:
+#: **Pinned, not merely documented.**  ``ToleranceIsPinnedAtTheRulingsOwnCase``
+#: in ``test_split_guard_hd27.py`` fails if this is widened past 0.157 — the
+#: discrepancy of the 2.34x-drop-on-a-2:1 case HD-27 reasons about.  Before that
+#: test the suite was green at every value from 0.031 to 0.47.
 SPLIT_MATCH_TOLERANCE = 0.15
 
 
 def _adjudicate_jump(
-    jump: float,
+    signed_jump: float,
     bar_index: int,
     threshold: float,
     corporate_actions: Optional[CorporateActions],
 ) -> Tuple[str, Optional[float], str]:
     """Decide what a large log jump means. Returns ``(verdict, coefficient, evidence)``.
 
-    HD-27's separation, in four cases:
+    ``signed_jump`` is ``y[t] - y[t-1]``, sign retained: the *direction* of the
+    move is evidence and discarding it lets an up-move "match" a forward split.
+    The magnitude is what the caller records; only this function needs the sign.
+
+    HD-27's separation, in five cases:
 
     * **No split feed** — the two hypotheses are indistinguishable from prices
       alone, so the bar-set is rejected conservatively. This is the pre-HD-27
       behaviour and it is what keeps GX-10 (a synthetic 2:1 with no feed) green.
+    * **Feed present, coefficient unusable** — a non-finite or non-positive
+      coefficient is *absent evidence*, not a mismatch: ``ln`` is undefined on it
+      and there is nothing to compare the jump against. Rejected on the same
+      reasoning as no feed at all, and the evidence says so rather than claiming
+      anything about adjustment.
     * **Feed present, no split at this bar** — a real market event. **ACCEPT.**
       This is AAPL 2000-09-29: −51.9% on a profit warning, split coefficient 1.0.
-    * **Feed present, split here, and the jump matches ``ln(coefficient)``** —
-      a confirmed adjustment defect. **REJECT.**
-    * **Feed present, split here, but the jump does NOT match** — the prices are
+    * **Feed present, split here, and the move matches the split in BOTH
+      direction and magnitude** — a confirmed adjustment defect. **REJECT.**
+    * **Feed present, split here, but the move does NOT match** — the prices are
       already adjusted and something else moved the stock. **ACCEPT**, because
       re-adjusting would be adjusting twice.
+
+    This is still §18's single split condition, adjudicated; it is not a fourth
+    whole-bar-set guard and it mints no new ``ReasonCode``.
     """
     if corporate_actions is None:
         return (
@@ -172,6 +190,25 @@ def _adjudicate_jump(
         )
 
     coefficient = corporate_actions.coefficient_at(bar_index)
+    if not math.isfinite(coefficient) or coefficient <= 0.0:
+        # UNUSABLE EVIDENCE, not a mismatch.  A feed encoding "unknown" as 0, a
+        # blank cell parsed to NaN, or a sign error yields a number ``ln`` is not
+        # defined on — so there is no implied jump to compare against and no
+        # ground whatsoever for saying the prices are already adjusted.  Treating
+        # it as a mismatch would ACCEPT a genuinely unadjusted split *and* assert
+        # a reason that was never established.  HD-27 rules that where the
+        # evidence is genuinely unavailable the safe direction is to reject, so
+        # this lands in the same place as no feed at all.
+        return (
+            "REJECT",
+            coefficient,
+            f"the split coefficient recorded at this bar is {coefficient}, which "
+            f"is not a usable ratio (a coefficient must be finite and strictly "
+            f"positive); with no usable coefficient a crash and an unadjusted "
+            f"split are indistinguishable from prices alone, so the bar-set is "
+            f"rejected conservatively (HD-27)",
+        )
+
     if coefficient == 1.0:
         return (
             "ACCEPT",
@@ -179,9 +216,25 @@ def _adjudicate_jump(
             "no split at this bar; genuine market movement preserved (HD-27)",
         )
 
-    import math
-
+    jump = abs(signed_jump)
     expected = abs(math.log(coefficient))
+    # An unadjusted series moves by exactly 1/c across the split bar, so the
+    # signed log change it would show is ``-ln(c)`` — NEGATIVE for a forward
+    # split (2:1 unadjusted prices halve) and POSITIVE for a reverse split (1:10
+    # unadjusted prices rise tenfold).  Magnitude alone cannot tell those apart
+    # from their opposites, and 48 -> 96 on a 2:1 is not that split.
+    expected_signed = -math.log(coefficient)
+    if signed_jump * expected_signed <= 0.0:
+        direction = "fall" if expected_signed < 0 else "rise"
+        return (
+            "ACCEPT",
+            coefficient,
+            f"a split of {coefficient} occurred here but the move is in the wrong "
+            f"direction: an unadjusted series would {direction} by "
+            f"{expected_signed:+.6f} in log space and the observed change is "
+            f"{signed_jump:+.6f}, so this jump is not that split (HD-27)",
+        )
+
     if abs(jump - expected) <= SPLIT_MATCH_TOLERANCE:
         return (
             "REJECT",
@@ -270,15 +323,20 @@ def run_guards(
             previous_index = None
             continue
         if previous_index is not None and previous_index == bar.t - 1:
-            jump = abs(
+            # The SIGN is carried into adjudication (an up-move is not a forward
+            # split) but the MAGNITUDE is what the threshold tests and what the
+            # recorded ``log_jump`` fields mean, unchanged.
+            signed_jump = (
                 ln_price(usable_high[bar.t]) - ln_price(usable_high[previous_index])
             )
+            jump = abs(signed_jump)
             if jump > params.split_log_jump_threshold:
                 # HD-27: a large jump TRIGGERS INSPECTION. It does not, on its
                 # own, invalidate the symbol. What decides the verdict is
                 # split-event evidence.
                 verdict, coefficient, evidence = _adjudicate_jump(
-                    jump, bar.t, params.split_log_jump_threshold, corporate_actions
+                    signed_jump, bar.t, params.split_log_jump_threshold,
+                    corporate_actions,
                 )
                 if verdict == "REJECT":
                     emit(bar.t, ReasonCode.SUSPECTED_UNADJUSTED_SPLIT)
