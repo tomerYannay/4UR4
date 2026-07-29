@@ -533,8 +533,8 @@ whose commit range is **not recorded**, and whose sign-off block is **deliberate
   **The HD-22 fixture-immutability guard engaged and passed on the merits.** Three gate verdicts
   at the exact head. Relayed: 202 tests (base 141); all 23 golden reproduce in full, **and RM-01
   reproduces only its Phase-2 assertable surface** — record (a) above forbids that phrase from
-  travelling without this rider, and an earlier form of this very line dropped it; in
-  both directions, **first run, nothing reconciled**.
+  travelling without this rider, and an earlier form of this very line dropped it.
+  Both directions, **first run, nothing reconciled**.
 - **Recently merged:** **[#37](https://github.com/tomerYannay/4UR4/pull/37)** at `c66fd294`
   (ticket (h) engine hardening, M-28/29/30/32; the first PR on which the fixture-immutability
   guard did real work) · **[#38](https://github.com/tomerYannay/4UR4/pull/38)** at `0b564a41`

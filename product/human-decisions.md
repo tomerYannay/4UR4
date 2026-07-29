@@ -37,6 +37,9 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-23 | high | Autonomous-execution directive: finish the permitted work; product delivery outranks governance polish | **PENDING PRODUCT OWNER CONFIRMATION** |
 | HD-24 | high | Merge authorization for PR #38/#37, a **Phase-3** GOV-015 scope lift, and a ruling on #36 Part B | **APPROVED (relayed) — two overreaches recorded** |
 | HD-25 | high | `FAILED_BREAKOUT` retains **both** exits — new-ATH reset and expiry (resolves ESC-4) | **APPROVED (relayed, no citable artifact)** |
+| HD-28 | high | A phase whose exit criteria are met **as written** closes on the Product Steward's determination; no further approval | **APPROVED (relayed)** |
+
+> **HD-26 and HD-27 are not missing.** They are recorded on the branch of [PR #44](https://github.com/tomerYannay/4UR4/pull/44) (the exploratory Alpha Vantage pilot and the HD-27 split-guard correction) and land in this register when that PR merges. The gap is a branch-ordering artifact, not a lost decision — noted because a reader of this file alone would otherwise have to guess.
 
 ---
 
@@ -1738,7 +1741,7 @@ Phase-3-only form, which retires the question for Phases 4–9 at the same cost.
 **Ruling.** **A phase-exit determination whose acceptance criteria are met as written closes on the
 Product Steward's determination alone. No further Product Owner approval is required.**
 
-**What made this a live question, stated so the ruling is not read as a formality.** [HD-24](#hd-24)
+**What made this a live question, stated so the ruling is not read as a formality.** [HD-24](#hd-24--pr-3837-merge-authorization--phase-3-gov-015-scope-lift--36-part-b--materiality-high)
 §4 said Phase 2 was *"authorized to close on its acceptance criteria **without further Product Owner
 approval**"*, and §4(b) glossed that as *"The approval requirement is **already removed**."* An
 approval step that is *removed* is a step that **existed** — so the corpus could not treat
@@ -1747,7 +1750,7 @@ granted the Phase-3 equivalent. PR #45 nonetheless recorded `authority: the crit
 no ruling was required`, which asserted an authority that had not been granted. The Reviewer's
 finding was correct and this ruling supplies what was missing, generally.
 
-**Who still makes the determination is UNCHANGED.** [HD-24](#hd-24) §4(a): it is a GOV-002
+**Who still makes the determination is UNCHANGED.** [HD-24](#hd-24--pr-3837-merge-authorization--phase-3-gov-015-scope-lift--36-part-b--materiality-high) §4(a): it is a GOV-002
 determination **owned by the Product Steward, and no other agent may make it.** This ruling removes
 an approval step; it does not move the determination or widen who may make it.
 
