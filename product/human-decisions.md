@@ -1729,6 +1729,48 @@ them together would level exactly the distinction these headings exist to keep.*
 
 ---
 
+## HD-28 — A phase closes on its criteria; no further approval · materiality: **high**
+
+**Ruled by the Product Owner, 2026-07-29.** Escalated by the Strategic Product Reviewer as
+`STRATEGIC_HUMAN_DECISION_REQUIRED` on PR #45, and ruled in the **general** form rather than the
+Phase-3-only form, which retires the question for Phases 4–9 at the same cost.
+
+**Ruling.** **A phase-exit determination whose acceptance criteria are met as written closes on the
+Product Steward's determination alone. No further Product Owner approval is required.**
+
+**What made this a live question, stated so the ruling is not read as a formality.** [HD-24](#hd-24)
+§4 said Phase 2 was *"authorized to close on its acceptance criteria **without further Product Owner
+approval**"*, and §4(b) glossed that as *"The approval requirement is **already removed**."* An
+approval step that is *removed* is a step that **existed** — so the corpus could not treat
+"criteria met ⇒ closes" as self-evident, and §4's removal was scoped to **Phase 2 by name**. Nothing
+granted the Phase-3 equivalent. PR #45 nonetheless recorded `authority: the criteria themselves —
+no ruling was required`, which asserted an authority that had not been granted. The Reviewer's
+finding was correct and this ruling supplies what was missing, generally.
+
+**Who still makes the determination is UNCHANGED.** [HD-24](#hd-24) §4(a): it is a GOV-002
+determination **owned by the Product Steward, and no other agent may make it.** This ruling removes
+an approval step; it does not move the determination or widen who may make it.
+
+**What this ruling does NOT do, because the Reviewer named the risk precisely and it is accepted
+rather than waved away.** Phase 4's exit criteria carry backtest numbers and, transitively,
+**[HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high) money**. This ruling
+therefore lands on Phase 4 as well — deliberately. It is survivable **only** because the spend gate
+is independent of the exit gate:
+
+- **HD-06 remains PENDING and is untouched.** No phase-exit determination authorizes spend,
+  licensing, provider selection, or external data. A phase whose criteria require purchased data
+  cannot have those criteria met until HD-06 is separately ruled, so this ruling cannot be used to
+  reach money.
+- **GOV-015 is untouched.** Closing a phase lifts no freeze. Phase entry has its own conditions.
+- **The ruling binds only where criteria are met AS WRITTEN.** A determination that a criterion is
+  met *by ruling*, or that closes over an unmet criterion — Phase 2's actual situation — is a
+  different act and is **not** covered here. Phase 2 needed a Product Owner ruling because a
+  criterion was unmet, and that requirement stands for any future phase in the same position.
+
+**Recorded consequence.** `phase_3_exit` at
+[`project-state.md`](project-state.md) cites this ruling in its `authority:` field instead of
+claiming none was required.
+
 # Delegated product decisions (HD-21)
 
 > **Sequencing rule, learned from SPR-D-01:** a delegated decision's status line is written

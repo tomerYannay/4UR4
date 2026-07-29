@@ -142,7 +142,9 @@ exit_criteria: MET
 clean_gate_pass: true
 unmet_at_closure: []
 met_by_ruling: []
-authority: the criteria themselves — no ruling was required or used to close this phase
+not_assessable_by_steward: [V-2 (as a posted report), V-3]
+relayed_not_measured: [V-1 run figures, V-3]
+authority: HD-28 (Product Owner, 2026-07-29) — a phase whose criteria are met as written closes on the Steward's determination; no further approval
 evidence_base: SYNTHETIC_ONLY
 independence_probe_D5: UNDISCHARGED
 corpus_blind_regions: MEASURED
@@ -298,6 +300,10 @@ or reinterpreted to accommodate them, and the same discipline held through Phase
   HD-06**; a stated dependency of E2-AUTHOR **criterion 5**; the reason HD-22 part 3 cannot be
   closed; and the reason the D5 declaration had to be relayed by an interested party.
   **[#34](https://github.com/tomerYannay/4UR4/issues/34)** is the same root cause.
+  It **was also recorded as required before *any* freeze lift, and the [#31](https://github.com/tomerYannay/4UR4/issues/31)
+  lift proceeded without it** — the Product Owner's prerogative, restated here because the
+  clause's own words were *"recorded here because the earlier condition should not silently
+  disappear"*, and this refresh had dropped it. Found by the Strategic Product Reviewer.
 - **Issue [#22](https://github.com/tomerYannay/4UR4/issues/22)** — evidence-tooling follow-ups.
 - **D5 probe custody** ([`maintenance-backlog.md`](maintenance-backlog.md) **M-62**) — owner
   **Verification**. Undischarged; see the Phase-3 determination record (b).
@@ -525,7 +531,9 @@ whose commit range is **not recorded**, and whose sign-off block is **deliberate
 - **[PR #43](https://github.com/tomerYannay/4UR4/pull/43) MERGED** at `5ff74311` — the **Phase 3
   engine**. 16 files, **all `engine/`**; every other top-level tree object-identical to base.
   **The HD-22 fixture-immutability guard engaged and passed on the merits.** Three gate verdicts
-  at the exact head. Relayed: 202 tests (base 141); all 23 golden + RM-01 reproduce in full in
+  at the exact head. Relayed: 202 tests (base 141); all 23 golden reproduce in full, **and RM-01
+  reproduces only its Phase-2 assertable surface** — record (a) above forbids that phrase from
+  travelling without this rider, and an earlier form of this very line dropped it; in
   both directions, **first run, nothing reconciled**.
 - **Recently merged:** **[#37](https://github.com/tomerYannay/4UR4/pull/37)** at `c66fd294`
   (ticket (h) engine hardening, M-28/29/30/32; the first PR on which the fixture-immutability
