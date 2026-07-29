@@ -167,7 +167,7 @@ rule 4 remains unsatisfied and Phase-3 implementation does not begin.** See
 
 **The marker's `scope` is UNCHANGED, and the reason is a limit rather than a reassurance.**
 Phase 3 work is inside `engine/`, the directory the Phase-2 lift already names, so
-`scope: ["engine/"]` is correct and **must not change**: the marker is a list of directory
+`scope` was `["engine/"]` at the time of that ruling and **did not change for it** — *superseded 2026-07-29 by HD-26, which adds `providers/` and `scanner/` for the exploratory pilot; the reasoning below still holds for HD-24 §3 itself, which added no directory* : the marker is a list of directory
 names checked against the validator's guarded list, and this lift widens **authorized
 behaviour within** a directory, not the directory list. The consequence must be stated:
 **`tools/validate.mjs` CANNOT DISTINGUISH Phase-2 work from Phase-3 work inside `engine/`.**
@@ -227,13 +227,17 @@ does not widen the lift beyond `engine/`, and it changes no roadmap phase order.
 ```yaml
 build_freeze: ON
 autonomous_implementation: ENABLED_FOR_SCOPE
-lifted_by: "Product Owner — issue #31 (HD-22, Phase 2), 2026-07-26; extended by issue #39 (HD-24 §3, Phase 3), 2026-07-28"
-lifted_at: "2026-07-28"
+lifted_by: "Product Owner — issue #31 (HD-22, Phase 2), 2026-07-26; extended by issue #39 (HD-24 §3, Phase 3), 2026-07-28; extended by HD-26 (exploratory Alpha Vantage pilot: providers/, scanner/), 2026-07-29"
+lifted_at: "2026-07-29"
 # `scope` is a list of DIRECTORY names, matched against the validator's guarded list.
-# It is UNCHANGED because the directory is unchanged: both lifts are inside `engine/`.
-# The validator therefore cannot tell Phase-2 work from Phase-3 work here — see the
-# Phase 3 section above, which states that gap rather than leaving it to be discovered.
-scope: ["engine/"]
+# HD-22 (Phase 2) and HD-24 §3 (Phase 3) are BOTH inside `engine/`, so the validator
+# cannot tell Phase-2 work from Phase-3 work — that gap is stated in the Phase 3
+# section above rather than left to be discovered.
+# HD-26 (2026-07-29) adds `providers/` and `scanner/` for the EXPLORATORY pilot only.
+# That lift is REVOCABLE and is not HD-06: no provider is selected for production and
+# no recurring spend is authorized.  Deleting those two entries re-freezes both
+# directories on the next CI run, which is what keeps the boundary mechanical.
+scope: ["engine/", "providers/", "scanner/"]
 ```
 
 ## Enforcement

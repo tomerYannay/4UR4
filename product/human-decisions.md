@@ -1729,6 +1729,96 @@ them together would level exactly the distinction these headings exist to keep.*
 
 ---
 
+## HD-26 — Exploratory Alpha Vantage pilot: scoped GOV-015 lift, NOT HD-06 · materiality: **high**
+
+- **Status:** **APPROVED — Product Owner, 2026-07-29.** Relayed in session.
+- **Artifact:** **NONE.** No issue comment, no PR review, no commit trailer. Same disclosure
+  form as HD-23/HD-24/HD-25, under the single shared identity
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) / [#34](https://github.com/tomerYannay/4UR4/issues/34).
+
+**Ruling.** Run an **exploratory, survivor-biased backtest** of the engine against Alpha Vantage
+daily data. GOV-015 is lifted for **`providers/`** and **`scanner/`**, and the freeze marker's
+`scope` is widened accordingly so the boundary stays mechanical rather than declaratory.
+
+**This is expressly NOT [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high).**
+No provider is selected for production, **no recurring spend is authorized**, and no licence is
+accepted. HD-06 remains **PENDING**. The lift is **revocable**: deleting the two entries from the
+marker re-freezes both directories on the next CI run.
+
+**The licence position, recorded because it constrains the output and was not waived.**
+[`data-provider-findings.md`](data-provider-findings.md) §E records, **VERIFIED against the Terms
+of Service PDF**, that Alpha Vantage grants use *"for personal, non-commercial use, unless you and
+Alpha Vantage have agreed otherwise in writing"*, and that "Professional" covers *"any type of
+commercial activity that allows individuals or entities other than User to access information
+directly or indirectly"*. The pilot therefore produces **internal, non-redistributed** evidence
+only. **Redistributing the data, or shipping it in a product surface, is outside this ruling.**
+The Product Owner was shown this finding before the work began and directed it anyway; that is
+their call on their own account, and it is recorded rather than assumed.
+
+**Secret handling, ruled as part of the directive.** The API key is read **only** from
+`ALPHA_VANTAGE_API_KEY`. It is never hardcoded, logged, written to a source file, fixture,
+document or test, never placed in a committed URL, and **raw vendor payloads are never
+committed**. `.cache/`, `*.env` and `.secrets/` are gitignored.
+
+**Scope limits that travel with every number the pilot produces.** Survivor-biased universe
+(names that exist **today** — HD-07 unresolved, and the bias runs **upward**) · no
+multiple-comparison control · forward returns **measured, not traded** (entry at the breakout
+close, which is not obtainable) · **not a Phase 4 increment** — Phase 4's exit criterion is a
+backtest over the historical 4UR4 US Large-Cap 500 at point-in-time membership, which this is not.
+
+**HD-01 is preserved, and it decided the endpoint.** `TIME_SERIES_DAILY` returns raw OHLC with
+**no split coefficient**, so the ruled split-adjusted/dividend-unadjusted basis cannot be built
+from it at all. `TIME_SERIES_DAILY_ADJUSTED` supplies `8. split coefficient`, so the pilot takes
+**raw OHLC and applies split-only adjustment**, and **never reads `5. adjusted close`**, which is
+dividend-adjusted and is the basis HD-01 rejected. Verified: NVDA raw 1208.88 on 2024-06-07 →
+**120.888** split-only, against the vendor's dividend-adjusted 120.68.
+
+## HD-27 — A crash is not an adjustment defect: §18's split guard requires split evidence · materiality: **high**
+
+- **Status:** **APPROVED — Product Owner, 2026-07-29.** Relayed in session. **Artifact: NONE.**
+
+**The defect, found on real data rather than in review.** AAPL fell **51.9% on 2000-09-29** on a
+profit warning — vendor split coefficient **1.0**, no corporate action. §18's guard inferred an
+unadjusted split from the size of the move alone and **rejected the entire 26-year bar-set**. The
+engine emitted nothing for AAPL: `final_state = NONE`, zero breakouts, **and no diagnostic saying
+why**. It failed closed and silently.
+
+**Ruling.**
+1. **Separate** extreme real-market movement from a confirmed corporate-action adjustment defect.
+2. A large log jump **may trigger inspection but must not, alone, invalidate a symbol.**
+3. **Use split-event evidence** to decide whether the series is improperly adjusted.
+4. Where no split occurred, **preserve the bar and continue normally.**
+5. **Never fail silently** to `final_state = NONE` with zero breakouts and no diagnostic.
+6. Every rejection must return a **structured, observable** reason carrying symbol, date, detected
+   jump, threshold, relevant split coefficient and rejection reason.
+
+**How it is implemented, in four cases.** With a feed: no split at the bar → **ACCEPT** (real
+movement); split whose implied `ln(coefficient)` **matches** the observed jump → **REJECT**
+(confirmed defect); split whose implied jump **does not match** → **ACCEPT** (already adjusted —
+adjusting twice would be the error). **Without a feed → reject conservatively**, because the two
+hypotheses are genuinely indistinguishable from prices alone.
+
+**Why the no-feed fallback exists, stated plainly rather than buried.** Ruling clause 2 read
+literally would break **GX-10**, a committed fixture that carries a 2:1 unadjusted jump, **no
+corporate-action data**, and expects `SUSPECTED_UNADJUSTED_SPLIT`. GX-10 is immutable under
+**HD-22**. Making the verdict depend on the *evidence available* satisfies clause 2 wherever
+evidence exists — which is every real-data path — while leaving the committed contract intact.
+**If the Product Owner intends clause 2 to bind even without a feed, GX-10 must change, and that
+is an HD-22 escalation reserved to them.** It is recorded here rather than decided.
+
+**No reason code was added.** The closed `ReasonCode` set is asserted equal to the fixture
+schema's by architecture test A-4; minting a member would be a product-definition change. What
+changed is **when** `SUSPECTED_UNADJUSTED_SPLIT` fires, not the code set.
+
+**The match tolerance, and which way it errs.** A split of ratio `c` on unadjusted prices implies
+an observed jump of `|ln(c) − ln(1+r)|` for that day's genuine move `r`, so the tolerance bounds
+`|ln(1+r)|`. It is **0.15** (~±16% same-day movement). *An initial 0.25 was wrong and a regression
+test caught it: at 0.25 a 2:1 split "matched" anything from 1.56× to 2.57×, and a genuine 2.34×
+crash on a split date was misattributed as a defect.* The tolerance **errs toward accepting**,
+because a missed defect surfaces later as anomalous geometry, whereas a wrongly rejected symbol
+produces nothing at all and looks indistinguishable from an absence of signal — which is the
+failure HD-27 exists to end.
+
 # Delegated product decisions (HD-21)
 
 > **Sequencing rule, learned from SPR-D-01:** a delegated decision's status line is written

@@ -28,7 +28,77 @@ from .logspace import ln_price
 from .params import DetectorParams
 from .state import LineState, ReasonCode, TransitionRecord
 
-__all__ = ["GuardVerdict", "run_guards"]
+__all__ = ["GuardVerdict", "GuardRejection", "GuardObservation",
+           "CorporateActions", "run_guards"]
+
+
+@dataclass(frozen=True)
+class CorporateActions:
+    """Split-event evidence for one symbol (HD-27).
+
+    ``splits`` maps a **bar index** to the split coefficient effective at that
+    bar — 4.0 for a 4:1, 0.1 for a 1:10 reverse. Absent keys mean "no split".
+
+    The presence of this object is itself evidence: with it the guard can tell a
+    crash from an adjustment defect, and without it it cannot. That distinction
+    is the whole of HD-27 and is why the type is optional rather than required.
+    """
+
+    symbol: str
+    splits: Dict[int, float]
+
+    def coefficient_at(self, bar_index: int) -> float:
+        return float(self.splits.get(bar_index, 1.0))
+
+
+@dataclass(frozen=True)
+class GuardObservation:
+    """A large jump that was **inspected and accepted** as real market movement.
+
+    Emitted rather than swallowed so that "the guard looked and decided this was
+    a crash" is observable evidence rather than an absence. Without this, an
+    accepted jump and a jump that was never tested look identical.
+    """
+
+    bar: int
+    date: Any
+    log_jump: float
+    threshold: float
+    split_coefficient: float
+    verdict: str
+
+
+@dataclass(frozen=True)
+class GuardRejection:
+    """Structured, observable reason for a whole-bar-set rejection (HD-27 §6).
+
+    Every field the Product Owner named is present. A rejection must never be
+    inferable only from ``final_state == NONE``.
+    """
+
+    symbol: Optional[str]
+    bar: int
+    date: Any
+    reason: str
+    log_jump: Optional[float] = None
+    threshold: Optional[float] = None
+    split_coefficient: Optional[float] = None
+    evidence: str = ""
+
+    def describe(self) -> str:
+        parts = [f"{self.symbol or '<unknown>'} bar {self.bar}"]
+        if self.date is not None:
+            parts.append(f"({self.date})")
+        parts.append(f"{self.reason}")
+        if self.log_jump is not None:
+            parts.append(f"log_jump={self.log_jump:.6f}")
+        if self.threshold is not None:
+            parts.append(f"threshold={self.threshold:.6f}")
+        if self.split_coefficient is not None:
+            parts.append(f"split_coefficient={self.split_coefficient}")
+        if self.evidence:
+            parts.append(f"— {self.evidence}")
+        return " ".join(parts)
 
 
 @dataclass(frozen=True)
@@ -37,6 +107,10 @@ class GuardVerdict:
     records: Tuple[TransitionRecord, ...]
     codes: Tuple[ReasonCode, ...]
     detail: Optional[Dict[str, Any]]
+    #: Every rejection, structured. Empty when ``rejected`` is False.
+    rejections: Tuple[GuardRejection, ...] = ()
+    #: Large jumps inspected and **accepted** as genuine market movement.
+    observations: Tuple[GuardObservation, ...] = ()
 
     @staticmethod
     def clean() -> "GuardVerdict":
@@ -47,17 +121,107 @@ def _is_missing(value: Optional[float]) -> bool:
     return value is None
 
 
-def run_guards(series: BarSeries, params: DetectorParams) -> GuardVerdict:
+#: How close the observed jump must be to ``ln(coefficient)`` before a split is
+#: judged to be the *cause* of it.
+#:
+#: The physics fixes the shape: if prices are unadjusted for a split of ratio
+#: ``c``, then ``price[t]/price[t-1] == (1/c) * (1 + r)`` for that day's genuine
+#: move ``r``, so the observed jump is ``|ln(c) - ln(1+r)|``.  The tolerance is
+#: therefore a bound on ``|ln(1+r)|`` — how much real movement may ride on top of
+#: a split before the match is abandoned.  0.15 admits roughly a ±16% same-day
+#: move.
+#:
+#: **Which way this errs, stated rather than left to be discovered.**  Too WIDE
+#: misattributes a crash as an adjustment defect and silences a real symbol —
+#: the HD-27 defect itself.  Too NARROW lets a genuinely unadjusted split through
+#: when the stock also moved hard that day.  HD-27 ruled that a legitimate crash
+#: must remain valid market data, so this errs toward **accepting**: a missed
+#: defect surfaces later as anomalous geometry, whereas a wrongly rejected symbol
+#: produces nothing at all and looks like an absence of signal.
+SPLIT_MATCH_TOLERANCE = 0.15
+
+
+def _adjudicate_jump(
+    jump: float,
+    bar_index: int,
+    threshold: float,
+    corporate_actions: Optional[CorporateActions],
+) -> Tuple[str, Optional[float], str]:
+    """Decide what a large log jump means. Returns ``(verdict, coefficient, evidence)``.
+
+    HD-27's separation, in four cases:
+
+    * **No split feed** — the two hypotheses are indistinguishable from prices
+      alone, so the bar-set is rejected conservatively. This is the pre-HD-27
+      behaviour and it is what keeps GX-10 (a synthetic 2:1 with no feed) green.
+    * **Feed present, no split at this bar** — a real market event. **ACCEPT.**
+      This is AAPL 2000-09-29: −51.9% on a profit warning, split coefficient 1.0.
+    * **Feed present, split here, and the jump matches ``ln(coefficient)``** —
+      a confirmed adjustment defect. **REJECT.**
+    * **Feed present, split here, but the jump does NOT match** — the prices are
+      already adjusted and something else moved the stock. **ACCEPT**, because
+      re-adjusting would be adjusting twice.
+    """
+    if corporate_actions is None:
+        return (
+            "REJECT",
+            None,
+            "no corporate-action feed supplied; a crash and an unadjusted split "
+            "are indistinguishable from prices alone, so the bar-set is rejected "
+            "conservatively (HD-27)",
+        )
+
+    coefficient = corporate_actions.coefficient_at(bar_index)
+    if coefficient == 1.0:
+        return (
+            "ACCEPT",
+            coefficient,
+            "no split at this bar; genuine market movement preserved (HD-27)",
+        )
+
+    import math
+
+    expected = abs(math.log(coefficient))
+    if abs(jump - expected) <= SPLIT_MATCH_TOLERANCE:
+        return (
+            "REJECT",
+            coefficient,
+            f"split coefficient {coefficient} implies a log jump of {expected:.6f} "
+            f"and the observed jump is {jump:.6f}; the series is unadjusted for "
+            f"this split (HD-27)",
+        )
+    return (
+        "ACCEPT",
+        coefficient,
+        f"a split of {coefficient} occurred here but the observed jump "
+        f"{jump:.6f} does not match its implied {expected:.6f}; prices are "
+        f"already adjusted, so this is market movement (HD-27)",
+    )
+
+
+def run_guards(
+    series: BarSeries,
+    params: DetectorParams,
+    corporate_actions: Optional[CorporateActions] = None,
+) -> GuardVerdict:
     """Evaluate §18's three whole-bar-set guards over the delivered series.
 
     Records are emitted in bar order; within a bar, ``INVALID_INPUT`` precedes
     ``INVALID_PRICE`` because a missing field cannot then be tested for
     positivity.  A bar whose ``high`` is missing or non-positive is excluded from
     the split-jump scan for the same reason.
+
+    ``corporate_actions`` supplies the split-event evidence HD-27 requires. When
+    it is ``None`` the split guard falls back to the pre-HD-27 jump-only rule —
+    not as a convenience, but because without a feed the two hypotheses are
+    genuinely indistinguishable and rejecting is the safe direction.
     """
     records: List[TransitionRecord] = []
     codes: List[ReasonCode] = []
     detail: Optional[Dict[str, Any]] = None
+    rejections: List[GuardRejection] = []
+    observations: List[GuardObservation] = []
+    symbol = corporate_actions.symbol if corporate_actions is not None else None
 
     def emit(bar_index: int, code: ReasonCode) -> None:
         records.append(TransitionRecord(bar_index, LineState.NONE, LineState.NONE, code))
@@ -70,6 +234,16 @@ def run_guards(series: BarSeries, params: DetectorParams) -> GuardVerdict:
         if _is_missing(bar.high) or _is_missing(bar.close):
             # §18 row "a bar missing high or close is invalid input".
             emit(bar.t, ReasonCode.INVALID_INPUT)
+            missing = [n for n in ("high", "close") if getattr(bar, n) is None]
+            rejections.append(
+                GuardRejection(
+                    symbol=symbol,
+                    bar=bar.t,
+                    date=bar.timestamp,
+                    reason="INVALID_INPUT",
+                    evidence=f"missing required field(s): {', '.join(missing)} (§18)",
+                )
+            )
             continue
         non_positive = [
             name for name, value in bar.prices() if value is not None and value <= 0
@@ -77,6 +251,15 @@ def run_guards(series: BarSeries, params: DetectorParams) -> GuardVerdict:
         if non_positive:
             # §1 positivity / §18 row "Non-positive price -> reject bar-set".
             emit(bar.t, ReasonCode.INVALID_PRICE)
+            rejections.append(
+                GuardRejection(
+                    symbol=symbol,
+                    bar=bar.t,
+                    date=bar.timestamp,
+                    reason="INVALID_PRICE",
+                    evidence=f"non-positive price in field(s): {', '.join(non_positive)} (§1/§18)",
+                )
+            )
             continue
         usable_high[bar.t] = float(bar.high)
 
@@ -91,9 +274,41 @@ def run_guards(series: BarSeries, params: DetectorParams) -> GuardVerdict:
                 ln_price(usable_high[bar.t]) - ln_price(usable_high[previous_index])
             )
             if jump > params.split_log_jump_threshold:
-                emit(bar.t, ReasonCode.SUSPECTED_UNADJUSTED_SPLIT)
-                if detail is None:
-                    detail = {"bar": bar.t, "log_jump": jump}
+                # HD-27: a large jump TRIGGERS INSPECTION. It does not, on its
+                # own, invalidate the symbol. What decides the verdict is
+                # split-event evidence.
+                verdict, coefficient, evidence = _adjudicate_jump(
+                    jump, bar.t, params.split_log_jump_threshold, corporate_actions
+                )
+                if verdict == "REJECT":
+                    emit(bar.t, ReasonCode.SUSPECTED_UNADJUSTED_SPLIT)
+                    rejections.append(
+                        GuardRejection(
+                            symbol=symbol,
+                            bar=bar.t,
+                            date=bar.timestamp,
+                            reason="SUSPECTED_UNADJUSTED_SPLIT",
+                            log_jump=jump,
+                            threshold=params.split_log_jump_threshold,
+                            split_coefficient=coefficient,
+                            evidence=evidence,
+                        )
+                    )
+                    if detail is None:
+                        detail = {"bar": bar.t, "log_jump": jump}
+                else:
+                    # Accepted as real market movement. Recorded, never silent —
+                    # an accepted jump and an untested one must not look alike.
+                    observations.append(
+                        GuardObservation(
+                            bar=bar.t,
+                            date=bar.timestamp,
+                            log_jump=jump,
+                            threshold=params.split_log_jump_threshold,
+                            split_coefficient=coefficient,
+                            verdict=evidence,
+                        )
+                    )
         previous_index = bar.t
 
     records.sort(key=lambda record: (record.bar, _CODE_ORDER[record.reason]))
@@ -103,7 +318,15 @@ def run_guards(series: BarSeries, params: DetectorParams) -> GuardVerdict:
     for record in records:
         if record.reason not in codes:
             codes.append(record.reason)
-    return GuardVerdict(bool(records), tuple(records), tuple(codes), detail)
+    rejections.sort(key=lambda r: r.bar)
+    return GuardVerdict(
+        bool(records),
+        tuple(records),
+        tuple(codes),
+        detail,
+        tuple(rejections),
+        tuple(observations),
+    )
 
 
 _CODE_ORDER = {

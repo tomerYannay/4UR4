@@ -85,6 +85,7 @@ def detect(
     series: BarSeries,
     params: DetectorParams,
     provenance: Optional[Provenance] = None,
+    corporate_actions: Optional[CorporateActions] = None,
 ) -> DetectionResult:
     """Run the §18 guards, then §21.2's causal fold.
 
@@ -101,7 +102,7 @@ def detect(
                 % (provenance.adjustment_basis, Provenance.ACCEPTED_BASIS)
             )
 
-    guard = run_guards(series, params)
+    guard = run_guards(series, params, corporate_actions)
     if guard.rejected:
         return DetectionResult(
             spec_version=params.spec_version,
@@ -116,7 +117,15 @@ def detect(
             ath_anchor=None,
             reported_line=None,
             stop_bar=None,
-            diagnostics={"guard_detail": guard.detail},
+            diagnostics={
+                "guard_detail": guard.detail,
+                "guard_rejections": [r.describe() for r in guard.rejections],
+                "guard_observations": [
+                    {"bar": o.bar, "date": o.date, "log_jump": o.log_jump,
+                     "split_coefficient": o.split_coefficient, "verdict": o.verdict}
+                    for o in guard.observations
+                ],
+            },
         )
 
     causal = run(series, params)
