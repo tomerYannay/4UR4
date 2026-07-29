@@ -73,10 +73,31 @@ class CorporateActions:
         the prices are already adjusted.  Coercion is *attempted* rather than
         type-checked, so a feed recording ``'2.0'`` still adjudicates as 2.0
         exactly as before — this widens no verdict, it only stops the crash.
+
+        ``OverflowError`` is caught for the same reason and was initially
+        missed: it subclasses ``ArithmeticError``, not ``TypeError`` or
+        ``ValueError``, so ``{bar: 10**400}`` still escaped ``detect()`` after
+        the first two were handled.  A JSON payload with a bare integer literal
+        and no decimal point decodes to an arbitrary-precision ``int``, and
+        ``float()`` on a large enough one raises.  Not reachable through the
+        pilot's provider, which coerces the raw string first — latent, not live,
+        and fixed rather than documented as a caveat because the docstring above
+        it promised unconditionally that uncoercible values become ``nan``.
+
+        A ``bool`` is deliberately treated as unusable rather than coerced.
+        ``float(True)`` is ``1.0``, which the guard reads as *"no split at this
+        bar"* and then emits evidence affirmatively denying a split occurred —
+        a malformed feed value silently becoming a positive claim.  ``bool`` is
+        not a ratio, and it is the one type where successful coercion is worse
+        than failure.  It is checked by type because that is the only way to
+        catch it: unlike ``'n/a'``, it coerces cleanly.
         """
+        recorded = self.recorded_at(bar_index)
+        if isinstance(recorded, bool):
+            return float("nan")
         try:
-            return float(self.recorded_at(bar_index))
-        except (TypeError, ValueError):
+            return float(recorded)
+        except (TypeError, ValueError, OverflowError):
             return float("nan")
 
 

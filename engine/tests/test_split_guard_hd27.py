@@ -528,3 +528,49 @@ class Gx10ContractIsPreserved(unittest.TestCase):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
+
+
+class UncoercibleIsUnusableIncludingTheTypesThatCoerceTooWell(unittest.TestCase):
+    """Two escapes the earlier rounds missed, for opposite reasons.
+
+    ``10**400`` raises ``OverflowError`` — an ``ArithmeticError``, so the
+    ``(TypeError, ValueError)`` catch added for ``None`` and ``'n/a'`` did not
+    cover it, and it escaped ``detect()``. ``True`` is the mirror: it coerces
+    *cleanly* to 1.0, which the guard reads as "no split at this bar" and then
+    emits evidence affirmatively denying a split. A malformed feed value
+    becoming a positive claim is the HD-27 defect in miniature.
+    """
+
+    CLOSES = [99.0, 97.0, 99.0, 96.0, 49.5, 49.0, 50.0, 48.5]
+
+    def _verdict(self, coefficient):
+        return run_guards(series_from(self.CLOSES), PARAMS,
+                          CorporateActions("X", {4: coefficient}))
+
+    def test_a_huge_integer_rejects_instead_of_raising_OverflowError(self):
+        verdict = self._verdict(10 ** 400)
+        self.assertTrue(verdict.rejected)
+        self.assertIn(ReasonCode.SUSPECTED_UNADJUSTED_SPLIT, verdict.codes)
+        self.assertIn("not a usable ratio", verdict.rejections[0].evidence)
+
+    def test_it_escapes_neither_run_guards_nor_the_public_detect_entry_point(self):
+        # The defect was an exception crossing the public boundary, so the
+        # public boundary is where it is pinned.
+        result = detect(series_from(self.CLOSES), PARAMS,
+                        corporate_actions=CorporateActions("X", {4: 10 ** 400}))
+        self.assertTrue(result.guard.rejected)
+
+    def test_a_bool_is_unusable_not_a_coefficient_of_one(self):
+        # float(True) == 1.0 would mean "no split", and the guard would then
+        # ACCEPT the jump while claiming no split occurred.
+        verdict = self._verdict(True)
+        self.assertTrue(verdict.rejected, "a bool was read as 'no split at this bar'")
+        self.assertIn("not a usable ratio", verdict.rejections[0].evidence)
+        self.assertEqual(verdict.observations, ())
+
+    def test_the_numeric_string_contract_is_untouched(self):
+        # The bool check must not become a blanket type-check: '2.0' still
+        # adjudicates as 2.0, which is a genuine unadjusted 2:1 here.
+        verdict = self._verdict("2.0")
+        self.assertTrue(verdict.rejected)
+        self.assertIn("unadjusted for this split", verdict.rejections[0].evidence)

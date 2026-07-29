@@ -1831,16 +1831,22 @@ ruled content, and the ruling is the authority an operator or the next agent rea
 
 1. **No feed** → **REJECT** conservatively. The two hypotheses are genuinely indistinguishable
    from prices alone. This is the branch GX-10 lands in.
-2. **Coefficient unusable** — non-finite, zero, or negative → **REJECT**. Absent evidence, not a
-   mismatch; the rejection names the value and asserts nothing about adjustment.
+2. **Coefficient unusable** — non-finite, zero, negative, **or not coercible to a number at all**
+   (`None`, `"n/a"`, a list) → **REJECT**. Absent evidence, not a mismatch; the rejection names
+   what the feed *recorded*, not the `NaN` it became, and asserts nothing about adjustment.
 3. **No split at the bar** (coefficient 1.0) → **ACCEPT**. Real market movement. This is AAPL
    2000-09-29.
 4. **Split at the bar, and the observed move matches `ln(coefficient)` in BOTH direction and
    magnitude** → **REJECT**. Confirmed adjustment defect. *Direction is part of the test: an
    unadjusted forward split makes prices fall and an unadjusted reverse split makes them rise, so
    a same-magnitude move the other way is not that split.*
-5. **Split at the bar, but direction or magnitude does not match** → **ACCEPT**. Prices are
-   already adjusted and something else moved the stock; re-adjusting would be adjusting twice.
+5. **Split at the bar, but direction or magnitude does not match** → **ACCEPT**. The mismatch is
+   all that was measured; **no cause for the move is established**. Accepted because re-adjusting
+   on an unmatched split would adjust twice. *(This clause read "prices are already adjusted and
+   something else moved the stock" — verbatim the claim B6 had just required the **engine** to stop
+   making, left standing in the **ruling** that governs it. It is also contradicted six lines below
+   by this document's own statement that an over-adjusted series lands in case 5: there, prices are
+   not already adjusted, they are adjusted twice. The B6 defect class surviving inside the B5 fix.)*
 
 **Which way the DIRECTION test errs, stated with the same discipline as the tolerance.** It errs
 toward accepting, and the cost is specific and worth naming: an **over-adjusted** series — where a
