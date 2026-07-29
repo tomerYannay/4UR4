@@ -5,7 +5,8 @@
 Requires ``ALPHA_VANTAGE_API_KEY`` in the environment. Nothing here prints,
 stores or commits the key.
 
-EXPLORATORY ONLY (HD-26). Not a Phase 4 increment: Phase 4's exit criterion is a
+SURVIVOR-BIASED EXPLORATORY REAL-MARKET VALIDATION (HD-26). NOT Phase 4 entry,
+implementation or exit evidence: Phase 4's exit criterion is a
 backtest over the historical 4UR4 US Large-Cap 500 at each date's point-in-time
 membership. This is a fixed list of names that exist **today**.
 """
@@ -19,8 +20,8 @@ from dataclasses import asdict
 from pathlib import Path
 
 from engine.params import DetectorParams
-from providers import alphavantage as av
-from scanner import backtest
+from tools.research.providers import alphavantage as av
+from tools.research.scanner import backtest
 
 #: 40 large, liquid US names across sectors. Chosen before any result was seen,
 #: and fixed here so the universe cannot be tuned after the fact — but note it

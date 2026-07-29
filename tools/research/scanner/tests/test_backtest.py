@@ -11,7 +11,7 @@ from __future__ import annotations
 import unittest
 from dataclasses import dataclass
 
-from scanner import backtest
+from tools.research.scanner import backtest
 
 
 @dataclass(frozen=True)

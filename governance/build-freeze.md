@@ -227,8 +227,8 @@ does not widen the lift beyond `engine/`, and it changes no roadmap phase order.
 ```yaml
 build_freeze: ON
 autonomous_implementation: ENABLED_FOR_SCOPE
-lifted_by: "Product Owner — issue #31 (HD-22, Phase 2), 2026-07-26; extended by issue #39 (HD-24 §3, Phase 3), 2026-07-28; extended by HD-26 (exploratory Alpha Vantage pilot: providers/, scanner/), 2026-07-29"
-lifted_at: "2026-07-29"
+lifted_by: "Product Owner — issue #31 (HD-22, Phase 2), 2026-07-26; extended by issue #39 (HD-24 §3, Phase 3), 2026-07-28"
+lifted_at: "2026-07-28"
 # `scope` is a list of DIRECTORY names, matched against the validator's guarded list.
 # HD-22 (Phase 2) and HD-24 §3 (Phase 3) are BOTH inside `engine/`, so the validator
 # cannot tell Phase-2 work from Phase-3 work — that gap is stated in the Phase 3
@@ -237,7 +237,7 @@ lifted_at: "2026-07-29"
 # That lift is REVOCABLE and is not HD-06: no provider is selected for production and
 # no recurring spend is authorized.  Deleting those two entries re-freezes both
 # directories on the next CI run, which is what keeps the boundary mechanical.
-scope: ["engine/", "providers/", "scanner/"]
+scope: ["engine/"]
 ```
 
 ## Enforcement

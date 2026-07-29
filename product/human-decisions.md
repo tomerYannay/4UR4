@@ -1736,9 +1736,24 @@ them together would level exactly the distinction these headings exist to keep.*
   form as HD-23/HD-24/HD-25, under the single shared identity
   [#21](https://github.com/tomerYannay/4UR4/issues/21) / [#34](https://github.com/tomerYannay/4UR4/issues/34).
 
-**Ruling.** Run an **exploratory, survivor-biased backtest** of the engine against Alpha Vantage
-daily data. GOV-015 is lifted for **`providers/`** and **`scanner/`**, and the freeze marker's
-`scope` is widened accordingly so the boundary stays mechanical rather than declaratory.
+**Ruling.** Run a **survivor-biased exploratory real-market validation** of the engine against
+Alpha Vantage daily data. **GOV-015 IS NOT LIFTED. The freeze marker is UNCHANGED at
+`scope: ["engine/"]`.**
+
+**Correction of record — the first attempt got this backwards, and the Product Owner's words are
+the correction:** *"A freeze marker is an enforcement mechanism, not a source of authorization."*
+The pipeline was initially placed in `providers/` and `scanner/` — both **guarded product-code
+directories** — and the marker was widened to make it pass. That inverts the control: it edits the
+enforcement mechanism to authorize the thing the mechanism exists to stop. **HD-24 leaves
+`scanner` frozen and this ruling does not disturb that.**
+
+**Where it actually lives: `tools/research/`.** `tools` is **not** in `PRODUCT_CODE_DIRS`, so no
+scope change is needed or made. Better, the separation is enforced **by an existing test rather
+than by prose**: architecture test **A-3** permits engine modules to reference only the `engine`
+and `product` siblings, so an engine module importing anything under `tools/` fails the suite.
+Requirement 3 — production/runtime engine code must not depend on the pipeline — is therefore
+mechanical, not a convention. Verified at this head: no `engine/` module references
+`tools.research` in any form.
 
 **This is expressly NOT [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high).**
 No provider is selected for production, **no recurring spend is authorized**, and no licence is
@@ -1759,6 +1774,10 @@ their call on their own account, and it is recorded rather than assumed.
 `ALPHA_VANTAGE_API_KEY`. It is never hardcoded, logged, written to a source file, fixture,
 document or test, never placed in a committed URL, and **raw vendor payloads are never
 committed**. `.cache/`, `*.env` and `.secrets/` are gitignored.
+
+**Classification, recorded in the exact terms ruled.** This pilot is
+**survivor-biased exploratory real-market validation**. It is **NOT Phase 4 entry**, **NOT Phase 4
+implementation**, and **NOT Phase 4 exit evidence**, and may not be cited as any of them.
 
 **Scope limits that travel with every number the pilot produces.** Survivor-biased universe
 (names that exist **today** — HD-07 unresolved, and the bias runs **upward**) · no
@@ -1798,13 +1817,21 @@ movement); split whose implied `ln(coefficient)` **matches** the observed jump �
 adjusting twice would be the error). **Without a feed → reject conservatively**, because the two
 hypotheses are genuinely indistinguishable from prices alone.
 
-**Why the no-feed fallback exists, stated plainly rather than buried.** Ruling clause 2 read
-literally would break **GX-10**, a committed fixture that carries a 2:1 unadjusted jump, **no
-corporate-action data**, and expects `SUSPECTED_UNADJUSTED_SPLIT`. GX-10 is immutable under
-**HD-22**. Making the verdict depend on the *evidence available* satisfies clause 2 wherever
-evidence exists — which is every real-data path — while leaving the committed contract intact.
-**If the Product Owner intends clause 2 to bind even without a feed, GX-10 must change, and that
-is an HD-22 escalation reserved to them.** It is recorded here rather than decided.
+**GX-10 disposition — RULED by the Product Owner, 2026-07-29, and no longer an open question.**
+
+- **GX-10 stays immutable.** It carries a 2:1 unadjusted jump, **no corporate-action data**, and
+  expects `SUSPECTED_UNADJUSTED_SPLIT`; HD-22 protects it and nothing here edits it.
+- **With corporate-action evidence available, an extreme jump alone must not reject the series.**
+  That is clause 2, and it governs every real-data path.
+- **Without corporate-action evidence, the existing fail-closed fixture behaviour is retained**,
+  and **the evidence-dependent distinction is disclosed** rather than left implicit — which is
+  what this paragraph and `_adjudicate_jump`'s docstring do.
+- **Do not escalate** unless an implementation requires changing GX-10, or requires changing
+  canonical behaviour **without** an evidence feed. Neither is the case here.
+
+The earlier form of this entry framed the fallback as an open HD-22 escalation awaiting a Product
+Owner ruling. **That ruling has been given and the framing is superseded**, not merely satisfied:
+the evidence-dependent split is now the ruled design, not a compromise pending review.
 
 **No reason code was added.** The closed `ReasonCode` set is asserted equal to the fixture
 schema's by architecture test A-4; minting a member would be a product-definition change. What

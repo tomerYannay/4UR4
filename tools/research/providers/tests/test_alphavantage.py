@@ -18,7 +18,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from providers import alphavantage as av
+from tools.research.providers import alphavantage as av
 
 # --- Real observed payloads, keys redacted -------------------------------------
 

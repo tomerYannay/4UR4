@@ -1,7 +1,8 @@
 """Exploratory, survivor-biased backtest of the 4UR4 engine on vendor data.
 
-EXPLORATORY ONLY — authorized by HD-26. **This is not a Phase 4 increment and
-must never be cited as one.** Phase 4's exit criterion is a backtest over the
+**SURVIVOR-BIASED EXPLORATORY REAL-MARKET VALIDATION — authorized by HD-26.**
+**This is NOT Phase 4 entry, NOT Phase 4 implementation, and NOT Phase 4 exit
+evidence, and must never be cited as any of them.** Phase 4's exit criterion is a backtest over the
 historical 4UR4 US Large-Cap 500 at each date's point-in-time membership; this
 is a handful of tickers that happen to exist today, over a window of whatever
 length the free tier returns.

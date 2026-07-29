@@ -1,7 +1,8 @@
 """Alpha Vantage TIME_SERIES_DAILY_ADJUSTED fetch, validation, split adjustment and cache.
 
-EXPLORATORY ONLY. Authorized by HD-26 as a revocable, exploratory-scoped lift of
-GOV-015. This is **not** HD-06: no provider is selected for production, no
+**SURVIVOR-BIASED EXPLORATORY REAL-MARKET VALIDATION.** Authorized by HD-26.
+This lives under ``tools/`` — deliberately NOT a product-code directory — so no
+GOV-015 scope change was needed or made. This is **not** HD-06: no provider is selected for production, no
 recurring spend is authorized, and nothing here may be cited as a Phase-1 or
 Phase-4 increment.
 
