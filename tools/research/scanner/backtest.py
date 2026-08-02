@@ -16,14 +16,28 @@ of them and none is recoverable by analysis:
    This biases every aggregate **upward** by an unknown amount. HD-07 exists
    because of exactly this, and it is unresolved.
 
-2. **THE ANCHOR IS AN ALL-TIME HIGH *OF THE DELIVERED WINDOW*.** The premium
-   key returns full history (~6,700 daily bars back to 1999 for the names here),
-   so the anchor is a genuine multi-decade high and this does test the thesis
-   rather than a proxy. It is still bounded by what the vendor delivers: a name
-   whose true all-time high predates the window would be anchored on a lower
-   maximum. *(An earlier form of this note said the free tier's ~100 bars made
-   the anchor a 5-month local high. That was true of the free tier and is not
-   true of the data actually used — corrected rather than left standing.)*
+2. **THE ANCHOR IS AN ALL-TIME HIGH *OF THE DELIVERED WINDOW*, AND THE WINDOW
+   DEPENDS ON HOW THE RUN WAS INVOKED.** Read this against `--max-bars` before
+   citing any figure.
+
+   * **Full delivered history** (no `--max-bars`): the premium key returns
+     ~6,700 daily bars back to 1999 for the names here, so the anchor is a
+     genuine multi-decade high and this does test the thesis rather than a
+     proxy. Still bounded by the vendor: a name whose true all-time high
+     predates the window is anchored on a lower maximum.
+   * **`--max-bars N`** takes a **causal PREFIX** — each symbol's *earliest* N
+     trading days, `bars[:N]` — not a common calendar window and not a recent
+     one. **Every published pilot figure comes from this path**, at N=1000. So
+     the anchor is a ~4-year high, the sentence above about a multi-decade high
+     is FALSE of those numbers, and the 40 symbols are **not pooled over a
+     shared period**: AAPL's prefix runs 1999-11 to 2003-10 while META's runs
+     2012-05 to 2016-05, because each begins at that symbol's own listing.
+
+   *This limit has now been wrong twice in opposite directions. It first said
+   the free tier's ~100 bars made the anchor a 5-month local high — true of the
+   free tier, false of the data used. It was corrected to claim a multi-decade
+   anchor, which is true of the delivered payload and false of every run that
+   actually produced a number. Found by the Strategic Product Reviewer.*
 
 3. **NO MULTIPLE-COMPARISON CONTROL.** One parameter set, one window, one
    universe, and every metric reported. Treat any apparent edge as a hypothesis

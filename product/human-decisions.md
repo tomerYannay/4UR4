@@ -1827,44 +1827,40 @@ why**. It failed closed and silently.
 6. Every rejection must return a **structured, observable** reason carrying symbol, date, detected
    jump, threshold, relevant split coefficient and rejection reason.
 
-**How it is implemented, in SIX cases.** *(This read "four cases" and enumerated only the original
-four while the engine had already grown to five. Code Review caught it. The enumeration is not
-decoration: this document states four lines below that what HD-27 changed is **when**
-`SUSPECTED_UNADJUSTED_SPLIT` fires — so an enumeration that omits two branches omits exactly the
-ruled content, and the ruling is the authority an operator or the next agent reads.)*
+**How it is implemented, case by case — one per executable branch of `_adjudicate_jump`.**
+*No count is written here on purpose.* This enumeration has been corrected four times for
+disagreeing with the branch set it describes, and the last correction was re-derived from **this
+list** rather than from the code — so it came out internally consistent and externally wrong, which
+is worse, because it then looks checked. Derive from `engine/guards.py`'s `_adjudicate_jump`, in
+source order, and nothing else.
 
-1. **No feed** → **REJECT** conservatively. The two hypotheses are genuinely indistinguishable
-   from prices alone. This is the branch GX-10 lands in.
-2. **Coefficient unusable** → **REJECT**. Four kinds: non-finite · zero or negative · not
-   coercible to a number at all (`None`, `"n/a"`, a list, an integer too large for a float) ·
-   **a boolean**. Absent evidence, not a mismatch; the rejection names what the feed *recorded*,
-   not the `NaN` it became, and asserts nothing about adjustment.
-   *(The boolean is listed explicitly because it is what this enumeration previously mis-routed.
-   `True` is finite, positive, non-zero and coerces cleanly to `1.0`, so under the earlier wording
-   it fell into **case 3** — "no split at this bar, ACCEPT" — while the engine rejects it. An
-   operator reading the ruling would have concluded the engine was misbehaving, and the next agent
-   would have read case 3 and reverted the check as a bug. The same defect as the case-5 correction
-   above with the sides swapped: there the ruling claimed more than the code, here it claimed
-   less.)*
-3. **No split at the bar** (coefficient 1.0) → **ACCEPT**. Real market movement. This is AAPL
-   2000-09-29.
-4. **Split at the bar, and the observed move matches `ln(coefficient)` in BOTH direction and
-   magnitude** → **REJECT**. Confirmed adjustment defect. *Direction is part of the test: an
-   unadjusted forward split makes prices fall and an unadjusted reverse split makes them rise, so
-   a same-magnitude move the other way is not that split.*
-5. **Split at the bar, right direction, magnitude does not match** → **ACCEPT**. The mismatch is
+1. **No feed at all** (`corporate_actions is None`) → **REJECT** conservatively. The two hypotheses
+   are indistinguishable from prices alone. This is the branch GX-10 lands in.
+2. **Feed present but it does not COVER this bar** — it neither declares complete history nor
+   records an entry here → **REJECT**, since
+   **[HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
+   (ii)**. Silence is absent evidence, not a record that no split occurred.
+3. **Coefficient unusable** — non-finite · zero or negative · not coercible to a number at all
+   (`None`, `"n/a"`, a list, an integer too large for a float) · **a boolean** → **REJECT**. Absent
+   evidence, not a mismatch; the rejection names what the feed *recorded*, not the `NaN` it became.
+4. **Feed COVERS the bar and the coefficient is 1.0** → **ACCEPT**. Real market movement. This is
+   AAPL 2000-09-29.
+   *(The coverage qualifier is load-bearing and its absence was **instance eight** of this PR's
+   signature defect. This clause read "No split at the bar (coefficient 1.0) → ACCEPT", unqualified,
+   after HD-29 (ii) had made a bare `{}` reject — and `coefficient_at` returns `1.0` by default for
+   an uncovered bar, so the unqualified clause described the pre-HD-29 conflation exactly. The
+   warning under case 3 above — that the next agent would read the clause and revert the check as a
+   bug — had already been written about this same clause, about booleans. The check they would have
+   reverted is the one that stops M-65's measured NVDA false ATH.)*
+5. **Split at the bar, WRONG direction** → **REJECT**, since HD-29 (i). An unadjusted forward split
+   makes prices fall and an unadjusted reverse split makes them rise; a same-magnitude move the
+   other way is not that split, and the reason says only that.
+6. **Split at the bar, right direction, magnitude matches `ln(coefficient)`** → **REJECT**.
+   Confirmed adjustment defect.
+7. **Split at the bar, right direction, magnitude does not match** → **ACCEPT**. The mismatch is
    all that was measured; **no cause for the move is established**. Accepted because re-adjusting
    on an unmatched split would adjust twice.
-6. **Split at the bar, WRONG direction** → **REJECT**, since
-   **[HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
-   (i)**. *(This clause read "direction **or** magnitude does not match → ACCEPT" and the engine had
-   six branches, not five. HD-29 reversed the direction half and this enumeration was not updated —
-   the third time this entry has been corrected for describing a branch set its own code does not
-   have, and the standard it was missing is stated four paragraphs above it.)* *(This clause read "prices are already adjusted and
-   something else moved the stock" — verbatim the claim B6 had just required the **engine** to stop
-   making, left standing in the **ruling** that governs it. It is also contradicted six lines below
-   by this document's own statement that an over-adjusted series lands in case 5: there, prices are
-   not already adjusted, they are adjusted twice. The B6 defect class surviving inside the B5 fix.)*
+
 
 **SUPERSEDED BY [HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
 (i), and retained because the reasoning is what the ruling overturned.** This paragraph read: the
@@ -2001,7 +1997,10 @@ not carried forward:
   multiple-comparison control · returns **measured rather than traded** · **this is NOT a Phase 4
   increment** and may not be cited as Phase 4 entry, implementation or exit evidence. The harness
   adds a fifth that matters here — the **anchor is an all-time high of the delivered window**, and
-  these figures come from a **1,000-bar causal prefix**, not full history.*
+  these figures come from a **1,000-bar causal PREFIX** — each symbol's *earliest*
+  1,000 trading days, not full history and not a shared calendar window. The pooled sample
+  therefore spans **different periods per name**: AAPL 1999-11..2003-10, META 2012-05..2016-05,
+  each starting at its own listing.*
   *A first version of this rider listed `backtest.py`'s four instead of HD-26's, substituting the
   windowed anchor for the Phase-4 disclaimer — dropping the limit with the highest misuse cost from
   the block that exists to prevent exactly that misuse. Found by Verification.*
