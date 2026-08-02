@@ -37,9 +37,10 @@ Status: planning artifact under [GOV-015](../governance/build-freeze.md); these 
 | HD-23 | high | Autonomous-execution directive: finish the permitted work; product delivery outranks governance polish | **PENDING PRODUCT OWNER CONFIRMATION** |
 | HD-24 | high | Merge authorization for PR #38/#37, a **Phase-3** GOV-015 scope lift, and a ruling on #36 Part B | **APPROVED (relayed) — two overreaches recorded** |
 | HD-25 | high | `FAILED_BREAKOUT` retains **both** exits — new-ATH reset and expiry (resolves ESC-4) | **APPROVED (relayed, no citable artifact)** |
+| HD-26 | high | Exploratory Alpha Vantage pilot: **NO** GOV-015 lift, NOT HD-06 | **APPROVED (relayed, no citable artifact)** |
+| HD-27 | high | A crash is not an adjustment defect: §18's split guard requires split evidence | **APPROVED (relayed, no citable artifact)** |
 | HD-28 | high | A phase whose exit criteria are met **as written** closes on the Product Steward's determination; no further approval | **APPROVED (relayed)** |
-
-> **HD-26 and HD-27 are not missing.** They are recorded on the branch of [PR #44](https://github.com/tomerYannay/4UR4/pull/44) (the exploratory Alpha Vantage pilot and the HD-27 split-guard correction) and land in this register when that PR merges. The gap is a branch-ordering artifact, not a lost decision — noted because a reader of this file alone would otherwise have to guess.
+| HD-29 | high | Unseparable split evidence REJECTS with an honest reason; an empty feed is absent evidence, not evidence of absence | **APPROVED (relayed, no citable artifact)** |
 
 ---
 
@@ -1732,6 +1733,303 @@ them together would level exactly the distinction these headings exist to keep.*
 
 ---
 
+## HD-26 — Exploratory Alpha Vantage pilot: NO GOV-015 lift, NOT HD-06 · materiality: **high**
+
+- **Status:** **APPROVED — Product Owner, 2026-07-29.** Relayed in session.
+- **Artifact:** **NONE.** No issue comment, no PR review, no commit trailer. Same disclosure
+  form as HD-23/HD-24/HD-25, under the single shared identity
+  [#21](https://github.com/tomerYannay/4UR4/issues/21) / [#34](https://github.com/tomerYannay/4UR4/issues/34).
+
+**Ruling.** Run a **survivor-biased exploratory real-market validation** of the engine against
+Alpha Vantage daily data. **GOV-015 IS NOT LIFTED. The freeze marker is UNCHANGED at
+`scope: ["engine/"]`.**
+
+**Correction of record — the first attempt got this backwards, and the Product Owner's words are
+the correction:** *"A freeze marker is an enforcement mechanism, not a source of authorization."*
+The pipeline was initially placed in `providers/` and `scanner/` — both **guarded product-code
+directories** — and the marker was widened to make it pass. That inverts the control: it edits the
+enforcement mechanism to authorize the thing the mechanism exists to stop. **HD-24 leaves
+`scanner` frozen and this ruling does not disturb that.**
+
+**Where it actually lives: `tools/research/`.** `tools` is **not** in `PRODUCT_CODE_DIRS`, so no
+scope change is needed or made. Requirement 3 — production/runtime engine code must not depend on
+the pipeline — is **mechanical, not a convention**, but by a different test than first claimed:
+`A2Purity.test_the_only_dependency_is_a_narrow_standard_library_subset` allows engine production
+modules to import only `{math, decimal, dataclasses, enum, typing, __future__}`, so a root `tools`
+import fails the suite.
+
+**Attribution corrected, because the first version of this paragraph credited the wrong test and
+two reviewers caught it independently.** It said architecture test **A-3** enforced this. A-3's
+assertions are substring checks — `assertNotIn("tools/", source)` and `assertNotIn('"tools"',
+source)` — and a dotted `from tools.research.providers import alphavantage` contains neither, so
+A-3 would pass it. The conclusion was right and the mechanism named for it was wrong.
+
+**The residual gap, stated rather than left implicit.** A-2's allowlist iterates `PRODUCT_MODULES`
+(top-level `engine/*.py`), which is exactly the production surface Requirement 3 names. Test
+modules under `engine/tests/` are covered only by A-3's substring check and could therefore import
+`tools.research` undetected. Verified at this head: no `engine/` module, test or production,
+references `tools.research` in any form.
+
+**This is expressly NOT [HD-06](#hd-06--data-provider-selection--recurring-cost--materiality-high).**
+No provider is selected for production, **no recurring spend is authorized**, and no licence is
+accepted. HD-06 remains **PENDING**. There is **no lift to revoke**: the marker stands at
+`scope: ["engine/"]`, and revocation of this pilot means deleting `tools/research/`, not editing
+the marker.
+
+**The licence position, recorded because it constrains the output and was not waived.**
+[`data-provider-findings.md`](data-provider-findings.md) §E records, **VERIFIED against the Terms
+of Service PDF**, that Alpha Vantage grants use *"for personal, non-commercial use, unless you and
+Alpha Vantage have agreed otherwise in writing"*, and that "Professional" covers *"any type of
+commercial activity that allows individuals or entities other than User to access information
+directly or indirectly"*. The pilot therefore produces **internal, non-redistributed** evidence
+only. **Redistributing the data, or shipping it in a product surface, is outside this ruling.**
+The Product Owner was shown this finding before the work began and directed it anyway; that is
+their call on their own account, and it is recorded rather than assumed.
+
+**Secret handling, ruled as part of the directive.** The API key is read **only** from
+`ALPHA_VANTAGE_API_KEY`. It is never hardcoded, logged, written to a source file, fixture,
+document or test, never placed in a committed URL, and **raw vendor payloads are never
+committed**. `.cache/`, `*.env` and `.secrets/` are gitignored.
+
+**Classification, recorded in the exact terms ruled.** This pilot is
+**survivor-biased exploratory real-market validation**. It is **NOT Phase 4 entry**, **NOT Phase 4
+implementation**, and **NOT Phase 4 exit evidence**, and may not be cited as any of them.
+
+**Scope limits that travel with every number the pilot produces.** Survivor-biased universe
+(names that exist **today** — HD-07 unresolved, and the bias runs **upward**) · no
+multiple-comparison control · forward returns **measured, not traded** (entry at the breakout
+close, which is not obtainable) · **not a Phase 4 increment** — Phase 4's exit criterion is a
+backtest over the historical 4UR4 US Large-Cap 500 at point-in-time membership, which this is not.
+
+**HD-01 is preserved, and it decided the endpoint.** `TIME_SERIES_DAILY` returns raw OHLC with
+**no split coefficient**, so the ruled split-adjusted/dividend-unadjusted basis cannot be built
+from it at all. `TIME_SERIES_DAILY_ADJUSTED` supplies `8. split coefficient`, so the pilot takes
+**raw OHLC and applies split-only adjustment**, and **never reads `5. adjusted close`**, which is
+dividend-adjusted and is the basis HD-01 rejected. Verified: NVDA raw 1208.88 on 2024-06-07 →
+**120.888** split-only, against the vendor's dividend-adjusted 120.68.
+
+## HD-27 — A crash is not an adjustment defect: §18's split guard requires split evidence · materiality: **high**
+
+- **Status:** **APPROVED — Product Owner, 2026-07-29.** Relayed in session. **Artifact: NONE.**
+
+**The defect, found on real data rather than in review.** AAPL fell **51.9% on 2000-09-29** on a
+profit warning — vendor split coefficient **1.0**, no corporate action. §18's guard inferred an
+unadjusted split from the size of the move alone and **rejected the entire 26-year bar-set**. The
+engine emitted nothing for AAPL: `final_state = NONE`, zero breakouts, **and no diagnostic saying
+why**. It failed closed and silently.
+
+**Ruling.**
+1. **Separate** extreme real-market movement from a confirmed corporate-action adjustment defect.
+2. A large log jump **may trigger inspection but must not, alone, invalidate a symbol.**
+3. **Use split-event evidence** to decide whether the series is improperly adjusted.
+4. Where no split occurred, **preserve the bar and continue normally.**
+5. **Never fail silently** to `final_state = NONE` with zero breakouts and no diagnostic.
+6. Every rejection must return a **structured, observable** reason carrying symbol, date, detected
+   jump, threshold, relevant split coefficient and rejection reason.
+
+**How it is implemented, case by case — one per executable branch of `_adjudicate_jump`.**
+*No count is written here on purpose.* This enumeration has been corrected four times for
+disagreeing with the branch set it describes, and the last correction was re-derived from **this
+list** rather than from the code — so it came out internally consistent and externally wrong, which
+is worse, because it then looks checked. Derive from `engine/guards.py`'s `_adjudicate_jump`, in
+source order, and nothing else.
+
+1. **No feed at all** (`corporate_actions is None`) → **REJECT** conservatively. The two hypotheses
+   are indistinguishable from prices alone. This is the branch GX-10 lands in.
+2. **Feed present but it does not COVER this bar** — it neither declares complete history nor
+   records an entry here → **REJECT**, since
+   **[HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
+   (ii)**. Silence is absent evidence, not a record that no split occurred.
+3. **Coefficient unusable** — non-finite · zero or negative · not coercible to a number at all
+   (`None`, `"n/a"`, a list, an integer too large for a float) · **a boolean** → **REJECT**. Absent
+   evidence, not a mismatch; the rejection names what the feed *recorded*, not the `NaN` it became.
+4. **Feed COVERS the bar and the coefficient is 1.0** → **ACCEPT**. Real market movement. This is
+   AAPL 2000-09-29.
+   *(The coverage qualifier is load-bearing and its absence was **instance eight** of this PR's
+   signature defect. This clause read "No split at the bar (coefficient 1.0) → ACCEPT", unqualified,
+   after HD-29 (ii) had made a bare `{}` reject — and `coefficient_at` returns `1.0` by default for
+   an uncovered bar, so the unqualified clause described the pre-HD-29 conflation exactly. The check a
+   next agent would have reverted, reading the unqualified clause, is the one that stops M-65's
+   measured NVDA false ATH.)*
+5. **Split at the bar, WRONG direction** → **REJECT**, since HD-29 (i). An unadjusted forward split
+   makes prices fall and an unadjusted reverse split makes them rise; a same-magnitude move the
+   other way is not that split, and the reason says only that.
+6. **Split at the bar, right direction, magnitude matches `ln(coefficient)`** → **REJECT**.
+   Confirmed adjustment defect.
+7. **Split at the bar, right direction, magnitude does not match** → **ACCEPT**. The mismatch is
+   all that was measured; **no cause for the move is established**. Accepted because re-adjusting
+   on an unmatched split would adjust twice.
+
+
+**SUPERSEDED BY [HD-29](#hd-29--unseparable-split-evidence-rejects-and-silence-is-not-a-record--materiality-high)
+(i), and retained because the reasoning is what the ruling overturned.** This paragraph read: the
+direction test *"errs toward accepting"*, an over-adjusted series *"now lands in case 5 and is
+**ACCEPTED**"*, and *"over-adjustment is therefore **not detected at all**"*. **All three are false
+at this head.** The wrong-direction shape now REJECTS. Over-adjustment is still not *detected* — it
+is no longer *admitted*. That is a deliberate, disclosed gap rather than an oversight:
+`+ln(c)` at a split bar is genuinely ambiguous between over-adjustment and a real `c`× move, and
+separating them needs a distinct over-adjustment hypothesis that **no ruling has supplied**. Logged
+as **M-68**. Forcing a verdict there would be a product-definition change and is reserved.
+
+**GX-10 disposition — RULED by the Product Owner, 2026-07-29, and no longer an open question.**
+
+- **GX-10 stays immutable.** It carries a 2:1 unadjusted jump, **no corporate-action data**, and
+  expects `SUSPECTED_UNADJUSTED_SPLIT`; HD-22 protects it and nothing here edits it.
+- **With corporate-action evidence available, an extreme jump alone must not reject the series.**
+  That is clause 2, and it governs every real-data path.
+- **Without corporate-action evidence, the existing fail-closed fixture behaviour is retained**,
+  and **the evidence-dependent distinction is disclosed** rather than left implicit — which is
+  what this paragraph and `_adjudicate_jump`'s docstring do.
+- **Do not escalate** unless an implementation requires changing GX-10, or requires changing
+  canonical behaviour **without** an evidence feed. Neither is the case here.
+
+The earlier form of this entry framed the fallback as an open HD-22 escalation awaiting a Product
+Owner ruling. **That ruling has been given and the framing is superseded**, not merely satisfied:
+the evidence-dependent split is now the ruled design, not a compromise pending review.
+
+**No reason code was added.** The closed `ReasonCode` set is asserted equal to the fixture
+schema's by architecture test A-4; minting a member would be a product-definition change. What
+changed is **when** `SUSPECTED_UNADJUSTED_SPLIT` fires, not the code set.
+
+**The match tolerance, and which way it errs.** A split of ratio `c` on unadjusted prices implies
+an observed jump of `|ln(c) − ln(1+r)|` for that day's genuine move `r`, so the tolerance bounds
+`|ln(1+r)|`. It is **0.15** (~±16% same-day movement). At an initial 0.25 a 2:1 split "matched"
+anything from 1.56× to 2.57×, so a genuine **2.34× crash landing on a split date** was
+misattributed as an adjustment defect.
+
+**Correction of record — this paragraph previously claimed "a regression test caught it," and no
+such test existed.** A code review mutated the constant and measured the suite green at 0.031,
+0.15, 0.3, 0.4 **and 0.47**: nothing failed at 0.25. The only case in that region used a 3.2× drop
+whose discrepancy is 0.47, which passes at every tolerance below it. The claim was false, and in
+the one place this repository is least entitled to make one — asserting test coverage for the
+single tuned constant the change introduces. `ToleranceIsPinnedAtTheRulingsOwnCase` now supplies
+it: the 2.34× drop measures `jump = 0.850151` and `|jump − ln 2| = 0.157004`, and
+`test_the_constant_cannot_be_widened_past_this_case` asserts the constant against the **computed**
+discrepancy `0.157004` rather than against a literal — so the suite is green at exactly `0.157`
+and fails from `0.158`. Re-measured by mutating the constant against the full suite: green at 0.15
+and 0.157, **FAILED at 0.158, 0.25, 0.3, 0.4 and 0.47**. *(This sentence read "asserts
+`SPLIT_MATCH_TOLERANCE < 0.157` directly", which misnames its own emitter and is wrong at exactly
+one measured value — written, again, in the paragraph whose subject is asserting numbers one has
+not measured. Found by Code Review.)*
+
+**The pin is one-sided, and that is recorded rather than left to be assumed.** It binds hard
+against *widening* — the direction of the HD-27 defect — but only loosely against narrowing: the
+suite is still green at 0.031, because the tightest lower pin is
+`test_a_2_to_1_unadjusted_split_is_rejected_when_the_feed_confirms_it`, whose discrepancy is
+**0.030772** = `|ln(96/49.5) − ln 2|`. A constant bracketed on one side is not a constant
+bracketed.
+
+*Corrected: this read `0.0298`, and Verification FAILED the head on it — rightly. The number was
+not a rounding slip but a falsifiable claim of downward slack that does not exist: setting the
+constant to 0.0298 turns the suite **red**, including the very test named here as the pin.
+Measured: 0.0298 FAIL · 0.0300 FAIL · 0.030772 PASS · 0.031 PASS. *(The failure **count** at 0.0298
+differs by injection method — Verification observed 4, a re-measurement via module attribute
+observed 2 — so no count is asserted here. The pass/fail boundary is what the pin claims and it
+reproduces both ways.)* Written into the
+paragraph whose subject is asserting numbers one has not measured, and caught independently by two
+gates. Logged as **M-71**, because the third instance of a pattern is no longer an incident.*
+
+The tolerance **errs toward accepting**,
+because a missed defect surfaces later as anomalous geometry, whereas a wrongly rejected symbol
+produces nothing at all and looks indistinguishable from an absence of signal — which is the
+failure HD-27 exists to end.
+
+## HD-29 — Unseparable split evidence REJECTS, and silence is not a record · materiality: **high**
+
+**Status: APPROVED (relayed). Artifact: NONE** — no issue comment, no PR review, no commit
+trailer. Recorded in the same disclosed posture as HD-23/24/25/26/27, and **the gap is larger here**
+than for those: this ruling authorizes a behavioural engine change *and* a behavioural edit inside a
+quarantined directory. [#21](https://github.com/tomerYannay/4UR4/issues/21) remains the ceiling.
+
+**Ruled by the Product Owner, 2026-07-29.** Escalated by the Strategic Product Reviewer as
+`STRATEGIC_HUMAN_DECISION_REQUIRED` on PR #44.
+
+**What the Reviewer found, and it is the reason this ruling exists.** `_adjudicate_jump` reasoned
+from **one premise to two opposite verdicts**. The unusable-coefficient branch held that where the
+two hypotheses cannot be separated *"the safe direction is to reject"*; sixty lines later the
+wrong-direction branch began from the identical premise — *"genuinely ambiguous … the two
+hypotheses cannot be separated"* — and **accepted**, citing HD-27 as if the ruling had determined
+it. HD-27 determined no such thing. It was an agent's choice presented as a derivation, and three
+code reviews and two verifications passed it, because each was asking whether the code was correct
+rather than whether the decision was the agent's to make.
+
+**The Reviewer also found the option nobody had considered.** The engine argued that closing the
+gap *"would require a distinct over-adjustment hypothesis, and no ruling has supplied one."* True
+for **detecting** over-adjustment — and false for **rejecting an ambiguous bar-set**. A rejection
+that says only *"a move of split magnitude in the wrong direction sits at a split bar; the cause is
+not established"* invents no hypothesis, satisfies HD-27 clauses 5 and 6, and is how every other
+unseparable-hypothesis branch already behaves.
+
+**RULING (i) — direction.** A supra-threshold move whose direction is inconsistent with the recorded
+split **REJECTS**, with a structured reason claiming **only the direction mismatch**. It must not
+claim over-adjustment and must not claim the prices are already adjusted. Over-adjustment is still
+not *detected*; it is no longer *admitted*.
+
+**RULING (ii) — silence.** A feed holding no split data is **absent evidence**.
+`CorporateActions(sym, {})` may not be read as *"I have complete history and there is no split
+here."* `None` and `{}` were two spellings of the same thing producing opposite verdicts, and the
+conflation had become load-bearing in a test's own name.
+
+**How (ii) is implemented without re-breaking AAPL, which is the whole point of HD-27.** Coverage is
+made **explicit and per-bar**: `CorporateActions` carries `complete_history`, defaulting to the safe
+direction, and `covers(bar)` is true when the feed declares completeness **or** carries an entry at
+that bar. A caller that genuinely holds the full history says so. The pilot's `run_symbol` does —
+the vendor payload is complete for the range its bars cover — so **AAPL 2000-09-29 is still
+ACCEPTED and still produces its breakouts**, verified end-to-end through the harness, while a bare
+`{}` now rejects as unexplained. This is backlog row **M-65**, ruled rather than deferred.
+
+**The one rule, statable in a sentence, which it was not before:** *unseparable hypotheses reject,
+and the reason says only what was measured.*
+
+**Not changed.** §18 still defines exactly three whole-bar-set guards; no `ReasonCode` was minted;
+GX-10's no-feed contract is byte-identical; `detect()` still defaults `corporate_actions=None`, so
+all 23 golden fixtures and RM-01 take the no-feed branch and cannot move.
+
+**Consequence for the pilot's published numbers — RERUN COMPLETE, measured under this ruling.**
+The 40-symbol run was repeated at commit `6a873ab` and every figure below is measured under HD-29,
+not carried forward:
+
+- **40 attempted · 40 COMPLETE · 0 rejected · 0 timed out · 0 insufficient · 0 provider errors.**
+- **306 raw breakouts · 255 non-overlapping · 6 excluded** for an incomplete forward window.
+  *Every number in this block carries **HD-26's four limits**, which is what HD-26 requires to
+  travel with every number the pilot produces: survivorship bias running **upward** · no
+  multiple-comparison control · returns **measured rather than traded** · **this is NOT a Phase 4
+  increment** and may not be cited as Phase 4 entry, implementation or exit evidence. The harness
+  adds a fifth that matters here — the **anchor is an all-time high of the delivered window**, and
+  these figures come from a **1,000-bar causal PREFIX** — each symbol's *earliest*
+  1,000 trading days, not full history and not a shared calendar window. The pooled sample
+  therefore spans **different periods per name**: AAPL 1999-11..2003-10, META 2012-05..2016-05,
+  each starting at its own listing — **author-run**, emitted as per-row `first_date`/`last_date` by
+  `compare_hd27.py` into a gitignored `.cache/` artifact, so no repository gate re-derives them.*
+  *A first version of this rider listed `backtest.py`'s four instead of HD-26's, substituting the
+  windowed anchor for the Phase-4 disclaimer — dropping the limit with the highest misuse cost from
+  the block that exists to prevent exactly that misuse. Found by Verification.*
+- **AAPL preserved end-to-end, on the declared 1000-bar causal prefix**: COMPLETE, **3 breakouts**,
+  **1 inspected-and-accepted** extreme jump (bar 231, 2000-09-29, log jump `0.618163` on the
+  adjusted **high** series — the raw-**close** jump for the same event is `0.731247`, which is the
+  figure the regression test carries, and the two are not interchangeable), coefficient `1.0`,
+  `final_state RETESTED`, **no silent rejection**. *The window is load-bearing and is named because
+  the record previously omitted it: on the **full 6,724-bar** series the same call yields **68
+  breakouts** and `final_state NONE`.* — the verdict text now reads *"no split
+  at this bar **on a feed that covers it**"*, so HD-29's coverage requirement is visible in the
+  emitted evidence rather than only in the code.
+- **Zero ambiguous-evidence rejections**, and that is a finding rather than an absence: no symbol in
+  this universe reached the wrong-direction or uncovered-bar branch. All **four** accepted extreme
+  jumps sat on feeds whose coverage came from the caller's `complete_history=True` **declaration**,
+  with `coefficient_at` returning its `1.0` default rather than a per-bar recorded entry. That is
+  still *confirmed evidence of no split* under this ruling — a complete feed silent at a bar has
+  said there was no split — but the distinction matters and the first wording blurred it. **The pilot supplies no
+  real-market instance of over-adjustment**; those branches are exercised by the engine suite only.
+
+*Labelled before/after diagnostic, and the only comparison drawn:* HD-29 changed **no** pilot
+outcome — identical status table, identical 306/255, identical statistics. **This half is an
+author-run claim**: it requires the pre-HD-29 pass for comparison, which lives in gitignored
+`.cache/` and no repository gate can re-derive. What *is* independently verified is the mechanism
+behind it — across all 40 symbols the wrong-direction and uncovered-bar branches are unreached under
+the shipped configuration, which is consistent with the claim without establishing it. Expected, since the new
+branches are unreached here. The earlier figures were therefore not wrong; they were **unverified
+against a ruling that had not been made**, and now they are measured under it.
+
 ## HD-28 — A phase closes on its criteria; no further approval · materiality: **high**
 
 **Ruled by the Product Owner, 2026-07-29.** Escalated by the Strategic Product Reviewer as
@@ -1773,6 +2071,7 @@ is independent of the exit gate:
 **Recorded consequence.** `phase_3_exit` at
 [`project-state.md`](project-state.md) cites this ruling in its `authority:` field instead of
 claiming none was required.
+
 
 # Delegated product decisions (HD-21)
 

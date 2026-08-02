@@ -4,3 +4,20 @@
 # OS / editor cruft
 .DS_Store
 *.swp
+
+# Vendor API responses and normalized caches — NEVER committed.
+# Alpha Vantage ToS is personal/non-commercial by default (see
+# product/data-provider-findings.md §E); committed vendor payloads would also
+# make the repository a redistribution surface. HD-26 forbids both.
+.cache/
+*.env
+.secrets/
+
+# Python bytecode. Absent until 2026-08-02, when a `git add -A` committed nine
+# .pyc blobs — including one whose src_size recorded the pre-fix source of the
+# very file that commit was fixing. No gate greps for them and none of the six
+# required checks would have caught it; merging is irreversible without a
+# history rewrite. Found by Code Review.
+__pycache__/
+*.pyc
+*.pyo

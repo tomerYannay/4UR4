@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import ast
 import os
+import re
 import unittest
 from typing import Dict, List, Set
 
@@ -451,12 +452,42 @@ class ScopeDiscipline(unittest.TestCase):
                 "%s names the reserved, unreachable EXPIRED state" % name,
             )
 
-    def test_engine_is_the_only_product_directory(self) -> None:
-        product_like = {"src", "app", "lib", "server", "api", "worker", "scanner", "dashboard"}
+    def test_no_product_directory_outside_the_lifted_scope_appears(self) -> None:
+        """The permitted set is **derived from the freeze marker**, not hand-held.
+
+        This previously hard-coded ``engine`` as the only permitted product
+        directory, which made it fail the moment the Product Owner widened the
+        lift — reporting a *governance* change as an engine defect. It now reads
+        ``scope`` out of ``governance/build-freeze.md`` and fails only for a
+        product directory the marker does **not** name, which is the condition
+        GOV-015 actually states.
+        """
+        marker = _source(os.path.join(REPO_ROOT, "governance", "build-freeze.md"))
+        blocks = re.findall(
+            r"##[ \t]*Freeze marker[^\r\n]*(?:\r?\n)+```ya?ml\r?\n([\s\S]*?)```", marker
+        )
+        self.assertEqual(len(blocks), 1, "expected exactly one freeze marker block")
+        scope_line = None
+        for line in blocks[0].split("\n"):
+            if line.startswith("scope:"):
+                scope_line = line
+                break
+        self.assertIsNotNone(scope_line, "freeze marker carries no line-initial scope")
+        lifted = {d.rstrip("/") for d in re.findall(r'"([^"]+)"', scope_line)}
+        # Anti-vacuity: an empty parse would make every assertion below pass.
+        self.assertTrue(lifted, "lifted scope parsed empty; the check would be vacuous")
+        self.assertIn("engine", lifted, "engine/ must always be in the lifted scope")
+
+        product_like = {"src", "app", "lib", "server", "api", "worker", "scanner",
+                        "dashboard", "providers", "db", "billing", "alerts",
+                        "services", "web", "backend", "frontend", "packages", "client"}
         for name in os.listdir(REPO_ROOT):
-            self.assertNotIn(
-                name, product_like, "a product directory outside engine/ appeared: %s" % name
-            )
+            if name in product_like and name not in lifted:
+                self.fail(
+                    "product directory %r exists but the freeze marker's lifted scope "
+                    "is %s — add it to the marker (and PRODUCT_CODE_DIRS) or remove the "
+                    "directory; the prose alone does not lift it" % (name, sorted(lifted))
+                )
 
 
 if __name__ == "__main__":  # pragma: no cover

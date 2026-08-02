@@ -167,7 +167,7 @@ rule 4 remains unsatisfied and Phase-3 implementation does not begin.** See
 
 **The marker's `scope` is UNCHANGED, and the reason is a limit rather than a reassurance.**
 Phase 3 work is inside `engine/`, the directory the Phase-2 lift already names, so
-`scope: ["engine/"]` is correct and **must not change**: the marker is a list of directory
+`scope` was `["engine/"]` at the time of that ruling and **did not change for it** — *HD-26 (2026-07-29) likewise added no directory: its first revision did, and that widening was reverted on Product Owner ruling* : the marker is a list of directory
 names checked against the validator's guarded list, and this lift widens **authorized
 behaviour within** a directory, not the directory list. The consequence must be stated:
 **`tools/validate.mjs` CANNOT DISTINGUISH Phase-2 work from Phase-3 work inside `engine/`.**
@@ -230,9 +230,16 @@ autonomous_implementation: ENABLED_FOR_SCOPE
 lifted_by: "Product Owner — issue #31 (HD-22, Phase 2), 2026-07-26; extended by issue #39 (HD-24 §3, Phase 3), 2026-07-28"
 lifted_at: "2026-07-28"
 # `scope` is a list of DIRECTORY names, matched against the validator's guarded list.
-# It is UNCHANGED because the directory is unchanged: both lifts are inside `engine/`.
-# The validator therefore cannot tell Phase-2 work from Phase-3 work here — see the
-# Phase 3 section above, which states that gap rather than leaving it to be discovered.
+# HD-22 (Phase 2) and HD-24 §3 (Phase 3) are BOTH inside `engine/`, so the validator
+# cannot tell Phase-2 work from Phase-3 work — that gap is stated in the Phase 3
+# section above rather than left to be discovered.
+# HD-26 (2026-07-29) adds NOTHING here, deliberately.  An earlier revision widened this
+# list to ["engine/", "providers/", "scanner/"] so an exploratory pilot would pass, and
+# the Product Owner reverted it: "a freeze marker is an enforcement mechanism, not a
+# source of authorization."  The pilot lives in `tools/research/`, and `tools` is not in
+# the validator's PRODUCT_CODE_DIRS, so no entry is needed.  If you are here because some
+# record told you `providers/` and `scanner/` belong in this list: they do not, and that
+# record is the residue of the reverted attempt.
 scope: ["engine/"]
 ```
 

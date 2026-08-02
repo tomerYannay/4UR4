@@ -177,3 +177,68 @@ jobs:
         # agreement with the reference model earns no credit (HD-15 condition 1), and the
         # engine imports nothing under tools/ (asserted by its own architecture test).
         run: python3 -m engine.tests.run_all
+
+      - name: Research harness — the pilot's measurement arithmetic
+        # These 38 tests (24 provider + 14 backtest) pin the split-adjustment
+        # direction, the dividend-close exclusion, the API-key redaction
+        # contract, and None-not-zero on truncated forward horizons.
+        #
+        # The floor below is 30 — EIGHT UNDER the current count, deliberately.
+        # It catches broken DISCOVERY (a rename, a re-home, a lost __init__.py),
+        # not a deleted test: EIGHT harness tests could be removed with this gate
+        # still green -- the check is `-lt 30`, so count=30 still passes.
+        # Measured: count=31 GREEN, count=30 GREEN, count=29 RED. An earlier
+        # wording said five, contradicting the then-"SIX UNDER" two lines above it
+        # and making the gate look tighter than it is. Said explicitly because the comment previously read "these
+        # 30 tests" while the suite was 36, which invited exactly the opposite
+        # reading — that the floor was coincident with the suite and so caught
+        # any loss. The numeral was right when written and went stale two commits
+        # later. The emitter is the `unittest discover` in this step's `run:`
+        # block below, which reports "Ran 38 tests". The count has moved twice
+          # (30 -> 36 -> 38) and this comment was stale both times.
+        #
+        # `engine.tests.run_all`
+        # discovers only `engine/tests`, so until this step existed no gate ran
+        # them and they were decorative: a broken measurement layer would have
+        # shipped green and quietly produced wrong pilot numbers.
+        #
+        # This is a RESEARCH harness, not product code. It gates its own
+        # correctness and it gates NO PHASE — but say the other half too: there
+        # is one job here, and its name is the required status context, so this
+        # step gates EVERY MERGE. A defect in a disposable research harness can
+        # block an engine PR that never touched it. That fails safe, and it is
+        # why the step is deliberately NOT in tools/validate.mjs's requiredLines:
+        # a permanent gate should be pinned, a disposable one should be
+        # removable. (This file has been corrected once already for exactly this
+        # shape of half-statement — see the "Dependency-free" note above.)
+        #
+        # The floor is not decoration: `unittest discover` exits 0 on "Ran 0
+        # tests", so a rename, a re-home or a lost __init__.py would turn this
+        # green while asserting nothing — the very failure the step exists to
+        # end, one layer up, and indistinguishable from a real pass.
+        run: |
+          # `set -o pipefail` is load-bearing, not boilerplate. A pipeline's exit
+          # status is its LAST command's, so `unittest ... | tee` reports tee's
+          # success and `set -e` never fires: the first version of this step
+          # exited GREEN on a suite with 3 failures, because the count check
+          # passed and nothing else looked. Measured, not theorised. A floor that
+          # swallows the failure it sits above is strictly worse than no floor.
+          set -o pipefail
+          python3 -m unittest discover -s tools/research -t . -p "test_*.py" 2>&1 | tee /tmp/research.log
+          # `|| true` is defence in depth and is currently UNREACHABLE: pipefail
+          # aborts at the pipeline above on any non-zero unittest exit, so this
+          # line runs only after a clean exit, and a clean exit always emits a
+          # "Ran N" line (including "Ran 0 tests"). It guards the one shape that
+          # would otherwise slip past — a green run with no such line.
+          #
+          # An earlier version of this comment claimed the `|| true` was what
+          # made the ::error:: annotation print on an import error. Code Review
+          # measured the step with and without it across six scenarios and got
+          # identical results in all six; the annotation's absence on a missing
+          # `__init__.py` is unchanged either way. Corrected rather than left
+          # standing five lines under "Measured, not theorised."
+          count=$(grep -oE '^Ran [0-9]+ test' /tmp/research.log | grep -oE '[0-9]+') || true
+          if [ -z "$count" ] || [ "$count" -lt 30 ]; then
+            echo "::error::research harness discovered ${count:-0} tests, expected >= 30 — discovery is broken, not the suite"
+            exit 1
+          fi
