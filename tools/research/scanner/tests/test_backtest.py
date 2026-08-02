@@ -8,7 +8,6 @@ prove nothing.
 
 from __future__ import annotations
 
-import inspect
 import unittest
 from dataclasses import dataclass
 
@@ -241,10 +240,51 @@ class TheCompletenessDeclarationIsPinned(unittest.TestCase):
         self.assertTrue(captured["complete_history"])
 
     def test_the_declaration_is_what_the_provider_actually_supports(self):
-        # The flag is only honest because normalize() derives splits_applied from
-        # the same payload rows it builds bars from. If that ever stops being
-        # true the declaration becomes false and fails OPEN (M-74).
+        """The invariant the declaration rests on, asserted structurally.
+
+        This method previously read `normalize`'s SOURCE and asserted the
+        substring "split" appeared in it. That cannot fail for any recognisable
+        version of the function — the docstring alone satisfies it — and Code
+        Review measured it **green against a `normalize()` whose
+        `splits_applied` is hardcoded to `()`**, which is M-74's exact failure.
+        A test that passes against the defect it names is worse than no test,
+        and it was the M-70 shape (a substring check that does not do what its
+        name says) reintroduced by the commit whose subject was that a
+        load-bearing line had no test.
+
+        What actually makes `complete_history=True` honest is that `normalize`
+        derives `splits_applied` from the same payload rows it builds `bars`
+        from, so every split date IS a bar date and a bar with no entry is one
+        the vendor recorded as 1.0. That is asserted here on a real normalized
+        payload, not read out of the source text.
+        """
         from tools.research.providers import alphavantage as av
 
-        source = inspect.getsource(av.normalize)
-        self.assertIn("split", source.lower())
+        payload = {
+            "Meta Data": {"3. Last Refreshed": "2020-01-03", "4. Output Size": "full"},
+            "Time Series (Daily)": {
+                "2020-01-02": {"1. open": "100.0", "2. high": "101.0", "3. low": "99.0",
+                               "4. close": "100.0", "6. volume": "1000",
+                               "8. split coefficient": "1.0"},
+                "2020-01-03": {"1. open": "50.0", "2. high": "51.0", "3. low": "49.0",
+                               "4. close": "50.0", "6. volume": "2000",
+                               "8. split coefficient": "2.0"},
+            },
+        }
+        series = av.normalize(payload, "X")
+
+        bar_dates = {b.date for b in series.bars}
+        split_dates = {d for d, _ in series.splits_applied}
+
+        # 1. The split was recorded at all — this is what the old assertion
+        #    could not detect.
+        self.assertEqual(split_dates, {"2020-01-03"})
+        # 2. Every split date is a bar date. This is the invariant
+        #    `complete_history=True` depends on: a bar with no entry is a bar
+        #    the vendor said had no split, not a bar the feed forgot.
+        self.assertTrue(split_dates <= bar_dates,
+                        "a split date is not a bar date; `complete_history=True` "
+                        "would be a false declaration (M-74)")
+        # 3. The 1.0 bar is absent from splits_applied rather than recorded as
+        #    a no-op, which is why absence has to mean "no split".
+        self.assertNotIn("2020-01-02", split_dates)

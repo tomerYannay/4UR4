@@ -266,7 +266,8 @@ def _adjudicate_jump(
     move is evidence and discarding it lets an up-move "match" a forward split.
     The magnitude is what the caller records; only this function needs the sign.
 
-    HD-27's separation, as amended by HD-29, in six cases.  Three of them —
+    HD-27's separation, as amended by HD-29, in SEVEN cases — one per
+    executable branch, counted rather than asserted.  Three of them —
     no feed, no coverage, unusable coefficient — are the *same* judgement:
     where the evidence does not separate the hypotheses, reject.  HD-29 (i)
     added the fourth member of that family, the direction mismatch, which

@@ -179,13 +179,13 @@ jobs:
         run: python3 -m engine.tests.run_all
 
       - name: Research harness — the pilot's measurement arithmetic
-        # These 36 tests (24 provider + 12 backtest) pin the split-adjustment
+        # These 38 tests (24 provider + 14 backtest) pin the split-adjustment
         # direction, the dividend-close exclusion, the API-key redaction
         # contract, and None-not-zero on truncated forward horizons.
         #
-        # The floor below is 30 — SIX UNDER the current count, deliberately.
+        # The floor below is 30 — EIGHT UNDER the current count, deliberately.
         # It catches broken DISCOVERY (a rename, a re-home, a lost __init__.py),
-        # not a deleted test: SIX harness tests could be removed with this gate
+        # not a deleted test: EIGHT harness tests could be removed with this gate
         # still green -- the check is `-lt 30`, so count=30 still passes.
         # Measured: count=31 GREEN, count=30 GREEN, count=29 RED. An earlier
         # wording said five, contradicting the "SIX UNDER" two lines above it
@@ -194,7 +194,8 @@ jobs:
         # reading — that the floor was coincident with the suite and so caught
         # any loss. The numeral was right when written and went stale two commits
         # later. The emitter is the `unittest discover` in this step's `run:`
-        # block below, which reports "Ran 36 tests".
+        # block below, which reports "Ran 38 tests". The count has moved twice
+          # (30 -> 36 -> 38) and this comment was stale both times.
         #
         # `engine.tests.run_all`
         # discovers only `engine/tests`, so until this step existed no gate ran

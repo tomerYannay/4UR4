@@ -1827,7 +1827,7 @@ why**. It failed closed and silently.
 6. Every rejection must return a **structured, observable** reason carrying symbol, date, detected
    jump, threshold, relevant split coefficient and rejection reason.
 
-**How it is implemented, in FIVE cases.** *(This read "four cases" and enumerated only the original
+**How it is implemented, in SIX cases.** *(This read "four cases" and enumerated only the original
 four while the engine had already grown to five. Code Review caught it. The enumeration is not
 decoration: this document states four lines below that what HD-27 changed is **when**
 `SUSPECTED_UNADJUSTED_SPLIT` fires — so an enumeration that omits two branches omits exactly the
@@ -1996,6 +1996,11 @@ not carried forward:
 
 - **40 attempted · 40 COMPLETE · 0 rejected · 0 timed out · 0 insufficient · 0 provider errors.**
 - **306 raw breakouts · 255 non-overlapping · 6 excluded** for an incomplete forward window.
+  *Every number in this block inherits all four limits stated at the top of
+  `tools/research/scanner/backtest.py` — survivorship bias running **upward**, a windowed
+  anchor, no multiple-comparison control, and returns **measured rather than traded**. HD-26
+  requires those limits to travel with every number the pilot produces; they were in the
+  harness and not in this register.*
 - **AAPL preserved end-to-end, on the declared 1000-bar causal prefix**: COMPLETE, **3 breakouts**,
   **1 inspected-and-accepted** extreme jump (bar 231, 2000-09-29, log jump `0.618163` on the
   adjusted **high** series — the raw-**close** jump for the same event is `0.731247`, which is the
