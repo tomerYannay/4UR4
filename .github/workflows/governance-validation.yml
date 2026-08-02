@@ -188,7 +188,7 @@ jobs:
         # not a deleted test: EIGHT harness tests could be removed with this gate
         # still green -- the check is `-lt 30`, so count=30 still passes.
         # Measured: count=31 GREEN, count=30 GREEN, count=29 RED. An earlier
-        # wording said five, contradicting the "SIX UNDER" two lines above it
+        # wording said five, contradicting the then-"SIX UNDER" two lines above it
         # and making the gate look tighter than it is. Said explicitly because the comment previously read "these
         # 30 tests" while the suite was 36, which invited exactly the opposite
         # reading — that the floor was coincident with the suite and so caught

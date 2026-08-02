@@ -207,10 +207,6 @@ class TheCompletenessDeclarationIsPinned(unittest.TestCase):
     """
 
     def test_run_symbol_declares_the_feed_complete(self):
-        import inspect
-
-        from engine.guards import CorporateActions
-
         captured = {}
         real = backtest.CorporateActions
 

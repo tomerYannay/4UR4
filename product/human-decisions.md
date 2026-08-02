@@ -1996,11 +1996,15 @@ not carried forward:
 
 - **40 attempted · 40 COMPLETE · 0 rejected · 0 timed out · 0 insufficient · 0 provider errors.**
 - **306 raw breakouts · 255 non-overlapping · 6 excluded** for an incomplete forward window.
-  *Every number in this block inherits all four limits stated at the top of
-  `tools/research/scanner/backtest.py` — survivorship bias running **upward**, a windowed
-  anchor, no multiple-comparison control, and returns **measured rather than traded**. HD-26
-  requires those limits to travel with every number the pilot produces; they were in the
-  harness and not in this register.*
+  *Every number in this block carries **HD-26's four limits**, which is what HD-26 requires to
+  travel with every number the pilot produces: survivorship bias running **upward** · no
+  multiple-comparison control · returns **measured rather than traded** · **this is NOT a Phase 4
+  increment** and may not be cited as Phase 4 entry, implementation or exit evidence. The harness
+  adds a fifth that matters here — the **anchor is an all-time high of the delivered window**, and
+  these figures come from a **1,000-bar causal prefix**, not full history.*
+  *A first version of this rider listed `backtest.py`'s four instead of HD-26's, substituting the
+  windowed anchor for the Phase-4 disclaimer — dropping the limit with the highest misuse cost from
+  the block that exists to prevent exactly that misuse. Found by Verification.*
 - **AAPL preserved end-to-end, on the declared 1000-bar causal prefix**: COMPLETE, **3 breakouts**,
   **1 inspected-and-accepted** extreme jump (bar 231, 2000-09-29, log jump `0.618163` on the
   adjusted **high** series — the raw-**close** jump for the same event is `0.731247`, which is the
