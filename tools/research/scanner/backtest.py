@@ -27,7 +27,10 @@ of them and none is recoverable by analysis:
      predates the window is anchored on a lower maximum.
    * **`--max-bars N`** takes a **causal PREFIX** — each symbol's *earliest* N
      trading days, `bars[:N]` — not a common calendar window and not a recent
-     one. **Every published pilot figure comes from this path**, at N=1000. So
+     one. **The published aggregate figures — the 306/255 event counts and every
+     return statistic — come from this path**, at N=1000. Figures that name a
+     different window, such as the 68-breakout full-series AAPL count, say so
+     on their face. So
      the anchor is a ~4-year high, the sentence above about a multi-decade high
      is FALSE of those numbers, and the 40 symbols are **not pooled over a
      shared period**: AAPL's prefix runs 1999-11 to 2003-10 while META's runs

@@ -1848,10 +1848,9 @@ source order, and nothing else.
    *(The coverage qualifier is load-bearing and its absence was **instance eight** of this PR's
    signature defect. This clause read "No split at the bar (coefficient 1.0) → ACCEPT", unqualified,
    after HD-29 (ii) had made a bare `{}` reject — and `coefficient_at` returns `1.0` by default for
-   an uncovered bar, so the unqualified clause described the pre-HD-29 conflation exactly. The
-   warning under case 3 above — that the next agent would read the clause and revert the check as a
-   bug — had already been written about this same clause, about booleans. The check they would have
-   reverted is the one that stops M-65's measured NVDA false ATH.)*
+   an uncovered bar, so the unqualified clause described the pre-HD-29 conflation exactly. The check a
+   next agent would have reverted, reading the unqualified clause, is the one that stops M-65's
+   measured NVDA false ATH.)*
 5. **Split at the bar, WRONG direction** → **REJECT**, since HD-29 (i). An unadjusted forward split
    makes prices fall and an unadjusted reverse split makes them rise; a same-magnitude move the
    other way is not that split, and the reason says only that.
@@ -2000,7 +1999,8 @@ not carried forward:
   these figures come from a **1,000-bar causal PREFIX** — each symbol's *earliest*
   1,000 trading days, not full history and not a shared calendar window. The pooled sample
   therefore spans **different periods per name**: AAPL 1999-11..2003-10, META 2012-05..2016-05,
-  each starting at its own listing.*
+  each starting at its own listing — **author-run**, emitted as per-row `first_date`/`last_date` by
+  `compare_hd27.py` into a gitignored `.cache/` artifact, so no repository gate re-derives them.*
   *A first version of this rider listed `backtest.py`'s four instead of HD-26's, substituting the
   windowed anchor for the Phase-4 disclaimer — dropping the limit with the highest misuse cost from
   the block that exists to prevent exactly that misuse. Found by Verification.*

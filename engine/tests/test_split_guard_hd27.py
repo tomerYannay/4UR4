@@ -6,10 +6,11 @@ and the §18 guard read it as ``SUSPECTED_UNADJUSTED_SPLIT`` and rejected the
 **entire 26-year bar-set**. The engine emitted nothing for AAPL: ``final_state
 NONE``, zero breakouts, and no diagnostic that said why.
 
-The four cases the Product Owner named are each a test below. The engine has
-since grown further branches under HD-29; the authoritative list is
+The engine has grown further branches under HD-29; the authoritative list is
 `_adjudicate_jump` in source order, and no count is restated here — every
-restatement of it in this repository has gone stale at least once
+restatement of it in this repository has gone stale at least once.
+
+The four cases the Product Owner named are each a test below, and the real
 numbers are used rather than invented ones — a synthetic 50% drop would prove
 the arithmetic but not that the guard behaves correctly on the event that
 actually broke it.
