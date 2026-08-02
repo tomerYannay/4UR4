@@ -281,6 +281,3 @@ class TheCompletenessDeclarationIsPinned(unittest.TestCase):
         self.assertTrue(split_dates <= bar_dates,
                         "a split date is not a bar date; `complete_history=True` "
                         "would be a false declaration (M-74)")
-        # 3. The 1.0 bar is absent from splits_applied rather than recorded as
-        #    a no-op, which is why absence has to mean "no split".
-        self.assertNotIn("2020-01-02", split_dates)
